@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["control"] = "v2015.03";
+self.SCRIPT_VERSIONS["control"] = "v2015.05";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
@@ -1431,6 +1431,7 @@ window.control = (() => {
         cShownum.addOption(9, "设置线条风格");
         cShownum.addOption(10, "设置按键位置");
         cShownum.addOption(11, "加载按键设置");
+        cShownum.addOption(12, "重置数据");
         cShownum.setText(EMOJI_ROUND_ONE);
         cShownum.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
         cShownum.menu.lis[0].checked = true;
@@ -1460,6 +1461,7 @@ window.control = (() => {
                 9: () => { setCBoardLineStyleMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
                 10: () => { saveRenjuSettingsMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
                 11: () => { loadRenjuSettingsMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
+                12: () => {location.href = "reset.html"},
             }
             setMenuCheckBox(but, but.input.selectedIndex, [0, 1, 2, 3]);
             execFunction(FUN[but.input.value]);
