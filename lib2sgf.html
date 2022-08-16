@@ -114,7 +114,10 @@
                 RenjuLib.openLib(file)
                     .then(() => document.getElementById("status").innerHTML = "开始编码SGF")
                     .then(RenjuLib.lib2sgf)
-                    .then(() => document.getElementById("status").innerHTML = "下载SGF文件")
+                    .then(bufObj => {
+                        document.getElementById("status").innerHTML = "下载SGF文件";
+                        return bufObj;
+                    })
                     .then(function(bufObj){
                         RenjuLib.closeLib();
                         buffer2sgf(new Uint8Array(bufObj.buf, 0, bufObj.byteLen), filename)

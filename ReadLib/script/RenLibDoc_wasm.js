@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2015.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2015.02";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -564,7 +564,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2015.01";
     }
     
     CRenLibDoc.prototype.lib2sgf = function() {
-        let isFormat = true;
+        let isFormat = false;
         return  createSGFBuffer(wasm_exports._Z16getSGFByteLengthb(isFormat))
         .then(function(buf) {
             sgfUint8 = new Uint8Array(buf);
