@@ -1,0 +1,690 @@
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/PFSCMedium1.woff') format('woff'),
+        url('./font/PFSCMedium1.ttf') format('truetype');
+    font-weight: normal;
+}
+
+
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/PFSCHeavy1.woff') format('woff'),
+        url('./font/PFSCHeavy1.ttf') format('truetype');
+    font-weight: bolder;
+}
+
+
+font {
+    font-family: mHeiTi, SimHei;
+    font-weight: bold;
+    -webkit-user-select: none;
+    /* Chrome/Safari/Opera */
+}
+
+
+
+button {
+    font-family: mHeiTi, SimHei;
+    -webkit-user-select: none;
+    /* Chrome/Safari/Opera */
+}
+
+
+div {
+    font-family: mHeiTi, SimHei;
+    /*font-weight: bolder;*/
+    -webkit-user-select: none;
+    /* Chrome/Safari/Opera */
+}
+
+
+h1 {
+    font-family: mHeiTi, SimHei;
+    -webkit-user-select: none;
+    /* Chrome/Safari/Opera */
+}
+
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    font-family: mHeiTi, SimHei;
+    scroll-behavior: smooth;
+    -webkit-user-select: none;
+    /*background-color: #303030*/
+    /* Chrome/Safari/Opera */
+}
+
+
+a {
+    color: #663366;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* 未被访问的链接 */
+a:link {
+    color: #663366;
+    text-decoration: underline;
+}
+
+/* 已被访问的链接 */
+a:visited {
+    color: #552255;
+    text-decoration: underline;
+}
+
+/* 将鼠标悬停在链接上 */
+a:hover {
+    color: #885588;
+    text-decoration: underline;
+}
+
+/* 被选择的链接 */
+a:active {
+    color: blue;
+    text-decoration: underline;
+}
+
+
+.menu {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    /*
+    width: 300px;
+    left: 300px;
+    top: 100px;
+    height: 300px;
+    border-radius: 30px;
+    background: #ccc;
+    */
+}
+
+.menu li {
+    /*font-size: 20px;*/
+    list-style: none;
+    /*line-height: 38px;
+    margin-left: -1px;
+    padding-left: 26px;*/
+}
+
+.menu li:hover {
+    background-color: #4281f4;
+    color: #fff;
+}
+
+hr {
+    height: 3px;
+    margin: 0 0 0 0;
+}
+
+#helpWindow {
+    background-color: white;
+    border-width: 0px;
+}
+
+#viewBox {
+    background: #ccc;
+    overflow-x: scroll;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+#viewBox::-webkit-scrollbar {
+    display: none;
+}
+
+#wrapper {
+    overflow-x: scroll;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+#exWindow {
+    overflow-x: scroll;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+#menu::-webkit-scrollbar {
+    display: none;
+}
+
+.showHelpWindow {
+    -webkit-animation: showHelpWindow 500ms ease-in;
+    -moz-animation: showHelpWindow 500ms ease-in;
+    animation: showHelpWindow 500ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+@-webkit-keyframes showHelpWindow {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0.937;
+    }
+}
+
+@-moz-keyframes showHelpWindow {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0.937;
+    }
+}
+
+@keyframes showHelpWindow {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0.937;
+    }
+}
+
+.hideHelpWindow {
+    -webkit-animation: hideHelpWindow 500ms ease-in;
+    -moz-animation: hideHelpWindow 500ms ease-in;
+    animation: hideHelpWindow 500ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+@-webkit-keyframes hideHelpWindow {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0.937;
+    }
+}
+
+@-moz-keyframes hideHelpWindow {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0.937;
+    }
+}
+
+@keyframes hideHelpWindow {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0.937;
+    }
+}
+
+.showEXWindow {
+    -webkit-animation: showEXWindow 500ms ease-in;
+    -moz-animation: showEXWindow 500ms ease-in;
+    animation: showEXWindow 500ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+@-webkit-keyframes showEXWindow{
+    0% {
+        opacity: 0;
+    }
+    
+    100% {
+        opacity: 0.937;
+    }
+}
+
+@-moz-keyframes showEXWindow{
+    0% {
+        opacity: 0;
+    }
+    
+    100% {
+        opacity: 0.937;
+    }
+}
+
+@keyframes showEXWindow {
+    0% {
+        opacity: 0;
+    }
+    
+    100% {
+        opacity: 0.937;
+    }
+}
+
+.hideEXWindow {
+    -webkit-animation: hideEXWindow 500ms ease-in;
+    -moz-animation: hideEXWindow 500ms ease-in;
+    animation: hideEXWindow 500ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+@-webkit-keyframes hideEXWindow {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@-moz-keyframes hideEXWindow {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes hideEXWindow {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@-webkit-keyframes startPoint {
+    0% {
+        opacity: 1;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0.8;
+        -webkit-transform: scale(1.5);
+        -moz-transform: scale(1.5);
+        -ms-transform: scale(1.5);
+        transform: scale(1.5);
+    }
+}
+
+@-moz-keyframes startPoint {
+    0% {
+        opacity: 1;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0.8;
+        -webkit-transform: scale(1.5);
+        -moz-transform: scale(1.5);
+        -ms-transform: scale(1.5);
+        transform: scale(1.5);
+    }
+}
+
+@keyframes startPoint {
+    0% {
+        opacity: 1;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0.8;
+        -webkit-transform: scale(1.5);
+        -moz-transform: scale(1.5);
+        -ms-transform: scale(1.5);
+        transform: scale(1.5);
+    }
+}
+
+@-webkit-keyframes selectLine {
+    0% {
+        opacity: 1;
+        /*border-color: red;*/
+    }
+
+    30% {
+        opacity: 0.2;
+        /*border-color: red;*/
+    }
+
+    100% {
+        opacity: 1;
+        /*border-color: white;*/
+    }
+}
+
+@-moz-keyframes selectLine {
+    0% {
+        opacity: 1;
+        /*border-color: red;*/
+    }
+
+    30% {
+        opacity: 0.2;
+        /*border-color: red;*/
+    }
+
+    100% {
+        opacity: 1;
+        /*border-color: white;*/
+    }
+}
+
+@keyframes selectLine {
+    0% {
+        opacity: 1;
+        /*border-color: red;*/
+    }
+
+    30% {
+        opacity: 0.2;
+        /*border-color: red;*/
+    }
+
+    100% {
+        opacity: 1;
+        /*border-color: white;*/
+    }
+}
+
+
+
+@-webkit-keyframes showlabel {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0.75;
+    }
+}
+
+@-moz-keyframes showlabel {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0.75;
+    }
+}
+
+@keyframes showlabel {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0.75;
+    }
+}
+
+
+@-webkit-keyframes hidelabel {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@-moz-keyframes hidelabel {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes hidelabel {
+    0% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+
+
+@-webkit-keyframes show {
+    0% {
+        opacity: 0;
+        -webkit-transform: scale(0.6);
+        -moz-transform: scale(0.6);
+        -ms-transform: scale(0.6);
+        transform: scale(0.6);
+
+    }
+
+    100% {
+        opacity: 0.937;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+@-moz-keyframes show {
+    0% {
+        opacity: 0;
+        -webkit-transform: scale(0.6);
+        -moz-transform: scale(0.6);
+        -ms-transform: scale(0.6);
+        transform: scale(0.6);
+
+    }
+
+    100% {
+        opacity: 0.937;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+@keyframes show {
+    0% {
+        opacity: 0;
+        -webkit-transform: scale(0.6);
+        -moz-transform: scale(0.6);
+        -ms-transform: scale(0.6);
+        transform: scale(0.6);
+
+    }
+
+    100% {
+        opacity: 0.937;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+
+@-webkit-keyframes hide {
+    0% {
+        opacity: 0.937;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+        display: block;
+    }
+
+    100% {
+        opacity: 0;
+        -webkit-transform: scale(0);
+        -moz-transform: scale(0);
+        -ms-transform: scale(0);
+        transform: scale(0);
+        display: none;
+    }
+}
+
+@-moz-keyframes hide {
+    0% {
+        opacity: 0.937;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+        display: block;
+    }
+
+    100% {
+        opacity: 0;
+        -webkit-transform: scale(0);
+        -moz-transform: scale(0);
+        -ms-transform: scale(0);
+        transform: scale(0);
+        display: none;
+    }
+}
+
+@keyframes hide {
+    0% {
+        opacity: 0.937;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+        display: block;
+    }
+
+    100% {
+        opacity: 0;
+        -webkit-transform: scale(0);
+        -moz-transform: scale(0);
+        -ms-transform: scale(0);
+        transform: scale(0);
+        display: none;
+    }
+}
+
+
+
+
+@-webkit-keyframes hideContextMenu {
+    0% {
+        opacity: 0.937;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@-moz-keyframes hideContextMenu {
+    0% {
+        opacity: 0.937;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes hideContextMenu {
+    0% {
+        opacity: 0.937;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+.showlabel {
+    -webkit-animation: showlabel 1000ms ease-in;
+    -moz-animation: showlabel 1000ms ease-in;
+    animation: showlabel 1000ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+.hidelabel {
+    -webkit-animation: hidelabel 380ms ease-in;
+    -moz-animation: hidelabel 380ms ease-in;
+    animation: hidelabel 380ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+.show {
+    -webkit-animation: show 150ms ease-in;
+    -moz-animation: show 150ms ease-in;
+    animation: show 150ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+.hide {
+    -webkit-animation: hide 380ms ease-in;
+    -moz-animation: hide 380ms ease-in;
+    animation: hide 380ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+.hideContextMenu {
+    -webkit-animation: hideContextMenu 250ms ease-in;
+    -moz-animation: hideContextMenu 250ms ease-in;
+    animation: hideContextMenu 250ms ease-in;
+    -webkit-animation-fill-mode: both;
+    -moz-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+.startPoint {
+    -webkit-animation: startPoint 1s linear 0.5s infinite alternate;
+    -moz-animation: startPoint 1s linear 0.5s infinite alternate;
+    animation: startPoint 1s linear 0.5s infinite alternate;
+
+}
+
+.selectLine {
+    -webkit-animation: selectLine 3s linear 1.5s infinite alternate;
+    -moz-animation: selectLine 3s linear 1.5s infinite alternate;
+    animation: selectLine 3s linear 1.5s infinite alternate;
+
+}
