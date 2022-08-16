@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>test</title>
+    <style type="text/css">
+        #root {
+            position: relative;
+        }
+
+        #wrapper {
+            background-color: #dddddd;
+            width: 800px;
+            height: 1200px;
+            overflow-x: hidden;
+            overflow-y: scroll;
+            position: fixed;
+            left: 0px;
+            top: 50px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        body.loading {
+            opacity: 0;
+        }
+
+        div {
+            height: 0px;
+            position: relative;
+        }
+
+        #console {
+            position: fixed;
+            z-index: 99;
+        }
+
+        iframe {
+            overflow: scroll;
+            background-color: white;
+            border-width: 0px;
+            width: 800px;
+            height: 100%;
+            position: relative;
+            left: 0px;
+            top: 0px;
+            z-index: 0;
+        }
+
+        button {
+            font-size: 30px;
+            position: fixed;
+            width: 80px;
+            height: 50px;
+            top: 30px;
+            z-index: 1;
+        }
+
+        button.one {
+
+            left: 0px;
+        }
+
+        button.two {
+
+            left: 100px;
+        }
+
+        button.three {
+
+            left: 200px;
+        }
+
+        button.top {
+
+            left: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="wrapper">
+        <iframe name="helpWindow" id="iframe" src="test1.html"></iframe>
+    </div>
+    <script>
+        const IFREAM_DIV = document.getElementById("wrapper")
+        const IFREAM = document.getElementById("iframe")
+        const CHILD_WINDOW = IFREAM.contentWindow;
+        let getDocumentHeight = () => {};
+        let getScrollPoints = () => {};
+
+
+
+        document.body.onload = () => {
+
+            CHILD_WINDOW.setView(document);
+
+            //centerAndScale(document.getElementById(`wrapper`))
+
+            getDocumentHeight = (() => { //添加结束标记，准确判断文档高度
+
+                let iDoc = IFREAM.Document || IFREAM.contentWindow.document;
+                const MARK_END = iDoc.createElement("a");
+                iDoc.body.appendChild(MARK_END);
+                return () => {
+                    return CHILD_WINDOW.getAbsolutePos(MARK_END).y;
+                }
+            })();
+
+            getScrollPoints = CHILD_WINDOW.getScrollPoints;
+            if (navigator.userAgent.indexOf("iPhone") + 1) {
+                //CHILD_WINDOW.scrollToAnimation = scrollToAnimation;
+                CHILD_WINDOW.setScrollY = setScrollY;
+                CHILD_WINDOW.getScrollY = getScrollY;
+                const temp = CHILD_WINDOW.scrollToAnimation;
+                CHILD_WINDOW.scrollToAnimation = (top) => {
+                    console.log(">>>parent animationFrameScroll")
+                    IFREAM.style.height = getDocumentHeight() + "px";
+                    temp(top);
+                }
+            }
+        }
+
+
+        /*
+                const scrollToAnimation = (() => {
+
+                    let moves = [];
+                    let animationFrameScroll = null;
+                    let targetScrollTop = 0
+                    let tempScrollTop = 0;
+
+                    function scrollTo() {
+
+                        let IFREAM = document.getElementById("iframe");
+                        let iDoc = IFREAM.Document || IFREAM.contentWindow.document;
+                        //console.log(`scrollHeight=${iDoc.body.scrollHeight},\ndocumentHeight=${getDocumentHeight()}`)
+                        tempScrollTop += moves.splice(0, 1)[0];
+                        setScrollY(tempScrollTop);
+                        if (moves.length) {
+                            animationFrameScroll = =(scrollTo);
+                        }
+                        else {
+                            cancelAnima();
+                        }
+                    }
+
+                    function cancelAnima() {
+
+                        cancelAnimationFrame(animationFrameScroll);
+                        moves = [];
+                        animationFrameScroll = null;
+                        targetScrollTop = 0
+                        tempScrollTop = 0;
+                    }
+
+                    return (top) => {
+
+                        console.log("parent animationFrameScroll")
+                        IFREAM.style.height = getDocumentHeight() + "px";
+                        cancelAnima();
+                        targetScrollTop = top;
+                        tempScrollTop = IFREAM_DIV.scrollTop;
+                        moves = getScrollPoints(targetScrollTop - tempScrollTop);
+                        scrollTo();
+                    };
+                })();
+        */
+
+
+        function getScrollY() {
+
+            return IFREAM_DIV.scrollTop;
+        }
+
+
+        function setScrollY(top) {
+            console.log(`IFREAM_DIV setScrollY, ${top}`)
+            IFREAM_DIV.scrollTop = top;
+        }
+
+        function centerAndScale(elem) {
+
+            const IS_TOP_WINDOW = window.parent == window.self;
+            const DW = document.documentElement.clientWidth;
+            const DH = document.documentElement.clientHeight;
+            const SW = window.screen.width;
+            const SH = window.screen.height;
+            const MAX = SW > SH ? SW : SH;
+            const MIN = SW < SH ? SW : SH;
+            let s = elem.style;
+
+            const ELEM_WIDTH = 800;
+            alert(`dw=${DW}, dh=${DH}, sw=${SW}, sh=${SH}, max=${MAX}, min=${MIN}, ${ELEM_WIDTH}`)
+            s.position = "absolute";
+            s.left = (DW - ELEM_WIDTH) / 2 + `px`;
+
+            if (IS_TOP_WINDOW) {
+                let scale = (DW < DH ? DW : DW * 0.6) / ELEM_WIDTH;
+                s.transform = "scale(" + scale + ")";
+                s.transformOrigin = "center top";
+            }
+        }
+
+        /*
+                function setView(width = 800) {
+
+                    const ELEM_LIST = document.getElementsByName("viewport");
+                    const VIEW = ELEM_LIST[0] || document.createElement("meta");
+                    let dw = document.documentElement.clientWidth;
+                    let dh = document.documentElement.clientHeight;
+                    let sw = window.screen.width;
+                    let sh = window.screen.height;
+                    let max = sw > sh ? sw : sh;
+                    let min = sw < sh ? sw : sh;
+                    let scale = (dw > dh ? max : min) / width;
+                    document.head.appendChild(VIEW);
+                    VIEW.setAttribute("name", "viewport");
+                    VIEW.setAttribute("content", `initial-scale=${self.scale+0.01} `);
+                    VIEW.setAttribute("content", `width=${width}, initial-scale=${scale}, minimum-scale=${scale}, maximum-scale =${scale*3}, user-scalable=${"yes"}`);
+                }
+                */
+    </script>
+</body>
+
+</html>
