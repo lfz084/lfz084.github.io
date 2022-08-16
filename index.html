@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!--
+    <meta http-equiv=X-UA-Compatible content="IE=edge">
+    <meta http-equiv=Cache-Control content=no-siteapp>
+    -->
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name=mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-status-bar-style content=default>
+    <meta name=apple-mobile-web-app-title content=摆棋小工具>
+    <meta name=x5-page-mode content=app>
+    <link rel="shortcut icon" sizes=128x128 href=./icon.png>
+    <link rel=apple-touch-icon href=./icon.png>
+    <link rel=icon href=./icon.ico>
+    <title>摆棋小工具</title>
+    
+    <link href="./style/main.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        a {
+            text-decoration: none;
+            font-family: 黑体;
+            font-weight: bold;
+            font-size: 25px;
+            line-Height: 3;
+            color: black;
+            -webkit-user-select: none;
+            /* Chrome/Safari/Opera */
+        }
+
+        h1 {
+            text-align: left
+        }
+
+        h2 {
+            text-align: center
+        }
+
+        div {
+            position: absolute;
+            left: 60px;
+            top: 100px;
+            width: 360px;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        let scale = window.screen.width / 480;
+        //console.log("scale=" + scale);
+        let viewport = document.createElement("meta");
+        viewport.setAttribute("name", "viewport");
+        document.head.appendChild(viewport);
+        viewport.setAttribute("content", `width=480, initial-scale=${scale}, minimum-scale=${scale}, maximum-scale =${scale}, user-scalable=no`);
+    </script>
+    <div class="main">
+        <h1> <a href="./renju.html" style="color:black"> <img src="./pic/favicon1.ico"> 五子棋摆棋计算 </a> <a href="./help/renjuhelp/renjuhelp.html" style="color:pink"> &nbsp;&nbsp;&nbsp;使用说明 </a> </h1>
+        <h1> <a href="./tuya.html" style="color:black"> <img src="./pic/favicon.ico"> 棋盘图片标记 </a> <a href="./help/tuyahelp/tuyahelp.html" style="color:pink"> &nbsp;&nbsp;&nbsp;使用说明 </a> </h1>
+        <h1> <a href="./lib2sgf.html" style="color:black"> <img src="./pic/ay8gf-i79zr-001.ico"> LIB2SGF </a></h1>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <style>
+        body {
+            font-size: 50px;
+            text-align: center;
+            line-height: 1.8;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        document.body.innerHTML += `准备重置 摆棋小工具.....<br>`
+        Promise.resolve()
+            .then(() => {
+                document.body.innerHTML += `搜索 serviceWorker.....<br>`
+                return "serviceWorker" in navigator &&
+                    "getRegistrations" in navigator.serviceWorker &&
+                    navigator.serviceWorker.getRegistrations()
+                    .then(registrations => {
+                        registrations.map(registration => {
+                            if (window.location.href.indexOf(registration.scope) + 1) {
+                                registration.unregister()
+                                document.body.innerHTML += `删除 serviceWorker.....<br>${registration.scope}<br>`
+                            }
+                        })
+                    })
+            })
+            .then(() => {
+                document.body.innerHTML += `搜索 caches.....<br>`
+                return "caches" in window &&
+                    caches.keys()
+                    .then(keys => {
+                        keys.map(key => {
+                            caches.delete(key)
+                            document.body.innerHTML += `删除 cache.....${key}<br>`
+                        })
+                    })
+            })
+            .then(() =>{
+                document.body.innerHTML += `搜索 localStorage.....<br>`
+                "localStorage" in window &&
+                Object.keys(localStorage).map(key => {
+                    localStorage.removeItem(key)
+                    document.body.innerHTML += `删除 ${key}<br>`
+                })
+            })
+            .then(() => {
+                document.body.innerHTML += `OK<br>`
+            })
+            .catch(err => {
+                document.body.innerHTML += `出错了<br>${err}<br>${err.stack}<br>`
+            })
+    </script>
+</body>
+
+</html>

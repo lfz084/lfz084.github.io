@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>全屏显示</title>
+    <meta charset="utf-8" />
+    <style>
+        iframe {
+
+            padding: 0px 0px 0px 0px;
+            border-style=none;
+            background: #fff;
+            border: hidden;
+            overflow: hidden;
+            scroll: no;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+        }
+
+        #fullDiv {
+
+            border: hidden;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+        }
+
+        #btn {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 200px;
+            height: 100px;
+            font-size: 50px;
+            z-index: 100;
+        }
+
+        h1 {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="fullDiv">
+        <button type="button" id="btn">全屏</button>
+        <iframe id="iframe"></iframe>
+    </div>
+    <script>
+        const DW = document.documentElement.clientWidth;
+        const DH = document.documentElement.clientHeight;
+        const SW = window.screen.width;
+        const SH = window.screen.height;
+        const boardH = DW < DH ? DW :
+            DH * 2 < DW ?
+            DH : DW / 2;
+        const W_SCALE = SW / boardH / 2;
+        const H_SCALE = SH / boardH;
+        let scale = DW < DH ? SW / DW :
+            W_SCALE < H_SCALE ?
+            W_SCALE : H_SCALE;
+        const IFRAME = document.getElementById("iframe");
+        let fullDiv = document.getElementById("fullDiv");
+        let btn = document.getElementById("btn");
+
+        document.body.onload = function() {
+
+            fullDiv.style.top = DW<DH ? "0px": (DH - boardH) / 2 + "px";
+            fullDiv.style.width = DW + "px";
+            fullDiv.style.height = DH + "px";
+            IFRAME.style.width = DW + "px";
+            IFRAME.style.height = DH + "px";
+            IFRAME.src = "./renju.html";
+        }
+
+        btn.onclick = function() {
+            if (!document.fullscreenElement) {
+                fullScreen(true)
+            }
+            else {
+                document.exitFullscreen();
+            }
+        };
+
+        const fullScreen = (() => {
+
+            function Fullenabled() {
+
+                fullDiv.style.display = "none";
+                IFRAME.style.left = `${DW<DH ? 0: (SW-DW)/2}px`;
+                if (DW < DH) {
+                    IFRAME.style.width = DW + "px";
+                    IFRAME.style.height = SH / scale + "px";
+                }
+                else {
+                    IFRAME.style.top = DW < DH ? 0 : (SH - DH * scale) / 2 / scale + "px";
+                }
+
+                IFRAME.style.transform = "scale(" + scale + ")";
+                IFRAME.style.webkitTransform = "scale(" + scale + ")";
+                IFRAME.style.mozTransform = "scale(" + scale + ")";
+                IFRAME.style.transformOrigin = `${DW<DH ? 0: DW/2}px 0px`;
+
+
+                btn.style.transform = "scale(" + scale + ")";
+                btn.style.webkitTransform = "scale(" + scale + ")";
+                btn.style.mozTransform = "scale(" + scale + ")";
+                btn.style.transformOrigin = "0 0";
+
+                requestFullScreen(fullDiv);
+                fullDiv.style.left = 0 + "px";
+
+                fullDiv.style.width = SW + "px";
+                fullDiv.style.height = SH + "px";
+
+                fullDiv.style.display = "block"
+            }
+
+            function Fullcancle() {
+                fullDiv.style.display = "none";
+                fullDiv.style.left = 0 + "px";
+                fullDiv.style.top = DW<DH ? "0px": (DH - boardH) / 2 + "px";
+                fullDiv.style.width = DW + "px";
+                fullDiv.style.height = DH + "px";
+
+                btn.style.transform = "scale(" + 1 + ")";
+                btn.style.webkitTransform = "sacale(" + 1 + ")";
+                btn.style.mozTransform = "scale(" + 1 + ")";
+                btn.style.transformOrigin = "0 0";
+
+                IFRAME.style.left = `0px`;
+                IFRAME.style.top = `0px`;
+                if (DW < DH) {
+                    IFRAME.style.width = DW + "px";
+                    IFRAME.style.height = SH / scale + "px";
+                }
+                IFRAME.style.transform = "scale(" + 1 + ")";
+                IFRAME.style.webkitTransform = "scale(" + 1 + ")";
+                IFRAME.style.mozTransform = "scale(" + 1 + ")";
+                IFRAME.style.transformOrigin = "0 0";
+                fullDiv.style.display = "block"
+            }
+
+            return (enabled) => {
+                if (enabled) {
+                    Fullenabled()
+                }
+                else {
+                    Fullcancle()
+                }
+            }
+        })()
+
+
+        function requestFullScreen(element) {
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            }
+            //FireFox
+            else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
+            }
+            //Chrome等
+            else if (element.webkitRequestFullScreen) {
+                element.webkitRequestFullScreen();
+            }
+            //IE11
+            else if (element.msRequestFullscreen) {
+                element.msRequestFullscreen();
+            }
+        }
+
+        fullDiv.addEventListener("fullscreenchange", function(e) {
+
+            if (!document.fullscreenElement) {
+                //alert("exit full")
+                fullScreen()
+            }
+        });
+    </script>
+</body>
+
+</html>

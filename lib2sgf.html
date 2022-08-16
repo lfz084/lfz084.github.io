@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <link rel="shortI icon" sizes=32×32 href="./pic/favicon.ico" />
+    <link rel="preload" href="./style/font/PFSCMedium1.woff" as="font" type="font/woff" crossorigin="anonymous">
+    <link rel="preload" href="./style/font/PFSCHeavy1.woff" as="font" type="font/woff" crossorigin="anonymous">
+    <link href="./style/main.css" rel="stylesheet" type="text/css">
+    <link rel="preload" href="./script/View.js" as="script">
+    <link rel="preload" href="./script/Button.js" as="script">
+    <link rel="preload" href="./script/msgbox.js" as="script">
+    <link rel="preload" href="./ReadLib/script/RenjuLib.js" as="script">
+    <title>lib2sgf</title>
+</head>
+
+<body>
+    <script>
+        window.SCRIPT_VERSIONS = {};
+    </script>
+    <script src="./script/View.js"></script>
+    <script src="./script/Button.js"></script>
+    <script src="./script/msgbox.js"></script>
+    <script src="./ReadLib/script/RenjuLib.js"></script>
+    <script>
+        // "a" = 97, "[" = 91, "]" = 93, "(" = 40, ")" = 41, ";" = 59
+        function buffer2sgf(buffer, filename) {
+            filename += ".sgf";
+            //let mimetype = "application/sgf";
+            let blob = new Blob([buffer]/*, { type: mimetype }*/);
+            saveFile(blob, filename);
+        }
+
+        function saveFile(blob, filename) {
+            if (typeof navigator !== "undefined" && navigator.msSaveOrOpenBlob) {
+                navigator.msSaveOrOpenBlob(blob, filename);
+                //log("msSaveOrOpenBlob...");
+            }
+            else {
+                // if iphone open file;
+                if (navigator.userAgent.indexOf("iPhone") + 1) {
+                    let url = URL.createObjectURL(blob);
+                    window.open(url, "helpWindow");
+                    setTimeout(() => {
+                        URL.revokeObjectURL(url);
+                    }, 1000 * 60);
+                    //log("open downloading...");
+                }
+                else { // download file;
+                    let save_link = document.createElement("a");
+                    save_link.href = URL.createObjectURL(blob);
+                    save_link.download = filename;
+                    save_link.target = "download";
+                    document.body.appendChild(save_link);
+                    save_link.click();
+                    save_link.parentNode.removeChild(save_link);
+                    setTimeout(() => { URL.revokeObjectURL(save_link.href); }, 1000 * 60);
+                    //log("click downloading...");
+                }
+            }
+        }
+    </script>
+    <script>
+        let d = document;
+        let dw = 0; //网页可见宽度
+        let dh = 0; //网页可见高度
+        dw = d.documentElement.clientWidth;
+        dh = d.documentElement.clientHeight;
+        let cWidth = dw < dh ? dw * 0.95 : dh * 0.95;
+        cWidth = dw < dh ? cWidth : dh < dw / 2 ? dh : dw / 2;
+
+        let viewport = new View(dw);
+        viewport.resize();
+
+        document.body.onload = () => {
+            window.loadAnimation = (() => {
+                let status = document.getElementById("status");
+                return {
+                    open: () => {},
+                    close: () => { status.innerHTML = "" },
+                    text: (txt) => { status.innerHTML = txt }
+                }
+            })()
+
+            let div = d.getElementById("w");
+            let s = div.style;
+            s.position = "absolute";
+            s.left = parseInt((dw - cWidth) / 2) + "px";
+            s.textAlign = "center";
+
+            div = d.getElementById("title");
+            s = div.style;
+            s.position = "absolute";
+            s.left = "0px";
+            s.top = "0px";
+            s.width = cWidth + "px";
+            s.fontSize = "100px";
+
+            div = d.getElementById("but");
+            s = div.style;
+            s.position = "absolute";
+            s.left = (cWidth-300)/2 + "px";
+            s.top = "150px";
+
+            let fileField = new Button(div, "file", 0, 0, 300, 100);
+            fileField.show();
+            fileField.setText("选择文件");
+            fileField.setonchange(function() {
+                let file = this.files[0],
+                    filename = (this.value).split("\\").pop();
+                this.value = "";
+                d.getElementById("filename").innerHTML = filename;
+                RenjuLib.openLib(file)
+                    .then(() => document.getElementById("status").innerHTML = "开始编码SGF")
+                    .then(RenjuLib.lib2sgf)
+                    .then(() => document.getElementById("status").innerHTML = "下载SGF文件")
+                    .then(function(bufObj){
+                        RenjuLib.closeLib();
+                        buffer2sgf(new Uint8Array(bufObj.buf, 0, bufObj.byteLen), filename)
+                    })
+            });
+
+            div = d.getElementById("filename");
+            s = div.style;
+            s.position = "absolute";
+            s.left = "0px";
+            s.top = "300px";
+            s.width = cWidth + "px";
+            s.fontSize = "50px";
+
+
+            div = d.getElementById("status");
+            s = div.style;
+            s.position = "absolute";
+            s.left = "0px";
+            s.top = "450px";
+            s.width = cWidth + "px";
+            s.fontSize = "50px";
+
+            setTimeout(function() {
+                RenjuLib.reset({
+                    isBusy: () => false,
+                    setBusy: () => {},
+                    newGame: () => {},
+                    cBoard: null,
+                    getShowNum: () => 0,
+                    setPlayMode: () => {}
+                });
+
+            }, 1000 * 1);
+        }
+    </script>
+    <div id="w">
+        <div id="title">
+            LIB2SGF
+        </div>
+        <div id="but">
+        </div>
+        <div id="filename">
+        </div>
+        <div id="status">
+        </div>
+    </div>
+</body>
+
+</html>
