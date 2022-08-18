@@ -253,10 +253,10 @@ window.engine = (function() {
         position.map((color, idx) => {
             switch (color) {
                 case 1:
-                    blackMoves.push(idx);
+                    blackMoves.splice(0,0,idx);
                     break;
                 case 2:
-                    whiteMoves.push(idx);
+                    whiteMoves.splice(0,0,idx);
                     break;
             }
         })
@@ -574,12 +574,18 @@ window.engine = (function() {
     async function createTreeVCF(param) {
         let tree = await createTreeWin(param, LEVEL_NOFREEFOUR);
         if (!tree) {
-            let vcfInfo = await findVCF(param),
+            let iHtml = "",
+                vcfInfo = await findVCF(param),
                 { tree, positionMoves, isPushPass, current } = createTree(param);
-
-            vcfInfo.winMoves.map(vcfMoves => tree.createPathVCF(current, vcfMoves));
+            
+            vcfInfo.winMoves.length && (iHtml += `解题找${COLOR_NAME[param.color]}VCF:\n`);
+            vcfInfo.winMoves.map(vcfMoves => {
+                tree.createPathVCF(current, vcfMoves)
+                iHtml += `${movesToName(vcfMoves)}\n`;
+            });
+            tree.createPath(tree.init.MS).comment = iHtml;
             tree.init.MS = getInitMoves(tree);
-
+            
             0 == vcfInfo.winMoves.length && warn(`${EMOJI_FOUL_THREE} ${COLOR_NAME[param.color]} 查找VCF失败了 ${EMOJI_FOUL_THREE}`);
             return tree;
         }

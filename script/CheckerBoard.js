@@ -511,30 +511,20 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
         if (tree.init) {
             this.cle();
             this.MS = tree.init.MS;
+            console.log(`addTree tree.init.MS = ${tree.init.MS}`)
             this.resetNum = tree.init.resetNum;
             while (this.MSindex < tree.init.MSindex) this.toNext(true, 100);
         }
-        this.autoShow();
     };
 
 
 
     CheckerBoard.prototype.mergeTree = function(tree) {
-        this.oldFirstColor = this.firstColor; // 在this.cle 前面
-        this.firstColor = "black";
-
-        this.oldResetNum = this.resetNum;
-        this.resetNum = 0;
-        //log(tree);
         this.tree = this.tree || new RenjuTree();
         this.tree.mergeTree(tree);
-        if (tree.init) {
-            this.cle();
-            this.MS = tree.init.MS;
-            this.resetNum = tree.init.resetNum;
-            while (this.MSindex < tree.init.MSindex) this.toNext(true, 100);
-        }
-        this.autoShow();
+        this.tree.init = tree.init;
+        console.log(`mergeTree tree.init.MS = ${tree.init.MS}`)
+        this.addTree(this.tree);
     }
 
 
@@ -4098,54 +4088,14 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
 
 
     CheckerBoard.prototype.unpackTree = function() {
-
-        function getInnerHTML(nd) {
-            while (nd) {
-                if (nd.innerHTML) return nd.innerHTML;
-                nd = nd.parentNode;
-            }
-            return "";
-        }
-
-        function printChildNode(node, txt) {
-            let exWindow = control.getEXWindow();
-            exWindow.innerHTML(getInnerHTML(node) || "");
-            if (node.innerHTML) exWindow.openWindow();
-            printLines.call(this, node.lines);
-            for (let i = node.childNode.length - 1; i >= 0; i--) {
-                this.wLb(node.childNode[i].idx, node.childNode[i].txt || txt, node.childNode[i].txtColor || "black");
-            }
-        }
-
-        function printLines(lines = []) {
-            for (let i = lines.length - 1; i >= 0; i--) {
-                this.createMarkLine(lines[i].start, lines[i].end, lines[i].color);
-            }
-        }
-
-        function getTxT(node, idx) {
-            let txt;
-            for (let i = node.childNode.length - 1; i >= 0; i--) {
-                if (node.childNode[i].idx == idx) {
-                    txt = node.childNode[i].txt;
-                    break;
-                }
-            }
-            return txt;
-        }
-
-        function getChildNode(node, idx) {
-            for (let i = node.childNode.length - 1; i >= 0; i--) {
-                if (node.childNode[i].idx == idx) return node.childNode[i];
-            }
-        }
-
         //log(this.tree)
         this.cleLb("all");
-        let nodes = this.tree.getBranchNodes(this.MS.slice(0, this.MSindex + 1)),
+        let path = this.MS.slice(0, this.MSindex + 1),
+            nodes = this.tree.getBranchNodes(path),
+            iHtml = this.tree.getInnerHtml(path),
             nextMove = { idx: -1, level: -2, idxColor: undefined },
             level = ["l", "L", "c", "c5", "c4", "c3", "c2", "c1", "w", "W", "a", "a5", "a4", "a3", "a2", "a1"];
-
+        console.log(`unpackTree path = ${path}`)
         nodes.map(cur => {
             if (cur) {
                 //console.log(`cur.branchsInfo: ${cur.branchsInfo}`)
@@ -4167,6 +4117,11 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
                 }
             }
         });
+        
+        let exWindow = control.getEXWindow();
+        exWindow.innerHTML(iHtml);
+        iHtml && exWindow.openWindow();
+        
         if (this.MSindex + 1 === this.MS.length && nextMove.idx > -1 && nextMove.idx < 225) {
             (this.MSindex & 1) + 1 == nextMove.idxColor && this.MS.push(225);
             this.MS.push(nextMove.idx);

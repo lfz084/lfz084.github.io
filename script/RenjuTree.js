@@ -251,26 +251,27 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
             return this.nodeBuf.getUint8(this.pointer + 3);
         }
         get down() {
-            let pointer = this.nodeBuf.getUint32(this.pointer + 8);
+            let pointer = this.nodeBuf.getUint32(this.pointer + 4);
             if (pointer) {
                 return new Node(this.nodeBuf, this.commentBuf, pointer);
             }
         }
         get right() {
-            let pointer = this.nodeBuf.getUint32(this.pointer + 12);
+            let pointer = this.nodeBuf.getUint32(this.pointer + 8);
             if (pointer) {
                 return new Node(this.nodeBuf, this.commentBuf, pointer);
             }
         }
         get boardText() {
             let buf = [];
-            this.nodeBuf.readMemory(buf, this.pointer + 16, 4);
+            this.nodeBuf.readMemory(buf, this.pointer + 12, 4);
             buf.push(0, 0);
             return Buffer2String(buf);
         }
         get comment() {
-            let pointer = this.nodeBuf.getUint32(this.pointer + 20),
+            let pointer = this.nodeBuf.getUint32(this.pointer + 16),
                 buf = [];
+            console.log(`get comment pointer =${pointer}`)
             if (pointer) {
                 this.commentBuf.readMemory(buf, pointer + 4, COMMENT_SIZE - 4);
                 buf.push(0, 0);
@@ -294,31 +295,31 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
         }
         set down(node) {
             if (node && node.constructor.name == "Node")
+                this.nodeBuf.setUint32(this.pointer + 4, node.pointer);
+            else
+                this.nodeBuf.setUint32(this.pointer + 4, 0);
+        }
+        set right(node) {
+            if (node && node.constructor.name == "Node")
                 this.nodeBuf.setUint32(this.pointer + 8, node.pointer);
             else
                 this.nodeBuf.setUint32(this.pointer + 8, 0);
         }
-        set right(node) {
-            if (node && node.constructor.name == "Node")
-                this.nodeBuf.setUint32(this.pointer + 12, node.pointer);
-            else
-                this.nodeBuf.setUint32(this.pointer + 12, 0);
-        }
         set boardText(str) {
             if (str) {
                 let buf = String2Buffer(str).slice(0, 4);
-                this.nodeBuf.writeMemory(buf, this.pointer + 16, buf.length);
+                this.nodeBuf.writeMemory(buf, this.pointer + 12, buf.length);
             }
         }
         set comment(str) {
             if (str) {
-                let pointer = this.nodeBuf.getUint32(this.pointer + 20),
+                let pointer = this.nodeBuf.getUint32(this.pointer + 16),
                     buf = String2Buffer(str).slice(0, COMMENT_SIZE - 4);
                 if (0 == pointer) {
                     pointer = this.commentBuf.alloc();
                     pointer==0 && alert(pointer)
                     this.commentBuf.setUint8(pointer, 1);
-                    this.nodeBuf.setUint32(this.pointer + 20, pointer);
+                    this.nodeBuf.setUint32(this.pointer + 16, pointer);
                 }
                 pointer && this.commentBuf.writeMemory(buf, pointer + 4, buf.length);
             }
@@ -1031,6 +1032,25 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
         //console.log(`nMatch: ${nodes.map(cur => (cur.branchs[0] && cur.branchs[0].nMatch) || (cur.branchs[1] && cur.branchs[1].nMatch))}`)
         //console.log(`[${movesToName(nodes.map(cur => (cur.branchs[0] && cur.branchs[0].idx) || (cur.branchs[1] && cur.branchs[1].idx)))}]`)
         return nodes;
+    }
+    
+    Tree.prototype.getInnerHtml = function(path) {
+        let current = this.root.down,
+            depth = 0,
+            iHtml = "";
+        while (current) {
+            while (current) {
+                if (current.idx == path[depth]) {
+                    current = current.down;
+                    depth++;
+                    if (depth == path.length - 1) {
+                        iHtml = current.comment;
+                    }
+                }
+                else current = current.right;
+            }
+        }
+        return iHtml;
     }
 
     Tree.prototype.createPath = function(path, nodeInfo) {

@@ -535,7 +535,7 @@ window.control = (() => {
                 FUN[but.input.value]();
             });
     }
-
+    /*
     function setTreeInit(tree) {
         if (tree && tree.constructor.name == "Tree") {
             tree.createPath(cBd.MS.slice(0, cBd.MSindex + 1));
@@ -546,11 +546,11 @@ window.control = (() => {
             })
         }
     }
+    */
 
     async function addTree(tree) {
         if (tree && tree.constructor.name == "Tree") {
             setPlayMode(MODE_READLIB);
-            setTreeInit(tree);
             cBd.addTree(tree);
         }
     }
@@ -558,7 +558,6 @@ window.control = (() => {
     async function mergeTree(tree) {
         if (tree && tree.constructor.name == "Tree") {
             setPlayMode(MODE_READLIB);
-            setTreeInit(tree);
             cBd.mergeTree(tree);
         }
     }
