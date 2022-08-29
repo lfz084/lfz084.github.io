@@ -255,11 +255,12 @@ window.control = (() => {
 
     function newGame() {
 
-        engine.cancel();
         let h1 = ~~(cBd.width);
         let h2 = ~~(cBd.canvas.height);
         scaleCBoard(false);
+        cBd.viewBox.style.height = cBd.canvas.style.height;
         cBd.cle();
+        cBd.resetCBoardCoordinate();
         cBd.printEmptyCBoard();
         cBd.resetNum = 0;
         cBd.firstColor = "black";
@@ -782,7 +783,6 @@ window.control = (() => {
         cLoadImg.setonchange(function(but) {
             but.setText(`打开`);
             if (isBusy()) return;
-            console.log(`setonchange`)
             const FUN = {
                 1: () => {
                     fileInput.accept = "image/*";
@@ -790,12 +790,9 @@ window.control = (() => {
                     fileInput.click()
                 },
                 2: () => {
-                    console.log(`setonchange1`)
                     fileInput.accept = "application/lib";
                     fileInput.onchange = openLib;
-                    console.log(`setonchange2`)
                     fileInput.click()
-                    console.log(`setonchange3`)
                 },
                 3: () => { setMemoryMenu.showMenu() },
             }
@@ -839,7 +836,6 @@ window.control = (() => {
         }
 
         function openImg() {
-            engine.cancel();
             cBd.drawLineEnd();
             let reader = new FileReader();
             let file = fileInput.files[0];
@@ -859,7 +855,6 @@ window.control = (() => {
 
         function openLib() {
             newGame();
-            engine.cancel();
             cBd.drawLineEnd();
             let file = fileInput.files[0];
             fileInput.value = "";
@@ -897,6 +892,7 @@ window.control = (() => {
         cCancelFind = new Button(renjuCmddiv, "button", 0, 0, w, h);
         cCancelFind.setText(`${EMOJI_STOP} 停止`);
         cCancelFind.setontouchend(function(but) {
+            cCancelFind.setText(`停止中...`);
             engine.cancel();
             RenjuLib.isLoading() && RenjuLib.cancal();
         });
@@ -1177,13 +1173,13 @@ window.control = (() => {
             cFindVCF.addOption(4, "大道五目");
             cFindVCF.addOption(5, "三手五连");
             cFindVCF.addOption(6, "四手五连");
-            cFindVCF.addOption(7, "禁手路线分析");
+            cFindVCF.addOption(7, "全盘禁手分析");
             cFindVCF.addOption(8, "防 冲四抓禁");
             //cFindVCF.addOption(9, "找  VCF防点");
-            cFindVCF.addOption(10, "找  VCF防点(深度+1)");
-            cFindVCF.addOption(11, "找  VCF防点(深度+∞)");
-            cFindVCF.addOption(12, "坂田三手胜(测试)");
-            cFindVCF.addOption(13, "VCT(测试）");
+            cFindVCF.addOption(10, "找 VCF 防点(深度+1)");
+            cFindVCF.addOption(11, "找 VCF 防点(深度+∞)");
+            //cFindVCF.addOption(12, "坂田三手胜(测试)");
+            //cFindVCF.addOption(13, "VCT(测试）");
             //cFindVCF.addOption(12, "test two");
         }
         else {
@@ -1222,19 +1218,21 @@ window.control = (() => {
                     })
                 },
                 3: async function() {
-                    engine.postMsg("isTwoVCF", {
-                        color: getRenjuSelColor(),
+                    return engine.createTreeDoubleVCF({
                         arr: arr,
-                        newarr: getArr2D([])
+                        color: getRenjuSelColor(),
+                        maxVCF: 1,
+                        maxDepth: 180,
+                        maxNode: 1000000
                     });
                 },
                 4: async function() {
-                    engine.postMsg("isSimpleWin", {
-                        color: getRenjuSelColor(),
+                    return engine.createTreeFourWin({
                         arr: arr,
-                        newarr: getArr2D([]),
-                        num: 4,
-                        level: 3
+                        color: getRenjuSelColor(),
+                        maxVCF: 1,
+                        maxDepth: (4 - 2) * 2 + 1,
+                        maxNode: 1000000
                     });
                 },
                 5: async function() {
@@ -1252,8 +1250,9 @@ window.control = (() => {
                     });
                 },
                 7: async function() {
-                    engine.postMsg("findFoulNode", {
+                    return engine.createTreeTestFoul({
                         arr: arr,
+                        color: getRenjuSelColor(),
                     });
                 },
                 9: async function() {
@@ -1263,15 +1262,23 @@ window.control = (() => {
                     });
                 },
                 10: async function() {
-                    engine.postMsg("getBlockVCFb", {
+                    return engine.createTreeBlockVCF({
+                        arr: arr,
                         color: getRenjuSelColor(),
-                        arr: arr
+                        maxVCF: 1,
+                        maxDepth: 180,
+                        maxNode: 1000000,
+                        blkDepth: 1
                     });
                 },
                 11: async function() {
-                    engine.postMsg("getBlockVCFTree", {
+                    return engine.createTreeBlockVCF({
+                        arr: arr,
                         color: getRenjuSelColor(),
-                        arr: arr
+                        maxVCF: 1,
+                        maxDepth: 180,
+                        maxNode: 1000000,
+                        blkDepth: 2
                     });
                 },
                 8: async function() {
@@ -3154,7 +3161,6 @@ window.control = (() => {
     }
 
     function isBusy(loading = true) {
-        console.log(`isBusy loading = ${loading}`)
         let busy = cCancelFind.div.parentNode; //!cLoadImg.div.parentNode || !cCutImage.div.parentNode || !cFindVCF.div.parentNode || !cFindPoint.div.parentNode;
         if (busy && loading) loadAnimation.open("busy", 1600);
         return busy;
@@ -3165,6 +3171,7 @@ window.control = (() => {
             for (let i = renjuCmdSettings.ButtonsIdx[renjuCmdSettings.idx].length - 1; i >= 0; i--) {
                 renjuCmdSettings.defaultButtons[renjuCmdSettings.ButtonsIdx[renjuCmdSettings.idx][i]].hide();
             }
+            cCancelFind.setText(`${EMOJI_STOP} 停止`);
             cCancelFind.move(renjuCmdSettings.positions[6].left, renjuCmdSettings.positions[6].top, renjuCmdSettings.defaultButtons[0].width, renjuCmdSettings.defaultButtons[0].height);
             lbTime.move(renjuCmdSettings.positions[5].left, renjuCmdSettings.positions[5].top, renjuCmdSettings.defaultButtons[0].width, renjuCmdSettings.defaultButtons[0].height, ~~(parseInt(renjuCmdSettings.defaultButtons[0].width) / 4) + "px");
         }

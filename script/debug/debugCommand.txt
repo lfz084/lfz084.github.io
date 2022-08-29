@@ -203,3 +203,12 @@ JFile.js
 JPoint.js
 LibraryFile.js
 LibraryTree.js
+
+try{
+let tree = cBoard.tree,
+    current = tree.createPath(cBoard.MS.slice(0, cBoard.MSindex + 2));
+    engine.addBranchIsFoul(112, cBoard.getArray(), tree, current);
+}
+catch(err){
+    console.log(err.stack)
+}

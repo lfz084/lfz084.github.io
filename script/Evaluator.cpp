@@ -100,13 +100,14 @@ BYTE vcfMoves[228] = {0},
     svcfFourPoints[228] = {0}, //simpleVCF
     svcfVCF[228] = {0};
 
-BYTE blockBuf[952] = {0}; // getBlockVCF
+BYTE blockBuf[1024] = {0}; // getBlockVCF
 BYTE* const blockPoints = blockBuf;// getBlockVCF
 BYTE* const blockArr = (blockBuf + 228); //保存可能防点
 DWORD* const blockLineInfos = (DWORD*)(blockBuf + 456);
 DWORD* const blockFLineInfos= (DWORD*)(blockBuf + 464);
 DWORD* const blockLineInfoList = (DWORD*)(blockBuf + 472);
 DWORD* const blockInfoArr = (DWORD*)(blockBuf + 496);
+BYTE* const tempBlockPoints = (blockBuf + 952);
 
 struct Moves {
     struct Moves* next;
@@ -2261,7 +2262,11 @@ void findVCF(char* arr, char color, BYTE maxVCF, BYTE maxDepth, UINT maxNode) {
 }
 */
 
-BYTE* getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool includeFour) {
+BYTE* getBlockVCFBuffer() {
+    return blockPoints;
+}
+
+void getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool includeFour) {
     bool fast = true;//默认采用快速搜索防点
     BYTE fourCount = 0, //分析最后一手棋
         infoIdx = 0,
@@ -2358,7 +2363,7 @@ BYTE* getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool 
                             case 0:
                                 st++;
                                 if (st) {
-                                    blockArr[idx] = idx;
+                                    blockArr[idx] = 1;
                                     move = 6;
                                 }
                                 break;
@@ -2375,7 +2380,7 @@ BYTE* getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool 
                             case 0:
                                 st++;
                                 if (st) {
-                                    blockArr[idx] = idx;
+                                    blockArr[idx] = 1;
                                     move = 6;
                                 }
                                 break;
@@ -2396,6 +2401,7 @@ BYTE* getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool 
                     BYTE idx = moveIdx(endIdx, -move, direction);
                     if (0 == arr[idx]) {
                         blockArr[idx] = 1;
+                        tempBlockPoints[0] = idx;
                         break;
                     }
                 }
@@ -2403,9 +2409,27 @@ BYTE* getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool 
                     BYTE idx = moveIdx(endIdx, move, direction);
                     if (0 == arr[idx]) {
                         blockArr[idx] = 1;
+                        tempBlockPoints[1] = idx;
                         break;
                     }
                 }
+                
+                //排除连活三多余防点
+                if (FOUR_FREE == (FOUL_MAX_FREE & blockLineInfos[0])) { 
+                    arr[endIdx] = 0;
+                    for (BYTE i = 0; i < 2; i++) {
+                        arr[tempBlockPoints[i]] = color;
+                        if (FOUR_FREE == (FOUL_MAX_FREE & testLineFour(tempBlockPoints[i], direction, color, arr))) {
+                            if (gameRules != RENJU_RULES || color != 1 || !isFoul(tempBlockPoints[i], arr)) {
+                                blockArr[tempBlockPoints[(i + 1) % 2]] = 0; //连活三如果有两个活四点，排除一个防点
+                                break;
+                            }
+                        }
+                        arr[tempBlockPoints[i]] = 0;
+                    }
+                    arr[endIdx] = color;
+                }
+                
             }
             else { //infoIdx == 2，双线44防点
                 BYTE idx = getBlockFourPoint(endIdx, arr, blockLineInfos[0]);
@@ -2417,12 +2441,13 @@ BYTE* getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool 
 
         arr[vcfMoves[--end]] = 0;
         blockArr[vcfMoves[end]] = 1; // 搜索直接防和反防
+        const short AND = INVERT_COLOR[color] == 1 && gameRules == RENJU_RULES ? FOUL_MAX : MAX;
         for (DWORD i = 0; i < vcfMovesLen - 1; i += 2) {
             end--;
             for (BYTE direction = 0; direction < 4; direction++) {
                 testLinePointFour(vcfMoves[end], direction, INVERT_COLOR[color], arr, blockLineInfoList);
                 for (BYTE j = 0; j < 9; j++) {
-                    if (FOUR_NOFREE == (FOUL_MAX & blockLineInfoList[j])) {
+                    if (FOUR_NOFREE == (AND & blockLineInfoList[j])) {
                         BYTE idx = moveIdx(vcfMoves[end], j - 4, direction);
                         blockArr[idx] = 1;
                     }
@@ -2459,7 +2484,6 @@ BYTE* getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool 
             }
         }
     }
-    return blockPoints;
 }
 
 //--------------------------------------------------

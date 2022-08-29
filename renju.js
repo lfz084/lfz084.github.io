@@ -2,7 +2,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2015.05";
 var loadApp = () => { // 按顺序加载应用
     "use strict";
     const TEST_LOADAPP = true;
-    const TEST_SERVER_WORKER = true;
+    const TEST_SERVER_WORKER = false;
     let logCommands = [];
     function log(param, type = "log") {
         const command = {

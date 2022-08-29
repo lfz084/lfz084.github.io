@@ -226,12 +226,12 @@ function loadEvaluatorWebassembly() {
 
                 function getBlockThreePoints(idx, arr, lineInfo) {
                     let rt = wGlobal._Z19getBlockThreePointshPct(idx, putArr(arr), lineInfo);
-                    return [(rt >> 24) & 0xff, (rt >> 16) & 0xff, (rt >> 8) & 0xff, 0xff];
+                    return [rt & 0xff, (rt >> 8) & 0xff, (rt >> 16) & 0xff, (rt >> 24) & 0xff];
                 }
 
                 function getFreeFourPoint(idx, arr, lineInfo) {
                     let rt = wGlobal._Z16getFreeFourPointhPct(idx, putArr(arr), lineInfo);
-                    return [(rt >> 24) & 0xff, (rt >> 16) & 0xff, (rt >> 8) & 0xff, 0xff];
+                    return [rt & 0xff, (rt >> 8) & 0xff, (rt >> 16) & 0xff, (rt >> 24) & 0xff];
                 }
 
                 function isFoul(idx, arr) {
@@ -395,10 +395,10 @@ function loadEvaluatorWebassembly() {
                                                     if (info <= FOUR_FREE && info > lineInfo) lineInfo = info;
                                                 }
                                                     switch (lineInfo) {
+                                                        case FOUR_FREE:
                                                         case THREE_FREE:
                                                             threePoints.push(idx, fourPoints[i + 1]);
                                                             break;
-                                                        case FOUR_FREE:
                                                         case FOUR_NOFREE:
                                                         case THREE_NOFREE:
                                                             threePoints = [idx, fourPoints[i + 1]].concat(threePoints);
@@ -459,7 +459,8 @@ function loadEvaluatorWebassembly() {
                 }
 
                 function getBlockVCF(arr, color, vcfMoves, includeFour) {
-                    let pMoves = wGlobal._Z11getBlockVCFPccPhhb(putArr(arr), color, putMoves(vcfMoves), vcfMoves.length, includeFour),
+                    wGlobal._Z11getBlockVCFPccPhhb(putArr(arr), color, putMoves(vcfMoves), vcfMoves.length, includeFour);
+                    let pMoves = wGlobal._Z17getBlockVCFBufferv(),
                         movesLen = new Uint8Array(memory.buffer, pMoves, 1)[0];
                     return TypedArray2Array(new Uint8Array(memory.buffer, pMoves + 1, movesLen));
                 }

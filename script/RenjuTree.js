@@ -271,7 +271,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
         get comment() {
             let pointer = this.nodeBuf.getUint32(this.pointer + 16),
                 buf = [];
-            console.log(`get comment pointer =${pointer}`)
+            //console.log(`get comment this.pointer = ${this.pointer}, pointer = ${pointer}`)
             if (pointer) {
                 this.commentBuf.readMemory(buf, pointer + 4, COMMENT_SIZE - 4);
                 buf.push(0, 0);
@@ -321,6 +321,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
                     this.commentBuf.setUint8(pointer, 1);
                     this.nodeBuf.setUint32(this.pointer + 16, pointer);
                 }
+                //console.log(`set comment this.pointer = ${this.pointer}, pointer = ${pointer}\n${str}`)
                 pointer && this.commentBuf.writeMemory(buf, pointer + 4, buf.length);
             }
         }
@@ -429,7 +430,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
         min == 0xFF && (min == max);
         return { maxScore: max, minScore: min };
     }
-
+    
+    Node.prototype.copyNode = function(sourceNode) {
+        this.idx = sourceNode.idx;
+        this.level = sourceNode.level;
+        this.boardText = sourceNode.boardText;
+        this.comment = sourceNode.comment;
+        return this;
+    }
 
     Node.prototype.addChild = function(childNode) {
         if (childNode.nodeBuf != this.nodeBuf) throw new Error(`Node.addChild Error: childNode.nodeBuf != this.nodeBuf`);
@@ -440,29 +448,39 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
             if (cIdx < leftNode.idx) {
                 this.down = childNode;
                 childNode.right = leftNode;
-                return;
+                return childNode;
             }
+            else if (cIdx == leftNode.idx) {
+                leftNode.copyNode(childNode);
+                return leftNode;
+            }
+            
             rightNode = leftNode.right;
             while (rightNode) {
                 if (cIdx < rightNode.idx) {
                     childNode.right = rightNode;
                     leftNode.right = childNode;
-                    return;
+                    return childNode;
                 }
+                else if (cIdx == rightNode.idx) {
+                    rightNode.copyNode(childNode);
+                    return rightNode;
+                }
+                
                 leftNode = rightNode;
                 rightNode = leftNode.right
             }
 
             leftNode.right = childNode;
-            return;
         }
         else {
             this.down = childNode;
         }
+        return childNode;
     }
 
     Node.prototype.addChilds = function(childNodes) {
-        childNodes.map(node => this.addChild(node));
+        return childNodes.map(node => this.addChild(node));
     }
 
     Node.prototype.removeChild = function(childNode) {
@@ -625,10 +643,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
     }
 
     Tree.prototype.copyNode = function(sourceNode, targetNode = this.newNode()) {
-        targetNode.idx = sourceNode.idx;
-        targetNode.level = sourceNode.level;
-        targetNode.boardText = sourceNode.boardText;
-        targetNode.comment = sourceNode.comment;
+        targetNode.copyNode(sourceNode);
         return targetNode;
     }
 
@@ -637,7 +652,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
         this.commentBuf.clePages();
         this.root = this.newNode();
     }
-
+    
+    //copyNode childNode addChileNode
     Tree.prototype.addChild = function(parNode, childNode) {
         if (parNode.nodeBuf != this.nodeBuf) throw new Error(`Tree.addChild Error: parNode.nodeBuf != this.nodeBuf`);
         let leftNode = parNode.down,
@@ -686,7 +702,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
 
     //parNode.nodeBuf == this.nodeBuf
     Tree.prototype.addChilds = function(parNode, childNodes) {
-        childNodes.map(node => this.addChild(parNode, node));
+        return childNodes.map(node => this.addChild(parNode, node));
     }
 
     Tree.prototype.addRight = function(leftNode, rightNode) {
@@ -1038,13 +1054,18 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
         let current = this.root.down,
             depth = 0,
             iHtml = "";
+        //console.log(`Tree getInnerHtml path[${path}], ${path.length}`)
         while (current) {
             while (current) {
+                //console.log(`[${path[depth]}], ${depth}`)
                 if (current.idx == path[depth]) {
-                    current = current.down;
                     depth++;
-                    if (depth == path.length - 1) {
+                    if (depth < path.length) {
+                        current = current.down;
+                    }
+                    else{
                         iHtml = current.comment;
+                        current = undefined;
                     }
                 }
                 else current = current.right;

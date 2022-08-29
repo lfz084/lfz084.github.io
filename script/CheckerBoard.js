@@ -3207,7 +3207,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
 
 
     // 在棋盘上打印当前正在计算的点
-    CheckerBoard.prototype.printSearchPoint = function(num, idx, text, color) {
+    CheckerBoard.prototype.printSearchPoint = function(num, idx, color) {
         let size;
         let temp;
         num = num ? parseInt(num) : 0;
@@ -4055,7 +4055,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
                 this.wNb(this.nameToIndex(a), "auto", showNum, undefined, undefined, 100);
             }
             else if (color == "black") {
-                console.log(`unpackMoves color == "black"`);
+                //console.log(`unpackMoves color == "black"`);
                 switch (control.getPlayMode()) {
                     case control.renlibMode:
                     case control.readLibMode:
@@ -4069,7 +4069,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
                 }
             }
             else if (color == "white") {
-                console.log(`unpackMoves color == "white"`);
+                //console.log(`unpackMoves color == "white"`);
                 switch (control.getPlayMode()) {
                     case control.renlibMode:
                     case control.readLibMode:

@@ -61,7 +61,7 @@ const EMPTYLIST = new Array(15);
 
 const LINE_NAME = {
     1: "活",
-    16: "禁",
+    16: "禁手",
     0: "零",
     3: "活一",
     2: "眠一",
@@ -156,6 +156,8 @@ for (let direction = 0; direction < 4; direction++) {
 
 //--------------------- line -------------------------
 
+//return lines[]
+//line: { start: idx, end: idx, "level": ["THREE_FREE" | "FOUR_NOFREE" | "FOUR_FREE" | "FIVE"] }
 function getLines(arr, color) {
     try {
         let infoArr = new Array(226),
@@ -247,6 +249,7 @@ function getLines(arr, color) {
 
 //---------------  ------------------ ------------------
 
+//return string: length = 45
 function getKey(arr) {
     let key = "";
     for (let y = 0; y < 15; y++) {
@@ -262,6 +265,7 @@ function getKey(arr) {
     return key;
 }
 
+//return number
 function getMoveKey(move) {
     const MOVE_LEN = move.length;
     let sum = 0; // 对每一手棋索引求，保存到数组最后位置。
@@ -271,6 +275,8 @@ function getMoveKey(move) {
     return sum;
 }
 
+//arr[] to arr[15][15]
+//return arr[15][15]
 function getArr2D(arr, setnum = 0, x = 15, y = 15) {
     let j = 0;
     arr.length = 0;

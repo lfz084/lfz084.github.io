@@ -64,7 +64,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["worker"] = "v2015.05";
 
         if (isWorkerBusy) throw new Error("Worker onmessage Error: Worker is Busy");
         else if (typeof COMMAND[e.data.cmd] == "function") {
-            post({cmd: "info", param: e.data.param});
+            //post({cmd: "info", param: e.data.param});
             COMMAND[e.data.cmd](e.data.param);
         }
         else throw new Error(`Worker onmessage Error: not found cmd "${e.data.cmd}"`);

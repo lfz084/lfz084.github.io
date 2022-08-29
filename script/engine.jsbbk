@@ -153,7 +153,7 @@ window.engine = (() => {
             "cleLb": (p) => { cleLb(p.idx); },
             "wLb": (p) => { wLb(p.idx, p.text, p.color); },
             "printMoves": (p) => { cBd.printMoves(p.winMoves, p.color); },
-            "printSearchPoint": (p) => { cBd.printSearchPoint(p.workerIdx, p.idx, p.text, p.color); },
+            "printSearchPoint": (p) => { cBd.printSearchPoint(p.workerIdx, p.idx, p.color); },
         }
         for (let cmd in commands) { // add commands
             defaultCmd[cmd] = commands[cmd];
@@ -455,7 +455,7 @@ window.engine = (() => {
                         if (sPoint.length == 0) { callback(); return; };
 
                         function ctnPost(workerIdx, idx, cmd, param) {
-                            cBd.printSearchPoint(workerIdx, idx, "⊙", "green");
+                            cBd.printSearchPoint(workerIdx, idx, "green");
                             param.idx = idx;
                             works[workerIdx].postMessage({ "cmd": cmd, parameter: param });
                         }
@@ -575,7 +575,7 @@ window.engine = (() => {
 
                     let excludeBP = (cmd) => {
                         function ctnPost(workerIdx, idx, cmd, param) {
-                            cBd.printSearchPoint(workerIdx, idx, "⊙", "green");
+                            cBd.printSearchPoint(workerIdx, idx, "green");
                             param.idx = idx;
                             works[workerIdx].postMessage({ "cmd": cmd, parameter: param });
                         }
@@ -640,7 +640,7 @@ window.engine = (() => {
 
                     let excludePath = (cmd) => {
                         function ctnPost(workerIdx, path, cmd, param) {
-                            cBd.printSearchPoint(workerIdx, path[0], "⊙", "green");
+                            cBd.printSearchPoint(workerIdx, path[0], "green");
                             param.path = path;
                             param.speed = `${PATHS_LEN-paths.length}/${PATHS_LEN}`;
                             works[workerIdx].postMessage({ "cmd": cmd, parameter: param });

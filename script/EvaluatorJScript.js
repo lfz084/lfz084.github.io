@@ -1813,10 +1813,10 @@ function loadEvaluatorJScript() {
                                             if (info <= FOUR_FREE && info > lineInfo) lineInfo = info;
                                         }
                                         switch (lineInfo) {
+                                            case FOUR_FREE:
                                             case THREE_FREE:
                                                 threePoints.push(idx, fourPoints[i + 1]);
                                                 break;
-                                            case FOUR_FREE:
                                             case FOUR_NOFREE:
                                             case THREE_NOFREE:
                                                 threePoints = [idx, fourPoints[i + 1]].concat(threePoints);
@@ -1986,7 +1986,7 @@ function loadEvaluatorJScript() {
                                     case 0:
                                         st++;
                                         if (st) {
-                                            blockArr[idx] = idx;
+                                            blockArr[idx] = 1;
                                             move = -6;
                                         }
                                         break;
@@ -2003,7 +2003,7 @@ function loadEvaluatorJScript() {
                                     case 0:
                                         st++;
                                         if (st) {
-                                            blockArr[idx] = idx;
+                                            blockArr[idx] = 1;
                                             move = 6;
                                         }
                                         break;
@@ -2019,11 +2019,13 @@ function loadEvaluatorJScript() {
                 }
                 else if (fourCount == 2) {
                     if (infoIdx == 1) { // 找活4，单线44防点
-                        let direction = (lineInfoList[0] >>> 12) & 0x07;
+                        let direction = (lineInfoList[0] >>> 12) & 0x07,
+                            bPoints = new Array(2);
                         for (let move = -1; move >= -4; move--) {
                             let idx = moveIdx(endIdx, move, direction);
                             if (0 == arr[idx]) {
                                 blockArr[idx] = 1;
+                                bPoints[0] = idx;
                                 break;
                             }
                         }
@@ -2031,8 +2033,25 @@ function loadEvaluatorJScript() {
                             let idx = moveIdx(endIdx, move, direction);
                             if (0 == arr[idx]) {
                                 blockArr[idx] = 1;
+                                bPoints[1] = idx;
                                 break;
                             }
+                        }
+                        
+                        //排除连活三多余防点
+                        if (FOUR_FREE == (FOUL_MAX_FREE & lineInfoList[0])) {
+                            arr[endIdx] = 0;
+                            for (let i = 0; i < 2; i++) {
+                                arr[bPoints[i]] = color;
+                                if (FOUR_FREE == (FOUL_MAX_FREE & _testLineFour(bPoints[i], direction, color, arr))) {
+                                    if (gameRules != RENJU_RULES || color != 1 || !isFoul(bPoints[i], arr)) {
+                                        blockArr[bPoints[(i + 1) % 2]] = 0; //连活三如果有两个活四点，排除一个防点
+                                        break;
+                                    }
+                                }
+                                arr[bPoints[i]] = 0;
+                            }
+                            arr[endIdx] = color;
                         }
                     }
                     else { //infoIdx == 2，双线44防点
@@ -2045,13 +2064,14 @@ function loadEvaluatorJScript() {
 
                 arr[vcfMoves[--end]] = 0;
                 blockArr[vcfMoves[end]] = 1; // 搜索直接防和反防
+                const AND = INVERT_COLOR[color] == 1 && gameRules == RENJU_RULES ? FOUL_MAX : MAX;
                 for (let i = end - 1; i >= 0; i -= 2) {
                     end--;
                     for (let direction = 0; direction < 4; direction++) {
                         let lineInfoList = new Array(9);
                         testLinePointFour(vcfMoves[end], direction, INVERT_COLOR[color], arr, lineInfoList);
                         for (let j = 0; j < 9; j++) {
-                            if (FOUR_NOFREE == (FOUL_MAX & lineInfoList[j])) {
+                            if (FOUR_NOFREE == (AND & lineInfoList[j])) {
                                 let idx = moveIdx(vcfMoves[end], j - 4, direction);
                                 blockArr[idx] = 1;
                             }
