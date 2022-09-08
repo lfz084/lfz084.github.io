@@ -1,5 +1,5 @@
 "use strict";
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2015.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2108.00";
 const DIRECTIONS = [0, 1, 2, 3] //[→, ↓, ↘, ↗]; // 米字线
 const FIND_ALL = 0;
 const ONLY_FREE = 1; // 只找活3，活4
@@ -571,13 +571,13 @@ function aroundPoint(arr, color, radius = 3, ctnInfo = [new Array(225), new Arra
                 let idx = IDX_LISTS[direction][list][move],
                     left,
                     right;
-                if (ctnInfo[0][idx] > 0) {
+                if (ctnInfo[0][idx] & color) {
                     left = Math.max(moveStart, move - radius);
                     right = Math.min(moveEnd, move + radius + 1);
 
                     while (++move < moveEnd && move < (right + radius)) {
                         idx = IDX_LISTS[direction][list][move];
-                        if (ctnInfo[0][idx] > 0) right = Math.min(moveEnd, move + radius + 1);
+                        if (ctnInfo[0][idx] & color) right = Math.min(moveEnd, move + radius + 1);
                     }
 
                     for (let m = left; m < right; m++) {
@@ -594,7 +594,7 @@ function aroundPoint(arr, color, radius = 3, ctnInfo = [new Array(225), new Arra
 
 function selectPoints(arr, color, radius = 3, maxVCF = 1, maxDepth = 10, maxNode = 100000) {
     let ctnArr = continueFour(arr, color, maxVCF, maxDepth, maxNode);
-    return aroundPoint(arr, color, radius, ctnArr);
+    return aroundPoint(arr, color, radius, maxVCF ? ctnArr : undefined);
 }
 
 function selectPointsLevel(arr, color, radius = 3, maxVCF = 1, maxDepth = 10, maxNode = 100000, nMaxDepth) {

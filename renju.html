@@ -37,7 +37,7 @@
         window.setUpdataVersion = function () {
             localStorage.removeItem("RENJU_APP_VERSION")
         }
-        window.NEW_VERSION = "v2015.05";
+        window.NEW_VERSION = "v2108.00";
         window.OLD_VERDION = localStorage.getItem("RENJU_APP_VERSION"); // if window.OLD_VERDION == null then upDate Version
         if (window.OLD_VERDION != window.NEW_VERSION && window.NEW_VERSION.indexOf("up") + 1) window.OLD_VERDION = null; //强制更新
         
@@ -144,9 +144,8 @@
                          "增加3种摆棋模式"],
             "v1718.02": ["支持打开大棋谱(64位浏览器)",
                         "浏览器内存不够时,打开部分棋谱"],
-            "v2015.05": ["添加lib转sgf功能",
-                            
-                        ]
+            "v2015.05": ["添加lib转sgf功能"],
+            "v2108.00": ["修复了解题功能的bug"]
         };
         
         window.alertCache = function() {

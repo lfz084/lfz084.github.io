@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["control"] = "v2015.05";
+self.SCRIPT_VERSIONS["control"] = "v2108.00";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
@@ -1167,14 +1167,14 @@ window.control = (() => {
 
         cFindVCF = new Button(renjuCmddiv, "select", 0, 0, w, h);
         if (CALCULATE) {
-            cFindVCF.addOption(1, "快速找  VCF");
-            cFindVCF.addOption(2, "找全   VCF");
-            cFindVCF.addOption(3, "找  双杀");
-            cFindVCF.addOption(4, "大道五目");
-            cFindVCF.addOption(5, "五手五连");
-            cFindVCF.addOption(6, "坂田三手胜");
-            cFindVCF.addOption(7, "全盘禁手分析");
-            cFindVCF.addOption(8, "防 冲四抓禁");
+            cFindVCF.addOption(1, "找 VCF");
+            cFindVCF.addOption(2, "找全VCF");
+            cFindVCF.addOption(3, "找 双杀");
+            cFindVCF.addOption(4, "三手胜");
+            cFindVCF.addOption(5, "大道五目");
+            cFindVCF.addOption(6, "五手五连");
+            cFindVCF.addOption(7, "禁手判断");
+            cFindVCF.addOption(8, "防冲四抓禁");
             //cFindVCF.addOption(9, "找  VCF防点");
             cFindVCF.addOption(10, "找 VCF 防点(深度+1)");
             cFindVCF.addOption(11, "找 VCF 防点(深度+∞)");
@@ -1227,26 +1227,6 @@ window.control = (() => {
                     });
                 },
                 4: async function() {
-                    return engine.createTreeNumberWin({
-                        arr: arr,
-                        color: getRenjuSelColor(),
-                        maxVCF: 1,
-                        maxDepth: 4 * 2 - 3,
-                        maxNode: 1000000,
-                        nMaxDepth: 180
-                    });
-                },
-                5: async function() {
-                    return engine.createTreeNumberWin({
-                        arr: arr,
-                        color: getRenjuSelColor(),
-                        maxVCF: 1,
-                        maxDepth: 5 * 2 - 3,
-                        maxNode: 1000000,
-                        nMaxDepth: 180
-                    });
-                },
-                6: async function() {
                     return engine.createTreeSimpleWin({
                         arr: arr,
                         color: getRenjuSelColor(),
@@ -1257,6 +1237,26 @@ window.control = (() => {
                         maxDepthVCT: 4 * 2 - 3,
                         maxNodeVCT: 1000000
                     })
+                },
+                5: async function() {
+                    return engine.createTreeNumberWin({
+                        arr: arr,
+                        color: getRenjuSelColor(),
+                        maxVCF: 1,
+                        maxDepth: 4 * 2 - 3,
+                        maxNode: 1000000,
+                        nMaxDepth: 180
+                    });
+                },
+                6: async function() {
+                    return engine.createTreeNumberWin({
+                        arr: arr,
+                        color: getRenjuSelColor(),
+                        maxVCF: 1,
+                        maxDepth: 5 * 2 - 3,
+                        maxNode: 1000000,
+                        nMaxDepth: 180
+                    });
                 },
                 7: async function() {
                     return engine.createTreeTestFoul({
@@ -2059,7 +2059,7 @@ window.control = (() => {
         cPutBoard.setColor("black");
         cPutBoard.setText(" 摆入棋盘");
         cPutBoard.setontouchend(function() {
-            if (cBd.SLTX == cBd.size && cBd.SLTY == cBd.size) {
+            if (true || cBd.SLTX == cBd.size && cBd.SLTY == cBd.size) {
                 putBoard();
             }
             else {

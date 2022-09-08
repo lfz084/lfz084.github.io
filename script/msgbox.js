@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["msgbox"] = "v2015.05";
+self.SCRIPT_VERSIONS["msgbox"] = "v2108.00";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {

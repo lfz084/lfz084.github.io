@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2015.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2108.00";
 window.engine = (function() {
             "use strict";
             const TEST_ENGINE = false;
@@ -522,11 +522,18 @@ window.engine = (function() {
                 let filterArr = await _selectPoints(param, BLOCK_MODE),
                     fourNodes = getNodesFour({ arr: param.arr, color: param.color, ftype: FIND_ALL }, filterArr),
                     threeNodes = await getLevelThreeNodes(param, filterArr),
-                    twoNodes = [];
+                    radiusArr = selectPoints(param.arr, param.color, 3, 0, 0, 0),
+                    twoNodes = [],
+                    elseNodes = [];
                 fourNodes.map(node => filterArr[node.idx] = 0);
                 threeNodes.map(node => filterArr[node.idx] = 0);
-                filterArr.map((v, idx) => v && twoNodes.push({idx: idx}));
-                return {fourNodes, threeNodes, twoNodes};
+                filterArr.map((v, idx) => {
+                    if (v) {
+                        if (radiusArr[idx]) twoNodes.push({idx: idx})
+                        else elseNodes.push({idx: idx})
+                    }
+                });
+                return {fourNodes, threeNodes, twoNodes, elseNodes};
             }
 
             //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ftype}
@@ -907,15 +914,43 @@ window.engine = (function() {
                         markArr[idx] = idx;
                         moves.push(idx);
                         
+                        if (arr[idx] == INVERT_COLOR[color]) {  // 搜索反防
+                            const AND = INVERT_COLOR[color] == 1 && gameRules == RENJU_RULES ? FOUL_MAX : MAX;
+                            for (let direction = 0; direction < 4; direction++) {
+                                let lineInfoList = new Array(9);
+                                testLinePointFour(idx, direction, arr[idx], arr, lineInfoList);
+                                for (let j = 0; j < 9; j++) {
+                                    if (FOUR_NOFREE == (AND & lineInfoList[j])) {
+                                        let nIdx = moveIdx(idx, j - 4, direction);
+                                        markArr[nIdx] = nIdx;
+                                    }
+                                }
+                            }
+                        }
+                        
                         if (down) {
                             next = down;
                             back = false;
                         }
                         else {
-                            arr[idx] = 0;
-                            let bPoint = getBlockVCF(arr, color, [idx], true);
-                            bPoint.map(idx => markArr[idx] = idx);
-                            if (bestMove.length > moves.length) bestMove = moves.slice(0);
+                            let level = getLevelPoint(idx, color, arr);
+                            //console.log(`[${idxToName(idx)}], ${0xff & level}`)
+                            if (LEVEL_CATCHFOUL > (0xff & level)) {
+                                let path = positionMoves(arr),
+                                    pNodes = tree.getPositionNodes(path, 7, 0xffff),
+                                    node = pNodes.find(node => node.down);
+                                //console.log('aaaaa [idxToName(idx)], ${node}')
+                                if (node) {
+                                    next = node.down;
+                                    back = false;
+                                }
+                            }
+                            else {
+                                arr[idx] = 0;
+                                let bPoint = getBlockVCF(arr, color, [idx], true);
+                                bPoint.map(idx => markArr[idx] = idx);
+                                if (bestMove.length > moves.length) bestMove = moves.slice(0);
+                            }
                         }
                     }
                     if (back) {
@@ -2036,9 +2071,9 @@ window.engine = (function() {
         }
         ps.length && await Promise.all(ps);
         moves.length == 0 && cBoard.cleSearchPoint();
-        vc2Nodes.map(node => {
-            console.log(`[${idxToName(node.idx)}], blkP: [${node.blkPoints}]`)
-        })
+        /*vc2Nodes.map(node => {
+            (idxToName(node.idx) == "G9" || idxToName(node.idx) =="F8") && console.log(`[${idxToName(node.idx)}], blkP: [${movesToName(node.blkPoints)}]`)
+        })*/
         return vc2Nodes;
     }
     
