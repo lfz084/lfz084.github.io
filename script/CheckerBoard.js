@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.00";
+self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
