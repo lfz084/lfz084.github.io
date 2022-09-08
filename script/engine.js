@@ -61,8 +61,14 @@ window.engine = (function() {
 
             function onmessage(e) {
                 if (typeof e.data == "object") {
-                    if (e.data.cmd == "resolve")(this.result ||= e.data.param, this.resolve(this.result), this.isBusy = false/*, log("resolve", "warn")*/);
-                    else typeof COMMAND[e.data.cmd] == "function" && COMMAND[e.data.cmd].call(this, e.data.param);
+                    if (e.data.cmd == "resolve") {
+                        this.result = e.data.param || this.result;
+                        this.resolve(this.result);
+                        this.isBusy = false;
+                    }//log("resolve", "warn");
+                    else if(typeof COMMAND[e.data.cmd] == "function") {
+                        COMMAND[e.data.cmd].call(this, e.data.param)
+                    }
                 }
             }
 
@@ -271,7 +277,7 @@ window.engine = (function() {
                     2: (lineInfo, idx) => FOUR_NOFREE == (lineInfo & FOUL_MAX_FREE) ? idx : undefined
                 },
                 FILTER_FIVE_NODE = node => FIVE == (node.lineInfo & FOUL_MAX_FREE);
-                
+   
 
             const LEVEL_THREE_POINTS_TXT = new Array(225);
             LEVEL_THREE_POINTS_TXT.fill(1).map((v, i) => {
@@ -515,7 +521,7 @@ window.engine = (function() {
             async function getLevelThreePoints(param, filterArr) {
                 return (await getLevelThreeNodes(param, filterArr)).map(node => node.idx);
             }
-            
+           
             //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ?nMaxDepth}
             //return Promise resolve: {fourNodes, threeNodes, twoNodes}
             async function getContinueNodes(param) {
@@ -1265,8 +1271,8 @@ window.engine = (function() {
     async function _addBranchSimpleVCT(param, tree, current, moves) {
         let winNode = undefined,
             { fourNodes, threeNodes } = await getContinueNodes(param);
-        winNode ||= await _addBranchSimpleVCT1(param, threeNodes, tree, current, moves);
-        winNode ||= await _addBranchSimpleVCT1(param, fourNodes, tree, current, moves);
+        winNode = winNode || await _addBranchSimpleVCT1(param, threeNodes, tree, current, moves);
+        winNode = winNode || await _addBranchSimpleVCT1(param, fourNodes, tree, current, moves);
         return winNode;
     }
     
@@ -1284,9 +1290,9 @@ window.engine = (function() {
         else if (hasScore == SCORE_REJECT) winNode = undefined;
         else if (param.maxDepthVCT >= 0) {
             current.score = SCORE_WAIT;
-            winNode ||= await _addBranchVCF(param, tree, current, moves);
+            winNode = winNode || await _addBranchVCF(param, tree, current, moves);
             if (param.maxDepthVCT >= 2) {
-                winNode ||= await _addBranchSimpleVCT(param, tree, current, moves);
+                winNode = winNode || await _addBranchSimpleVCT(param, tree, current, moves);
             }
         }
         winNode && (current.boardText = "L");
@@ -1736,7 +1742,7 @@ window.engine = (function() {
                     let catchFoul = catchFoulArray[j];
                     if (isCatchFoul(catchFoul, arr)) {
                         hasCatch = true;
-                        isCatch ||= catchFoul.winMoves[0] == bIdx;
+                        isCatch = isCatch || catchFoul.winMoves[0] == bIdx;
                         break;
                     }
                 }
@@ -1779,7 +1785,7 @@ window.engine = (function() {
                 }
                 isBlk && (cur.score = SCORE_RESOLVE);
             }
-            isBlock ||= isBlk;
+            isBlock = isBlock || isBlk;
             arr[idx] = 0;
         }
         
@@ -1790,7 +1796,7 @@ window.engine = (function() {
             0 == depth && cBoard.printSearchPoint(0, info.idx, "green");
             let isBlk = await _addBranchContinueBlockFoul(catchFoulArray, markArr, arr, tree, info.bCur, depth + 1);
             info.cur.score = isBlk ? SCORE_RESOLVE : SCORE_REJECT;
-            isBlock ||= isBlk;
+            isBlock = isBlock || isBlk;
             arr[info.idx] = 0;
             arr[info.bIdx] = 0;
         }
@@ -1971,8 +1977,8 @@ window.engine = (function() {
         param.maxDepth -= 2;
         let winNode = undefined,
             { fourNodes, threeNodes } = await getContinueNodes(param);
-        winNode ||= await _addBranchNumberVCT1(param, threeNodes, tree, current, moves);
-        winNode ||= await _addBranchNumberVCT1(param, fourNodes, tree, current, moves);
+        winNode = winNode || await _addBranchNumberVCT1(param, threeNodes, tree, current, moves);
+        winNode = winNode || await _addBranchNumberVCT1(param, fourNodes, tree, current, moves);
         param.maxDepth += 2;
         return winNode;
     }
@@ -2071,9 +2077,9 @@ window.engine = (function() {
         }
         ps.length && await Promise.all(ps);
         moves.length == 0 && cBoard.cleSearchPoint();
-        /*vc2Nodes.map(node => {
-            (idxToName(node.idx) == "G9" || idxToName(node.idx) =="F8") && console.log(`[${idxToName(node.idx)}], blkP: [${movesToName(node.blkPoints)}]`)
-        })*/
+        //vc2Nodes.map(node => {
+            //(idxToName(node.idx) == "G9" || idxToName(node.idx) =="F8") && console.log(`[${idxToName(node.idx)}], blkP: [${movesToName(node.blkPoints)}]`)
+        //})
         return vc2Nodes;
     }
     
@@ -2084,7 +2090,7 @@ window.engine = (function() {
             {twoNodes} = await getContinueNodes(param),
             vc2Nodes = await getVC2Node(param, twoNodes);
         //console.log(`vc2Nodes: [${movesToName(vc2Nodes.map(node => node.idx))}]`)
-        winNode ||= await _addBranchVC2_1(param, vc2Nodes, tree, current, moves);
+        winNode = winNode || await _addBranchVC2_1(param, vc2Nodes, tree, current, moves);
         param.maxDepth += 2;
         return winNode;
     }
@@ -2104,11 +2110,11 @@ window.engine = (function() {
         else if (hasScore == SCORE_REJECT) winNode = undefined;
         else if (param.maxDepth >= 0) {
             current.score = SCORE_WAIT;
-            winNode ||= await _addBranchVCF(param, tree, current, moves);
+            winNode = winNode || await _addBranchVCF(param, tree, current, moves);
             if (param.maxDepth >= 2) {
-                winNode ||= await _addBranchNumberVCT(param, tree, current, moves);
+                winNode = winNode || await _addBranchNumberVCT(param, tree, current, moves);
                 if (0 == moves.length && param.maxDepth >= 4) {
-                    winNode ||= await _addBranchVCT2(param, tree, current, moves);
+                    winNode = winNode || await _addBranchVCT2(param, tree, current, moves);
                 }
             }
         }
@@ -2144,13 +2150,13 @@ window.engine = (function() {
         }
     }
     return {
-        /* const */
+        // const //
         MAX_THREAD_NUM: MAX_THREAD_NUM,
-        /* function */
+        // function //
         setGameRules: _setGameRules,
         getFreeThread: getFreeThread,
         cancel: cancel,
-        /* async function */
+        // async function //
         createTreeVCF: async (param) => exe(param, createTreeVCF),
         createTreeFive: async (param) => exe(param, createTreeFive),
         createTreeFour: async (param) => exe(param, createTreeFour),
@@ -2163,7 +2169,7 @@ window.engine = (function() {
         createTreeNumberWin: async (param) => exe(param, createTreeNumberWin),
         createTreeBlockCatchFoul: async (param) => exe(param, createTreeBlockCatchFoul),
         createTreeSimpleWin: async (param) => exe(param, createTreeSimpleWin),
-        /* test function */
+        // test function //
         excludeBlockVCF: excludeBlockVCF,
         getBlockPoints: getBlockPoints,
         createTreeVCT: createTreeVCT,
