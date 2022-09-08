@@ -1171,8 +1171,8 @@ window.control = (() => {
             cFindVCF.addOption(2, "找全   VCF");
             cFindVCF.addOption(3, "找  双杀");
             cFindVCF.addOption(4, "大道五目");
-            cFindVCF.addOption(5, "三手五连");
-            cFindVCF.addOption(6, "四手五连");
+            cFindVCF.addOption(5, "五手五连");
+            cFindVCF.addOption(6, "坂田三手胜");
             cFindVCF.addOption(7, "全盘禁手分析");
             cFindVCF.addOption(8, "防 冲四抓禁");
             //cFindVCF.addOption(9, "找  VCF防点");
@@ -1227,32 +1227,50 @@ window.control = (() => {
                     });
                 },
                 4: async function() {
-                    return engine.createTreeFourWin({
+                    return engine.createTreeNumberWin({
                         arr: arr,
                         color: getRenjuSelColor(),
                         maxVCF: 1,
-                        maxDepth: (4 - 2) * 2 + 1,
-                        maxNode: 1000000
+                        maxDepth: 4 * 2 - 3,
+                        maxNode: 1000000,
+                        nMaxDepth: 180
                     });
                 },
                 5: async function() {
-                    engine.postMsg("isThreeWinPoint", {
-                        color: getRenjuSelColor(),
+                    return engine.createTreeNumberWin({
                         arr: arr,
-                        newarr: getArr2D([])
+                        color: getRenjuSelColor(),
+                        maxVCF: 1,
+                        maxDepth: 5 * 2 - 3,
+                        maxNode: 1000000,
+                        nMaxDepth: 180
                     });
                 },
                 6: async function() {
-                    engine.postMsg("isFourWinPoint", {
-                        color: getRenjuSelColor(),
+                    return engine.createTreeSimpleWin({
                         arr: arr,
-                        newarr: getArr2D([])
-                    });
+                        color: getRenjuSelColor(),
+                        maxVCF: 1,
+                        maxDepth: 180,
+                        maxNode: 1000000,
+                        maxVCT: 1,
+                        maxDepthVCT: 4 * 2 - 3,
+                        maxNodeVCT: 1000000
+                    })
                 },
                 7: async function() {
                     return engine.createTreeTestFoul({
                         arr: arr,
-                        color: getRenjuSelColor(),
+                        color: 1,
+                    });
+                },
+                8: async function() {
+                    return engine.createTreeBlockCatchFoul({
+                        arr: arr,
+                        color: 1,
+                        maxVCF: 1,
+                        maxDepth: 180,
+                        maxNode: 1000000
                     });
                 },
                 9: async function() {
@@ -1279,11 +1297,6 @@ window.control = (() => {
                         maxDepth: 180,
                         maxNode: 1000000,
                         blkDepth: 2
-                    });
-                },
-                8: async function() {
-                    engine.postMsg("blockCatchFoul", {
-                        arr: arr
                     });
                 },
                 12: async function() {
@@ -1931,7 +1944,6 @@ window.control = (() => {
             }
             else {
                 putImg();
-                return;
             }
         });
 
@@ -1955,6 +1967,7 @@ window.control = (() => {
             cBd.resetCutDiv();
             ctx = null;
             viewport1.userScalable();
+            //cBd.DIV.map(div => div.setAttribute("class", ""))
         }
 
         function lockImg(fun) {
@@ -2011,6 +2024,7 @@ window.control = (() => {
                     cBd.hideCutDiv();
                     ctx = null;
                     viewport1.resize();
+                    //cBd.DIV.map(div => div.setAttribute("class", "startPoint"))
                     if (fun) fun();
                     /*
                     cBd.parentNode.appendChild(cBd.bakCanvas);
@@ -2443,7 +2457,7 @@ window.control = (() => {
                     cBd.P[idx].cle();
                 }
                 else {
-                    cBd.P[idx].printNb(EMOJI_STAR_BLACK, color, cBd.gW, cBd.gH, color == "white" ? cBd.wNumColor : cBd.bNumColor);
+                    cBd.P[idx].printNb(EMOJI_STAR_BLACK, color, cBd.gW, cBd.gH, color == "white" ? "black" : "white");
                 }
             }
         }

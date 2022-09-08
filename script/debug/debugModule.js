@@ -73,20 +73,24 @@
     }
 
     window.testIsVCF = function() {
-        let end = vcfList2.length;
+        let end = vcfList2.length,
+            sTime = new Date().getTime();
 
         function next() {
-            console.warn(end);
+            console.log(end);
             if (end) {
-                let test = vcfList2[--end];
-                console.log(test.arr);
-                console.info(isVCF(test.color, test.arr, test.moves));
+                let test = vcfList2[--end],
+                    ov = test.moves[test.moves.length - 1];
+                //console.log(test.arr);
+                //console.info(isVCF(test.color, test.arr, test.moves));
                 test.moves[test.moves.length - 1] = 225;
-                console.info(isVCF(test.color, test.arr, test.moves));
-                setTimeout(next, 0);
+                //console.info(isVCF(test.color, test.arr, test.moves));
+                test.moves[test.moves.length - 1] = ov;
+                next();
             }
             else {
-                console.log(`testIsVCF finish`);
+                console.log(`testIsVCF finish\n
+                    平均时间: ${~~((new Date().getTime()-sTime)/vcfList2.length)}毫秒`);
             }
         }
         next();
@@ -111,19 +115,21 @@
     }
 
     window.testGetBlockVCF = function() {
-        let end = vcfList2.length;
+        let end = vcfList2.length,
+            sTime = new Date().getTime();
 
         function next() {
             if (end) {
                 console.log(end);
                 let test = vcfList2[--end],
                     ps = getBlockVCF(test.arr, test.color, test.moves);
-                console.log(test.arr);
-                console.info(`ps: [${ps}]`);
-                setTimeout(next, 0);
+                //console.log(test.arr);
+                //console.info(`ps: [${ps}]`);
+                next();
             }
             else {
-                console.log(`testGetLevelB finish`);
+                console.log(`testGetLevelB finish\n
+                平均时间: ${~~((new Date().getTime()-sTime)/vcfList2.length)}毫秒`);
             }
         }
         next();

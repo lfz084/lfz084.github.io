@@ -435,7 +435,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
         this.idx = sourceNode.idx;
         this.level = sourceNode.level;
         this.boardText = sourceNode.boardText;
-        this.comment = sourceNode.comment;
+        this.comment = sourceNode.comment + this.comment;
         return this;
     }
 
@@ -775,7 +775,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2015.05";
             }
         }
     }
-
+    
+    //copy branchRoot.childs to target
+    //target: path || node
     Tree.prototype.insertBranch = function(target, branchRoot) {
         let braCur = branchRoot.down,
             braDown,

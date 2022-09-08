@@ -260,6 +260,10 @@ function loadEvaluatorWebassembly() {
                 function getLevel(arr, color) {
                     return wGlobal._Z8getLevelPcc(putArr(arr), color);
                 }
+                
+                function getLevelPoint(idx, color, arr) {
+                    return wGlobal._Z13getLevelPointhcPc(idx, color, putArr(arr));
+                }
 
                 function isVCF(color, arr, moves) {
                     return wGlobal._Z5isVCFcPcPhh(color, putArr(arr), putMoves(moves), moves.length);
@@ -324,11 +328,11 @@ function loadEvaluatorWebassembly() {
                                 if (moves.length < maxDepth) {
                             
                                     wGlobal._Z8testFourPccPt(ARR, color, INFOARR);
-                                    let nLevel = wGlobal._Z8getLevelPcc(ARR, INVERT_COLOR[color]);
+                                    let nLevel = moves.length ? wGlobal._Z13getLevelPointhcPc(moves[moves.length - 1], INVERT_COLOR[color], ARR) : wGlobal._Z8getLevelPcc(ARR, INVERT_COLOR[color]);
                                     
-                                    if ((nLevel & 0xff) <= LEVEL_NOFREEFOUR) {
+                                    if ((nLevel & FOUL_MAX_FREE) <= LEVEL_NOFREEFOUR) {
                                         let end;
-                                        if ((nLevel & 0xff) == LEVEL_NOFREEFOUR) {
+                                        if ((nLevel & FOUL_MAX_FREE) == LEVEL_NOFREEFOUR) {
                                             end = 1;
                                             centerIdx = nLevel >> 8;
                                         }
@@ -336,7 +340,8 @@ function loadEvaluatorWebassembly() {
                                             end = 225;
                                         }
 
-                                        let twoPoints = [],
+                                        let winInfo = 0,
+                                            twoPoints = [],
                                             threePoints = [],
                                             elsePoints = [],
                                             fourPoints = [],
@@ -345,39 +350,39 @@ function loadEvaluatorWebassembly() {
                                         for (let i = end - 1; i >= 0; i--) {
                                             let idx = wGlobal._Z9aroundIdxhh(centerIdx, i),
                                                 max = infoArr[idx] & FOUL_MAX;
-                                            
                                             if (max == FOUR_NOFREE) {
-                                                
                                                 int8Arr[idx] = color;
-                                                let level = wGlobal._Z8getLevelPcc(ARR, color);
+                                                let levelInfo = wGlobal._Z13getLevelPointhcPc(idx, color, ARR),
+                                                    level = levelInfo & 0xff;
                                                 int8Arr[idx] = 0;
                                                 
-                                                if ((level & 0xff) == LEVEL_FREEFOUR) { //
-                                                    //pueh VCF
-                                                    let winMoves = moves.concat(idx),
-                                                        bufLen = new Uint8Array(memory.buffer, MOVESLEN, 1);
-                                                    //console.info(movesToName(winMoves, 600));
-                                                    bufLen[0] = winMoves.length;
-                                                    wGlobal._Z9simpleVCFcPcPhRh(color, INITARR, putMoves(winMoves), MOVESLEN);
-                                                    pushWinMoves(vcfWinMoves, new Uint8Array(memory.buffer, MOVES, bufLen[0]));
-                                                    //console.warn(vcfWinMoves[0]);
-                                                    console.log(`${movesToName(winMoves)} >> ${movesToName(new Uint8Array(memory.buffer, MOVES, bufLen[0]))}`)
-                                                    isConcat = false;
-                                                    vcfInfo.vcfCount++;
-                                                    "post" in self && post({ cmd: "vcfInfo", param: { vcfInfo: vcfInfo } });
-                                                    transTablePush(vcfHashTable, moves.length, sum, moves, int8Arr);
-                                                    
-                                                    if (vcfInfo.vcfCount == maxVCF) {
-                                                        for (let j = moves.length - 1; j >= 0; j--) {
-                                                            stackIdx.push(-1);
-                                                        }
-                                                        stackIdx.push(-1, -1);
-                                                        break;
-                                                    }
+                                                if (level >= LEVEL_CATCHFOUL) { //
+                                                    if ((winInfo & 0xff) < level) winInfo = idx << 8 | level;
+                                                    //post({cmd: "log", param: `winInfo: [${idxToName(idx)}], level: ${level}`})
                                                 }
                                                 else {
-                                                    fourPoints.push(idx, level >> 8);
+                                                    fourPoints.push(idx, levelInfo >> 8);
                                                 }
+                                            }
+                                        }
+                                        
+                                        if (winInfo) {
+                                            let idx = winInfo >> 8 & 0xff,
+                                                winMoves = moves.concat(idx),
+                                                bufLen = new Uint8Array(memory.buffer, MOVESLEN, 1);
+                                            bufLen[0] = winMoves.length;
+                                            wGlobal._Z9simpleVCFcPcPhRh(color, INITARR, putMoves(winMoves), MOVESLEN);
+                                            pushWinMoves(vcfWinMoves, new Uint8Array(memory.buffer, MOVES, bufLen[0]));
+                                            isConcat = false;
+                                            vcfInfo.vcfCount++;
+                                            maxVCF > 1 && "post" in self && post({ cmd: "vcfInfo", param: { vcfInfo: vcfInfo } });
+                                            transTablePush(vcfHashTable, moves.length, sum, moves, int8Arr);
+                                            
+                                            if (vcfInfo.vcfCount == maxVCF) {
+                                                for (let j = moves.length - 1; j >= 0; j--) {
+                                                    stackIdx.push(-1);
+                                                }
+                                                stackIdx.push(-1, -1);
                                             }
                                         }
                                         
@@ -491,6 +496,7 @@ function loadEvaluatorWebassembly() {
                 exports.testFour = testFour;
                 exports.testThree = testThree;
                 exports.getLevel = getLevel;
+                exports.getLevelPoint = getLevelPoint;
                 exports.isVCF = isVCF;
                 exports.simpleVCF = simpleVCF;
                 exports.findVCF = findVCF;

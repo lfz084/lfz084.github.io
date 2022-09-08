@@ -244,7 +244,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
         size = (color == "black" || color == "white") ? ~~(temp / 4 * 1.5) : ~~(temp / 4 * 3);
         this.d.style.fontSize = size + "px";
         size = ~~(temp / 4 * 2);
-        this.d.style.color = color == "white" ? "black" : "pink";
+        this.d.style.color = color == "white" ? "black" : "white";
         this.d.style.position = "absolute";
         this.d.style.background = (color == "white") ? "white" : (color == "black") ? "black" : "";
         this.d.style.width = size + "px";
@@ -511,17 +511,47 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
         if (tree.init) {
             this.cle();
             this.MS = tree.init.MS;
-            console.log(`addTree tree.init.MS = ${tree.init.MS}`)
             this.resetNum = tree.init.resetNum;
             while (this.MSindex < tree.init.MSindex) this.toNext(true, 100);
+            console.log(`addTree this.MS = [${this.MS}]\n[${this.MS.slice(0, this.MSindex + 1)}]`)
         }
     };
 
 
 
     CheckerBoard.prototype.mergeTree = function(tree) {
-        this.tree = this.tree || new RenjuTree();
-        this.tree.mergeTree(tree);
+        if (this.tree && tree.init) {
+            let targetPath = this.MS.slice(0, this.MSindex + 1),
+                branchRootPath = tree.init.MS.slice(0, tree.init.MSindex + 1);
+                
+            tree.init.MS = targetPath.concat(tree.init.MS.slice(tree.init.MSindex + 1));
+            tree.init.MSindex = this.MSindex;
+            tree.init.resetNum = targetPath.length;
+            //console.log(`targetPath: [${targetPath}] len: ${targetPath.length}\n branchRootPath: [${branchRootPath}] len: ${branchRootPath.length}`)
+            let target = this.tree.createPath(targetPath),
+                branchRoot = tree.createPath(branchRootPath);
+                
+            target.comment = branchRoot.comment + target.comment;
+            if ((targetPath.length & 1) == (branchRootPath.length & 1)) {
+                this.tree.insertBranch(target, branchRoot);
+                //console.log(`insertBranch(target, branchRoot)`)
+            }
+            else {
+                let passNode = branchRoot.getChild(225);
+                if (passNode) {
+                    this.tree.insertBranch(target,passNode);
+                    branchRoot.removeChild(passNode);
+                    //console.log(`insertBranch(target, passNode)`)
+                }
+                passNode = this.tree.createPath(targetPath.concat([225]));
+                this.tree.insertBranch(passNode, branchRoot);
+                //console.log(`insertBranch(passNode, branchRoot)`)
+            }
+        }
+        else {
+            this.tree = this.tree || new RenjuTree();
+            this.tree.mergeTree(tree);
+        }
         this.tree.init = tree.init;
         console.log(`mergeTree tree.init.MS = ${tree.init.MS}`)
         this.addTree(this.tree);
@@ -1271,8 +1301,11 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2015.05";
 
 
 
-    CheckerBoard.prototype.cleSearchPoint = function() {
-        for (let i = this.searchPoints.length - 1; i >= 0; i--) {
+    CheckerBoard.prototype.cleSearchPoint = function(num) {
+        if (num >= 0 && num < this.searchPoints.length) {
+            this.printSearchPoint(num);
+        }
+        else for (let i = this.searchPoints.length - 1; i >= 0; i--) {
             this.printSearchPoint(i);
         }
     }

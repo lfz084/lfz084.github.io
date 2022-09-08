@@ -7,14 +7,14 @@ const UINT _ONE_KB = 1024;
 const UINT _PAGE_SIZE = 1024*64; //64K
 const UINT _IO_BUFFER_SIZE = _PAGE_SIZE;
 
-const char FIND_ALL = 0;
-const char ONLY_FREE = 1; // 只找活3，活4
-const char ONLY_NOFREE = 2; // 只找眠3，眠4
-const char ONLY_VCF = 1; // 只找做VCF点
-const char ONLY_SIMPLE_WIN = 2; // 只找43级别做杀点
+const BYTE FIND_ALL = 0;
+const BYTE ONLY_FREE = 1; // 只找活3，活4
+const BYTE ONLY_NOFREE = 2; // 只找眠3，眠4
+const BYTE ONLY_VCF = 1; // 只找做VCF点
+const BYTE ONLY_SIMPLE_WIN = 2; // 只找43级别做杀点
 
-const char GOMOKU_RULES = 1; //无禁
-const char RENJU_RULES = 2; //有禁
+const BYTE GOMOKU_RULES = 1; //无禁
+const BYTE RENJU_RULES = 2; //有禁
 
 //---------------- color --------------------
 
@@ -24,44 +24,51 @@ const char INVERT_COLOR[3] = {0, 2, 1}; //利用数组反转棋子颜色
 
 //---------------- level --------------------
 
-const char LEVEL_WIN = 10;
-const char LEVEL_FREEFOUR = 9;
-const char LEVEL_NOFREEFOUR = 8;
-const char LEVEL_DOUBLEFREETHREE = 7;
-const char LEVEL_DOUBLEVCF = LEVEL_DOUBLEFREETHREE;
-const char LEVEL_FREETHREE = 6;
-const char LEVEL_VCF = LEVEL_FREETHREE;
-const char LEVEL_VCT = 4;
-const char LEVEL_NONE = 0;
+const BYTE LEVEL_MARK_FREEFOUR = 0x80;
+const BYTE LEVEL_MARK_LINE_DOUBLEFOUR = 0x40;
+const BYTE LEVEL_MARK_MULTILINE_DOUBLEFOUR = 0x20;
+const BYTE LEVEL_WIN = 10;
+const BYTE LEVEL_FREEFOUR = 9;
+const BYTE LEVEL_NOFREEFOUR = 8;
+const BYTE LEVEL_DOUBLEFREETHREE = 7;
+const BYTE LEVEL_DOUBLEVCF = LEVEL_DOUBLEFREETHREE;
+const BYTE LEVEL_FREETHREE = 6;
+const BYTE LEVEL_VCF = LEVEL_FREETHREE;
+const BYTE LEVEL_VCT = 4;
+const BYTE LEVEL_NONE = 0;
+const BYTE LEVEL_TRUE_FREEFOUR = LEVEL_MARK_FREEFOUR | LEVEL_FREEFOUR;
+const BYTE LEVEL_LINE_DOUBLEFOUR = LEVEL_MARK_LINE_DOUBLEFOUR | LEVEL_FREEFOUR;
+const BYTE LEVEL_MULTILINE_DOUBLEFOUR = LEVEL_MARK_MULTILINE_DOUBLEFOUR | LEVEL_FREEFOUR;
+const BYTE LEVEL_CATCHFOUL = 0 | LEVEL_FREEFOUR;
 
 //--------------- lineInfo ------------------
 
-const short FREE = 1; //0b00000001
-const short MAX = 14; //0b00001110
-const short MAX_FREE = 15; //0b00001111
-const short FOUL = 16; //0b00010000
-const short FOUL_FREE = 17; //0b00010001
-const short FOUL_MAX = 30; //0b00011110
-const short FOUL_MAX_FREE = 31; //0b00011111
-const short MARK_MOVE = 224; //0b11100000
-const short FREE_COUNT = 0x0700; //0b00000111 00000000
-const short ADD_FREE_COUNT = 0x800; //0b00001000 00000000
-const short MAX_COUNT = 0x7000; //0b01110000 00000000
-const short DIRECTION = 0x7000; //0b01110000 00000000
-const short ADD_MAX_COUNT = 0x8000; //0b10000000 00000000
-const short ZERO = 0;
-const short ONE_FREE = 3;
-const short ONE_NOFREE = 2;
-const short TWO_FREE = 5;
-const short TWO_NOFREE = 4;
-const short THREE_FREE = 7;
-const short THREE_NOFREE = 6;
-const short FOUR_FREE = 9;
-const short FOUR_NOFREE = 8;
-const short LINE_DOUBLE_FOUR = 24;
-const short FIVE = 10;
-const short SIX = 28;
-const short SHORT = 14; //空间不够
+const DWORD FREE = 1; //0b00000001
+const DWORD MAX = 14; //0b00001110
+const DWORD MAX_FREE = 15; //0b00001111
+const DWORD FOUL = 16; //0b00010000
+const DWORD FOUL_FREE = 17; //0b00010001
+const DWORD FOUL_MAX = 30; //0b00011110
+const DWORD FOUL_MAX_FREE = 31; //0b00011111
+const DWORD MARK_MOVE = 224; //0b11100000
+const DWORD FREE_COUNT = 0x0700; //0b00000111 00000000
+const DWORD ADD_FREE_COUNT = 0x800; //0b00001000 00000000
+const DWORD MAX_COUNT = 0x7000; //0b01110000 00000000
+const DWORD DIRECTION = 0x7000; //0b01110000 00000000
+const DWORD ADD_MAX_COUNT = 0x8000; //0b10000000 00000000
+const DWORD ZERO = 0;
+const DWORD ONE_FREE = 3;
+const DWORD ONE_NOFREE = 2;
+const DWORD TWO_FREE = 5;
+const DWORD TWO_NOFREE = 4;
+const DWORD THREE_FREE = 7;
+const DWORD THREE_NOFREE = 6;
+const DWORD FOUR_FREE = 9;
+const DWORD FOUR_NOFREE = 8;
+const DWORD LINE_DOUBLE_FOUR = 24;
+const DWORD FIVE = 10;
+const DWORD SIX = 28;
+const DWORD SHORT = 14; //空间不够
 
 
 //  --------------------------  --------------------------
@@ -1805,6 +1812,60 @@ DWORD getLevel(char* arr, char color) {
     }
 }
 
+// idx 不能是禁手
+DWORD getLevelPoint(BYTE idx, char color, char* arr) {
+    DWORD info = 0,
+        rt = LEVEL_NONE,
+        mark = 0;
+    BYTE fourCount = 0,
+        level = 0;
+    char ov = arr[idx];
+                
+    arr[idx] = color;
+    for (BYTE direction = 0; direction < 4; direction++) {
+        DWORD lineInfo = testLineFour(idx, direction, color, arr);
+        switch (lineInfo & FOUL_MAX_FREE) {
+            case FIVE:
+                level = LEVEL_WIN;
+                direction = 5;
+                break;
+            case FOUR_FREE:
+                if (mark < LEVEL_MARK_FREEFOUR) mark = LEVEL_MARK_FREEFOUR;
+                fourCount += 2;
+                info = lineInfo;
+                break;
+            case LINE_DOUBLE_FOUR:
+                if (mark < LEVEL_MARK_LINE_DOUBLEFOUR) mark = LEVEL_MARK_LINE_DOUBLEFOUR;
+                fourCount += 2;
+                info = lineInfo;
+                break;
+            case FOUR_NOFREE:
+                fourCount += 1;
+                info = lineInfo;
+                break;
+        }
+    }
+            
+    if (level) {
+        rt = LEVEL_WIN;
+    }
+    else if (fourCount) {
+        BYTE bIdx = getBlockFourPoint(idx, arr, info);
+        level = LEVEL_NOFREEFOUR;
+        if (fourCount > 1) {
+            if (mark < LEVEL_MARK_MULTILINE_DOUBLEFOUR) mark = LEVEL_MARK_MULTILINE_DOUBLEFOUR;
+            level = LEVEL_FREEFOUR;
+        }
+        else if (fourCount == 1 && gameRules == RENJU_RULES && color == 2) {
+            if (isFoul(bIdx, arr)) level = LEVEL_FREEFOUR;
+        }
+        rt = (bIdx << 8) | mark | level;
+    }
+    arr[idx] = ov;
+            
+    return rt;
+}
+
 //--------------------- vcf ------------------------
 /*
 const UINT VCF_HASHTABLE_LEN = 5880420 + 6400000 + 116000000; //((135+224)*45)*91*4 + 80*80000 + 232*500000
@@ -1961,9 +2022,9 @@ bool isVCF(char color, char* arr, BYTE* moves, BYTE movesLen) {
     BYTE isvcfValuesLen = 0;
 
     for (DWORD i = 0; i < movesLen; i += 2) {
-        DWORD levelInfo = getLevel(arr, INVERT_COLOR[color]);
+        DWORD levelInfo = i ? getLevelPoint(moves[i - 1], INVERT_COLOR[color], arr) : getLevel(arr, INVERT_COLOR[color]);
         BYTE bIdx = (levelInfo >> 8) & 0xff,
-            level = levelInfo & 0xff;
+            level = levelInfo & FOUL_MAX_FREE;
         if ((level < LEVEL_NOFREEFOUR && arr[moves[i]] == 0) ||
             (level == LEVEL_NOFREEFOUR && bIdx == moves[i])) {
             DWORD info = testPointFour(moves[i], color, arr);
@@ -1972,7 +2033,7 @@ bool isVCF(char color, char* arr, BYTE* moves, BYTE movesLen) {
                 arr[moves[i]] = color;
                 if (i + 1 >= movesLen) {
                     //所有手走完，判断是否出现胜形 (活4，44，冲4抓)
-                    isV = LEVEL_FREEFOUR == (0xff & getLevel(arr, color));
+                    isV = LEVEL_FREEFOUR == (FOUL_MAX_FREE & getLevelPoint(moves[i], color, arr));
                     break;
                 }
                 //后手不判断禁手
@@ -2353,41 +2414,31 @@ void getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool i
                 for (BYTE i = 0; i < fInfoIdx; i++) {
                     BYTE direction = (blockFLineInfos[i] >> 12) & 0x07,
                         bIdx = getBlockFourPoint(foulIdx, arr, blockFLineInfos[i]),
-                        isLineFF = LINE_DOUBLE_FOUR == (blockFLineInfos[i] & FOUL_MAX_FREE),
-                        st;
+                        isLineFF = LINE_DOUBLE_FOUR == (blockFLineInfos[i] & FOUL_MAX_FREE);
+                    char st;
                     if (!isLineFF) arr[bIdx] = 1;
-                    st = isLineFF ? -1 : 0;
-                    for (char move = 1; move <= 5; move++) {
-                        BYTE idx = moveIdx(foulIdx, -move, direction);
-                        switch (arr[idx]) {
-                            case 0:
-                                st++;
-                                if (st) {
-                                    blockArr[idx] = 1;
+                    for (char abs = -1; abs < 2; abs += 2) {
+                        st = isLineFF ? -1 : 0;
+                        for (char move = 1; move <= 5; move++) {
+                            BYTE idx = moveIdx(foulIdx, move * abs, direction);
+                            switch (arr[idx]) {
+                                case 0:
+                                    st++;
+                                    if (st) {
+                                        char ov = arr[bIdx];
+                                        arr[bIdx] = 0;
+                                        arr[idx] = 1;
+                                        !isFoul(foulIdx, arr) && (blockArr[idx] = 1);
+                                        arr[idx] = 0;
+                                        arr[bIdx] = ov;
+                                        move = 6;
+                                    }
+                                    break;
+                                case -1:
+                                case 2:
                                     move = 6;
-                                }
-                                break;
-                            case -1:
-                            case 2:
-                                move = 6;
-                                break;
-                        }
-                    }
-                    st = isLineFF ? -1 : 0;
-                    for (char move = 1; move <= 5; move++) {
-                        BYTE idx = moveIdx(foulIdx, move, direction);
-                        switch (arr[idx]) {
-                            case 0:
-                                st++;
-                                if (st) {
-                                    blockArr[idx] = 1;
-                                    move = 6;
-                                }
-                                break;
-                            case -1:
-                            case 2:
-                                move = 6;
-                                break;
+                                    break;
+                            }
                         }
                     }
                     arr[bIdx] = 0;
@@ -2397,20 +2448,14 @@ void getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool i
         else if (fourCount == 2) {
             if (infoIdx == 1) { // 找活4，单线44防点
                 BYTE direction = (blockLineInfos[0] >> 12) & 0x07;
-                for (char move = 1; move <= 4; move++) {
-                    BYTE idx = moveIdx(endIdx, -move, direction);
-                    if (0 == arr[idx]) {
-                        blockArr[idx] = 1;
-                        tempBlockPoints[0] = idx;
-                        break;
-                    }
-                }
-                for (char move = 1; move <= 4; move++) {
-                    BYTE idx = moveIdx(endIdx, move, direction);
-                    if (0 == arr[idx]) {
-                        blockArr[idx] = 1;
-                        tempBlockPoints[1] = idx;
-                        break;
+                for (char abs = -1; abs < 2; abs += 2) {
+                    for (char move = 1; move <= 4; move++) {
+                        BYTE idx = moveIdx(endIdx, move * abs, direction);
+                        if (0 == arr[idx]) {
+                            blockArr[idx] = 1;
+                            tempBlockPoints[(abs + 1) / 2] = idx;
+                            break;
+                        }
                     }
                 }
                 

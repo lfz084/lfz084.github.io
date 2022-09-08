@@ -17,6 +17,9 @@ const WHITE_COLOR = 2;
 const INVERT_COLOR = [0, 2, 1]; //利用数组反转棋子颜色
 
 //---------------- level --------------------
+const LEVEL_MARK_FREEFOUR = 0x80;
+const LEVEL_MARK_LINE_DOUBLEFOUR = 0x40;
+const LEVEL_MARK_MULTILINE_DOUBLEFOUR = 0x20;
 const LEVEL = 0x0f;
 const LEVEL_WIN = 10;
 const LEVEL_FREEFOUR = 9;
@@ -27,6 +30,10 @@ const LEVEL_FREETHREE = 6;
 const LEVEL_VCF = LEVEL_FREETHREE;
 const LEVEL_VCT = 4;
 const LEVEL_NONE = 0;
+const LEVEL_TRUE_FREEFOUR = LEVEL_MARK_FREEFOUR | LEVEL_FREEFOUR;
+const LEVEL_LINE_DOUBLEFOUR = LEVEL_MARK_LINE_DOUBLEFOUR | LEVEL_FREEFOUR;
+const LEVEL_MULTILINE_DOUBLEFOUR = LEVEL_MARK_MULTILINE_DOUBLEFOUR | LEVEL_FREEFOUR;
+const LEVEL_CATCHFOUL = 0 | LEVEL_FREEFOUR;
 
 //--------------- lineInfo ------------------
 
@@ -588,6 +595,30 @@ function aroundPoint(arr, color, radius = 3, ctnInfo = [new Array(225), new Arra
 function selectPoints(arr, color, radius = 3, maxVCF = 1, maxDepth = 10, maxNode = 100000) {
     let ctnArr = continueFour(arr, color, maxVCF, maxDepth, maxNode);
     return aroundPoint(arr, color, radius, ctnArr);
+}
+
+function selectPointsLevel(arr, color, radius = 3, maxVCF = 1, maxDepth = 10, maxNode = 100000, nMaxDepth) {
+    let info = getLevelB(arr, INVERT_COLOR[color], maxVCF, nMaxDepth || maxDepth, maxNode),
+        idx = info >> 8 & 0xff,
+        level = info & FOUL_MAX,
+        rtArr = new Array(225);
+    switch (level) {
+        case LEVEL_WIN:
+            break;
+        case LEVEL_NOFREEFOUR:
+            rtArr[idx] = 1;
+            break;
+        case LEVEL_VCF:
+            let winMoves = levelBInfo.winMoves;
+            if (winMoves.length) {
+                let points = getBlockVCF(arr, INVERT_COLOR[color], winMoves, true);
+                points.map(idx => rtArr[idx] = 1)
+            }
+            break;
+        default :
+            rtArr = selectPoints(arr, color, radius, maxVCF, maxDepth, maxNode)
+    }
+    return rtArr;
 }
 
 function resetLevelBInfo() {

@@ -25,33 +25,45 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["worker"] = "v2015.05";
         },
         getLevelB: function({arr, color, maxVCF, maxDepth, maxNode}) {
             getLevelB(arr, color, maxVCF, maxDepth, maxNode);
-            post({ cmd: "levelBInfo", param: { levelBInfo: levelBInfo } });
-            post(MSG_RESOLVE);
+            //post({ cmd: "levelBInfo", param: { levelBInfo: levelBInfo } });
+            //post(MSG_RESOLVE);
+            post({cmd: "resolve", param: levelBInfo})
         },
         findVCF: function({ arr, color, maxVCF, maxDepth, maxNode }) {
             findVCF(arr, color, maxVCF, maxDepth, maxNode);
-            post({cmd: "vcfInfo", param: {vcfInfo: vcfInfo}});
-            post(MSG_RESOLVE);
+            //post({cmd: "vcfInfo", param: {vcfInfo: vcfInfo}});
+            //post(MSG_RESOLVE);
+            post({cmd: "resolve", param: vcfInfo})
         },
         getBlockVCF: function({arr, color, vcfMoves, includeFour}) {
             let points = getBlockVCF(arr, color, vcfMoves, includeFour);
-            post({ cmd: "points", param: { points: points } });
-            post(MSG_RESOLVE);
+            //post({ cmd: "points", param: { points: points } });
+            //post(MSG_RESOLVE);
+            post({cmd: "resolve", param: points})
         },
-        selectPoints: function({arr, color, radius, maxVCF, maxDepth, maxNode }) {
+        selectPoints: function({ arr, color, radius, maxVCF, maxDepth, maxNode}) {
             let selectArr = selectPoints(arr, color, radius, maxVCF, maxDepth, maxNode);
-            post({ cmd: "selectPoints", param: { selectArr: selectArr } });
-            post(MSG_RESOLVE);
+            //post({ cmd: "selectPoints", param: { selectArr: selectArr } });
+            //post(MSG_RESOLVE);
+            post({cmd: "resolve", param: selectArr})
+        },
+        selectPointsLevel: function({ arr, color, radius, maxVCF, maxDepth, maxNode, nMaxDepth}) {
+            let selectArr = selectPointsLevel(arr, color, radius, maxVCF, maxDepth, maxNode, nMaxDepth);
+            //post({ cmd: "selectPointsLevel", param: { selectArr: selectArr } });
+            //post(MSG_RESOLVE);
+            post({cmd: "resolve", param: selectArr})
         },
         excludeBlockVCF: function({points, arr, color, maxVCF, maxDepth, maxNode}) {
             let ps = excludeBlockVCF(points, arr, color, maxVCF, maxDepth, maxNode);
-            post({ cmd: "points", param: { points: ps } });
-            post(MSG_RESOLVE);
+            //post({ cmd: "points", param: { points: ps } });
+            //post(MSG_RESOLVE);
+            post({cmd: "resolve", param: ps})
         },
         getBlockPoints: function({arr, color, radius, maxVCF, maxDepth, maxNode}) {
             let ps = getBlockPoints(arr, color, radius, maxVCF, maxDepth, maxNode);
-            post({ cmd: "points", param: { points: ps } });
-            post(MSG_RESOLVE);
+            //post({ cmd: "points", param: { points: ps } });
+            //post(MSG_RESOLVE);
+            post({cmd: "resolve", param: ps})
         }
     };
 

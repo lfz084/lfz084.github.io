@@ -1611,6 +1611,60 @@ function loadEvaluatorJScript() {
                     return (fiveIdx << 8) | LEVEL_NOFREEFOUR;
             }
         }
+        
+        // idx 不能是禁手
+        function getLevelPoint(idx, color, arr) {
+            let info = 0,
+                fourCount = 0,
+                mark = 0,
+                level = 0,
+                rt = LEVEL_NONE,
+                ov = arr[idx];
+                
+            arr[idx] = color;
+            for (let direction = 0; direction < 4; direction++) {
+                let lineInfo = _testLineFour(idx, direction, color, arr);
+                switch (lineInfo & FOUL_MAX_FREE) {
+                    case FIVE:
+                        level = LEVEL_WIN;
+                        direction = 5;
+                        break;
+                    case FOUR_FREE:
+                        if (mark < LEVEL_MARK_FREEFOUR) mark = LEVEL_MARK_FREEFOUR;
+                        fourCount += 2;
+                        info = lineInfo;
+                        break;
+                    case LINE_DOUBLE_FOUR:
+                        if (mark < LEVEL_MARK_LINE_DOUBLEFOUR) mark = LEVEL_MARK_LINE_DOUBLEFOUR;
+                        fourCount += 2;
+                        info = lineInfo;
+                        break;
+                    case FOUR_NOFREE:
+                        fourCount += 1;
+                        info = lineInfo;
+                        break;
+                }
+            }
+            
+            if (level) {
+                rt = LEVEL_WIN;
+            }
+            else if (fourCount) {
+                let bIdx = getBlockFourPoint(idx, arr, info);
+                level = LEVEL_NOFREEFOUR;
+                if (fourCount > 1) {
+                    if (mark < LEVEL_MARK_MULTILINE_DOUBLEFOUR) mark = LEVEL_MARK_MULTILINE_DOUBLEFOUR;
+                    level = LEVEL_FREEFOUR;
+                }
+                else if (fourCount == 1 && gameRules == RENJU_RULES && color == 2) {
+                    if (isFoul(bIdx, arr)) level = LEVEL_FREEFOUR;
+                }
+                rt = (bIdx << 8) | mark | level;
+            }
+            arr[idx] = ov;
+            
+            return rt;
+        }
 
         // moves.length 为单数
         function isVCF(color, arr, moves) {
@@ -1620,9 +1674,9 @@ function loadEvaluatorJScript() {
             let l = moves.length;
 
             for (let i = 0; i < l; i += 2) {
-                let levelInfo = getLevel(arr, INVERT_COLOR[color]),
+                let levelInfo = i ? getLevelPoint(moves[i - 1], INVERT_COLOR[color], arr): getLevel(arr, INVERT_COLOR[color]),
                     bIdx = (levelInfo >>> 8) & 0xff,
-                    level = levelInfo & 0xff;
+                    level = levelInfo & FOUL_MAX_FREE;
                 if ((level < LEVEL_NOFREEFOUR && arr[moves[i]] == 0) ||
                     (level == LEVEL_NOFREEFOUR && bIdx == moves[i])) {
                     let info = testPointFour(moves[i], color, arr);
@@ -1631,7 +1685,7 @@ function loadEvaluatorJScript() {
                         arr[moves[i]] = color;
                         if (i + 1 >= l) {
                             //所有手走完，判断是否出现胜形 (活4，44，冲4抓)
-                            isV = LEVEL_FREEFOUR == (0xff & getLevel(arr, color));
+                            isV = LEVEL_FREEFOUR == (FOUL_MAX_FREE & getLevelPoint(moves[i], color, arr));
                             break;
                         }
                         //后手不判断禁手
@@ -1748,11 +1802,11 @@ function loadEvaluatorJScript() {
                         if (moves.length < maxDepth) {
                             //console.log(`[${movesToName(moves, 500)}]`);
                             testFour(arr, color, infoArr);
-                            let nLevel = getLevel(arr, INVERT_COLOR[color]);
+                            let nLevel = moves.length ? getLevelPoint(moves[moves.length - 1], INVERT_COLOR[color], arr) : getLevel(arr, INVERT_COLOR[color]);
                             //post("vConsole", `nLevel: ${nLevel}`);
-                            if ((nLevel & 0xff) <= LEVEL_NOFREEFOUR) {
+                            if ((nLevel & FOUL_MAX_FREE) <= LEVEL_NOFREEFOUR) {
                                 let end;
-                                if ((nLevel & 0xff) == LEVEL_NOFREEFOUR) {
+                                if ((nLevel & FOUL_MAX_FREE) == LEVEL_NOFREEFOUR) {
                                     end = 1;
                                     centerIdx = nLevel >>> 8;
                                 }
@@ -1760,7 +1814,8 @@ function loadEvaluatorJScript() {
                                     end = 225;
                                 }
 
-                                let twoPoints = [],
+                                let winInfo = 0,
+                                    twoPoints = [],
                                     threePoints = [],
                                     elsePoints = [],
                                     fourPoints = [],
@@ -1769,36 +1824,38 @@ function loadEvaluatorJScript() {
                                 for (let i = end - 1; i >= 0; i--) {
                                     let idx = aroundIdx(centerIdx, i),
                                         max = infoArr[idx] & FOUL_MAX;
-                                    if (max == FOUR_NOFREE) {
-
+                                    if (max == FOUR_NOFREE) {  //freeFour win
                                         arr[idx] = color;
-                                        let level = getLevel(arr, color);
+                                        let levelInfo = getLevelPoint(idx, color, arr),
+                                            level = levelInfo & 0xff;
                                         arr[idx] = 0;
-
-                                        if ((level & 0xff) == LEVEL_FREEFOUR) { //
-                                            //pueh VCF
-                                            //msg(`[${moves.concat(idx)}]`, "input");
-                                            let wMoves = moves.concat(idx);
-                                            simpleVCF(color, vcfInfo.initArr, wMoves);
-                                            pushWinMoves(vcfWinMoves, wMoves);
-                                            //console.warn(`[${movesToName(moves.concat(idx), 900)}]`);
-                                            isConcat = false;
-                                            vcfInfo.vcfCount++;
-                                            "post" in self && post({ cmd: "vcfInfo", param: { vcfInfo: vcfInfo } });
-                                            transTablePush(vcfHashTable, moves.length, sum, moves, arr);
-                                            if (vcfInfo.vcfCount == maxVCF) {
-                                                for (let j = moves.length - 1; j >= 0; j--) {
-                                                    stackIdx.push(-1);
-                                                }
-                                                stackIdx.push(-1, -1);
-                                                break;
-                                            }
+                                        if (level >= LEVEL_CATCHFOUL) { //
+                                            if ((winInfo & 0xff) < level) winInfo = idx << 8 | level;
+                                            //post({cmd: "log", param: `winInfo: [${idxToName(idx)}], level: ${level}`})
                                         }
                                         else {
-                                            fourPoints.push(idx, level >>> 8);
+                                            fourPoints.push(idx, levelInfo >> 8);
                                         }
                                     }
                                 }
+                                
+                                if (winInfo) {
+                                    let idx = winInfo >> 8 & 0xff,
+                                        wMoves = moves.concat(idx);
+                                    simpleVCF(color, vcfInfo.initArr, wMoves);
+                                    pushWinMoves(vcfWinMoves, wMoves);
+                                    isConcat = false;
+                                    vcfInfo.vcfCount++;
+                                    maxVCF > 1 && "post" in self && post({ cmd: "vcfInfo", param: { vcfInfo: vcfInfo } });
+                                    transTablePush(vcfHashTable, moves.length, sum, moves, arr);
+                                    if (vcfInfo.vcfCount == maxVCF) {
+                                        for (let j = moves.length - 1; j >= 0; j--) {
+                                            stackIdx.push(-1);
+                                        }
+                                        stackIdx.push(-1, -1);
+                                    }
+                                }
+                                
                                 if (isConcat) {
                                     let fpLen = fourPoints.length;
                                     for (let i = 0; i < fpLen; i += 2) {
@@ -1979,62 +2036,47 @@ function loadEvaluatorJScript() {
                                 isLineFF = LINE_DOUBLE_FOUR == (fLineInfoList[i] & FOUL_MAX_FREE),
                                 st;
                             !isLineFF && (arr[bIdx] = 1);
-                            st = isLineFF ? -1 : 0;
-                            for (let move = -1; move >= -5; move--) {
-                                let idx = moveIdx(foulIdx, move, direction);
-                                switch (arr[idx]) {
-                                    case 0:
-                                        st++;
-                                        if (st) {
-                                            blockArr[idx] = 1;
-                                            move = -6;
-                                        }
-                                        break;
-                                    case -1:
-                                    case 2:
-                                        move = -6;
-                                        break;
-                                }
-                            }
-                            st = isLineFF ? -1 : 0;
-                            for (let move = 1; move <= 5; move++) {
-                                let idx = moveIdx(foulIdx, move, direction);
-                                switch (arr[idx]) {
-                                    case 0:
-                                        st++;
-                                        if (st) {
-                                            blockArr[idx] = 1;
+                            for (let abs = -1; abs < 2; abs += 2) {
+                                st = isLineFF ? -1 : 0;
+                                for (let move = 1; move <= 5; move++) {
+                                    let idx = moveIdx(foulIdx, move * abs, direction);
+                                    switch (arr[idx]) {
+                                        case 0:
+                                            st++;
+                                            if (st) {
+                                                let ov = arr[bIdx];
+                                                arr[bIdx] = 0;
+                                                arr[idx] = 1;
+                                                !isFoul(foulIdx, arr) && (blockArr[idx] = 1);
+                                                arr[idx] = 0;
+                                                arr[bIdx] = ov;
+                                                move = 6;
+                                            }
+                                            break;
+                                        case -1:
+                                        case 2:
                                             move = 6;
-                                        }
-                                        break;
-                                    case -1:
-                                    case 2:
-                                        move = 6;
-                                        break;
+                                            break;
+                                    }
                                 }
                             }
                             arr[bIdx] = 0;
                         }
                     }
+                    //alert(`1_${movesToName(blockArr.map((v,idx)=>v && idx).filter(v => v))}`)
                 }
                 else if (fourCount == 2) {
                     if (infoIdx == 1) { // 找活4，单线44防点
                         let direction = (lineInfoList[0] >>> 12) & 0x07,
                             bPoints = new Array(2);
-                        for (let move = -1; move >= -4; move--) {
-                            let idx = moveIdx(endIdx, move, direction);
-                            if (0 == arr[idx]) {
-                                blockArr[idx] = 1;
-                                bPoints[0] = idx;
-                                break;
-                            }
-                        }
-                        for (let move = 1; move <= 4; move++) {
-                            let idx = moveIdx(endIdx, move, direction);
-                            if (0 == arr[idx]) {
-                                blockArr[idx] = 1;
-                                bPoints[1] = idx;
-                                break;
+                        for (let abs = -1; abs < 2; abs += 2) {
+                            for (let move = 1; move <= 4; move++) {
+                                let idx = moveIdx(endIdx, move * abs, direction);
+                                if (0 == arr[idx]) {
+                                    blockArr[idx] = 1;
+                                    bPoints[(abs + 1) / 2] = idx;
+                                    break;
+                                }
                             }
                         }
                         
@@ -2082,6 +2124,8 @@ function loadEvaluatorJScript() {
                     arr[vcfMoves[--end]] = 0;
                     blockArr[vcfMoves[end]] = 1;
                 }
+                
+                //alert(`2_${movesToName(blockArr.map((v,idx)=>v && idx).filter(v => v))}`)
 
                 for (let i = 0; i < 225; i++) {
                     if (FOUR_NOFREE == (FOUL_MAX & infoArr[i])) {
@@ -2092,6 +2136,8 @@ function loadEvaluatorJScript() {
                         blockPoints.push(i);
                     }
                 }
+                
+                //alert(`3_${movesToName(blockArr.map((v,idx)=>v && idx).filter(v => v))}`)
             }
             else { // 有33，暴力搜索防点
 
@@ -2139,6 +2185,7 @@ function loadEvaluatorJScript() {
         exports.testFour = testFour;
         exports.testThree = testThree;
         exports.getLevel = getLevel;
+        exports.getLevelPoint = getLevelPoint;
         exports.isVCF = isVCF;
         exports.simpleVCF = simpleVCF;
         exports.findVCF = findVCF;

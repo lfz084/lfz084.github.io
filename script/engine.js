@@ -56,11 +56,12 @@ window.engine = (function() {
                 points: function(param) { this.result = param.points },
                 levelBInfo: function(param) { this.result = param.levelBInfo },
                 selectPoints: function(param) { this.result = param.selectArr },
+                selectPointsLevel: function(param) { this.result = param.selectArr },
             };
 
             function onmessage(e) {
                 if (typeof e.data == "object") {
-                    if (e.data.cmd == "resolve")(this.resolve(this.result), this.isBusy = false, log("resolve", "warn"));
+                    if (e.data.cmd == "resolve")(this.result ||= e.data.param, this.resolve(this.result), this.isBusy = false/*, log("resolve", "warn")*/);
                     else typeof COMMAND[e.data.cmd] == "function" && COMMAND[e.data.cmd].call(this, e.data.param);
                 }
             }
@@ -224,6 +225,8 @@ window.engine = (function() {
             const NEWLINE = String.fromCharCode(10);
             const DEFAULT_BOARD_TXT = ["", "●", "○", "◐"];
             const DIRECTION_NAME = ["→", "↓", "↘", "↗"]; 
+            const BLOCK_MODE = "selectPointsLevel",
+                AROUND_MODE = "selectPoints";
             const SCORE_MAX = 0xFF,
                 SCORE_MIN = 0x00,
                 SCORE_WIN = 0xFE,
@@ -233,24 +236,24 @@ window.engine = (function() {
                 SCORE_REJECT = 0x03;
         
             const FILTER_FOUL_THREE_NODE = {
-                    0: node => (node.info & FOUL) || THREE_NOFREE == (node.info & FOUL_MAX),
-                    1: node => (node.info & FOUL) || THREE_FREE == (node.info & FOUL_MAX_FREE),
-                    2: node => (node.info & FOUL) || THREE_NOFREE == (node.info & FOUL_MAX_FREE)
+                    0: node => (node.lineInfo & FOUL) || THREE_NOFREE == (node.lineInfo & FOUL_MAX),
+                    1: node => (node.lineInfo & FOUL) || THREE_FREE == (node.lineInfo & FOUL_MAX_FREE),
+                    2: node => (node.lineInfo & FOUL) || THREE_NOFREE == (node.lineInfo & FOUL_MAX_FREE)
                 },
                 FILTER_FOUL_FOUR_NODE = {
-                    0: node => (node.info & FOUL) || FOUR_NOFREE == (node.info & FOUL_MAX),
-                    1: node => (node.info & FOUL) || FOUR_FREE == (node.info & FOUL_MAX_FREE),
-                    2: node => (node.info & FOUL) || FOUR_NOFREE == (node.info & FOUL_MAX_FREE)
+                    0: node => (node.lineInfo & FOUL) || FOUR_NOFREE == (node.lineInfo & FOUL_MAX),
+                    1: node => (node.lineInfo & FOUL) || FOUR_FREE == (node.lineInfo & FOUL_MAX_FREE),
+                    2: node => (node.lineInfo & FOUL) || FOUR_NOFREE == (node.lineInfo & FOUL_MAX_FREE)
                 },
                 FILTER_THREE_NODE = {
-                    0: node => THREE_NOFREE == (node.info & FOUL_MAX),
-                    1: node => THREE_FREE == (node.info & FOUL_MAX_FREE),
-                    2: node => THREE_NOFREE == (node.info & FOUL_MAX_FREE)
+                    0: node => THREE_NOFREE == (node.lineInfo & FOUL_MAX),
+                    1: node => THREE_FREE == (node.lineInfo & FOUL_MAX_FREE),
+                    2: node => THREE_NOFREE == (node.lineInfo & FOUL_MAX_FREE)
                 },
                 FILTER_FOUR_NODE = {
-                    0: node => FOUR_NOFREE == (node.info & FOUL_MAX),
-                    1: node => FOUR_FREE == (node.info & FOUL_MAX_FREE),
-                    2: node => FOUR_NOFREE == (node.info & FOUL_MAX_FREE)
+                    0: node => FOUR_NOFREE == (node.lineInfo & FOUL_MAX),
+                    1: node => FOUR_FREE == (node.lineInfo & FOUL_MAX_FREE),
+                    2: node => FOUR_NOFREE == (node.lineInfo & FOUL_MAX_FREE)
                 },
                 FILTER_VCF_NODE = {
                     0: node => true,
@@ -258,16 +261,16 @@ window.engine = (function() {
                     2: node => node.winMoves && node.winMoves.length == 3
                 },
                 FILTER_THREE = {
-                    0: (info, idx) => THREE_NOFREE == (info & FOUL_MAX) ? idx : undefined,
-                    1: (info, idx) => THREE_FREE == (info & FOUL_MAX_FREE) ? idx : undefined,
-                    2: (info, idx) => THREE_NOFREE == (info & FOUL_MAX_FREE) ? idx : undefined
+                    0: (lineInfo, idx) => THREE_NOFREE == (lineInfo & FOUL_MAX) ? idx : undefined,
+                    1: (lineInfo, idx) => THREE_FREE == (lineInfo & FOUL_MAX_FREE) ? idx : undefined,
+                    2: (lineInfo, idx) => THREE_NOFREE == (lineInfo & FOUL_MAX_FREE) ? idx : undefined
                 },
                 FILTER_FOUR = {
-                    0: (info, idx) => FOUR_NOFREE == (info & FOUL_MAX) ? idx : undefined,
-                    1: (info, idx) => FOUR_FREE == (info & FOUL_MAX_FREE) ? idx : undefined,
-                    2: (info, idx) => FOUR_NOFREE == (info & FOUL_MAX_FREE) ? idx : undefined
+                    0: (lineInfo, idx) => FOUR_NOFREE == (lineInfo & FOUL_MAX) ? idx : undefined,
+                    1: (lineInfo, idx) => FOUR_FREE == (lineInfo & FOUL_MAX_FREE) ? idx : undefined,
+                    2: (lineInfo, idx) => FOUR_NOFREE == (lineInfo & FOUL_MAX_FREE) ? idx : undefined
                 },
-                FILTER_FIVE_NODE = node => FIVE == (node.info & FOUL_MAX_FREE);
+                FILTER_FIVE_NODE = node => FIVE == (node.lineInfo & FOUL_MAX_FREE);
                 
 
             const LEVEL_THREE_POINTS_TXT = new Array(225);
@@ -326,7 +329,7 @@ window.engine = (function() {
 
             //return first Node || undefined
             function hasPosition(path, tree) {
-                let node = tree.getPositionNodes(path, 0, 1)[0];
+                let node = tree.getPositionNodes(path, 7, 1)[0];
                 return node;
             }
 
@@ -340,6 +343,19 @@ window.engine = (function() {
                 }
                 initMoves[initMoves.length - 1] == 225 && initMoves.pop();
                 return initMoves;
+            }
+            
+            function filterBlockPoints(bPoints, color, arr) {
+                let infoArr = new Array(226),
+                    fourPoints = [],
+                    elsePoints = [];
+                testFour(arr, color, infoArr);
+                for (let i = bPoints.length - 1; i >= 0; i--) {
+                    let idx = bPoints[i];
+                    if (FOUR_NOFREE == (FOUL_MAX & infoArr[idx])) fourPoints.push(idx);
+                    else elsePoints.push(idx);
+                }
+                return {fourPoints: fourPoints, elsePoints: elsePoints}
             }
 
             //param: {arr, ?color}
@@ -376,27 +392,27 @@ window.engine = (function() {
             }
 
             //return array[node1,node2,node3...], 
-            // node: {idx: idx, boardText: string, info: info}
+            // node: {idx: idx, boardText: string, lineInfo: info}
             function infoArrToNodes(infoArr) {
                 return infoArr.map((info, idx) => {
                     let isFoul = info & FOUL,
                         isFree = info & FREE,
                         foul_max_free = info & FOUL_MAX_FREE;
                     if (isFoul) {
-                        return { idx: idx, boardText: EMOJI_FOUL, info: info }
+                        return { idx: idx, boardText: EMOJI_FOUL, lineInfo: info }
                     }
                     else {
                         switch (foul_max_free) {
                             case FIVE:
-                                return { idx: idx, boardText: EMOJI_ROUND_FIVE, info: info }
+                                return { idx: idx, boardText: EMOJI_ROUND_FIVE, lineInfo: info }
                                 case FOUR_FREE:
-                                    return { idx: idx, boardText: EMOJI_ROUND_FOUR, info: info }
+                                    return { idx: idx, boardText: EMOJI_ROUND_FOUR, lineInfo: info }
                                     case FOUR_NOFREE:
-                                        return { idx: idx, boardText: "4", info: info }
+                                        return { idx: idx, boardText: "4", lineInfo: info }
                                         case THREE_FREE:
-                                            return { idx: idx, boardText: EMOJI_ROUND_THREE, info: info }
+                                            return { idx: idx, boardText: EMOJI_ROUND_THREE, lineInfo: info }
                                             case THREE_NOFREE:
-                                                return { idx: idx, boardText: "3", info: info }
+                                                return { idx: idx, boardText: "3", lineInfo: info }
                         }
                     }
                 }).filter(node => !!node)
@@ -412,16 +428,17 @@ window.engine = (function() {
 
             //param: {arr, color, ftype}
             //return array[node1,node2,node3...], 
-            // node: {idx: idx, boardText: string, info: info}
+            // node: {idx: idx, boardText: string, lineInfo: info}
             function getNodesThree(param) {
                 return getNodes(param, FILTER_THREE_NODE[param.ftype])
             }
 
             //param: {arr, color, ftype}
             //return array[node1,node2,node3...], 
-            // node: {idx: idx, boardText: string, info: info}
-            function getNodesFour(param) {
+            // node: {idx: idx, boardText: string, lineInfo: info}
+            function getNodesFour(param, filterArr = new Array(225).fill(1)) {
                 return getNodes(param, FILTER_FOUR_NODE[param.ftype])
+                    .filter(node => filterArr[node.idx])
             }
 
             //param: {arr, color}
@@ -467,39 +484,52 @@ window.engine = (function() {
                 if (winMoves.length) return { idx: idx, lineInfo: lineInfo, winMoves: winMoves };
             }
 
-            //param: {arr, color, maxVCF, maxDepth, maxNode}
+            //param: {arr, color, maxVCF, maxDepth, maxNode, ?nMaxDepth}
             //node: { idx: 0 - 224, lineInfo: Uint16, winMoves: [idx1,idx2,idx3...] }
             //return Promise resolve: nodes[node1,node2,node3...] || []
-            async function getLevelThreeNodes(param) {
+            async function getLevelThreeNodes(param, filterArr) {
                 let infoArr = getTestThreeInfo(param),
-                    sltArr = await _selectPoints(param),
+                    sltArr = filterArr || await _selectPoints(param, BLOCK_MODE),
+                    nodes = [],
                     ps = [];
 
                 for (let idx = 0; idx < 225; idx++) {
                     if (sltArr[idx]) {
                         let thread = await getFreeThread();
                         if (canceling) break;
-                        ps.push(getLevelThreeNode(idx, infoArr[idx], param, thread));
+                        ps.push(getLevelThreeNode(idx, infoArr[idx], param, thread)
+                            .then(node => node && nodes.push(node))
+                        );
+                        if (ps.length >= MAX_THREAD_NUM) {
+                            await Promise.race(ps);
+                            await removeFinallyPromise(ps);
+                        }
                     }
                 }
-                return (await Promise.all(ps) || []).filter(node => !!node);
+                await Promise.all(ps);
+                return nodes;
             }
 
-            //param: {arr, color, radius, maxVCF, maxDepth, maxNode}
+            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode}
             //return Promise resolve: points[idx1,idx2,idx3...] || []
-            async function getLevelThreePoints(param, nextMoves) {
-                let infoArr = getTestThreeInfo(param),
-                    ps = [];
-                for (let i = nextMoves.length - 1; i >= 0; i--) {
-                    let thread = await getFreeThread(),
-                        idx = nextMoves[i];
-                    if (canceling) break;
-                    ps.push(getLevelThreeNode(idx, infoArr[idx], param, thread));
-                }
-                return (await Promise.all(ps) || []).filter(node => !!node).map(node => node.idx);
+            async function getLevelThreePoints(param, filterArr) {
+                return (await getLevelThreeNodes(param, filterArr)).map(node => node.idx);
+            }
+            
+            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ?nMaxDepth}
+            //return Promise resolve: {fourNodes, threeNodes, twoNodes}
+            async function getContinueNodes(param) {
+                let filterArr = await _selectPoints(param, BLOCK_MODE),
+                    fourNodes = getNodesFour({ arr: param.arr, color: param.color, ftype: FIND_ALL }, filterArr),
+                    threeNodes = await getLevelThreeNodes(param, filterArr),
+                    twoNodes = [];
+                fourNodes.map(node => filterArr[node.idx] = 0);
+                threeNodes.map(node => filterArr[node.idx] = 0);
+                filterArr.map((v, idx) => v && twoNodes.push({idx: idx}));
+                return {fourNodes, threeNodes, twoNodes};
             }
 
-            //param: {arr, color, radius, maxVCF, maxDepth, maxNode, ftype}
+            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ftype}
             async function getPointsVCT(param) {
                 let nextMoves = [],
                     sortArr = new Array(225).fill(0),
@@ -517,7 +547,7 @@ window.engine = (function() {
                 return sortArr.map((v, idx) => v > 2 ? idx : undefined).filter(idx => idx != undefined);
             }
 
-            //param: {arr, color, radius, maxVCF, maxDepth, maxNode}
+            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode}
             async function _nextMoves(param) {
                 let thread,
                     infoArr = [],
@@ -539,6 +569,24 @@ window.engine = (function() {
             function _setGameRules(rules) {
                 setGameRules(rules);
                 reset();
+            }
+            
+            //return Promise resolve: isFinally
+            async function isFinally(promise) {
+                let isF = true,
+                    t = {};
+                await Promise.race([promise, t])
+                    .then(v => v===t && (isF = false))
+                return isF;
+            }
+            
+            //loop promiseArray removeFinallyPromise
+            async function removeFinallyPromise(promiseArray) {
+                for (let j = promiseArray.length - 1; j >= 0; j--) {
+                    if (await isFinally(promiseArray[j])) {
+                        promiseArray.splice(j, 1);
+                    }
+                }
             }
             
             //wait if obj[key] == value resolve
@@ -573,6 +621,23 @@ window.engine = (function() {
                 return waitValueChange(node, "score", oScore, time);
             }
             
+            //return Promise resolve: node
+            async function hasPositionNode(arr, tree) {
+                let path = positionToMoves(arr),
+                    hasNode = hasPosition(path, tree),
+                    hasScore = hasNode && hasNode.score || 0;
+                
+                if (hasScore == SCORE_WAIT) {
+                    hasScore = await waitNodeScore(hasNode, SCORE_WAIT);
+                }
+                return hasNode;
+            }
+            
+            //return Promise resolve: score
+            async function hasPositionScore(arr, tree) {
+                return await hasPositionNode(arr, tree).score;
+            }
+            
             async function wait(time) {
                 return new Promise(resolve => setTimeout(resolve, time))
             }
@@ -587,11 +652,12 @@ window.engine = (function() {
                 await wait(waitTime);
             }
 
-            //param: {arr, color, radius, maxVCF, maxDepth, maxNode}
+            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ?nMaxDepth}
+            //mode: BLOCK_MODE || AROUND_MODE
             //return Promise resolve: arr[225];
-            async function _selectPoints(param, thread) {
+            async function _selectPoints(param, mode = AROUND_MODE, thread) {
                 thread = thread || await getFreeThread();
-                return await run("selectPoints", param, thread) || new Array(225);
+                return await run(mode, param, thread) || new Array(225);
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
@@ -650,7 +716,7 @@ window.engine = (function() {
                 return _excludeBlockVCF(param);
             }
 
-            //param: {arr, color, radius, maxVCF, maxDepth, maxNode}
+            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode}
             //return Promise resolve: points[idx1, idx2, idx3...]
             async function getBlockPoints(param) {
                 let levelBInfo = await _getLevelB(param),
@@ -692,22 +758,21 @@ window.engine = (function() {
                 if (wTree) return wTree;
                 
                 isPrintMoves = true;
-                let iHtml = "<br><br>",
+                let iHtml = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: 找VCF<br>结果:<br>`,
                     vcfInfo = await findVCF(param),
                     { tree, positionMoves, isPushPass, current } = createTree(param);
 
                 if (vcfInfo.winMoves.length) {
-                    iHtml += `解题找${COLOR_NAME[param.color]}VCF:<br>`;
                     vcfInfo.winMoves.map(vcfMoves => {
                         tree.createPathVCF(current, vcfMoves);
                         iHtml += `[${movesToName(vcfMoves)}]<br>`;
                     });
-                    tree.createPath(positionMoves).comment = iHtml;
-                    tree.init.MS = getInitMoves(tree);
                 }
                 else {
-                    warn(`${EMOJI_FOUL_THREE} ${COLOR_NAME[param.color]} 查找VCF失败了 ${EMOJI_FOUL_THREE}`);
+                    iHtml += `没有VCF<br>`;
                 }
+                tree.createPath(positionMoves).comment = iHtml;
+                tree.init.MS = getInitMoves(tree);
                 isPrintMoves = false;
                 return tree;
             }
@@ -750,7 +815,7 @@ window.engine = (function() {
                 }
 
                 if (LEVEL_WIN == (getLevel(param.arr, 1) & 0xff) || LEVEL_WIN == (getLevel(param.arr, 2) & 0xff)) {
-                    tree.createPath(positionMoves).comment = `<br><br>棋局已结束`;
+                    tree.createPath(positionMoves).comment = `棋局已结束`;
                     return tree;
                 }
                 else if (level >= LEVEL_NOFREEFOUR) {
@@ -758,13 +823,13 @@ window.engine = (function() {
                     node.idx = fiveIdx;
                     node.boardText = "W";
                     current.addChild(node);
-                    tree.createPath(positionMoves).comment = `<br><br>${COLOR_NAME[param.color]} 可以五连`;
+                    tree.createPath(positionMoves).comment = `${COLOR_NAME[param.color]} 可以五连`;
                     return tree;
                 }
                 else if (level == LEVEL_VCF) {
                     tree.createPathVCF(current, levelBInfo.winMoves);
                     tree.init.MS = getInitMoves(tree);
-                    tree.createPath(positionMoves).comment = `<br><br>${COLOR_NAME[param.color]} 有杀`;
+                    tree.createPath(positionMoves).comment = `${COLOR_NAME[param.color]} 有杀`;
                     return tree;
                 }
                 return undefined;
@@ -774,7 +839,8 @@ window.engine = (function() {
             //return Promise resolve: RenjuTree
             async function _createTreeLevelThree(param) {
                 let { tree, positionMoves, isPushPass, current } = createTree(param),
-                    nodes = await getLevelThreeNodes(param);
+                    filterArr = await _selectPoints(param, AROUND_MODE),
+                    nodes = await getLevelThreeNodes(param, filterArr);
 
                 nodes.filter(FILTER_VCF_NODE[param.ftype]).map(node => {
                     let nNode = tree.newNode(),
@@ -791,18 +857,16 @@ window.engine = (function() {
             //param: {arr, color, maxVCF, maxDepth, maxNode, ftype}
             //return Promise resolve: RenjuTree
             async function createTreeLevelThree(param) {
-                cBoard.cleLb("all");
                 let wTree = await createTreeWin(param);
                 if (wTree) return wTree;
                 
                 let tree = await _createTreeLevelThree(param);
                 return tree;
             }
-
+            
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //return Promise resolve: RenjuTree
             async function createTreePointsVCT(param) {
-                cBoard.cleLb("all");
                 let wTree = await createTreeWin(param);
                 if (wTree) return wTree;
                 
@@ -810,12 +874,79 @@ window.engine = (function() {
                 tree.mergeTree(createTreeFour(param));
                 return tree;
             }
-
-            //param: {arr, color, radius, maxVCF, maxDepth, maxNode, maxVCT, maxDepthVCT, maxNodeVCT, ftype}
+            
+    //------------------------ VCT ----------------------
+           
+            //param: {arr, color, maxVCF, maxDepth, maxNode}
+            //return {blkPoints: [idx1, idx2, idx3...], bestMove: [idx1, idx2, idx3...]}
+            async function _getBlockVCT(param, tree, vctRoot) {
+                let arr = param.arr,
+                    color = param.color,
+                    infoArr = getTestThreeInfo({arr: arr, color: INVERT_COLOR[color]}),
+                    markArr = new Array(225),
+                    bestMove = new Array(225),
+                    blkPoints = [],
+                    moves = [],
+                    stack = [],
+                    idx = vctRoot.idx,
+                    next = vctRoot.down;
+                    
+                arr[idx] = color;
+                markArr[idx] = idx;
+                moves.push(idx);
+                
+                while (next) {
+                    let back = true;
+                    idx = next.idx
+                    if ( 0 <= idx && idx < 225) {
+                        let right = next.right,
+                            down = next.down;
+                        if (right) stack.push({node: right, depth: moves.length})
+                        
+                        arr[idx] = (moves.length & 1) ? INVERT_COLOR[color] : color;
+                        markArr[idx] = idx;
+                        moves.push(idx);
+                        
+                        if (down) {
+                            next = down;
+                            back = false;
+                        }
+                        else {
+                            arr[idx] = 0;
+                            let bPoint = getBlockVCF(arr, color, [idx], true);
+                            bPoint.map(idx => markArr[idx] = idx);
+                            if (bestMove.length > moves.length) bestMove = moves.slice(0);
+                        }
+                    }
+                    if (back) {
+                        if (stack.length) {
+                            let {node, depth} = stack.pop();
+                            while (depth < moves.length) arr[moves.pop()] = 0;
+                            next = node;
+                        }
+                        else next = undefined;
+                    }
+                }
+                idx = moves[0];
+                for (let i = moves.length - 1; i >= 0; i--) arr[moves.pop()] = 0;
+                
+                //add fourPoints
+                infoArr.map((info, idx) => FOUR_NOFREE == (FOUL_MAX & info) && (markArr[idx] = idx))
+                
+                //add levelThreePoints
+                param.color = INVERT_COLOR[color];
+                let threePoints = await getLevelThreePoints(param);
+                threePoints.map(idx => markArr[idx] = idx)
+                param.color = color;
+                
+                blkPoints = markArr.filter(idx => (idx!=undefined) && !(FOUL & infoArr[idx]));
+                return {blkPoints, bestMove}
+            }
+            
+            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, maxVCT, maxDepthVCT, maxNodeVCT, ftype}
             //return Promise resolve: RenjuTree
             async function createTreeVCT(param) {
-                cBoard.cleLb("all");
-                    let wTree = await createTreeWin(param);
+                let wTree = await createTreeWin(param);
                     if (wTree) return wTree;
 
                     let { tree, positionMoves, isPushPass, current } = createTree(param),
@@ -970,118 +1101,285 @@ window.engine = (function() {
         return tree;
     }
     
-    //param: {arr, color, maxVCF, maxDepth, maxNode}
-    //return Promise resolve: isBlockVCF
-    async function _addBranchIsDoubleVCF(param, blkPoints, tree, current) {
+    //param {arr, color, maxVCF, maxDepth, maxNode}
+    //return Promise resolve: count
+    async function _addBranchBlockSimpleWin(param, blkPoints, tree, current, moves) {
+        param = copyParam(param);
+        param.arr = param.arr.slice(0);
+        moves = moves.slice(0);
         let ps = [],
             count = 0,
-            path = positionToMoves(param.arr),
-            hasNode = hasPosition(path, tree),
-            hasScore = hasNode && hasNode.score || 0;
+            done = false,
+            isFour = FOUR_NOFREE == (FOUL_MAX & testPointFour(current.idx, param.color, param.arr));
         
-        //console.log(`path[${path}]\nhas [${hasScore}]`)
-        if (hasScore) {
-            switch(hasScore) {
-                case SCORE_WAIT:
-                    ps.push(waitNodeScore(hasNode, SCORE_WAIT)
-                        .then(sc => {
-                            if (sc == SCORE_RESOLVE) count = blkPoints.length;
-                            else count = 0;
-                        })
-                    );
-                    break;
-                case SCORE_RESOLVE:
-                    count = blkPoints.length;
-                    break;
-                case SCORE_REJECT:
-                    count = 0;
-                    break;
+        for (let i = blkPoints.length - 1; i >= 0; i--) {
+            let idx = blkPoints[i],
+                arr = param.arr,
+                blkCur = tree.newNode(idx, DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]),
+                nIsFour = isFour || FOUR_NOFREE == (FOUL_MAX & testPointFour(idx, INVERT_COLOR[param.color], arr));
+                
+            current.addChild(blkCur);
+            arr[idx] = INVERT_COLOR[param.color];
+            moves.push(idx);
+            
+            !nIsFour && (param.maxDepthVCT -= 2);
+            ps.push(_addBranchSimpleWin(param, tree, blkCur, moves)
+                .then(wNode => {
+                    if (wNode) count++
+                    else {
+                        done = true;
+                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>[${idxToName(idx)}]<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepthVCT / 2)} 手内取胜<br>`;
+                    }
+                })
+            )
+            !nIsFour && (param.maxDepthVCT += 2);
+            
+            moves.pop();
+            arr[idx] = 0;
+            if (ps.length == 1) {
+                await Promise.all(ps);
+                ps = [];
             }
+            if (done) break;
         }
-        else {
-            current.score = SCORE_WAIT;
-            for (let i = blkPoints.length - 1; i >= 0; i--) {
-            //blkPoints.map(idx => {
-                let idx = blkPoints[i],
-                    arr = param.arr.slice(0),
-                    cur = tree.newNode(idx, DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]);
-                arr[idx] = INVERT_COLOR[param.color];
-                current.addChild(cur);
-                ps.push(_findVCF({arr: arr, color: param.color, maxVCF: param.maxVCF, maxDepth: param.maxDepth, maxNode: param.maxNode})
-                    .then(winMoves => {
-                        if (winMoves.length) {
-                            cur.boardText = "L";
-                            cur.comment = `<br><br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防 ${idxToName(idx)} 不成立<br> ${COLOR_NAME[param.color]} 还有 VCF:<br> [${movesToName(winMoves)}]`;
-                            tree.createPathVCF(cur, winMoves);
-                            count++;
-                        }
-                        else {
-                            let levelInfo = getLevel(arr, INVERT_COLOR[param.color]),
-                                bIdx = (levelInfo >>> 8) & 0xff,
-                                level = levelInfo & 0xff,
-                                narr = arr.slice(0);
-                            narr[bIdx] = param.color;
-                            if (level == LEVEL_FREEFOUR || level == LEVEL_NOFREEFOUR) {
-                                return _findVCF({arr: narr, color: param.color, maxVCF: param.maxVCF, maxDepth: param.maxDepth, maxNode: param.maxNode})
-                                    .then(wMoves => {
-                                        let ncur = tree.newNode(bIdx, DEFAULT_BOARD_TXT[param.color]);
-                                        cur.addChild(ncur); 
-                                        cur.comment = `<br><br>${COLOR_NAME[INVERT_COLOR[param.color]]} 先手防于 ${idxToName(idx)}`;
-                                        if (wMoves.length) {
-                                            return _getBlockVCF({arr: narr, color: param.color, vcfMoves: wMoves, includeFour: true})
-                                                .then(bPoints => {
-                                                    ncur.comment = `<br><br>${COLOR_NAME[param.color]} 挡四后有 VCF:<br>[${movesToName(wMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]}防点:<br>[${movesToName(bPoints)}]`;
-                                                    return _addBranchIsDoubleVCF({arr: narr, color: param.color, maxVCF: param.maxVCF, maxDepth: param.maxDepth, maxNode: param.maxNode}, bPoints, tree, ncur)
-                                                        .then(r => {
-                                                            if (r) {
-                                                                cur.boardText = "L";
-                                                                ncur.boardText = "W";
-                                                                count++;
-                                                            }
-                                                        })
-                                                })
-                                        }
-                                        else {
-                                            ncur.comment = `<br><br>${COLOR_NAME[param.color]} 挡四后无 VCF`;
-                                        }
-                                    })
-                            }
-                            else {
-                                cur.comment = `<br><br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防 ${idxToName(idx)}<br>${COLOR_NAME[param.color]} 没有 VCF，防点成立<br>`;
-                            }
+        ps.length && await Promise.all(ps);
+        return count;
+    }
+    
+    //return Promise resolve: winNode
+    async function _addBranchSimpleVCT1(param, nodes, tree, current, moves) {
+        let ps = [],
+            winNode = undefined,
+            done = false,
+            arr = param.arr,
+            color = param.color;
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            let node = nodes[i],
+                idx = node.idx,
+                cur = tree.newNode(idx, DEFAULT_BOARD_TXT[color]),
+                blkPoints;
+            arr[idx] = color;
+            moves.push(idx);
+            current.addChild(cur);
+                    
+            if (node.winMoves) { //levelThreeNode
+                blkPoints = getBlockVCF(arr, color, node.winMoves, true);
+                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 防点:<br>[${movesToName(blkPoints)}]<br>`;
+                let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
+                    nParam = copyParam(param),
+                    nMoves = moves.slice(0);
+                nParam.arr = nParam.arr.slice(0);
+                ps.push(_addBranchBlockSimpleWin(param, elsePoints, tree, cur, moves)
+                    .then(ct => {
+                        if (ct == elsePoints.length) {
+                            return _addBranchBlockSimpleWin(nParam, fourPoints, tree, cur, nMoves)
+                                .then(ct => {
+                                    if (ct == fourPoints.length) {
+                                        cur.boardText = "W";
+                                        winNode = cur;
+                                        done = true;
+                                    }
+                                })
                         }
                     })
+                    .then(() => {
+                        if (1 >= moves.length) {
+                            if (canceling) current.removeChild(cur);
+                            else cBoard.wLb(cur.idx, cur.boardText, "black");
+                        }
+                    })
+                    .then(() => idx)
                 )
-                if (0 == ps.length % MAX_THREAD_NUM) {
-                    await Promise.all(ps);
-                    ps = [];
-                }
-            //})
+            }
+            else { //fourNode
+                let bIdx = getBlockFourPoint(idx, arr, node.lineInfo);
+                blkPoints = [bIdx];
+                ps.push(_addBranchBlockSimpleWin(param, blkPoints, tree, cur, moves)
+                    .then(ct => {
+                        if (ct == blkPoints.length) {
+                            cur.boardText = "W";
+                            winNode = cur;
+                            done = true;
+                        }
+                    })
+                    .then(() => {
+                        if (1 >= moves.length) {
+                            if (canceling) current.removeChild(cur);
+                            else cBoard.wLb(cur.idx, cur.boardText, "black");
+                        }
+                    })
+                    .then(() => idx)
+                )
+            }
+            moves.pop();
+            arr[idx] = 0;
+            moves.length == 0 && cBoard.printSearchPoint(idx, idx, "green");
+            if (ps.length >= MAX_THREAD_NUM) {
+                await Promise.race(ps)
+                    .then(idx => moves.length == 0 && cBoard.cleSearchPoint(idx))
+                await removeFinallyPromise(ps);
+            }
+            if (done) break;
+        }
+        ps.length && await Promise.all(ps);
+        moves.length == 0 && cBoard.cleSearchPoint();
+        return winNode;
+    }
+    
+    //return Promise resolve: winNode
+    async function _addBranchSimpleVCT(param, tree, current, moves) {
+        let winNode = undefined,
+            { fourNodes, threeNodes } = await getContinueNodes(param);
+        winNode ||= await _addBranchSimpleVCT1(param, threeNodes, tree, current, moves);
+        winNode ||= await _addBranchSimpleVCT1(param, fourNodes, tree, current, moves);
+        return winNode;
+    }
+    
+    //return Promise resolve: winNode
+    async function _addBranchSimpleWin(param, tree, current, moves = []) {
+        param = copyParam(param);
+        param.arr = param.arr.slice(0);
+        moves = moves.slice(0);
+        let winNode = undefined,
+            arr = param.arr,
+            hasNode = await hasPositionNode(arr, tree),
+            hasScore = hasNode.score;
+            
+        if (hasScore == SCORE_RESOLVE) winNode = hasNode;
+        else if (hasScore == SCORE_REJECT) winNode = undefined;
+        else if (param.maxDepthVCT >= 0) {
+            current.score = SCORE_WAIT;
+            winNode ||= await _addBranchVCF(param, tree, current, moves);
+            if (param.maxDepthVCT >= 2) {
+                winNode ||= await _addBranchSimpleVCT(param, tree, current, moves);
             }
         }
+        winNode && (current.boardText = "L");
+        current.score = winNode ? SCORE_RESOLVE : SCORE_REJECT;
+        return winNode;
+    }
+    
+    //param: {arr, color, maxVCF, maxDepth, maxNode, maxVCT, maxDepthVCT, maxNodeVCT}
+    //return Promise resolve: RenjuTree
+    async function createTreeSimpleWin(param) {
+        let wTree = await createTreeWin(param);
+        if (wTree) return wTree;
         
-        return Promise.all(ps)
-            .then(() => {
-                if (count == blkPoints.length) {
-                    current.score = SCORE_RESOLVE;
-                    return true;
+        let { tree, positionMoves, isPushPass, current } = createTree(param),
+            winNode = await _addBranchSimpleWin(param, tree, current);
+        
+        tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: 坂田三手胜<br>.先手方要在三手内取胜<br>.最后的VCF算一手棋<br>.被动防冲四不增加手数<br>-----点击棋盘查看计算结果-----<br>`;
+        
+        return tree;
+    }
+    
+    //------------------------ DoubleVCF ----------------------
+
+    //return Promise resolve: isDoubleVCF
+    async function _addBranchIsDoubleVCF3(param, tree, current, depth = 0) {
+        param = copyParam(param);
+        param.arr = param.arr.slice(0);
+        
+        let idx = current.idx,
+            isDoubleVCF = false,
+            winMoves = await _findVCF(param);
+        if (winMoves.length) {
+            current.comment = `<br><br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防 ${idxToName(idx)} 不成立<br> ${COLOR_NAME[param.color]} 还有 VCF:<br> [${movesToName(winMoves)}]<br>`;
+            tree.createPathVCF(current, winMoves);
+            isDoubleVCF = true;
+        }
+        else {
+            let lineInfo = testPointFour(idx, INVERT_COLOR[param.color], param.arr);
+            if (FOUR_NOFREE == (FOUL_MAX & lineInfo)) {
+                let bIdx = getBlockFourPoint(idx, param.arr, lineInfo),
+                    cur = tree.newNode(bIdx, DEFAULT_BOARD_TXT[param.color]);
+                param.arr[bIdx] = param.color;
+                current.addChild(cur);
+                current.comment = `<br><br>${COLOR_NAME[INVERT_COLOR[param.color]]} 先手防于 ${idxToName(idx)}<br>`;
+                let wMoves = await _findVCF(param);
+                if (wMoves.length) {
+                    let bPoints = getBlockVCF(param.arr, param.color, wMoves, true);
+                    cur.comment = `<br><br>${COLOR_NAME[param.color]} 挡四后有 VCF:<br>[${movesToName(wMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]}防点:<br>[${movesToName(bPoints)}]<br>`;
+                    isDoubleVCF = await _addBranchIsDoubleVCF(param, bPoints, tree, cur, depth + 1);
                 }
-                else {
-                    current.score = SCORE_REJECT;
-                    return false;
+                else{
+                    cur.comment = `<br><br>${COLOR_NAME[param.color]} 挡四后无 VCF<br>`;
+                    isDoubleVCF = false
                 }
-            })
+            }
+            else{
+                current.comment = `<br><br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防 ${idxToName(idx)}<br>${COLOR_NAME[param.color]} 没有 VCF，防点成立<br>`;
+                isDoubleVCF = false
+            }
+        }
+        isDoubleVCF && (current.boardText = "L");
+        return isDoubleVCF;
+    }
+    
+    //return Promise resolve: count
+    async function _addBranchIsDoubleVCF2(param, blkPoints, tree, current, depth = 0) {
+        let ps = [],
+            count = 0,
+            done = false;
+        for (let i = blkPoints.length - 1; i >= 0; i--) {
+            let idx = blkPoints[i],
+                arr = param.arr,
+                cur = tree.newNode(idx, DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]);
+            arr[idx] = INVERT_COLOR[param.color];
+            current.addChild(cur);
+            ps.push(_addBranchIsDoubleVCF3(param, tree, cur, depth)
+                .then(wNode => {
+                    if (wNode) count++;
+                    else if (depth) done = true;
+                })
+            );
+            arr[idx] = 0;
+            if (ps.length >= MAX_THREAD_NUM) {
+                await Promise.race(ps);
+                await removeFinallyPromise(ps);
+            }
+            if (done) break;
+        }
+        ps.length && await Promise.all(ps);
+        return count;
+    }
+    
+    //param: {arr, color, maxVCF, maxDepth, maxNode}
+    //return Promise resolve: isDoubleVCF
+    async function _addBranchIsDoubleVCF(param, blkPoints, tree, current, depth = 0) {
+        param = copyParam(param);
+        param.arr = param.arr.slice(0);
+        let count = 0,
+            hasScore = await hasPositionScore(param.arr, tree);
+        
+        if (hasScore == SCORE_RESOLVE) count = blkPoints.length;
+        else if (hasScore == SCORE_REJECT) count = 0;
+        else {
+            current.score = SCORE_WAIT;
+            let {fourPoints, elsePoints} = filterBlockPoints(blkPoints, INVERT_COLOR[param.color], param.arr);
+            count += await _addBranchIsDoubleVCF2(param, elsePoints, tree, current, depth);
+            if (count == elsePoints.length) count += await _addBranchIsDoubleVCF2(param, fourPoints, tree, current, depth);
+        }
+        
+        if (count == blkPoints.length) {
+            current.score = SCORE_RESOLVE;
+            current.boardText = "W";
+            return true;
+        }
+        else {
+            current.score = SCORE_REJECT;
+            return false;
+        }
     }
     
     //param {arr, color, maxVCF, maxDepth, maxNode}
     //return Promise resolve: RenjuTree
     async function createTreeBlockVCF(param) {
-        cBoard.cleLb("all");
         param.color = INVERT_COLOR[param.color];
         let wTree = await createTreeWin(param, LEVEL_NOFREEFOUR);
         if (wTree) return wTree;
         
-        let iHtml = "<br><br>",
+        let iHtml = `解题<br>先手: ${COLOR_NAME[INVERT_COLOR[param.color]]}<br>规则: 找VCF防点<br>结果:<br>`,
             vcfInfo = await findVCF(param),
             { tree, positionMoves, isPushPass, current} = createTree(param, INVERT_COLOR[param.color]);
             
@@ -1094,7 +1392,7 @@ window.engine = (function() {
             let blkPoints = await _getBlockVCF(param);
             if (param.blkDepth == 1) {
                 current.addChilds(tree.createNodes(blkPoints, {boardText: DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]})).map(cur => {
-                    cur.comment = `<br><br>${COLOR_NAME[param.color]} VCF:<br>[${movesToName(vcfInfo.winMoves[0])}]<br>已经不成立`;
+                    cur.comment = `<br><br>${COLOR_NAME[param.color]} VCF:<br>[${movesToName(vcfInfo.winMoves[0])}]<br>已经不成立<br>`;
                 })
             }
             else {
@@ -1102,19 +1400,18 @@ window.engine = (function() {
             }
                 
             iHtml += `${COLOR_NAME[INVERT_COLOR[param.color]]}防点:<br>`;
-            iHtml += `[${movesToName(blkPoints)}]<br>-----点击棋盘查看计算结果-----<br>`;
-            tree.createPath(positionMoves).comment = iHtml;
+            iHtml += `[${movesToName(blkPoints)}]<br>${param.blkDepth > 1 ? "***找到成立的直接防点，不会算先手防***" : ""}<br>-----点击棋盘查看计算结果-----<br>`;
         }
         else {
-            warn(`${EMOJI_FOUL_THREE} ${COLOR_NAME[param.color]} 查找VCF失败了 ${EMOJI_FOUL_THREE}`);
+            iHtml += `${COLOR_NAME[param.color]} 没有找到 VCF<br>`;
         }
+        tree.createPath(positionMoves).comment = iHtml;
         return tree;
     }
     
     //param {arr, color, maxVCF, maxDepth, maxNode}
     //return Promise resolve: RenjuTree
     async function createTreeDoubleVCF(param) {
-        cBoard.cleLb("all");
         let wTree = await createTreeWin(param);
         if (wTree) return wTree;
         
@@ -1139,30 +1436,29 @@ window.engine = (function() {
                     
                 ps.push(_addBranchIsDoubleVCF(nParam, blkPoints, tree, cur)
                     .then(isDoubleVCF => {
-                        if (isDoubleVCF) {
-                            cur.boardText = "W";
-                        }
-                        cur.comment = `<br><br>${COLOR_NAME[param.color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防点:<br>[${movesToName(blkPoints)}]<br>双杀 ${isDoubleVCF?"成立":"不成立"}`;
+                        cur.comment = `<br><br>${COLOR_NAME[param.color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防点:<br>[${movesToName(blkPoints)}]<br>双杀 ${isDoubleVCF?"成立":"不成立"}<br>`;
                         if (canceling) current.removeChild(cur);
                         else cBoard.wLb(cur.idx, cur.boardText, "black");
                     })
+                    .then(() => idx)
                 )
-                cBoard.printSearchPoint(ps.length, idx, "green");
-                if (0 == ps.length % MAX_THREAD_NUM) {
-                    await Promise.all(ps);
-                    cBoard.cleSearchPoint();
-                    ps = [];
+                cBoard.printSearchPoint(idx, idx, "green");
+                if (ps.length >= MAX_THREAD_NUM) {
+                    await Promise.race(ps)
+                        .then(idx => cBoard.cleSearchPoint(idx))
+                    await removeFinallyPromise(ps);
                 }
             }
         }
         await Promise.all(ps);
-        tree.createPath(positionMoves).comment = `<br><br>${COLOR_NAME[param.color]} 找 茶馆双杀点:<br>双杀点不包括直接活三点<br>-----点击棋盘查看计算结果-----<br>`;
-        cBoard.cleSearchPoint();
+        tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: 茶馆双杀点<br>. 双杀点不包括直接活三点<br>-----点击棋盘查看计算结果-----<br>`;
         return tree;
     }
     
+    //------------------------ isFoul ----------------------
+    
     //return isFoul: [FOUL, FIVE, 0]
-    function _addBranchIsFoul(idx, arr, tree, blackCurrent, depth = 0) {
+    function _addBranchIsFoul(idx, arr, tree, current, depth = 0) {
         let ov = arr[idx],
             rt = 0,
             fiveCount = 0,
@@ -1171,12 +1467,12 @@ window.engine = (function() {
             threeCount = 0,
             lineInfos = [],
             iHtml = `<br><br>判断 ${idxToName(idx)} 是否为禁手......<br>`,
-            pCur = blackCurrent.getChild(225),
+            pCur = 0 == depth ? current : current.getChild(225),
             bCur = tree.newNode(idx, DEFAULT_BOARD_TXT[1]);
         
         if (!pCur) {
             pCur = tree.newNode(225);
-            blackCurrent.addChild(pCur);
+            current.addChild(pCur);
         }
         pCur.addChild(bCur);
         arr[idx] = 1;
@@ -1263,10 +1559,9 @@ window.engine = (function() {
     //param: {arr, color}
     //return Promise resolve: RenjuTree
     async function createTreeTestFoul(param) {
-        cBoard.cleLb("all");
-        let { tree, positionMoves, isPushPass, current} = createTree(param, 2),
+        let { tree, positionMoves, isPushPass, current} = createTree(param, 1),
             infoArr = getTestThreeInfo(param);
-        tree.createPath(positionMoves).comment = `<br><br>解题 全盘禁手分析<br>-----点击棋盘查看计算结果-----<br>`;
+        tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: 全盘禁手分析<br>-----点击棋盘查看计算结果-----<br>`;
         for (let idx = 0; idx < 225; idx++) {
             let fmf = infoArr[idx] & FOUL_MAX_FREE;
             if (fmf >= THREE_FREE) {
@@ -1276,198 +1571,573 @@ window.engine = (function() {
         return tree;
     }
     
+    //param: {arr, color, maxVCF, maxDepth, maxNode}
+    //return catchFoulArray[[idx1],[idx2],[idx3]...]
+    function getCatchFoulArray(param) {
+        param.color = 2;
+        let infoArr = getTestFourInfo(param),
+            arr = param.arr,
+            catchFoulArray = [];
+        infoArr.map((info, idx) => {
+            if (FOUR_NOFREE == (FOUL_MAX_FREE & info)) {
+                arr[idx] = 2;
+                let lvl = getLevelPoint(idx, 2, arr);
+                if (LEVEL_CATCHFOUL == (lvl & 0xff)) catchFoulArray.push({winMoves: [idx], foulIdx: lvl >> 8 & 0xff});
+                arr[idx] = 0;
+            }
+        })
+        return catchFoulArray;
+    }
+    
+    function _addBranchCatchFoul(idx, foulIdx, arr, tree, current) {
+        if (0 == arr[idx] && 0 == arr[foulIdx]) {
+            let cur = tree.newNode(idx, DEFAULT_BOARD_TXT[2]);
+            current.addChild(cur);
+            arr[idx] = 2;
+            _addBranchIsFoul(foulIdx, arr, tree, cur, 0);
+            arr[idx] = 0;
+        }
+    }
+    
+    function _addBranchBlockCatchFoul(catchFoulArray, arr, tree, current) {
+        let markArr = new Array(225).fill(0),
+            blkPoints = [];
+        catchFoulArray.map(catchFoul => {
+            let bPoints = getBlockVCF(arr, 2, catchFoul.winMoves);
+            bPoints.map(idx => markArr[idx]++)
+        })
+        markArr.map((v, idx) => v == catchFoulArray.length && blkPoints.push(idx))
+        blkPoints.map(bIdx => {
+            let cur = tree.newNode(bIdx, DEFAULT_BOARD_TXT[1]);
+            current.addChild(cur);
+            arr[bIdx] = 1;
+            catchFoulArray.map(catchFoul => {
+                _addBranchCatchFoul(catchFoul.winMoves[0], catchFoul.foulIdx, arr, tree, cur)
+            })
+            arr[bIdx] = 0;
+        })
+        if (catchFoulArray.length == 1) {
+            let charList = new Array(225),
+                idx = catchFoulArray[0].winMoves[0],
+                foulIdx = catchFoulArray[0].foulIdx;
+            charList[idx] = "A";
+            charList[foulIdx] = "B";
+            arr[idx] = 2;
+            for (let direction = 0; direction < 4; direction++) {
+                let lineInfo = testLineThree(foulIdx, direction, 1, arr);
+                if (FOUR_NOFREE == (FOUL_MAX & lineInfo) || LINE_DOUBLE_FOUR == (FOUL_MAX_FREE & lineInfo)) {
+                    for (let abs = -1; abs < 2; abs += 2) {
+                        for (let move = 1; move < 6; move++) {
+                            let mIdx = moveIdx(foulIdx, move * abs, direction);
+                            if (mIdx < 0 || mIdx > 224 || arr[mIdx] == 2) break;
+                            if(arr[mIdx]) continue;
+                            arr[mIdx] = 1;
+                            let info = FOUL_MAX & testLineThree(foulIdx, direction, 1, arr);
+                            (FOUR_NOFREE != info) && (charList[mIdx] = EMOJI_FORK);
+                            arr[mIdx] = 0;
+                        }
+                    }
+                }
+                else if (THREE_FREE == (FOUL_MAX_FREE & lineInfo)) {
+                    for (let abs = -1; abs < 2; abs += 2) {
+                        for (let move = 1; move < 6; move++) {
+                            let mIdx = moveIdx(foulIdx, move * abs, direction);
+                            if (mIdx < 0 || mIdx > 224 || arr[mIdx] == 2) break;
+                            if(arr[mIdx]) continue;
+                            arr[mIdx] = 1;
+                            let info = testLineThree(foulIdx, direction, 1, arr);
+                            if (FOUR_NOFREE == (FOUL_MAX & info)) charList[mIdx] = EMOJI_SQUARE_BLACK;
+                            else if(THREE_FREE != (FOUL_MAX_FREE & info)) charList[mIdx] = EMOJI_FORK;
+                            arr[mIdx] = 0;
+                        }
+                    }
+                }
+            }
+            arr[idx] = 0;
+            blkPoints.map(bIdx => {
+                current.getChild(bIdx).boardText = charList[bIdx] || EMOJI_ROUND_DOUBLE;
+            })
+        }
+        return blkPoints;
+    }
+    
+    function isCatchFoul(catchFoul, arr) {
+        let isCatch = false,
+            idx = catchFoul.winMoves[0],
+            foulIdx =catchFoul.foulIdx;
+        arr[idx] = 2;
+        isCatch = isFoul(foulIdx, arr);
+        arr[idx] = 0;
+        return isCatch;
+    }
+    
+    async function _addBranchContinueBlockFoul(catchFoulArray, markArr, arr, tree, current, depth = 0) {
+        let isBlock = false,
+            fourNodes = getNodesFour({arr: arr, color: 1, ftype: FIND_ALL}),
+            ctnInfo = [];
+        
+        await wait(0);
+        if (canceling) return false;
+        
+        for (let i = fourNodes.length - 1; i >= 0; i--) {
+            let info = fourNodes[i].lineInfo,
+                idx = fourNodes[i].idx,
+                isBlk = false,
+                done = false;
+            arr[idx] = 1;
+            
+            0 == depth && cBoard.printSearchPoint(0, idx, "green");
+            let hasScore = await hasPositionScore(arr, tree);
+            if (hasScore == SCORE_RESOLVE) (isBlk = true, done = true)
+            else if (hasScore == SCORE_REJECT) (isBlk = false, done = true)
+            
+            if (!done) {
+                let hasCatch = false,
+                    isCatch = false,
+                    cur = tree.newNode(idx, "先"),
+                    bIdx = getBlockFourPoint(idx, arr, info);
+                current.addChild(cur);
+                for (let j = catchFoulArray.length - 1; j >= 0; j--) {
+                    let catchFoul = catchFoulArray[j];
+                    if (isCatchFoul(catchFoul, arr)) {
+                        hasCatch = true;
+                        isCatch ||= catchFoul.winMoves[0] == bIdx;
+                        break;
+                    }
+                }
+                if (!hasCatch) {
+                    if (depth) {
+                        if (!markArr[idx] || markArr[idx] > 1) {
+                            cur.boardText = "新";
+                            cur.comment = "先手冲四解禁点";
+                            !markArr[idx] && (markArr[idx] = depth + 1);
+                            isBlk = true;
+                        }
+                    }
+                    else {
+                        markArr[idx] = depth + 1;
+                        isBlk = true;
+                    }
+                    (!isBlk) && (cur.score = SCORE_REJECT);
+                }
+                else if(isCatch) {
+                    cur.score = SCORE_REJECT;
+                }
+                else {
+                    let bCur = tree.newNode(bIdx, DEFAULT_BOARD_TXT[2]),
+                        bPoints = [];
+                    cur.addChild(bCur);
+                    arr[bIdx] = 2;
+                    bPoints = _addBranchBlockCatchFoul(catchFoulArray, arr, tree, bCur);
+                    for (let j = bPoints.length - 1; j >= 0; j--) {
+                        let blkIdx = bPoints[j];
+                        if (!markArr[blkIdx] || markArr[blkIdx] > 1) {
+                            let nCur = bCur.getChild(blkIdx);
+                            nCur.boardText = "新";
+                            nCur.comment = "先手增加解禁点";
+                            !markArr[blkIdx] && (markArr[blkIdx] = depth + 1);
+                            isBlk = true;
+                        }
+                    }
+                    if (!isBlk) ctnInfo.push({idx: idx, bIdx: bIdx, cur: cur, bCur: bCur});
+                    arr[bIdx] = 0;
+                }
+                isBlk && (cur.score = SCORE_RESOLVE);
+            }
+            isBlock ||= isBlk;
+            arr[idx] = 0;
+        }
+        
+        for (let i = ctnInfo.length - 1; i >= 0; i--) {
+            let info = ctnInfo[i];
+            arr[info.idx] = 1;
+            arr[info.bIdx] = 2;
+            0 == depth && cBoard.printSearchPoint(0, info.idx, "green");
+            let isBlk = await _addBranchContinueBlockFoul(catchFoulArray, markArr, arr, tree, info.bCur, depth + 1);
+            info.cur.score = isBlk ? SCORE_RESOLVE : SCORE_REJECT;
+            isBlock ||= isBlk;
+            arr[info.idx] = 0;
+            arr[info.bIdx] = 0;
+        }
+        
+        if (0 == depth) {
+            cBoard.cleSearchPoint();
+            current.map(cur => {
+                let nodes = cur.getChilds();
+                nodes.map(node => {
+                    if (SCORE_REJECT == node.score) cur.removeChild(node);
+                })
+            })
+        }
+        
+        return isBlock;
+    }
+    
+    //param: {arr, color, maxVCF, maxDepth, maxNode}
+    //return Promise resolve: RenjuTree
+    async function createTreeBlockCatchFoul(param) {
+        let wTree = await createTreeWin(param);
+        if (wTree) return wTree;
+        
+        let { tree, positionMoves, isPushPass, current} = createTree(param, 1),
+            infoArr = getTestThreeInfo(param),
+            catchFoulArray = getCatchFoulArray(param),
+            markArr = new Array(225),
+            iHtml = `解题<br>先手: ${COLOR_NAME[1]}<br>规则: 针对白棋冲四抓禁，分类解禁<br>.直接防点: A, B<br>.反防点: ${EMOJI_SQUARE_BLACK}<br>.六腐防点: ${EMOJI_FORK}<br>.多层禁手防点: ${EMOJI_ROUND_DOUBLE}<br>.双抓共防点: ${EMOJI_ROUND_BLACK}<br>.先手防点: 先<br>.先手增加防点: 新<br>`;
+        
+        if (catchFoulArray.length) {
+            let bPoints = _addBranchBlockCatchFoul(catchFoulArray, param.arr, tree, current);
+            bPoints.map(idx => markArr[idx] = 1);
+            await _addBranchContinueBlockFoul(catchFoulArray, markArr, param.arr, tree, current);
+            
+            iHtml += `<br>找到冲四抓禁:<br>${catchFoulArray.map(catchFoul => `冲 [${idxToName(catchFoul.winMoves[0])}] 抓 [${idxToName(catchFoul.foulIdx)}]<br>`)}`;
+        }
+        else {
+            iHtml = `<br><br>没有找到冲四抓禁<br>`;
+        }
+        tree.createPath(positionMoves).comment = iHtml;
+        return tree;
+    }
+    
+    //------------------------ NumberWin ----------------------
+    
     //param {arr, color, maxVCF, maxDepth, maxNode}
-    //return Promise resolve: isWin
-    async function _addBranchBlockNumberWin(param, blkPoints, tree, current, depth = 0) {
+    //return Promise resolve: count
+    async function _addBranchBlockNumberWin(param, blkPoints, tree, current, moves) {
         param = copyParam(param);
         param.arr = param.arr.slice(0);
+        moves = moves.slice(0);
         let ps = [],
-            isWin = true;
+            count = 0,
+            done = false;
         
         for (let i = blkPoints.length - 1; i >= 0; i--) {
             let idx = blkPoints[i],
                 arr = param.arr,
-                blkCur = tree.newNode(idx, "L");
+                blkCur = tree.newNode(idx, DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]);
         
             current.addChild(blkCur);
             arr[idx] = INVERT_COLOR[param.color];
-            ps.push(_addBranchNumberWin(param, tree, blkCur, depth + 1)
-                .then(isW => {
-                    if (!isW) {
-                        isWin = false;
-                        blkCur.boardText = DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]];
-                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>[${idxToName(idx)}]<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepth / 2) + 2} 手内五连`;
+            moves.push(idx);
+            ps.push(_addBranchNumberWin(param, tree, blkCur, moves)
+                .then(wNode => {
+                    if (wNode) count++
+                    else {
+                        done = true;
+                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>[${idxToName(idx)}]<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepth / 2) + 2} 手内五连<br>`;
                     }
                 })
             )
+            moves.pop();
             arr[idx] = 0;
-            if (0 == ps.length % MAX_THREAD_NUM) {
+            if (ps.length == 1) {
                 await Promise.all(ps);
                 ps = [];
             }
-            //if (!isWin) break;
+            if (done) break;
         }
-        await Promise.all(ps);
-        return isWin;
+        ps.length && await Promise.all(ps);
+        return count;
+    }
+    
+    //return Promise resolve: winNode
+    async function _addBranchVCF(param, tree, current, moves) {
+        let winNode = undefined,
+            vcfMoves = await _findVCF(param);
+        if (vcfMoves.length) {
+            tree.createPathVCF(current, vcfMoves);
+            winNode = current.getChild(vcfMoves[0]);
+        }
+        return winNode;
+    }
+    
+    //return Promise resolve: winNode
+    async function _addBranchNumberVCT1(param, nodes, tree, current, moves) {
+        let ps = [],
+            winNode = undefined,
+            done = false,
+            arr = param.arr,
+            color = param.color;
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            let node = nodes[i],
+                idx = node.idx,
+                cur = tree.newNode(idx, DEFAULT_BOARD_TXT[color]),
+                blkPoints;
+            arr[idx] = color;
+            moves.push(idx);
+            current.addChild(cur);
+                    
+            if (node.winMoves) { //levelThreeNode
+                blkPoints = getBlockVCF(arr, color, node.winMoves, true);
+                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 防点:<br>[${movesToName(blkPoints)}]<br>`;
+                let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
+                    nParam = copyParam(param),
+                    nMoves = moves.slice(0);
+                nParam.arr = nParam.arr.slice(0);
+                ps.push(_addBranchBlockNumberWin(param, elsePoints, tree, cur, moves)
+                    .then(ct => {
+                        if (ct == elsePoints.length) {
+                            return _addBranchBlockNumberWin(nParam, fourPoints, tree, cur, nMoves)
+                                .then(ct => {
+                                    if (ct == fourPoints.length) {
+                                        cur.boardText = "W";
+                                        winNode = cur;
+                                        done = moves.length > 1;
+                                    }
+                                })
+                        }
+                    })
+                    .then(() => {
+                        if (1 >= moves.length) {
+                            if (canceling) current.removeChild(cur);
+                            else cBoard.wLb(cur.idx, cur.boardText, "black");
+                        }
+                    })
+                    .then(() => idx)
+                )
+            }
+            else { //fourNode
+                let bIdx = getBlockFourPoint(idx, arr, node.lineInfo);
+                blkPoints = [bIdx];
+                ps.push(_addBranchBlockNumberWin(param, blkPoints, tree, cur, moves)
+                    .then(ct => {
+                        if (ct == blkPoints.length) {
+                            cur.boardText = "W";
+                            winNode = cur;
+                            done = moves.length > 1;
+                        }
+                    })
+                    .then(() => {
+                        if (1 >= moves.length) {
+                            if (canceling) current.removeChild(cur);
+                            else cBoard.wLb(cur.idx, cur.boardText, "black");
+                        }
+                    })
+                    .then(() => idx)
+                )
+            }
+            moves.pop();
+            arr[idx] = 0;
+            moves.length == 0 && cBoard.printSearchPoint(idx, idx, "green");
+            if (ps.length >= MAX_THREAD_NUM) {
+                await Promise.race(ps)
+                    .then(idx => moves.length == 0 && cBoard.cleSearchPoint(idx))
+                await removeFinallyPromise(ps);
+            }
+            if (done) break;
+        }
+        ps.length && await Promise.all(ps);
+        moves.length == 0 && cBoard.cleSearchPoint();
+        return winNode;
+    }
+    
+    //return Promise resolve: winNode
+    async function _addBranchNumberVCT(param, tree, current, moves) {
+        param.maxDepth -= 2;
+        let winNode = undefined,
+            { fourNodes, threeNodes } = await getContinueNodes(param);
+        winNode ||= await _addBranchNumberVCT1(param, threeNodes, tree, current, moves);
+        winNode ||= await _addBranchNumberVCT1(param, fourNodes, tree, current, moves);
+        param.maxDepth += 2;
+        return winNode;
+    }
+    
+    //return Promise resolve: winNode
+    async function _addBranchVC2_1(param, nodes, tree, current, moves) {
+        let ps = [],
+            winNode = undefined,
+            done = false,
+            arr = param.arr,
+            color = param.color;
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            let node = nodes[i],
+                idx = node.idx,
+                cur = tree.newNode(idx, DEFAULT_BOARD_TXT[color]),
+                blkPoints = node.blkPoints;
+            arr[idx] = color;
+            moves.push(idx);
+            current.addChild(cur);
+            cur.comment = `<br><br>${COLOR_NAME[color]} 做VCT:<br>[${movesToName(node.bestMove)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 防点:<br>[${movesToName(blkPoints)}]<br>`;
+                
+            let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
+                nParam = copyParam(param),
+                nMoves = moves.slice(0);
+            nParam.arr = nParam.arr.slice(0);
+            ps.push(_addBranchBlockNumberWin(param, elsePoints, tree, cur, moves)
+                .then(ct => {
+                    if (ct == elsePoints.length) {
+                        return _addBranchBlockNumberWin(nParam, fourPoints, tree, cur, nMoves)
+                            .then(ct => {
+                                if (ct == fourPoints.length) {
+                                    cur.boardText = "W";
+                                    winNode = cur;
+                                    done = true;
+                                }
+                            })
+                    }
+                })
+                .then(() => {
+                    if (1 >= moves.length) {
+                        if (canceling) current.removeChild(cur);
+                        else cBoard.wLb(cur.idx, cur.boardText, "black");
+                    }
+                })
+            )
+            
+            moves.pop();
+            arr[idx] = 0;
+            moves.length == 0 && cBoard.printSearchPoint(ps.length, idx, "green");
+            if (ps.length == MAX_THREAD_NUM) {
+                await Promise.all(ps);
+                ps = [];
+            }
+            if (done) break;
+        }
+        ps.length && await Promise.all(ps);
+        moves.length == 0 && cBoard.cleSearchPoint();
+        return winNode;
+    }
+    
+    //return Promise resolve: VCFNodes || []
+    async function getVC2Node(param, filterNodes) {
+        let { tree, positionMoves, isPushPass, current} = createTree(param),
+            ps = [],
+            moves = [],
+            vc2Nodes = [];
+        for (let i = filterNodes.length - 1; i >= 0; i--) {
+            let idx = filterNodes[i].idx,
+                cur = tree.newNode(idx),
+                pCur = tree.newNode(225);
+            param.arr[idx] = param.color;
+            moves.push(idx, 225);
+            current.addChild(cur);
+            cur.addChild(pCur);
+            let nParam = copyParam(param);
+            nParam.arr = nParam.arr.slice(0);
+            ps.push(_addBranchNumberWin(param, tree, pCur, moves)
+                    .then(async (wNode) => {
+                        if (wNode) {
+                            let {bestMove, blkPoints} =  await _getBlockVCT(nParam, tree, wNode);
+                            filterNodes[i].bestMove = bestMove;
+                            filterNodes[i].blkPoints = blkPoints;
+                            vc2Nodes.push(filterNodes[i])
+                        }
+                    })
+                    .then(() => idx)
+            )
+            moves.length -= 2;
+            param.arr[idx] = 0;
+            moves.length == 0 && cBoard.printSearchPoint(idx, idx, "green");
+            if (ps.length >= MAX_THREAD_NUM) {
+                await Promise.race(ps)
+                    .then(idx => moves.length == 0 && cBoard.cleSearchPoint(idx))
+                await removeFinallyPromise(ps);
+            }
+        }
+        ps.length && await Promise.all(ps);
+        moves.length == 0 && cBoard.cleSearchPoint();
+        vc2Nodes.map(node => {
+            console.log(`[${idxToName(node.idx)}], blkP: [${node.blkPoints}]`)
+        })
+        return vc2Nodes;
+    }
+    
+    //return Promise resolve: winNode
+    async function _addBranchVCT2(param, tree, current, moves) {
+        param.maxDepth -= 2;
+        let winNode = undefined,
+            {twoNodes} = await getContinueNodes(param),
+            vc2Nodes = await getVC2Node(param, twoNodes);
+        //console.log(`vc2Nodes: [${movesToName(vc2Nodes.map(node => node.idx))}]`)
+        winNode ||= await _addBranchVC2_1(param, vc2Nodes, tree, current, moves);
+        param.maxDepth += 2;
+        return winNode;
     }
     
     //param {arr, color, maxVCF, maxDepth, maxNode}
-    //return Promise resolve: isWin
-    async function _addBranchNumberWin(param, tree, current, depth = 0) {
+    //return Promise resolve: winNode
+    async function _addBranchNumberWin(param, tree, current, moves = []) {
         param = copyParam(param);
         param.arr = param.arr.slice(0);
-        let ps = [],
-            isWin = false,
+        moves = moves.slice(0);
+        let winNode = undefined,
             arr = param.arr,
-            path = positionToMoves(arr),
-            hasNode = hasPosition(path, tree),
-            hasScore = hasNode && hasNode.score || 0;
-        
-        if (hasScore) {
-            switch (hasScore) {
-                case SCORE_WAIT:
-                    isWin = SCORE_RESOLVE == await waitNodeScore(hasNode, SCORE_WAIT);
-                    break;
-                case SCORE_RESOLVE:
-                    isWin = true;
-                    break;
-                case SCORE_REJECT:
-                    isWin = false;
-                    break;
-            }
-        }
+            hasNode = await hasPositionNode(arr, tree),
+            hasScore = hasNode.score;
+            
+        if (hasScore == SCORE_RESOLVE) winNode = hasNode;
+        else if (hasScore == SCORE_REJECT) winNode = undefined;
         else if (param.maxDepth >= 0) {
             current.score = SCORE_WAIT;
-            let vcfMoves = await _findVCF(param)
-            
-            if (vcfMoves.length) {
-                tree.createPathVCF(current, vcfMoves);
-                isWin = true;
-            }
-            else if (param.maxDepth >= 2) {
-                param.maxDepth -= 2;
-                let fourNodes = getNodesFour({arr: arr, color: param.color, ftype: FIND_ALL});
-                for (let i = fourNodes.length - 1; i >= 0; i--) {
-                    let idx = fourNodes[i].idx,
-                        cur = tree.newNode(idx, DEFAULT_BOARD_TXT[param.color]),
-                        bIdx;
-                        
-                    arr[idx] = param.color;
-                    current.addChild(cur);
-                    bIdx = getBlockFourPoint(idx, arr, fourNodes[i].info);
-                    ps.push(_addBranchBlockNumberWin(param, [bIdx], tree, cur, depth + 1)
-                        .then(isW => {
-                            if (isW) {
-                                isWin = true;
-                                cur.boardText = "W";
-                            }
-                            cur.comment = `${COLOR_NAME[param.color]} 冲四:<br>[${idxToName(idx)}]<br>防点:<br>[${idxToName(bIdx)}]`;
-                            if (0 == depth) {
-                                if (canceling) current.removeChild(cur);
-                                else cBoard.wLb(cur.idx, cur.boardText, "black");
-                            }
-                        })
-                    )
-                    arr[idx] = 0;
-                    0 == depth && cBoard.printSearchPoint(ps.length, idx, "green");
-                    if (0 == ps.length % MAX_THREAD_NUM) {
-                        await Promise.all(ps);
-                        0 == depth && cBoard.cleSearchPoint();
-                        ps = [];
-                    }
-                }
-                
-                let nodes = await getLevelThreeNodes(param);
-                for (let i = nodes.length - 1; i >= 0; i--) {
-                    let node = nodes[i],
-                        idx = node.idx,
-                        cur = tree.newNode(idx, DEFAULT_BOARD_TXT[param.color]),
-                        blkPoints;
-                        
-                    arr[idx] = param.color;
-                    current.addChild(cur);
-                    param.vcfMoves = node.winMoves;
-                    param.includeFour = true;
-                    blkPoints = await _getBlockVCF(param);
-                    ps.push(_addBranchBlockNumberWin(param, blkPoints, tree, cur, depth + 1)
-                        .then(isW => {
-                            if (isW) {
-                                isWin = true;
-                                cur.boardText = "W";
-                            }
-                            cur.comment = `${COLOR_NAME[param.color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>防点:<br>[${movesToName(blkPoints)}]`;
-                            if (0 == depth) {
-                                if (canceling) current.removeChild(cur);
-                                else cBoard.wLb(cur.idx, cur.boardText, "black");
-                            }
-                        })
-                    )
-                    arr[idx] = 0;
-                    0 == depth && cBoard.printSearchPoint(ps.length, idx, "green");
-                    if (0 == ps.length % MAX_THREAD_NUM) {
-                        await Promise.all(ps);
-                        0 == depth && cBoard.cleSearchPoint();
-                        ps = [];
-                    }
+            winNode ||= await _addBranchVCF(param, tree, current, moves);
+            if (param.maxDepth >= 2) {
+                winNode ||= await _addBranchNumberVCT(param, tree, current, moves);
+                if (0 == moves.length && param.maxDepth >= 4) {
+                    winNode ||= await _addBranchVCT2(param, tree, current, moves);
                 }
             }
         }
-        
-        await Promise.all(ps);
-        if (isWin) current.score = SCORE_RESOLVE;
-        else current.score = SCORE_REJECT;
-        return isWin;
-    }
-    
-    //param {arr, color, maxVCF, maxDepth, maxNode}
-    //return Promise resolve: isWin
-    async function _addBranchNumberWinVC2(param, tree, current, depth = 0) {
+        winNode && (current.boardText = "L");
+        current.score = winNode ? SCORE_RESOLVE : SCORE_REJECT;
+        return winNode;
     }
     
     //param {arr, color, maxVCF, maxDepth, maxNode}
     //return Promise resolve: RenjuTree
-    async function createTreeFourWin(param) {
-        cBoard.cleLb("all");
+    async function createTreeNumberWin(param) {
         let wTree = await createTreeWin(param, LEVEL_FREEFOUR);
         if (wTree) return wTree;
-        try{
-        let { tree, positionMoves, isPushPass, current} = createTree(param),
-            isWin = await _addBranchNumberWin(param, tree, current);
         
-        tree.createPath(positionMoves).comment = `<br><br>解题 大道五目:<br>解题规则 <br>1.要求在四手棋内五连<br>2.第一手活三级别`;
-        cBoard.cleSearchPoint();
+        let { tree, positionMoves, isPushPass, current} = createTree(param),
+            winNode = await _addBranchNumberWin(param, tree, current);
+        
+        tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: ${["零","一","二","三","四","五","六","七"][(param.maxDepth + 3) / 2]}手五连<br>.${{1: "黑白", 2: "白黑"}[param.color]}双方依次落子<br>.${COLOR_NAME[param.color]}只有 ${["0","1","2","3","4","5","6","7"][(param.maxDepth + 3) / 2]} 次落子机会<br>.${COLOR_NAME[param.color]}必须在落子机会内完成五连<br>-----点击棋盘查看计算结果-----<br>`;
+        
         return tree;
-        }
-        catch(err){
-            alert(err.stack)
-        }
     }
 
     //------------------------ exports ----------------------
-
+    async function exe(param, callback) {
+        try {
+            cBoard.cleLb("all");
+            let result =  await callback(param);
+            cBoard.cleSearchPoint();
+            return result;
+        }
+        catch(err) {
+            console.log(err.stack);
+        }
+    }
     return {
+        /* const */
         MAX_THREAD_NUM: MAX_THREAD_NUM,
+        /* function */
         setGameRules: _setGameRules,
         getFreeThread: getFreeThread,
         cancel: cancel,
-        findVCF: findVCF,
-        getBlockVCF: _getBlockVCF,
-        getLevelB: _getLevelB,
-        createTreeVCF: createTreeVCF,
-        createTreeFive: createTreeFive,
-        createTreeFour: createTreeFour,
-        createTreeThree: createTreeThree,
-        createTreePointsVCT: createTreePointsVCT,
-        createTreeLevelThree: createTreeLevelThree,
-        createTreeBlockVCF: createTreeBlockVCF,
-        createTreeDoubleVCF: createTreeDoubleVCF,
-        createTreeTestFoul: createTreeTestFoul,
-        createTreeFourWin: createTreeFourWin,
+        /* async function */
+        createTreeVCF: async (param) => exe(param, createTreeVCF),
+        createTreeFive: async (param) => exe(param, createTreeFive),
+        createTreeFour: async (param) => exe(param, createTreeFour),
+        createTreeThree: async (param) => exe(param, createTreeThree),
+        createTreePointsVCT: async (param) => exe(param, createTreePointsVCT),
+        createTreeLevelThree: async (param) => exe(param, createTreeLevelThree),
+        createTreeBlockVCF: async (param) => exe(param, createTreeBlockVCF),
+        createTreeDoubleVCF: async (param) => exe(param, createTreeDoubleVCF),
+        createTreeTestFoul: async (param) => exe(param, createTreeTestFoul),
+        createTreeNumberWin: async (param) => exe(param, createTreeNumberWin),
+        createTreeBlockCatchFoul: async (param) => exe(param, createTreeBlockCatchFoul),
+        createTreeSimpleWin: async (param) => exe(param, createTreeSimpleWin),
+        /* test function */
         excludeBlockVCF: excludeBlockVCF,
         getBlockPoints: getBlockPoints,
         createTreeVCT: createTreeVCT,
         reset: () => {},
         //test
+        findVCF: findVCF,
+        getBlockVCF: _getBlockVCF,
+        getLevelB: _getLevelB,
+        
         _findVCF: _findVCF,
         _nextMoves: _nextMoves,
         _addBranchIsFoul: _addBranchIsFoul,
