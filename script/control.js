@@ -1501,7 +1501,7 @@ window.control = (() => {
             setMenuRadio(cBoardSizeMenu, cBoardSizeMenu.input.selectedIndex);
             viewport1.scrollTop();
             cBoardSize = this.size;
-            if (this.tree.constructor.name == "Tree") {
+            if (this.tree && this.tree.constructor.name == "Tree") {
                 let libSize = this.tree.centerPos.x * 2 - 1;
                 if (libSize != cBoardSize) msg(`${EMOJI_FOUL_THREE}${libSize}路棋谱 ${cBoardSize}路棋盘${EMOJI_FOUL_THREE}`);
             }

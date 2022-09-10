@@ -378,14 +378,9 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
         this.firstColor = "black";
         this.lineStyle = "normal";
 
-        this.node = function(value) {
-            this.parentNode;
-            this.idx = value == undefined ? -1 : value;
-            this.childNode = [];
-        };
         this.oldFirstColor = "black";
         this.oldResetNum = 0;
-        this.tree = new this.node();
+        this.tree = undefined;
 
         //页面显示的棋盘
         this.scale = 1;
@@ -488,12 +483,12 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
         }();
 
         this.autoDelay = function(cBoard) {
-            return function(callback, timer) {
-                if (timer == "now") {
+            return function(callback, time) {
+                if (time == "now") {
                     callback();
                 }
                 else {
-                    cBoard.delay(callback, timer);
+                    cBoard.delay(callback, time);
                 }
             }
         }(this)
@@ -526,7 +521,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
                 
             tree.init.MS = targetPath.concat(tree.init.MS.slice(tree.init.MSindex + 1));
             tree.init.MSindex = this.MSindex;
-            tree.init.resetNum = targetPath.length;
+            tree.init.resetNum = (tree.init.MS[targetPath.length] == 225 ? 1 : 0 ) + targetPath.length;
             //console.log(`targetPath: [${targetPath}] len: ${targetPath.length}\n branchRootPath: [${branchRootPath}] len: ${branchRootPath.length}`)
             let target = this.tree.createPath(targetPath),
                 branchRoot = tree.createPath(branchRootPath);
@@ -565,7 +560,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
 
 
 
-    CheckerBoard.prototype.autoShow = function(timer = "now") {
+    CheckerBoard.prototype.autoShow = function(timer = 50) {
 
         let playMode = control.getPlayMode();
         //log(`playmofel=${control.getPlayMode()}`)
@@ -582,15 +577,8 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
             this.timerAutoShow = null;
         }
         let cBoard = this;
-        if (timer == "now") {
-            //show();
-            timer = 100;
-            this.timerAutoShow = setTimeout(show, parseInt(timer));
-        }
-        else {
-            this.timerAutoShow = setTimeout(show, parseInt(timer));
-        }
-
+        this.timerAutoShow = setTimeout(show, parseInt(timer));
+    
         function show() {
             if (playMode == control.readLibMode || playMode == control.editLibMode) {
                 cBoard.unpackTree();
@@ -807,7 +795,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
         for (let i = 0; i < bMS.length; i++) {
             this.wNb(bMS[i], `black`, undefined, undefined, undefined, 100);
         }
-        this.autoShow(100);
+        //this.autoShow(100);
     };
 
 
@@ -1024,7 +1012,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
         for (let i = 0; i < bMS.length; i++) {
             this.wNb(bMS[i], `black`, undefined, undefined, undefined, 100);
         }
-        this.autoShow(100);
+        //this.autoShow(100);
     };
 
 
@@ -2555,7 +2543,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
         this.removeMarkLine("all");
         this.MSToMoves();
         //this.removeTree();
-        this.autoShow();
+        //this.autoShow();
 
         // 复制一个点，同时打印出来
         function copyP(board, idx, idx1) {
@@ -3741,7 +3729,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
             return codeStr;
         }
         else {
-            return false;
+            return "";
         }
 
     };
@@ -4037,7 +4025,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
     };
 
 
-    CheckerBoard.prototype.unpackCode = function(showNum, codeStr, resetNum, firstColor) {
+    CheckerBoard.prototype.unpackCode = function(showNum, codeStr, resetNum = 0, firstColor = "black") {
         let st = 0;
         let end = codeStr.indexOf("{");
         end = end == -1 ? codeStr.length : end;
@@ -4054,8 +4042,8 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
         whiteMoves = this.setMoves(codeStr.slice(st, end));
         if (moves || blackMoves || whiteMoves) {
             this.cle();
-            this.resetNum = resetNum == undefined ? 0 : resetNum;
-            this.firstColor = firstColor == undefined ? "black" : firstColor;
+            this.resetNum = resetNum;
+            this.firstColor = firstColor;
             if (moves) this.unpackMoves(showNum, "auto", moves);
             if (blackMoves) this.unpackMoves(showNum, "black", blackMoves);
             if (whiteMoves) this.unpackMoves(showNum, "white", whiteMoves);
