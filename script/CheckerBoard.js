@@ -517,15 +517,16 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
     CheckerBoard.prototype.mergeTree = function(tree) {
         if (this.tree && tree.init) {
             let targetPath = this.MS.slice(0, this.MSindex + 1),
-                branchRootPath = tree.init.MS.slice(0, tree.init.MSindex + 1);
+                branchRootPath = tree.init.MS.slice(0, tree.init.MSindex + 1),
+                target = this.tree.createPath(targetPath),
+                branchRoot = tree.createPath(branchRootPath);
                 
             tree.init.MS = targetPath.concat(tree.init.MS.slice(tree.init.MSindex + 1));
             tree.init.MSindex = this.MSindex;
-            tree.init.resetNum = (tree.init.MS[targetPath.length] == 225 ? 1 : 0 ) + targetPath.length;
+            tree.init.resetNum = targetPath.length;
+            if (branchRoot && branchRoot.down && branchRoot.down.idx == 225) tree.init.resetNum++;
             //console.log(`targetPath: [${targetPath}] len: ${targetPath.length}\n branchRootPath: [${branchRootPath}] len: ${branchRootPath.length}`)
-            let target = this.tree.createPath(targetPath),
-                branchRoot = tree.createPath(branchRootPath);
-                
+            
             target.comment = branchRoot.comment + target.comment;
             if ((targetPath.length & 1) == (branchRootPath.length & 1)) {
                 this.tree.insertBranch(target, branchRoot);
