@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["renju"] = "v2108.01";
+self.SCRIPT_VERSIONS["renju"] = "v2108.02";
 var loadApp = () => { // 按顺序加载应用
     "use strict";
     const TEST_LOADAPP = true;
@@ -279,7 +279,11 @@ var loadApp = () => { // 按顺序加载应用
                     if (e.data.ok) {
                         log(`更新完成 ${e.data.version}`, "warn")
                         window.setUpdataVersion()
-                        resolve()
+                        window.removeOldAppCache()
+                            .then(()=>{})
+                            .catch(()=>{})
+                            .then(resolve)
+                        ()
                     }
                     else {
                         log(`更新失败 ${e.data.version} : ${e.data.error}`, "error")

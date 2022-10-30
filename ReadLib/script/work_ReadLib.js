@@ -1,5 +1,5 @@
 "use strict"
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["work_ReadLib"] = "v2108.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["work_ReadLib"] = "v2108.02";
 
 if ("importScripts" in self) {
     self.importScripts(
@@ -36,7 +36,7 @@ function post(cmd, param, transfer) {
 }
 
 
-let renLibDoc = new CRenLibDoc();
+let renLibDoc = new RenLibDoc();
 
 function getArrBuf(file) {
     return new Promise(function(resolve, reject) {

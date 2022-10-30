@@ -2064,16 +2064,15 @@ void simpleVCF(char color, char* arr, BYTE* moves, BYTE& movesLen) {
     BYTE svcfFourPointsLen = 0,
         svcfVCFLen = 0;
         
-    short leng = movesLen - 6;
-    for (DWORD j = 1; j <= leng; j += 2) { // add fourPoint
+    DWORD leng = movesLen - 6;
+    /*for (DWORD j = 1; j <= leng; j += 2) { // add fourPoint
+        arr[moves[j-1]] = color;
+        arr[moves[j]] = INVERT_COLOR[color];
         if (FOUR_NOFREE == (FOUL_MAX & testPointFour(moves[j], INVERT_COLOR[color], arr))) svcfFourPoints[svcfFourPointsLen++] = j;
     }
-    if (svcfFourPointsLen) {
-        for (BYTE j = 0; j <= leng; j++) {
-            arr[moves[j]] = (j & 1) ? INVERT_COLOR[color] : color;
-        }
+    for(DWORD j = 0; j <= leng; j++) {
+        arr[moves[j]] = 0;
     }
-    
     while (svcfFourPointsLen) { //判断引起对手反四的手顺是否可以去除
         BYTE st = 0;
         BYTE l = 2;
@@ -2087,16 +2086,15 @@ void simpleVCF(char color, char* arr, BYTE* moves, BYTE& movesLen) {
         }
         
         svcfVCFLen = 0; //concat
-        for (BYTE j=st; j<=leng; j++) arr[moves[j]] = 0;
-        leng = st;
+        for (BYTE j=0; j<st; j++) svcfVCF[svcfVCFLen++] = moves[j];
         for (BYTE j=st + l; j<movesLen; j++) svcfVCF[svcfVCFLen++] = moves[j];
         if (isVCF(color, arr, svcfVCF, svcfVCFLen)) { //splice
             movesLen = st;  //删除无谓冲四
-            for (BYTE j=0; j<svcfVCFLen; j++) moves[movesLen++] = svcfVCF[j];
+            for (BYTE j=st; j<svcfVCFLen; j++) moves[movesLen++] = svcfVCF[j];
         }
     }
 
-    leng = movesLen - 6;
+    leng = movesLen - 6;*/
     for (BYTE j = 0; j <= leng; j++) { // 摆棋子
         arr[moves[j]] = (j & 1) ? INVERT_COLOR[color] : color;
     }

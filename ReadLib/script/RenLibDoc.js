@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.02";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -166,7 +166,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         }
     }
 
-    class CRenLibDoc {
+    class RenLibDoc {
         constructor() {
             this.m_MoveList = new MoveList();
             this.m_file;
@@ -175,18 +175,18 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         }
     }
     
-    CRenLibDoc.prototype.setPostStart = function(start = 0) {
+    RenLibDoc.prototype.setPostStart = function(start = 0) {
         post_number_start = start;
         post("info", `post_number_start = ${post_number_start}`);
     }
 
-    CRenLibDoc.prototype.setCenterPos = function(point) {
+    RenLibDoc.prototype.setCenterPos = function(point) {
         centerPos.x = point.x;
         centerPos.y = point.y;
         //post("warn", `棋谱大小改为: ${centerPos.x*2-1} × ${centerPos.y*2-1} \n中心点已改为: x = ${centerPos.x}, y = ${centerPos.y}`)
     }
 
-    CRenLibDoc.prototype.readOldComment = function(libFile, pStrOneLine = [], pStrMultiLine = []) {
+    RenLibDoc.prototype.readOldComment = function(libFile, pStrOneLine = [], pStrMultiLine = []) {
 
         function msb(ch) {
             return (ch & 0x80);
@@ -203,7 +203,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
 
     }
 
-    CRenLibDoc.prototype.readNewComment = function(libFile, pStrOneLine = [0], pStrMultiLine = [0]) {
+    RenLibDoc.prototype.readNewComment = function(libFile, pStrOneLine = [0], pStrMultiLine = [0]) {
         let buffer = new Uint8Array(2),
             strNew = [];
 
@@ -238,7 +238,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         }
     }
 
-    CRenLibDoc.prototype.readBoardText = function(libFile, pStrBoardText = []) {
+    RenLibDoc.prototype.readBoardText = function(libFile, pStrBoardText = []) {
         let buffer = new Uint8Array(2);
 
         let strNew = [];
@@ -277,7 +277,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         */
     }
 
-    CRenLibDoc.prototype.findMoveNode = function(pMoveToFind) {
+    RenLibDoc.prototype.findMoveNode = function(pMoveToFind) {
         let m_Stack = new Stack();
 
         let isFound = false;
@@ -323,7 +323,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         return isFound;
     }
 
-    CRenLibDoc.prototype.getVariant = function(pMove = new MoveNode(), Pos, number = -1) {
+    RenLibDoc.prototype.getVariant = function(pMove = new MoveNode(), Pos, number = -1) {
 
         /*let current = this.m_MoveList.index();
         for (let i = 0; i <= current; i++) { // 兼容 Rapfi 制谱
@@ -349,7 +349,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         return 0;
     }
 
-    CRenLibDoc.prototype.addMove = function(pMove = new MoveNode(), pNewMove = new MoveNode()) {
+    RenLibDoc.prototype.addMove = function(pMove = new MoveNode(), pNewMove = new MoveNode()) {
         //console.log("addMove")
         if (pMove.getDown() == 0) {
             //console.log("addMove 1")
@@ -385,7 +385,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         }
     }
 
-    CRenLibDoc.prototype.addComment = function(pMove, pStrOneLine = "", pStrMultiLine = "") {
+    RenLibDoc.prototype.addComment = function(pMove, pStrOneLine = "", pStrMultiLine = "") {
         let isComment = false;
 
         if (pStrOneLine) {
@@ -417,7 +417,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         return isComment;
     }
 
-    CRenLibDoc.prototype.addBoardText = function(pMove, boardText = "") {
+    RenLibDoc.prototype.addBoardText = function(pMove, boardText = "") {
         let isBoardText = false;
 
         if (boardText) {
@@ -435,7 +435,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
         return isBoardText;
     }
 
-    CRenLibDoc.prototype.addAttributes = function(pMove, pFrom, bMark = [], bMove = [], bStart = []) {
+    RenLibDoc.prototype.addAttributes = function(pMove, pFrom, bMark = [], bMove = [], bStart = []) {
 
         bMark[0] = false;
         bMove[0] = false;
@@ -458,7 +458,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
     }
 
 
-    CRenLibDoc.prototype.addLibrary = function(buf) {
+    RenLibDoc.prototype.addLibrary = function(buf) {
         
         let libFile = new LibraryFile();
         
@@ -664,7 +664,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
 
 
     //-----------------------------------------------------------
-    CRenLibDoc.prototype.getBranchNodes = function(path) {
+    RenLibDoc.prototype.getBranchNodes = function(path) {
         function normalizeNodes(nodes, nMatch) {
             let idx,
                 txt,
@@ -843,7 +843,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
     }
 
 
-    CRenLibDoc.prototype.getAutoMove = function() {
+    RenLibDoc.prototype.getAutoMove = function() {
         function getIdx(pMove) {
             return pMove.mPos.x - 1 + (pMove.mPos.y - 1) * 15;
         }
@@ -862,5 +862,5 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.01";
     }
 
 
-    exports.CRenLibDoc = CRenLibDoc;
+    exports.RenLibDoc = RenLibDoc;
 })))

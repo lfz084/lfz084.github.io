@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.02";
 
 (function(global, factory) {
     (global = global || self, factory(global));
@@ -226,7 +226,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.01";
 
     const DEFAULT_BOARD_TXT = ["", "●", "○", "◐"];
     //byte idx; // 1 - 226, 226 is passMove
-    //byte v;  || info
+    //byte info;  || info
     //DWORD level; || //DWORD exInfo;   //RenLib.cpp -> class MoveNode
     
     //UINT down;
@@ -240,6 +240,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.01";
 
         get idx() {
             return this.nodeBuf.getUint8(this.pointer) - 1;
+        }
+        get info() {
+            return this.nodeBuf.getUint8(this.pointer + 1);
         }
         get level() {
             return this.nodeBuf.getUint16(this.pointer + 2);
@@ -283,6 +286,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.01";
 
         set idx(value) {
             this.nodeBuf.setUint8(this.pointer, value + 1);
+        }
+        set info(value) {
+            this.nodeBuf.setUint8(this.pointer + 1, value);
         }
         set level(value) {
             this.nodeBuf.setUint16(this.pointer + 2, value);
@@ -635,7 +641,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.01";
         let pointer = this.nodeBuf.alloc();
         if (pointer) {
             this.nodeBuf.resetObj(pointer); // set Obj buf = {0};
-            //this.nodeBuf.setUint8(pointer, 225 + 1); // idx = 225
             return new Node(this.nodeBuf, this.commentBuf, pointer, idx, boardText);
         }
         else

@@ -1,5 +1,5 @@
 "use strict";
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2108.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2108.02";
 const DIRECTIONS = [0, 1, 2, 3] //[→, ↓, ↘, ↗]; // 米字线
 const FIND_ALL = 0;
 const ONLY_FREE = 1; // 只找活3，活4
@@ -333,7 +333,7 @@ function idxToName(idx) {
     if (x < 0 || x >= cBoardSize || y < 0 || y >= cBoardSize)
         return "--";
     else
-        return alpha.charAt(x) + (15 - y);
+        return alpha.charAt(x) + (cBoardSize - y);
 }
 
 function movesToName(moves, maxLength) {

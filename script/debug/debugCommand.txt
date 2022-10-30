@@ -46,7 +46,7 @@ async function f(thread) {
 async function p() {
     try {
         for(let i=0; i<30; i++){
-            let thread = await engine.getFreeThread();
+            let thread = await engine.waitFreeThread();
             f(thread);
             console.log(i);
         }

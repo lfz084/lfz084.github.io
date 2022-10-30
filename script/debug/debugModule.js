@@ -34,11 +34,14 @@
                 blackCount = 0,
                 ps = [];
 
+            engine.loopWaitThreadList();
+            
             window.openNoSleep();
             console.warn(`VCF测试: ${engine.MAX_THREAD_NUM}线程`);
             for (let i = 0; i < testNum; i++) {
-                let thread = await engine.getFreeThread(),
+                let thread = await engine.waitFreeThread(),
                     test = vcfList[i];
+                console.log(i)
                 ps.push(engine.findVCF({ arr: test.arr, color: test.color, maxVCF: maxVCF, maxDepth: maxDepth, maxNode: maxNode }, thread)
                     .then(vcfInfo => {
                         let winMoves = vcfInfo.winMoves;
@@ -57,6 +60,7 @@
 
             Promise.all(ps)
                 .then(() => {
+                    engine.stopWaitThreadList();
                     engine.cancel();
                     window.closeNoSleep();
                     console.log(`测试结束: ${testNum}道VCF, 黑先: ${blackCount}题 + 白先: ${testNum - blackCount}题\n 
@@ -82,9 +86,9 @@
                 let test = vcfList2[--end],
                     ov = test.moves[test.moves.length - 1];
                 //console.log(test.arr);
-                //console.info(isVCF(test.color, test.arr, test.moves));
+                console.info(isVCF(test.color, test.arr, test.moves));
                 test.moves[test.moves.length - 1] = 225;
-                //console.info(isVCF(test.color, test.arr, test.moves));
+                console.info(isVCF(test.color, test.arr, test.moves));
                 test.moves[test.moves.length - 1] = ov;
                 next();
             }

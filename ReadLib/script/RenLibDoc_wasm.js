@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.02";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -307,7 +307,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
                 let pages = resetBuffer(bufSize,scl);
                 scl -= 0.1;
                 if(pages) resolve(pages);
-                else if(scl>1)setTimeout(()=>max(bufSize, scl),0);
+                else if(scl>0)setTimeout(()=>max(bufSize, scl),0);
                 else reject(`浏览器申请内存失败,请关闭后台应用、刷新网页，再试一下`);
             }
             const FOUR_GB = 4095*1024*1024;
@@ -356,7 +356,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
                     post("loading", { current: current, end: end });
                 },
                 _Z11memoryBoundv: ()=>{
-                    post("alert", `浏览器可用内存不足，只能打开 ${parseInt((jFile.m_current / jFile.m_end)*10000)/100}% 棋谱`);
+                    post("alert", `浏览器可用内存不足，只能打开 ${parseInt((jFile.m_current / jFile.m_end)*10000)/100}% 棋谱\n 使用64位浏览器可以获得更大的内存`);
                 },
                 _Z14outputSGFCachePcj: outputSGFCache,
                 _Z4growj: () => 0,
@@ -401,7 +401,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
         }
     }
 
-    class CRenLibDoc {
+    class RenLibDoc {
         constructor() {
             this.m_MoveList = new MoveList();
             this.m_file = new JFile();
@@ -410,18 +410,18 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
         }
     }
 
-    CRenLibDoc.prototype.setCenterPos = function(point) {
+    RenLibDoc.prototype.setCenterPos = function(point) {
         centerPos.x = point.x;
         centerPos.y = point.y;
         post("warn", `棋谱大小改为: ${centerPos.x*2-1} × ${centerPos.y*2-1} \n中心点已改为: x = ${centerPos.x}, y = ${centerPos.y}`)
     }
 
-    CRenLibDoc.prototype.setBufferScale = function(scl) {
+    RenLibDoc.prototype.setBufferScale = function(scl) {
         buffer_scale = scl;
         post("warn", `已设置${scl}倍内存，打开1M的lib文件会占用${scl}M内存`);
     }
 
-    CRenLibDoc.prototype.addLibrary = function(buf) {
+    RenLibDoc.prototype.addLibrary = function(buf) {
 
         return loadWASM("./RenLib.wasm")
             .then(function() {
@@ -445,7 +445,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
                     return Promise.reject("libFile Open Error");
                 }
             })
-
             .then(function() {
                 if (wasm_exports._Z12checkVersionv())
                     return Promise.resolve();
@@ -481,7 +480,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
 
 
     //-----------------------------------------------------------
-    CRenLibDoc.prototype.getBranchNodes = function(path) {
+    RenLibDoc.prototype.getBranchNodes = function(path) {
     
         function normalizeNodes(nodes, nMatch) {
             let idx,
@@ -554,7 +553,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
     }
 
 
-    CRenLibDoc.prototype.getAutoMove = function() {
+    RenLibDoc.prototype.getAutoMove = function() {
         let len = wasm_exports._Z11getAutoMovev(),
             path = [];
         for (let i = 0; i < len; i++) {
@@ -563,7 +562,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
         return path;
     }
     
-    CRenLibDoc.prototype.lib2sgf = function() {
+    RenLibDoc.prototype.lib2sgf = function() {
         let isFormat = false;
         return  createSGFBuffer(wasm_exports._Z16getSGFByteLengthb(isFormat))
         .then(function(buf) {
@@ -576,5 +575,5 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.01";
         })
     }
 
-    exports.CRenLibDoc = CRenLibDoc;
+    exports.RenLibDoc = RenLibDoc;
 })))

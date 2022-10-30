@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2108.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2108.02";
 
 function loadEvaluatorJScript() {
     (function(global, factory) {
@@ -1714,9 +1714,14 @@ function loadEvaluatorJScript() {
 
             let fs = []; // 把对手的反4点记录
             let leng = moves.length - 6;
-            for (let j = 1; j <= leng; j += 2) { // add fourPoint
+            /*for (let j = 1; j <= leng; j += 2) { // add fourPoint
+                //arr[moves[j -1]] = color;
+                //arr[moves[j]] = INVERT_COLOR[color];
                 if (FOUR_NOFREE == (FOUL_MAX & testPointFour(moves[j], INVERT_COLOR[color], arr))) fs.push(j);
             }
+            //for (let j = 0; j <= leng; j++) {
+                //arr[moves[j]] = 0;
+            //}
             while (fs.length) { //判断引起对手反四的手顺是否可以去除
                 let st = -1;
                 let l = 2;
@@ -1732,7 +1737,7 @@ function loadEvaluatorJScript() {
                 if (isVCF(color, arr, VCF)) moves.splice(st, l);
             }
 
-            leng = moves.length - 6;
+            leng = moves.length - 6;*/
             for (let j = 0; j <= leng; j++) { // 摆棋子
                 arr[moves[j]] = (j & 1) ? INVERT_COLOR[color] : color;
             }

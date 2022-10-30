@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2108.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2108.02";
 
 function loadEvaluatorWebassembly() {
 
@@ -373,6 +373,7 @@ function loadEvaluatorWebassembly() {
                                             bufLen[0] = winMoves.length;
                                             wGlobal._Z9simpleVCFcPcPhRh(color, INITARR, putMoves(winMoves), MOVESLEN);
                                             pushWinMoves(vcfWinMoves, new Uint8Array(memory.buffer, MOVES, bufLen[0]));
+                                            //pushWinMoves(vcfWinMoves, winMoves);
                                             isConcat = false;
                                             vcfInfo.vcfCount++;
                                             maxVCF > 1 && "post" in self && post({ cmd: "vcfInfo", param: { vcfInfo: vcfInfo } });

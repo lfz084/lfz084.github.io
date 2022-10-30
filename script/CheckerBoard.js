@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
+self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.02";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -521,24 +521,33 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
                 target = this.tree.createPath(targetPath),
                 branchRoot = tree.createPath(branchRootPath);
                 
-            tree.init.MS = targetPath.concat(tree.init.MS.slice(tree.init.MSindex + 1));
-            tree.init.MSindex = this.MSindex;
-            tree.init.resetNum = targetPath.length;
-            if (branchRoot && branchRoot.down && branchRoot.down.idx == 225) tree.init.resetNum++;
             //console.log(`targetPath: [${targetPath}] len: ${targetPath.length}\n branchRootPath: [${branchRootPath}] len: ${branchRootPath.length}`)
-            
             target.comment = branchRoot.comment + target.comment;
+            
             if ((targetPath.length & 1) == (branchRootPath.length & 1)) {
+                tree.init.MS = targetPath.concat(tree.init.MS.slice(tree.init.MSindex + 1));
+                tree.init.MSindex = this.MSindex;
+                tree.init.resetNum = targetPath.length;
+                branchRoot && branchRoot.down && branchRoot.down.idx == 225 && tree.init.resetNum++;
+            
                 this.tree.insertBranch(target, branchRoot);
                 //console.log(`insertBranch(target, branchRoot)`)
             }
             else {
+                let rMS = tree.init.MS.slice(tree.init.MSindex + 1);
+                rMS.length && (rMS[0] == 225 ? rMS.splice(0,1) : rMS.splice(0, 0, 225));
+                tree.init.MS = targetPath.concat(rMS);
+                tree.init.MSindex = this.MSindex;
+                tree.init.resetNum = targetPath.length;
+            
                 let passNode = branchRoot.getChild(225);
                 if (passNode) {
                     this.tree.insertBranch(target,passNode);
                     branchRoot.removeChild(passNode);
                     //console.log(`insertBranch(target, passNode)`)
                 }
+                else tree.init.resetNum++
+                
                 passNode = this.tree.createPath(targetPath.concat([225]));
                 this.tree.insertBranch(passNode, branchRoot);
                 //console.log(`insertBranch(passNode, branchRoot)`)
@@ -2451,7 +2460,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
 
 
     // 字母数字坐标，返回 P数组的index
-    CheckerBoard.prototype.nameToIndex = function(name) {
+    CheckerBoard.prototype.nameToIdx = function(name) {
 
         let x = name.toLowerCase().charCodeAt() - "a".charCodeAt();
         name = name.substr(1);
@@ -4074,7 +4083,7 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
             // 棋谱坐标转成 index 后添加棋子
             if (color == "auto") {
                 //console.log(`unpackMoves color == "auto"`);
-                this.wNb(this.nameToIndex(a), "auto", showNum, undefined, undefined, 100);
+                this.wNb(this.nameToIdx(a), "auto", showNum, undefined, undefined, 100);
             }
             else if (color == "black") {
                 //console.log(`unpackMoves color == "black"`);
@@ -4083,10 +4092,10 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
                     case control.readLibMode:
                     case control.editLibMode:
                         if (0 == (this.MSindex & 1)) this.wNb(225, "auto", showNum, undefined, undefined, 100);
-                        this.wNb(this.nameToIndex(a), "auto", showNum, undefined, undefined, 100);
+                        this.wNb(this.nameToIdx(a), "auto", showNum, undefined, undefined, 100);
                         break;
                     case control.renjuMode:
-                        this.wNb(this.nameToIndex(a), "black", showNum, undefined, undefined, 100);
+                        this.wNb(this.nameToIdx(a), "black", showNum, undefined, undefined, 100);
                         break;
                 }
             }
@@ -4097,10 +4106,10 @@ self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.01";
                     case control.readLibMode:
                     case control.editLibMode:
                         if (1 == (this.MSindex & 1)) this.wNb(225, "auto", showNum, undefined, undefined, 100);
-                        this.wNb(this.nameToIndex(a), "auto", showNum, undefined, undefined, 100);
+                        this.wNb(this.nameToIdx(a), "auto", showNum, undefined, undefined, 100);
                         break;
                     case control.renjuMode:
-                        this.wNb(this.nameToIndex(a), "white", showNum, undefined, undefined, 100);
+                        this.wNb(this.nameToIdx(a), "white", showNum, undefined, undefined, 100);
                         break;
                 }
             }

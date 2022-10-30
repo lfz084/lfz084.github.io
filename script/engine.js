@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2108.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2108.02";
 window.engine = (function() {
             "use strict";
             const TEST_ENGINE = false;
@@ -65,6 +65,7 @@ window.engine = (function() {
                         this.result = e.data.param || this.result;
                         this.resolve(this.result);
                         this.isBusy = false;
+                        //this.unlock();
                     }//log("resolve", "warn");
                     else if(typeof COMMAND[e.data.cmd] == "function") {
                         COMMAND[e.data.cmd].call(this, e.data.param)
@@ -75,11 +76,16 @@ window.engine = (function() {
             function onerror(e) {
                 this.resolve(this.result);
                 this.isBusy = false;
+                //this.unlock();
                 log(e, "error");
             }
 
             //------------------------ Thread --------------------
 
+            const UNLOCK = 0;
+            const LOCK1 = 1;
+            const LOCK2 = 2;
+            
             class Thread {
                 set onmessage(fun) {
                     if (typeof fun == "function") {
@@ -99,7 +105,7 @@ window.engine = (function() {
                 }
                 constructor(url, index = "") {
                     this.url = url;
-                    this.isLock = false;
+                    this.lockCode = UNLOCK;
                     this.ID = `thread` + `0000${index}`.slice(-2);
                     this.init();
                 }
@@ -140,12 +146,13 @@ window.engine = (function() {
                 return  this.reset()
             }
 
-            Thread.prototype.lock = function() {
-                this.isLock = true;
+            Thread.prototype.lock = function(code = LOCK1) {
+                this.lockCode < code && (this.lockCode = code);
             }
 
-            Thread.prototype.unlock = function() {
-                this.isLock = false;
+            Thread.prototype.unlock = function(code = LOCK1) {
+                this.lockCode <= code && (this.lockCode = UNLOCK);
+                console.log(`unlock ${this.lockCode}`)
             }
 
             Thread.prototype.postMessage = function(param) {
@@ -158,43 +165,47 @@ window.engine = (function() {
                 MAX_THREAD_NUM = 0xf8 & HD_CURRENT ? HD_CURRENT - 2 : 0xfe & HD_CURRENT ? HD_CURRENT - 1 : HD_CURRENT;
             let THREADS = new Array(MAX_THREAD_NUM),
                 canceling = false;
-
+            let waitThreadList = [], //[resolve1, resolve2, ...]
+                waitThreadInterval = null;
             for (let i = 0; i < MAX_THREAD_NUM; i++) THREADS[i] = new Thread("./script/worker.js", i+1);
 
-            function getFreeThread(threads = THREADS) {
+            function getFreeThreads(threads = THREADS) {
+                threads.map(thread => console.log(`${!thread.isBusy}  ${thread.lockCode}`))
+                console.log(waitThreadList.length);
+                return threads.filter(thread => !thread.isBusy && thread.lockCode == UNLOCK)
+            }
+            
+            async function waitFreeThread(threads = THREADS) {
                 return new Promise((resolve, reject) => {
-                    let timer = setInterval(() => {
-                        for (let i = threads.length - 1; i >= 0; i--) {
-                            if (!threads[i].isBusy && !threads[i].isLock) {
-                                clearInterval(timer);
-                                resolve(threads[i]);
-                                //log(`getFreeThread ${threads[i].ID}`, "log")
-                                return;
-                            }
-                        }
-                    }, 0);
+                    waitThreadList.push(resolve)
                 });
             }
-
-            function getThread() {
-                return new Promise((resolve, reject) => {
-                    let timer = setInterval(() => {
-                        for (let i = threads.length - 1; i >= 0; i--) {
-                            if (!threads[i].isLock) {
-                                threads[i].lock();
-                                clearInterval(timer);
-                                resolve(threads[i]);
-                                return;
-                            }
-                        }
-                    }, 0);
-                });
+            
+            function loopWaitThreadList() {
+                waitThreadInterval && clearInterval(waitThreadInterval);
+                waitThreadInterval = setInterval(() => {
+                    try{
+                        waitThreadList.length && getFreeThreads().map(thread => {
+                            waitThreadList.length && (thread.lock(), waitThreadList.shift()(thread)); //resolve(thread)
+                        })
+                    }
+                    catch(e) {
+                        alert(e.stack)
+                    }
+                }, 0)
+            }
+            
+            function stopWaitThreadList() {
+                waitThreadInterval && clearInterval(waitThreadInterval);
+                waitThreadInterval = null;
             }
 
             async function run(cmd, param, thread) {
                 //log(param, "log");
-                thread = thread || await getFreeThread();
-                return thread.run({ cmd: cmd, param: param });
+                thread = thread || await waitFreeThread();
+                let result = await thread.run({ cmd: cmd, param: param });
+                thread.unlock(LOCK1);
+                return result;
             }
 
             function reset() {
@@ -207,11 +218,11 @@ window.engine = (function() {
                         resolve();
                     }
                     else {
-                        THREADS.map(thread => thread.lock());
+                        THREADS.map(thread => thread.lock(LOCK2));
                         reset()
                             .then(() => {
                                 canceling = true;
-                                THREADS.map(thread => thread.unlock());
+                                THREADS.map(thread => thread.unlock(LOCK2));
                                 let count = 0,
                                     timer = setInterval(() => {
                                         count = THREADS.find(thread => thread.isBusy) ? 0 : count + 1;
@@ -230,7 +241,7 @@ window.engine = (function() {
             //------------------------ Evaluator -------------------
             const NEWLINE = String.fromCharCode(10);
             const DEFAULT_BOARD_TXT = ["", "●", "○", "◐"];
-            const DIRECTION_NAME = ["→", "↓", "↘", "↗"]; 
+            const DIRECTION_NAME = ["→ 线", "↓ 线", "↘ 线", "↗ 线"]; 
             const BLOCK_MODE = "selectPointsLevel",
                 AROUND_MODE = "selectPoints";
             const SCORE_MAX = 0xFF,
@@ -501,15 +512,15 @@ window.engine = (function() {
 
                 for (let idx = 0; idx < 225; idx++) {
                     if (sltArr[idx]) {
-                        let thread = await getFreeThread();
+                        let thread = await waitFreeThread();
                         if (canceling) break;
                         ps.push(getLevelThreeNode(idx, infoArr[idx], param, thread)
                             .then(node => node && nodes.push(node))
                         );
-                        if (ps.length >= MAX_THREAD_NUM) {
+                        /*if (ps.length >= MAX_THREAD_NUM) {
                             await Promise.race(ps);
                             await removeFinallyPromise(ps);
-                        }
+                        }*/
                     }
                 }
                 await Promise.all(ps);
@@ -669,14 +680,14 @@ window.engine = (function() {
             //mode: BLOCK_MODE || AROUND_MODE
             //return Promise resolve: arr[225];
             async function _selectPoints(param, mode = AROUND_MODE, thread) {
-                thread = thread || await getFreeThread();
-                return await run(mode, param, thread) || new Array(225);
+                thread = thread || await waitFreeThread();
+                return (await run(mode, param, thread)) || new Array(225);
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //return Promise resolve: vcfWinMoves || []
             async function _findVCF(param, thread) {
-                thread = thread || await getFreeThread();
+                thread = thread || await waitFreeThread();
                 let vInfo = (await run("findVCF", param, thread)) || {winMoves: []};
                 return vInfo.winMoves[0] || [];
             }
@@ -684,21 +695,21 @@ window.engine = (function() {
             //param: {arr, color, vcfMoves, includeFour}
             //return Promise resolve: points[idx1, idx2, idx3...]
             async function _getBlockVCF(param, thread) {
-                thread = thread || await getFreeThread();
+                thread = thread || await waitFreeThread();
                 return await run("getBlockVCF", param, thread) || [];
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //return Promise resolve: levelBInfo
             async function _getLevelB(param, thread) {
-                thread = thread || await getFreeThread();
+                thread = thread || await waitFreeThread();
                 return await run("getLevelB", param, thread) || levelBInfo;
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //return Promise resolve: vcfInfo
             async function findVCF(param, thread) {
-                thread = thread || await getFreeThread();
+                thread = thread || await waitFreeThread();
                 return await run("findVCF", param, thread) || vcfInfo;
             }
 
@@ -711,7 +722,7 @@ window.engine = (function() {
                 while (i >= 0) {
                     let idx = param.points[i--];
                     if (param.arr[idx] == 0) {
-                        let thread = await getFreeThread();
+                        let thread = await waitFreeThread();
                         param.arr[idx] = INVERT_COLOR[param.color];
                         ps.push(_findVCF(param, thread).then(winMoves => 0 == winMoves.length && (result[idx] = idx)));
                         param.arr[idx] = 0;
@@ -828,7 +839,7 @@ window.engine = (function() {
                 }
 
                 if (LEVEL_WIN == (getLevel(param.arr, 1) & 0xff) || LEVEL_WIN == (getLevel(param.arr, 2) & 0xff)) {
-                    tree.createPath(positionMoves).comment = `棋局已结束`;
+                    tree.createPath(positionMoves).comment = `棋局已结束<br>`;
                     return tree;
                 }
                 else if (level >= LEVEL_NOFREEFOUR) {
@@ -836,13 +847,13 @@ window.engine = (function() {
                     node.idx = fiveIdx;
                     node.boardText = "W";
                     current.addChild(node);
-                    tree.createPath(positionMoves).comment = `${COLOR_NAME[param.color]} 可以五连`;
+                    tree.createPath(positionMoves).comment = `${COLOR_NAME[param.color]} 可以五连<br>`;
                     return tree;
                 }
                 else if (level == LEVEL_VCF) {
                     tree.createPathVCF(current, levelBInfo.winMoves);
                     tree.init.MS = getInitMoves(tree);
-                    tree.createPath(positionMoves).comment = `${COLOR_NAME[param.color]} 有杀`;
+                    tree.createPath(positionMoves).comment = `${COLOR_NAME[param.color]} 有杀<br>`;
                     return tree;
                 }
                 return undefined;
@@ -942,7 +953,7 @@ window.engine = (function() {
                             let level = getLevelPoint(idx, color, arr);
                             //console.log(`[${idxToName(idx)}], ${0xff & level}`)
                             if (LEVEL_CATCHFOUL > (0xff & level)) {
-                                let path = positionMoves(arr),
+                                let path = positionToMoves(arr),
                                     pNodes = tree.getPositionNodes(path, 7, 0xffff),
                                     node = pNodes.find(node => node.down);
                                 //console.log('aaaaa [idxToName(idx)], ${node}')
@@ -1284,7 +1295,7 @@ window.engine = (function() {
         let winNode = undefined,
             arr = param.arr,
             hasNode = await hasPositionNode(arr, tree),
-            hasScore = hasNode.score;
+            hasScore = hasNode && hasNode.score;
             
         if (hasScore == SCORE_RESOLVE) winNode = hasNode;
         else if (hasScore == SCORE_REJECT) winNode = undefined;
@@ -1550,13 +1561,13 @@ window.engine = (function() {
                     len = ps[0],
                     pointInfo = 0;
                 //console.log(`idx: ${idxToName(idx)} [${movesToName(ps.slice(1, ps[0]+1))}]`)
-                iHtml += `判断 ${dirName} 线是否为活三......<br>`;
+                iHtml += `判断 ${dirName}是否为活三......<br>`;
                 if (len) {
                     arr[ps[1]] = 1;
                     pointInfo = _addBranchIsFoul(ps[1], arr, tree, bCur, depth+1);
                     arr[ps[1]] = 0;
                     if (!pointInfo) {
-                        iHtml += `[${idxToName(ps[1])}] 是活四点 ${dirName} 线是活三<br>`;
+                        iHtml += `[${idxToName(ps[1])}] 是活四点 ${dirName}是活三<br>`;
                         threeCount++;
                         continue;
                     }
@@ -1570,7 +1581,7 @@ window.engine = (function() {
                     pointInfo = _addBranchIsFoul(ps[2], arr, tree, bCur, depth+1);
                     arr[ps[2]] = 0;
                     if (!pointInfo) {
-                        iHtml += `[${idxToName(ps[2])}] 是活四点 ${dirName} 线是活三<br>`;
+                        iHtml += `[${idxToName(ps[2])}] 是活四点 ${dirName}是活三<br>`;
                         threeCount++;
                     }
                     else {
@@ -2104,7 +2115,7 @@ window.engine = (function() {
         let winNode = undefined,
             arr = param.arr,
             hasNode = await hasPositionNode(arr, tree),
-            hasScore = hasNode.score;
+            hasScore = hasNode && hasNode.score;
             
         if (hasScore == SCORE_RESOLVE) winNode = hasNode;
         else if (hasScore == SCORE_REJECT) winNode = undefined;
@@ -2141,7 +2152,9 @@ window.engine = (function() {
     async function exe(param, callback) {
         try {
             cBoard.cleLb("all");
+            loopWaitThreadList();
             let result =  await callback(param);
+            stopWaitThreadList();
             cBoard.cleSearchPoint();
             return result;
         }
@@ -2154,7 +2167,9 @@ window.engine = (function() {
         MAX_THREAD_NUM: MAX_THREAD_NUM,
         // function //
         setGameRules: _setGameRules,
-        getFreeThread: getFreeThread,
+        waitFreeThread: waitFreeThread,
+        stopWaitThreadList: stopWaitThreadList,
+        loopWaitThreadList: loopWaitThreadList,
         cancel: cancel,
         // async function //
         createTreeVCF: async (param) => exe(param, createTreeVCF),
