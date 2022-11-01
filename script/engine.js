@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2108.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2108.03";
 window.engine = (function() {
             "use strict";
             const TEST_ENGINE = false;
@@ -65,7 +65,6 @@ window.engine = (function() {
                         this.result = e.data.param || this.result;
                         this.resolve(this.result);
                         this.isBusy = false;
-                        //this.unlock();
                     }//log("resolve", "warn");
                     else if(typeof COMMAND[e.data.cmd] == "function") {
                         COMMAND[e.data.cmd].call(this, e.data.param)
@@ -76,7 +75,6 @@ window.engine = (function() {
             function onerror(e) {
                 this.resolve(this.result);
                 this.isBusy = false;
-                //this.unlock();
                 log(e, "error");
             }
 
@@ -105,7 +103,6 @@ window.engine = (function() {
                 }
                 constructor(url, index = "") {
                     this.url = url;
-                    this.lockCode = UNLOCK;
                     this.ID = `thread` + `0000${index}`.slice(-2);
                     this.init();
                 }
@@ -113,6 +110,8 @@ window.engine = (function() {
 
             Thread.prototype.init = async function() {
                 this.isBusy = false;
+                this.lockCode = UNLOCK;
+                this.lockCount = 0;
                 this.resolve = function() {};
                 this.reject = function() {};
                 this.result = undefined;
@@ -152,7 +151,7 @@ window.engine = (function() {
 
             Thread.prototype.unlock = function(code = LOCK1) {
                 this.lockCode <= code && (this.lockCode = UNLOCK);
-                console.log(`unlock ${this.lockCode}`)
+                //console.log(`unlock ${this.lockCode}`)
             }
 
             Thread.prototype.postMessage = function(param) {
@@ -170,11 +169,20 @@ window.engine = (function() {
             for (let i = 0; i < MAX_THREAD_NUM; i++) THREADS[i] = new Thread("./script/worker.js", i+1);
 
             function getFreeThreads(threads = THREADS) {
-                threads.map(thread => console.log(`${!thread.isBusy}  ${thread.lockCode}`))
-                console.log(waitThreadList.length);
-                return threads.filter(thread => !thread.isBusy && thread.lockCode == UNLOCK)
+                //threads.map(thread => console.log(`${!thread.isBusy}  ${thread.lockCode}`))
+                //console.log(waitThreadList.length);
+                return threads.filter(thread => {
+                    if (thread.lockCount > 100) alert(`${thread.ID} ERROR...`)
+                    if (!thread.isBusy) {
+                        if (thread.lockCode == UNLOCK) {
+                            thread.lockCount = 0;
+                            return true;
+                        }
+                        else thread.lockCount++
+                    }
+                })
             }
-            
+
             async function waitFreeThread(threads = THREADS) {
                 return new Promise((resolve, reject) => {
                     waitThreadList.push(resolve)
@@ -182,6 +190,7 @@ window.engine = (function() {
             }
             
             function loopWaitThreadList() {
+                THREADS.map(thread => (thread.isBusy = false, thread.unlock(LOCK2)));
                 waitThreadInterval && clearInterval(waitThreadInterval);
                 waitThreadInterval = setInterval(() => {
                     try{
@@ -189,9 +198,9 @@ window.engine = (function() {
                             waitThreadList.length && (thread.lock(), waitThreadList.shift()(thread)); //resolve(thread)
                         })
                     }
-                    catch(e) {
-                        alert(e.stack)
-                    }
+                        catch(e) {
+                            alert(e.stack)
+                        }
                 }, 0)
             }
             
@@ -200,9 +209,9 @@ window.engine = (function() {
                 waitThreadInterval = null;
             }
 
-            async function run(cmd, param, thread) {
+            async function run(cmd, param) {
                 //log(param, "log");
-                thread = thread || await waitFreeThread();
+                let thread = await waitFreeThread();
                 let result = await thread.run({ cmd: cmd, param: param });
                 thread.unlock(LOCK1);
                 return result;
@@ -492,12 +501,12 @@ window.engine = (function() {
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //node: { idx: 0 - 224, lineInfo: Uint16, winMoves: [idx1,idx2,idx3...] }
             //return Promise resolve: node || undefined
-            async function getLevelThreeNode(idx, lineInfo, param, thread) {
+            async function getLevelThreeNode(idx, lineInfo, param) {
                 if (param.arr[idx] || THREE_FREE < (lineInfo & FOUL_MAX_FREE)) return;
                 let arr = param.arr.slice(0);
                 arr[idx] = param.color;
 
-                let winMoves = await _findVCF({ arr: arr, color: param.color, maxVCF: param.maxVCF, maxDepth: param.maxDepth, maxNode: param.maxNode }, thread);
+                let winMoves = await _findVCF({ arr: arr, color: param.color, maxVCF: param.maxVCF, maxDepth: param.maxDepth, maxNode: param.maxNode });
                 if (winMoves.length) return { idx: idx, lineInfo: lineInfo, winMoves: winMoves };
             }
 
@@ -512,9 +521,7 @@ window.engine = (function() {
 
                 for (let idx = 0; idx < 225; idx++) {
                     if (sltArr[idx]) {
-                        let thread = await waitFreeThread();
-                        if (canceling) break;
-                        ps.push(getLevelThreeNode(idx, infoArr[idx], param, thread)
+                        ps.push(getLevelThreeNode(idx, infoArr[idx], param)
                             .then(node => node && nodes.push(node))
                         );
                         /*if (ps.length >= MAX_THREAD_NUM) {
@@ -573,8 +580,7 @@ window.engine = (function() {
 
             //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode}
             async function _nextMoves(param) {
-                let thread,
-                    infoArr = [],
+                let infoArr = [],
                     blkPoints = [],
                     ps = [];
 
@@ -679,38 +685,33 @@ window.engine = (function() {
             //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ?nMaxDepth}
             //mode: BLOCK_MODE || AROUND_MODE
             //return Promise resolve: arr[225];
-            async function _selectPoints(param, mode = AROUND_MODE, thread) {
-                thread = thread || await waitFreeThread();
-                return (await run(mode, param, thread)) || new Array(225);
+            async function _selectPoints(param, mode = AROUND_MODE) {
+                return (await run(mode, param)) || new Array(225);
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //return Promise resolve: vcfWinMoves || []
-            async function _findVCF(param, thread) {
-                thread = thread || await waitFreeThread();
-                let vInfo = (await run("findVCF", param, thread)) || {winMoves: []};
+            async function _findVCF(param) {
+                let vInfo = (await run("findVCF", param)) || {winMoves: []};
                 return vInfo.winMoves[0] || [];
             }
 
             //param: {arr, color, vcfMoves, includeFour}
             //return Promise resolve: points[idx1, idx2, idx3...]
-            async function _getBlockVCF(param, thread) {
-                thread = thread || await waitFreeThread();
-                return await run("getBlockVCF", param, thread) || [];
+            async function _getBlockVCF(param) {
+                return await run("getBlockVCF", param) || [];
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //return Promise resolve: levelBInfo
-            async function _getLevelB(param, thread) {
-                thread = thread || await waitFreeThread();
-                return await run("getLevelB", param, thread) || levelBInfo;
+            async function _getLevelB(param) {
+                return await run("getLevelB", param) || levelBInfo;
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //return Promise resolve: vcfInfo
-            async function findVCF(param, thread) {
-                thread = thread || await waitFreeThread();
-                return await run("findVCF", param, thread) || vcfInfo;
+            async function findVCF(param) {
+                return await run("findVCF", param) || vcfInfo;
             }
 
             //param: {points, arr, color, maxVCF, maxDepth, maxNode}
@@ -722,9 +723,8 @@ window.engine = (function() {
                 while (i >= 0) {
                     let idx = param.points[i--];
                     if (param.arr[idx] == 0) {
-                        let thread = await waitFreeThread();
                         param.arr[idx] = INVERT_COLOR[param.color];
-                        ps.push(_findVCF(param, thread).then(winMoves => 0 == winMoves.length && (result[idx] = idx)));
+                        ps.push(_findVCF(param).then(winMoves => 0 == winMoves.length && (result[idx] = idx)));
                         param.arr[idx] = 0;
                     }
                 }

@@ -368,14 +368,14 @@
         }
     });
     */
-    cBoard.onMove = function(idx) {
+    /*cBoard.onMove = function(idx) {
         try {
 
             cBoard.cleLb("all");
 
             let emptyList = new Array(15),
                 emptyMoves = new Array(15),
-                WLbs = [];
+                WLbs = [];*/
             /*
                                 window.animaCount++;
                                 let direction = window.animaCount & 3;
@@ -408,14 +408,14 @@
                                 */
 
 
-            let arr = /*cBoard.getArray2D(),*/ cBoard.getArray(),
+            /*let arr = /*cBoard.getArray2D(),*/ cBoard.getArray(),
                 newarr = getArr2D([]),
                 markArr = new Array(225),
                 around = [];
             let arrs = `[${arr}]`;
             //alert(arrs)
             ///msg(arrs, "input");
-            alert(getScore(idx, 1, arr))
+            alert(getScore(idx, 1, arr))*/
 
             /*
             for (let i = 0; i < 225; i++) {
@@ -449,7 +449,7 @@
                 }
             }
             */
-            console.log(`idx: ${idx}, ${arr[idx]}`);
+            /*console.log(`idx: ${idx}, ${arr[idx]}`);
 
             let st = new Date().getTime();
             for (let i = 0; i < 4; i++) {
@@ -535,7 +535,7 @@
         catch (err) {
             alert(`${err.message}\n${err.Stack}`)
         }
-    }
+    }*/
 
 
     function testEv(fun, time = 5000) {

@@ -2064,7 +2064,7 @@ void simpleVCF(char color, char* arr, BYTE* moves, BYTE& movesLen) {
     BYTE svcfFourPointsLen = 0,
         svcfVCFLen = 0;
         
-    DWORD leng = movesLen - 6;
+    short leng = movesLen - 6;
     /*for (DWORD j = 1; j <= leng; j += 2) { // add fourPoint
         arr[moves[j-1]] = color;
         arr[moves[j]] = INVERT_COLOR[color];
@@ -2465,6 +2465,7 @@ void getBlockVCF(char* arr, char color, BYTE* vcfMoves, BYTE vcfMovesLen, bool i
                         if (FOUR_FREE == (FOUL_MAX_FREE & testLineFour(tempBlockPoints[i], direction, color, arr))) {
                             if (gameRules != RENJU_RULES || color != 1 || !isFoul(tempBlockPoints[i], arr)) {
                                 blockArr[tempBlockPoints[(i + 1) % 2]] = 0; //连活三如果有两个活四点，排除一个防点
+                                arr[tempBlockPoints[i]] = 0;
                                 break;
                             }
                         }

@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2108.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2108.03";
 
 function loadEvaluatorJScript() {
     (function(global, factory) {
@@ -2093,6 +2093,7 @@ function loadEvaluatorJScript() {
                                 if (FOUR_FREE == (FOUL_MAX_FREE & _testLineFour(bPoints[i], direction, color, arr))) {
                                     if (gameRules != RENJU_RULES || color != 1 || !isFoul(bPoints[i], arr)) {
                                         blockArr[bPoints[(i + 1) % 2]] = 0; //连活三如果有两个活四点，排除一个防点
+                                        arr[bPoints[i]] = 0;
                                         break;
                                     }
                                 }
@@ -2162,7 +2163,7 @@ function loadEvaluatorJScript() {
                     }
                 }
             }
-
+            
             return blockPoints;
         }
 
