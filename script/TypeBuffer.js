@@ -27,7 +27,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["TypeBuffer"] = "v2108.03";
             this.int32 = new Int32Array(this.buf);
             this.int16 = new Int16Array(this.buf);
             this.int8 = new Int8Array(this.buf);
-            for (let i = (PAGE_SIZE >> 2) - 1; i >= 0; i--) this.uint32[i] = 0;
+            this.uint32.fill(0);
             //}
             //catch(err) {
             //console.error(err);

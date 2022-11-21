@@ -313,9 +313,9 @@ function loadEvaluatorWebassembly() {
                                 int8Arr[colorIdx] = color;
                                 int8Arr[nColorIdx] = INVERT_COLOR[color];
                                 moves.push(colorIdx);
-                                continueInfo[3][colorIdx] = continueInfo[color][colorIdx] = color;
+                                continueInfo[3][colorIdx] |= continueInfo[color][colorIdx] = color;
                                 moves.push(nColorIdx);
-                                continueInfo[3][nColorIdx] = continueInfo[INVERT_COLOR[color]][nColorIdx] = INVERT_COLOR[color];
+                                continueInfo[3][nColorIdx] |= continueInfo[INVERT_COLOR[color]][nColorIdx] = INVERT_COLOR[color];
                                 centerIdx = colorIdx;
                                 sum += colorIdx;
                                 stackIdx.push(-1, -1);

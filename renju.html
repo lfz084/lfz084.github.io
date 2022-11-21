@@ -57,6 +57,7 @@
             loadAnimation: "script/loadAnimation.js",
             loadFile: "script/loadFile.js",
             Viewport: "script/View.js",
+            windowError: "script/windowError.js",
             vconsole: "script/debug/vconsole.min.js",
             Button: "script/Button.js",
             emoji: "script/emoji.js",
@@ -97,6 +98,7 @@
             work_ReadLib: "ReadLib/script/work_ReadLib.js",
             RenjuLib: "ReadLib/script/RenjuLib.js",
             RenLibDoc_wasm: "ReadLib/script/RenLibDoc_wasm.js",
+            IndexedDB: "IndexedDB/IndexedDB.js",
 
             debugModule: "script/debug/debugModule.js",
             
@@ -369,14 +371,6 @@
                     oScript.src = url;
                 });
             }
-            /*
-            if (!codeURL) {
-                let oldTime = window.location.href.split(re1)[2] || 0;
-                if ((new Date().getTime() - oldTime) / 1000 > 300) {
-                    reloadApp();
-                }
-            }
-            */
             mlog(`body onload`)
             window.DEBUG = true;
             window.checkAppVersion()
@@ -401,7 +395,7 @@
                 })
                 .then(() => {
                     localStorage.removeItem("reloadCount"); //window.reloadApp Count
-                    _loadScript(SOURCE_FILES["debugModule"]);
+                    //_loadScript(SOURCE_FILES["debugModule"]);
                 })
                 .then(() => {
                     window.SOURCE_FILES = undefined;

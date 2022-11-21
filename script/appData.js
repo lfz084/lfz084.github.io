@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["appData"] = "v2108.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["appData"] = "v2108.03";
  window.appData = (() => {
     "use strict";
     const TYPE_BLACK = 3; // 无序号 添加的黑棋
@@ -11,9 +11,9 @@ self.SCRIPT_VERSIONS["appData"] = "v2108.03";
         }
         // 预定保存点击，
         timerSave = setTimeout(() => { 
-            let moves = cBoard.getMoves(),
-                whiteMoves = cBoard.getMoves(TYPE_WHITE),
-                blackMoves = cBoard.getMoves(TYPE_BLACK),
+            let moves = cBoard.getCodeType(TYPE_NUMBER),
+                whiteMoves = cBoard.getCodeType(TYPE_WHITE),
+                blackMoves = cBoard.getCodeType(TYPE_BLACK),
                 firstColor = cBoard.firstColor,
                 resetNum = cBoard.resetNum,
                 cBoardSize = cBoard.size,
@@ -41,9 +41,9 @@ self.SCRIPT_VERSIONS["appData"] = "v2108.03";
                 control.loadCmdSettings("renjuCmdSettings", data.renjuCmdSettings);
             if (data.firstColor != "undefined" && data.firstColor) cBoard.firstColor = data.firstColor;
             if (parseInt(data.resetNum) > 0) cBoard.resetNum = parseInt(data.resetNum);
-            if (data.moves && cBoard.setMoves(data.moves)) cBoard.unpackMoves(true);
-            if (data.whiteMoves) cBoard.unpackMoves(true, "white", data.whiteMoves);
-            if (data.blackMoves) cBoard.unpackMoves(true, "black", data.blackMoves);
+            if (data.moves) cBoard.unpackCodeType(true, "auto", data.moves);
+            if (data.whiteMoves) cBoard.unpackCodeType(true, "white", data.whiteMoves);
+            if (data.blackMoves) cBoard.unpackCodeType(true, "black", data.blackMoves);
         }, 300);
     };
 

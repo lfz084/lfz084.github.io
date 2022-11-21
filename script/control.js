@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["control"] = "v2108.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2108.03";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
@@ -120,7 +120,6 @@ window.control = (() => {
         cFindPoint = null,
         cFindVCF = null,
         cCancelFind = null,
-        cObjVCF = { arr: [], winMoves: [], color: 0, time: false }, // 保存VCF分支
         cLoadImg = null,
         cSLTX = null,
         cSLTY = null,
@@ -266,7 +265,6 @@ window.control = (() => {
         cBd.firstColor = "black";
         cBd.hideCutDiv();
         cBd.drawLineEnd();
-        cObjVCF.arr = [];
         setPlayMode(MODE_RENJU);
         blackwhiteRadioChecked(cSelBlack);
         markRadioChecked(cAutoadd);
@@ -442,13 +440,13 @@ window.control = (() => {
             case "Function":
                 setBusy(true);
                 callback();
-                setBusy(false);
+                setBusy(false, 1000);
                 break;
             case "AsyncFunction":
                 setBusy(true);
                 callback()
                     .then(()=>{}).catch(()=>{})
-                    .then(() => { setBusy(false) })
+                    .then(() => { setBusy(false, 1000) })
                 break;
         }
     }
@@ -653,7 +651,7 @@ window.control = (() => {
         cMoveL.setText("←");
         cMoveL.setontouchend(function() {
             if (isBusy()) return;
-            cBd.moveCheckerBoard("left");
+            cBd.translate(0, -1); //left
         });
 
         cMoveR = new Button(renjuCmddiv, "button", 0, 0, w, h);
@@ -661,7 +659,7 @@ window.control = (() => {
         cMoveR.setText("→ ");
         cMoveR.setontouchend(function() {
             if (isBusy()) return;
-            cBd.moveCheckerBoard("right");
+            cBd.translate(0, 1); //right
         });
 
         cMoveT = new Button(renjuCmddiv, "button", 0, 0, w, h);
@@ -669,7 +667,7 @@ window.control = (() => {
         cMoveT.setText(" ↑");
         cMoveT.setontouchend(function() {
             if (isBusy()) return;
-            cBd.moveCheckerBoard("top");
+            cBd.translate(-1, 0); //top
         });
 
         cMoveB = new Button(renjuCmddiv, "button", 0, 0, w, h);
@@ -677,21 +675,21 @@ window.control = (() => {
         cMoveB.setText("↓");
         cMoveB.setontouchend(function() {
             if (isBusy()) return;
-            cBd.moveCheckerBoard("bottom");
+            cBd.translate(1, 0); //down
         });
 
         cFlipY = new Button(renjuCmddiv, "button", 0, 0, w, h);
         cFlipY.setText("↔180°");
         cFlipY.setontouchend(function() {
             if (isBusy()) return;
-            cBd.boardFlipY(getShowNum());
+            cBd.rotateY180(getShowNum());
         });
 
         cCW = new Button(renjuCmddiv, "button", 0, 0, w, h);
         cCW.setText(" ↗90°");
         cCW.setontouchend(function() {
             if (isBusy()) return;
-            cBd.boardCW(getShowNum());
+            cBd.rotate90(getShowNum());
         });
 
         cCleLb = new Button(renjuCmddiv, "button", 0, 0, w, h);
@@ -739,8 +737,9 @@ window.control = (() => {
         function inputCode(initStr = "") {
             inputText(initStr)
                 .then(inputStr => {
+                    let type = (playMode == MODE_READLIB || playMode == MODE_EDITLIB) ? TYPE_NUMBER : undefined;
                     !checkCommand(inputStr) &&
-                        cBd.unpackCode(getShowNum(), inputStr);
+                        cBd.unpackCode(getShowNum(), inputStr, type);
                 })
 
         }
@@ -1515,15 +1514,15 @@ window.control = (() => {
             setMenuRadio(loadRenjuSettingsMenu, renjuCmdSettings.idx);
             viewport1.scrollTop();
         };
-        scaleCBoard = function(isScale, timer = "now") {
+        scaleCBoard = function(isScale, timeout = 0) {
             if (isScale) {
                 if (cBd.startIdx < 0)
-                    cBd.setScale(1.5, timer);
+                    cBd.setScale(1.5, timeout);
                 else
                     warn(`${EMOJI_STOP} 画线模式,不能放大棋盘`);
             }
             else {
-                cBd.setScale(1, timer);
+                cBd.setScale(1, timeout);
             }
         };
 
@@ -2916,14 +2915,14 @@ window.control = (() => {
         cBoard.toStart(isShowNum);
     }
 
-    function toPrevious(isShowNum, delay = "now") {
-        cBoard.toPrevious(isShowNum, delay);
-        cBoard.MS[cBoard.MSindex] == 225 && cBoard.toPrevious(isShowNum, delay);
+    function toPrevious(isShowNum, timeout = 0) {
+        cBoard.toPrevious(isShowNum, timeout);
+        cBoard.MS[cBoard.MSindex] == 225 && cBoard.toPrevious(isShowNum, timeout);
     }
 
-    function toNext(isShowNum, delay = "now") {
-        cBoard.toNext(isShowNum, delay);
-        cBoard.MS[cBoard.MSindex] == 225 && cBoard.toNext(isShowNum, delay);
+    function toNext(isShowNum, timeout = 0) {
+        cBoard.toNext(isShowNum, timeout);
+        cBoard.MS[cBoard.MSindex] == 225 && cBoard.toNext(isShowNum, timeout);
     }
 
     function toEnd(isShowNum) {
@@ -3180,7 +3179,7 @@ window.control = (() => {
         return busy;
     }
 
-    function setBusy(value) {
+    function setBusy(value, timeout = 0) {
         if (value) {
             for (let i = renjuCmdSettings.ButtonsIdx[renjuCmdSettings.idx].length - 1; i >= 0; i--) {
                 renjuCmdSettings.defaultButtons[renjuCmdSettings.ButtonsIdx[renjuCmdSettings.idx][i]].hide();
@@ -3191,7 +3190,8 @@ window.control = (() => {
         }
         else {
             moveButtons(renjuCmdSettings);
-            cCancelFind.hide();
+            cCancelFind.move(-0XFFFF, -0XFFFF);
+            setTimeout(() => cCancelFind.hide(), timeout);
             lbTime.close()
         }
         setBlockUnload();
@@ -3224,7 +3224,7 @@ window.control = (() => {
                                 centerPos = { x: cBd.size / 2 + 0.5, y: cBd.size / 2 + 0.5 },
                                 tree = new RenjuTree(1, 640, centerPos);
                             playMode = MODE_EDITLIB;
-                            cBd.unpackCode(getShowNum(), code);
+                            cBd.unpackCode(getShowNum(), code, TYPE_NUMBER);
                             cBd.addTree(tree);
                             cBd.tree.createPath(cBd.MS.slice(0, cBd.MSindex + 1));
                         }
@@ -3430,7 +3430,7 @@ window.control = (() => {
             s.top = ICO_DOWNLOAD.style.top;
             s.left = imgWidth / 2 + parseInt(s.width) * 0.5 + "px";
             s.backgroundColor = "#787878";
-            s.opacity = "0.8";
+            s.opacity = "0.8"; 
             setButtonClick(ICO_CLOSE, () => {
                 shareClose();
                 if (cBd.backgroundColor != oldBackgroundColor || cBd.LbBackgroundColor != oldLbBackgroundColor) {
@@ -3447,33 +3447,36 @@ window.control = (() => {
 
 
     return {
-        "getPlayMode": getPlayMode,
-        "setPlayMode": setPlayMode,
-        "renjuMode": MODE_RENJU,
-        "renjuFreeMode": MODE_RENJU_FREE,
-        "imgMode": MODE_LOADIMG,
-        "lineMode": MODE_LINE_EDIT,
-        "arrowMode": MODE_ARROW_EDIT,
-        "readTreeMode": MODE_READ_TREE,
-        "readThreePointMode": MODE_READ_THREEPOINT,
-        "renlibMode": MODE_RENLIB,
-        "readFoulPointMode": MODE_READ_FOULPOINT,
-        "readLibMode": MODE_READLIB,
-        "editLibMode": MODE_EDITLIB,
-        "cLockImgChecked": () => { return cLockImg.checked; },
-        "cAddwhite2Checked": () => { return cAddwhite2.checked; },
-        "putCheckerBoard": putCheckerBoard,
-        "renjuKeepTouch": renjuKeepTouch,
-        "renjuDblClick": renjuDblClick,
-        "renjuClick": renjuClick,
-        "getRenjuSelColor": getRenjuSelColor,
-        "getRenjuLbColor": getRenjuLbColor,
-        "reset": (cBoard, engine_, msg_, closeMsg_, appData_, documentWidth, documentHeight, param, bodyDiv) => {
+        MODE_RENJU: MODE_RENJU,
+        MODE_RENJU_FREE: MODE_RENJU_FREE,
+        MODE_LOADIMG: MODE_LOADIMG,
+        MODE_LINE_EDIT: MODE_LINE_EDIT,
+        MODE_ARROW_EDIT: MODE_ARROW_EDIT,
+        MODE_READ_TREE: MODE_READ_TREE,
+        MODE_READ_THREEPOINT: MODE_READ_THREEPOINT,
+        MODE_RENLIB: MODE_RENLIB,
+        MODE_READ_FOULPOINT: MODE_READ_FOULPOINT,
+        MODE_READLIB: MODE_READLIB,
+        MODE_EDITLIB: MODE_EDITLIB,
+        
+        getPlayMode: getPlayMode,
+        setPlayMode: setPlayMode,
+        putCheckerBoard: putCheckerBoard,
+        renjuKeepTouch: renjuKeepTouch,
+        renjuDblClick: renjuDblClick,
+        renjuClick: renjuClick,
+        getRenjuSelColor: getRenjuSelColor,
+        getRenjuLbColor: getRenjuLbColor,
+        loadCmdSettings: loadCmdSettings,
+        getEXWindow: () => { return exWindow },
+        cLockImgChecked: () => { return cLockImg.checked; },
+        cAddwhite2Checked: () => { return cAddwhite2.checked; },
+        reset: (cBoard, _engine, _msg, _closeMsg, _appData, documentWidth, documentHeight, param, bodyDiv) => {
             cBd = cBoard;
-            engine = engine_;
-            msg = msg_;
-            closeMsg = closeMsg_;
-            appData = appData_;
+            engine = _engine;
+            msg = _msg;
+            closeMsg = _closeMsg;
+            appData = _appData;
             dw = documentWidth;
             dh = documentHeight;
             parentNode = param[0];
@@ -3482,7 +3485,5 @@ window.control = (() => {
             createHelpWindow();
             setCheckerBoardEvent(cBoard.canvas, bodyDiv);
         },
-        "getEXWindow": () => { return exWindow },
-        "loadCmdSettings": loadCmdSettings
     };
-})();
+})(); 

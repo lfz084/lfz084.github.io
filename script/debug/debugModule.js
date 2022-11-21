@@ -538,14 +538,14 @@
     }*/
 
 
-    function testEv(fun, time = 5000) {
+    function testEv(fun, timeout = 5000) {
         setTimeout(() => {
             input()
                 .then(fun)
                 .then(() => {
-                    testEv(fun, time);
+                    testEv(fun, timeout);
                 })
-        }, time)
+        }, timeout)
     }
 
     function testIf(value, value1) {

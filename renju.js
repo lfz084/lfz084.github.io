@@ -460,7 +460,7 @@ var loadApp = () => { // 按顺序加载应用
     
             let {firstColor, resetNum, moves, whiteMoves, blackMoves, cBoardSize, coordinateType, renjuCmdSettings} = appData.loadData();
             if(window.codeURL) {
-                let obj = cBoard.loadCodeURL(window.codeURL);
+                let obj = cBoard.parserCodeURL(window.codeURL);
                 resetNum = obj.resetNum;
                 cBoardSize = obj.cBoardSize;
                 moves = obj.moves;
@@ -523,6 +523,7 @@ var loadApp = () => { // 按顺序加载应用
         .then(() => {
             loadAnimation.text("20%");
             return loadScriptAll([ //顺序加载
+                [SOURCE_FILES["windowError"]],
                 [SOURCE_FILES["Viewport"], () => {
                     window.viewport1 = new View(dw);
                 }],
@@ -574,6 +575,7 @@ var loadApp = () => { // 按顺序加载应用
                 [SOURCE_FILES["MoveList"]],
                 [SOURCE_FILES["Stack"]],
                 [SOURCE_FILES["RenjuLib"]],
+                [SOURCE_FILES["IndexedDB"]],
                 ], true)
         })
         .then(() => {

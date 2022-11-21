@@ -113,7 +113,7 @@ window.engine = (function() {
                 this.lockCode = UNLOCK;
                 this.lockCount = 0;
                 this.resolve = function() {};
-                this.reject = function() {};
+                //this.reject = function() {};
                 this.result = undefined;
                 this.work = new Worker(this.url);
                 if (this.work) return this.run({ cmd: "setGameRules", param: { rules: gameRules } });
@@ -127,12 +127,12 @@ window.engine = (function() {
             }
 
             Thread.prototype.run = async function({ cmd, param }) {
-                return new Promise((resolve, reject) => {
-                    if (this.isBusy) { reject(new Error("Thread is busy")); return };
+                return new Promise((resolve) => {
+                    if (this.isBusy) { throw new Error("Thread is busy"); return };
                     this.isBusy = true;
                     this.result = undefined;
                     this.resolve = resolve;
-                    this.reject = reject;
+                    //this.reject = reject;
                     this.onmessage = onmessage;
                     this.onerror = onerror;
                     if (canceling) this.onmessage({data: {cmd: "resolve"}});
@@ -184,7 +184,7 @@ window.engine = (function() {
             }
 
             async function waitFreeThread(threads = THREADS) {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     waitThreadList.push(resolve)
                 });
             }
@@ -222,7 +222,7 @@ window.engine = (function() {
             }
 
             function cancel() {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     if (canceling) {
                         resolve();
                     }
@@ -621,34 +621,34 @@ window.engine = (function() {
             
             //wait if obj[key] == value resolve
             //return Promise resolve: obj[key]
-            async function waitValue(obj, key, value, time = 500) {
-                return new Promise((resolve, reject) => {
+            async function waitValue(obj, key, value, timeout = 500) {
+                return new Promise((resolve) => {
                     let timer = setInterval(() => {
                         if (obj[key] == value) {
                             clearInterval(timer);
                             resolve(obj[key]);
                         }
-                    }, time)
+                    }, timeout)
                 })
             }
             
             //wait if obj[key] != value resolve
             //return Promise resolve: obj[key]
-            async function waitValueChange(obj, key, value, time = 500) {
-                return new Promise((resolve, reject) => {
+            async function waitValueChange(obj, key, value, timeout = 500) {
+                return new Promise((resolve) => {
                     let timer = setInterval(() => {
                         if (obj[key] != value) {
                             clearInterval(timer);
                             resolve(obj[key]);
                         }
-                    }, time)
+                    }, timeout)
                 })
             }
             
             //wait if node.score != oScore resolve
             //return Promise resolve: node.score
-            async function waitNodeScore(node, oScore, time = 100) {
-                return waitValueChange(node, "score", oScore, time);
+            async function waitNodeScore(node, oScore, timeout = 100) {
+                return waitValueChange(node, "score", oScore, timeout);
             }
             
             //return Promise resolve: node
@@ -668,8 +668,8 @@ window.engine = (function() {
                 return await hasPositionNode(arr, tree).score;
             }
             
-            async function wait(time) {
-                return new Promise(resolve => setTimeout(resolve, time))
+            async function wait(timeout) {
+                return new Promise(resolve => setTimeout(resolve, timeout))
             }
             
             async function putMove(idx, waitTime = 500) {
@@ -820,7 +820,7 @@ window.engine = (function() {
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: RenjuTree , reject: undefined
+            //return Promise resolve: RenjuTree | undefined
             async function createTreeWin(param, winLevel = LEVEL_VCF) {
                 let { tree, positionMoves, isPushPass, current } = createTree(param),
                     levelBInfo,
@@ -865,7 +865,7 @@ window.engine = (function() {
                 let { tree, positionMoves, isPushPass, current } = createTree(param),
                     filterArr = await _selectPoints(param, AROUND_MODE),
                     nodes = await getLevelThreeNodes(param, filterArr);
-
+                
                 nodes.filter(FILTER_VCF_NODE[param.ftype]).map(node => {
                     let nNode = tree.newNode(),
                         nodePass = tree.newNode();

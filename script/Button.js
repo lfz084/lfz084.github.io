@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["button"] = "2015.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -494,7 +494,7 @@ self.SCRIPT_VERSIONS["button"] = "2015.02";
         if (event) event.preventDefault();
         //   "✔  ○●",radio,checked,前面加上特殊字符。
         let s;
-        let timer;
+        let timeout;
         let cancel = false; // 判断是否取消单击
 
         if (this.isEventMove) cancel = true; // 不触发单击事件
@@ -521,10 +521,10 @@ self.SCRIPT_VERSIONS["button"] = "2015.02";
         else {
             // 未选中时的外观
             if (this.type != "select" || this.type == "checkbox") {
-                timer = 0;
+                timeout = 0;
             }
             else {
-                timer = 0;
+                timeout = 0;
             }
             s = this.type == "radio" ? "" : this.type == "checkbox" ? "" : "";
             s += this.text;
@@ -535,12 +535,12 @@ self.SCRIPT_VERSIONS["button"] = "2015.02";
             this.button.innerHTML = s;
 
             let but = this;
-            if (timer) {
+            if (timeout) {
                 setTimeout(function() {
                     but.button.style.fontSize = but.fontSize;
                     but.button.style.color = but.color;
                     but.button.style.backgroundColor = but.backgroundColor;
-                }, timer);
+                }, timeout);
             }
             else {
                 but.button.style.fontSize = but.fontSize;
@@ -743,24 +743,24 @@ self.SCRIPT_VERSIONS["button"] = "2015.02";
             this.button.style.backgroundColor = this.selectBackgroundColor;
         }
         else {
-            let timer;
+            let timeout;
             if (this.type == "radio" || this.type == "checkbox") {
-                timer = 0;
+                timeout = 0;
             }
             else {
-                timer = 0;
+                timeout = 0;
             }
             s = this.type == "radio" ? "" : this.type == "checkbox" ? "" : "";
             s += this.text;
             this.button.innerHTML = s;
 
             let but = this;
-            if (timer) {
+            if (timeout) {
                 setTimeout(function() {
                     but.button.style.fontSize = but.fontSize;
                     but.button.style.color = but.color;
                     but.button.style.backgroundColor = but.backgroundColor;
-                }, timer);
+                }, timeout);
             }
             else
             {

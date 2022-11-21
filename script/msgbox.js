@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["msgbox"] = "v2108.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2108.03";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -151,13 +151,13 @@ self.SCRIPT_VERSIONS["msgbox"] = "v2108.03";
 
         }
 
-        function closeMsg(timer) {
+        function closeMsg(timeout) {
 
             if (closeTimer) {
                 clearTimeout(closeTimer);
                 closeTimer = null;
             }
-            timer = parseInt(timer) > 0 ? parseInt(timer) : 300;
+            timeout = parseInt(timeout) > 0 ? parseInt(timeout) : 300;
             closeTimer = setTimeout(function() {
                 closeTimer = null;
                 const CLASS_NAME = MsgBoxobj.getAttribute("class");
@@ -171,7 +171,7 @@ self.SCRIPT_VERSIONS["msgbox"] = "v2108.03";
                     MsgBoxobj.setAttribute("class", "");
                     MsgBoxobj.ontouchend = MsgBoxobj.click = function() {};
                 }, ANIMATION_TIMEOUT);
-            }, timer);
+            }, timeout);
         }
 
 
@@ -220,7 +220,7 @@ self.SCRIPT_VERSIONS["msgbox"] = "v2108.03";
         })
     }
 
-    exports.msgbox = function msgbox(title, enterTXT, enterFunction = () => {}, cancelTXT, cancelFunction = () => {}, butNum, timer) {
+    exports.msgbox = function msgbox(title, enterTXT, enterFunction = () => {}, cancelTXT, cancelFunction = () => {}, butNum, timeout) {
         if (typeof title == "object") {
             const data = title;
             title = data.title || data.text || "";
@@ -229,7 +229,7 @@ self.SCRIPT_VERSIONS["msgbox"] = "v2108.03";
             enterFunction = data.enterFunction || data.callEnter || enterFunction;
             cancelFunction = data.cancelFunction || data.callCancel || cancelFunction;
             butNum = data.butNum || butNum;
-            timer = data.timer || timer;
+            timeout = data.timeout || timeout;
         }
         
         return new Promise((resolve, reject) => {
@@ -243,7 +243,7 @@ self.SCRIPT_VERSIONS["msgbox"] = "v2108.03";
                         resolve({ butCode: MSG_CANCEL });
                     }
                 msgWindow.msg(title, "msgbox", undefined, undefined, undefined, undefined, enterTXT, cancelTXT, newEnterFunction, newCancelFunction, butNum == undefined ? cancelTXT ? 2 : 1 : butNum, butNum == 0 ? 1 : undefined);
-                (butNum == 0) && exports.closeMsg(timer).then(resolve).catch(resolve);
+                (butNum == 0) && exports.closeMsg(timeout).then(resolve).catch(resolve);
             }
             catch (err) {
                 reject(err)
@@ -251,21 +251,21 @@ self.SCRIPT_VERSIONS["msgbox"] = "v2108.03";
         })
     }
 
-    exports.closeMsg = function closeMsg(timer) {
-        timer = parseInt(timer) > 0 ? parseInt(timer) : 300;
-        msgWindow.closeMsg(timer);
+    exports.closeMsg = function closeMsg(timeout) {
+        timeout = parseInt(timeout) > 0 ? parseInt(timeout) : 300;
+        msgWindow.closeMsg(timeout);
         
         return new Promise((resolve, reject) => {
-            setTimeout(resolve, timer);
+            setTimeout(resolve, timeout);
         })
     }
 
     exports.warn = (() => {
         let isShowLabel = true;
-        return (txt, timer = 2000) => new Promise((resolve, reject) => {
+        return (txt, timeout = 2000) => new Promise((resolve, reject) => {
             if (!isShowLabel) resolve();
             isShowLabel = false;
-            msgbox(txt, undefined, undefined, undefined, undefined, 0, timer)
+            msgbox(txt, undefined, undefined, undefined, undefined, 0, timeout)
                 .then(() => {
                     isShowLabel = true;
                     resolve();

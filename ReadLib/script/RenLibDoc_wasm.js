@@ -177,6 +177,16 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.03";
         }
     }
     
+    // ---------------  change buffer  -------------------
+    
+    function getbuffer() {
+        return memory.buffer;
+    }
+    
+    function setBuffer(buffer) {
+        
+    }
+    
     //------------------ WebAssembly ---------------------
 
     const POINT_SIZE = 2;

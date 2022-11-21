@@ -555,10 +555,12 @@ function continueFour(arr, color, maxVCF, maxDepth, maxNode) {
     return vcfInfo.continueInfo;
 }
 
-function aroundPoint(arr, color, radius = 3, ctnInfo = [new Array(225), new Array(225), new Array(225), new Array(225)]) {
+function aroundPoint(arr, color, radius = 4, ctnInfo = [new Array(225), new Array(225), new Array(225), new Array(225)]) {
     let rtArr = new Array(225);
-
-    for (let i = 0; i < 225; i++) ctnInfo[0][i] = arr[i] | ctnInfo[3][i];
+    
+    for (let i = 0; i < 225; i++) {
+        ctnInfo[0][i] = arr[i] | (ctnInfo[color][i] && color);
+    }
 
     for (let direction = 0; direction < 4; direction++) {
         let listStart = 0,
@@ -592,12 +594,12 @@ function aroundPoint(arr, color, radius = 3, ctnInfo = [new Array(225), new Arra
     return rtArr;
 }
 
-function selectPoints(arr, color, radius = 3, maxVCF = 1, maxDepth = 10, maxNode = 100000) {
+function selectPoints(arr, color, radius = 4, maxVCF = 1, maxDepth = 10, maxNode = 100000) {
     let ctnArr = continueFour(arr, color, maxVCF, maxDepth, maxNode);
     return aroundPoint(arr, color, radius, maxVCF ? ctnArr : undefined);
 }
 
-function selectPointsLevel(arr, color, radius = 3, maxVCF = 1, maxDepth = 10, maxNode = 100000, nMaxDepth) {
+function selectPointsLevel(arr, color, radius = 4, maxVCF = 1, maxDepth = 10, maxNode = 100000, nMaxDepth) {
     let info = getLevelB(arr, INVERT_COLOR[color], maxVCF, nMaxDepth || maxDepth, maxNode),
         idx = info >> 8 & 0xff,
         level = info & FOUL_MAX,
@@ -681,7 +683,7 @@ function excludeBlockVCF(points, arr, color, maxVCF, maxDepth, maxNode) {
 }
 
 // ❗color 是进攻方的颜色
-function getBlockPoints(arr, color, radius = 3, maxVCF = 1, maxDepth = 10, maxNode = 100000) {
+function getBlockPoints(arr, color, radius = 4, maxVCF = 1, maxDepth = 10, maxNode = 100000) {
     let levelInfo = getLevelB(arr, color, maxVCF, maxDepth, maxNode),
         level = levelInfo & 0xff,
         result = [];
