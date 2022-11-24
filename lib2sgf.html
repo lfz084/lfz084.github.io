@@ -16,6 +16,19 @@
 </head>
 
 <body>
+    <div id="w">
+        <div id="title">
+            LIB2SGF
+        </div>
+        <div id="but">
+        </div>
+        <div id="filename">
+        </div>
+        <div id="status">
+        </div>
+        <a id = "downlink"> </a>
+    </div>
+    <script> function $(id) {return document.getElementById(id)}</script>
     <script>
         window.SCRIPT_VERSIONS = {};
     </script>
@@ -28,11 +41,14 @@
         function buffer2sgf(buffer, filename) {
             filename += ".sgf";
             //let mimetype = "application/sgf";
+            $("status").innerHTML = "生成sgf文件";
             let blob = new Blob([buffer]/*, { type: mimetype }*/);
             saveFile(blob, filename);
         }
 
         function saveFile(blob, filename) {
+            try {
+            $("status").innerHTML = "准备下载文件";
             if (typeof navigator !== "undefined" && navigator.msSaveOrOpenBlob) {
                 navigator.msSaveOrOpenBlob(blob, filename);
                 //log("msSaveOrOpenBlob...");
@@ -48,17 +64,15 @@
                     //log("open downloading...");
                 }
                 else { // download file;
-                    let save_link = document.createElement("a");
+                    let save_link = $("downlink");
+                    save_link.href && URL.revokeObjectURL(save_link.href);
                     save_link.href = URL.createObjectURL(blob);
                     save_link.download = filename;
                     save_link.target = "download";
-                    document.body.appendChild(save_link);
-                    save_link.click();
-                    save_link.parentNode.removeChild(save_link);
-                    setTimeout(() => { URL.revokeObjectURL(save_link.href); }, 1000 * 60);
-                    //log("click downloading...");
+                    setTimeout(() => {save_link.innerHTML = "点击下载"}, 1000);
                 }
             }
+            }catch(e){alert(e.stack)}
         }
     </script>
     <script>
@@ -75,7 +89,7 @@
 
         document.body.onload = () => {
             window.loadAnimation = (() => {
-                let status = document.getElementById("status");
+                let status = $("status");
                 return {
                     open: () => {},
                     close: () => { status.innerHTML = "" },
@@ -83,13 +97,13 @@
                 }
             })()
 
-            let div = d.getElementById("w");
+            let div = $("w");
             let s = div.style;
             s.position = "absolute";
             s.left = parseInt((dw - cWidth) / 2) + "px";
             s.textAlign = "center";
 
-            div = d.getElementById("title");
+            div = $("title");
             s = div.style;
             s.position = "absolute";
             s.left = "0px";
@@ -97,7 +111,7 @@
             s.width = cWidth + "px";
             s.fontSize = "100px";
 
-            div = d.getElementById("but");
+            div = $("but");
             s = div.style;
             s.position = "absolute";
             s.left = (cWidth-300)/2 + "px";
@@ -110,21 +124,28 @@
                 let file = this.files[0],
                     filename = (this.value).split("\\").pop();
                 this.value = "";
-                d.getElementById("filename").innerHTML = filename;
+                $("filename").innerHTML = filename;
                 RenjuLib.openLib(file)
-                    .then(() => document.getElementById("status").innerHTML = "开始编码SGF")
+                    .then(() => $("status").innerHTML = "开始编码SGF")
                     .then(RenjuLib.lib2sgf)
                     .then(bufObj => {
-                        document.getElementById("status").innerHTML = "下载SGF文件";
+                        $("status").innerHTML = "编码完成";
                         return bufObj;
                     })
                     .then(function(bufObj){
+                        let len = 0;
                         RenjuLib.closeLib();
-                        buffer2sgf(new Uint8Array(bufObj.buf, 0, bufObj.byteLen), filename)
+                        if(bufObj.buf.byteLength < bufObj.byteLen) {
+                            len = bufObj.buf.byteLength;
+                            alert(`发生意外错误，丢失了${parseInt((bufObj.byteLen - len)/bufObj.byteLen*10000)/100}%的数据，保存的是不完整的棋谱`)
+                        }
+                        else len = bufObj.byteLen;
+                        $("status").innerHTML = "复制数据";
+                        buffer2sgf(new Uint8Array(bufObj.buf, 0, len), filename)
                     })
             });
 
-            div = d.getElementById("filename");
+            div = $("filename");
             s = div.style;
             s.position = "absolute";
             s.left = "0px";
@@ -133,13 +154,26 @@
             s.fontSize = "50px";
 
 
-            div = d.getElementById("status");
+            div = $("status");
             s = div.style;
             s.position = "absolute";
             s.left = "0px";
             s.top = "450px";
             s.width = cWidth + "px";
             s.fontSize = "50px";
+            
+            div = $("downlink");
+            s = div.style;
+            s.position = "absolute";
+            s.left = "0px";
+            s.top = "600px";
+            s.width = cWidth + "px";
+            s.fontSize = "50px";
+            div.onclick =  function() {
+                div.innerHTML = "";
+                div.href && setTimeout(() => URL.revokeObjectURL(div.href), 1000 * 60);
+            }
+
 
             setTimeout(function() {
                 RenjuLib.reset({
@@ -154,17 +188,7 @@
             }, 1000 * 1);
         }
     </script>
-    <div id="w">
-        <div id="title">
-            LIB2SGF
-        </div>
-        <div id="but">
-        </div>
-        <div id="filename">
-        </div>
-        <div id="status">
-        </div>
-    </div>
+    
 </body>
 
 </html>

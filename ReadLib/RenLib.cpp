@@ -1744,7 +1744,37 @@ void pushSGFNewLine(bool isFormat) {
 //---------------------- lib2sgf --------------------
 
 UINT getSGFByteLength(bool isFormat) {
-    return m_MoveNode_count*(isFormat ? 128 : 12) + 32;
+    return m_MoveNode_count*(isFormat ? 136 : 18) + 32;
+}
+
+void pushBoardText(CString str) {
+    for (int i = 0; i < 4; i++) {
+        if (str[i]) {
+            pushSGFChar(str[i]);
+        }
+        else break;
+    }
+}
+
+void pushLB(MoveNode* node) {
+    MoveNode* next = node->mDown;
+    CPoint point;
+    CString boardText;
+    while (next) {
+        boardText = next->getBoardText();
+        if (boardText[0]) {
+            point = IdxToPoint(next->mIdx);
+            pushSGFChar('L');
+            pushSGFChar('B');
+            pushSGFChar('[');
+            pushSGFChar(ALPHA[point.x]);
+            pushSGFChar(ALPHA[point.y]);
+            pushSGFChar(':');
+            pushBoardText(boardText);
+            pushSGFChar(']');
+        }
+        next = next->mRight;
+    }
 }
 
 void lib2sgf(bool isFormat) {
@@ -1783,6 +1813,7 @@ void lib2sgf(bool isFormat) {
     pushSGFChar('1');
     pushSGFChar('5');
     pushSGFChar(']');
+    pushLB(rootMoveNode);
     pushSGFNewLine(isFormat);
     
     for(int i=0; i < 256; i++) {
@@ -1812,6 +1843,7 @@ void lib2sgf(bool isFormat) {
         pushSGFChar(ALPHA[point.x]);
         pushSGFChar(ALPHA[point.y]);
         pushSGFChar(']');
+        pushLB(next);
         pushSGFNewLine(isFormat);
         
         if(next->mDown) {
