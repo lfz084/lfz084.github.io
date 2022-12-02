@@ -20945,28 +20945,6 @@ function charPointGBK2Unicode(arr){
 }
 // return Unicode String;
 function bufferGBK2Unicode(buf){
-    let str = ""
-    for(let i=0; i<buf.length; i++){
-        if(buf[i]<=0x7f){
-            str += String.fromCharCode(buf[i])
-        }
-        else{
-            str += charPointGBK2Unicode([buf[i], buf[++i] || 0])
-        }
-    }
-    
-    return str;
+    let utf8decoder = new TextDecoder("gb2312"); 
+    return utf8decoder.decode(new Uint8Array(buf));
 }
-/*
-function gbk2unicode(str){
-    let unicode = "";
-    for(let i=0;i<str.length;i++){
-        let idx = UNICODE2GBK.indexOf(str[i])
-    }
-}
-*/
-/*
-alert(unicode2gbk("军军"))
-alert(charGBK2Unicode("%BE%FC"))
-alert(bufferGBK2Unicode([190,252,97,190,252]))
-*/

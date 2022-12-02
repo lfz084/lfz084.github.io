@@ -440,13 +440,13 @@ window.control = (() => {
             case "Function":
                 setBusy(true);
                 callback();
-                setBusy(false, 1000);
+                setBusy(false, 100);
                 break;
             case "AsyncFunction":
                 setBusy(true);
                 callback()
                     .then(()=>{}).catch(()=>{})
-                    .then(() => { setBusy(false, 1000) })
+                    .then(() => { setBusy(false, 800) })
                 break;
         }
     }
@@ -2456,7 +2456,7 @@ window.control = (() => {
                     cBd.P[idx].cle();
                 }
                 else {
-                    cBd.P[idx].printNb(EMOJI_STAR_BLACK, color, cBd.gW, cBd.gH, color == "white" ? "black" : "white");
+                    cBd.P[idx].printNb(EMOJI_STAR_BLACK, color, cBd.gW, cBd.gH, color == "white" ? cBd.wNumColor : cBd.bNumColor);
                 }
             }
         }

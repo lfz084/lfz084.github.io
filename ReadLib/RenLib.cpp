@@ -1741,14 +1741,8 @@ void pushSGFNewLine(bool isFormat) {
     pushSGFChar(10);
 }
 
-//---------------------- lib2sgf --------------------
-
-UINT getSGFByteLength(bool isFormat) {
-    return m_MoveNode_count*(isFormat ? 136 : 18) + 32;
-}
-
-void pushBoardText(CString str) {
-    for (int i = 0; i < 4; i++) {
+void pushSGFString(CString str, UINT maxLen ) {
+    for (UINT i = 0; i < maxLen; i++) {
         if (str[i]) {
             pushSGFChar(str[i]);
         }
@@ -1756,16 +1750,34 @@ void pushBoardText(CString str) {
     }
 }
 
+//---------------------- lib2sgf --------------------
+
+UINT getSGFByteLength(bool isFormat) {
+    return m_MoveNode_count*(isFormat ? 136 : 18) + 32;
+}
+
+void pushBoardText(CString str) {
+    pushSGFString(str, 4);
+}
+
+void pushSGFComment(CString str) {
+    pushSGFString(str, 1024);
+}
+
 void pushLB(MoveNode* node) {
     MoveNode* next = node->mDown;
     CPoint point;
     CString boardText;
+    bool wLB = true;
     while (next) {
         boardText = next->getBoardText();
         if (boardText[0]) {
             point = IdxToPoint(next->mIdx);
-            pushSGFChar('L');
-            pushSGFChar('B');
+            if (wLB) {
+                pushSGFChar('L');
+                pushSGFChar('B');
+                wLB = false;
+            }
             pushSGFChar('[');
             pushSGFChar(ALPHA[point.x]);
             pushSGFChar(ALPHA[point.y]);
@@ -1774,6 +1786,16 @@ void pushLB(MoveNode* node) {
             pushSGFChar(']');
         }
         next = next->mRight;
+    }
+}
+
+void pushComment(MoveNode* node) {
+    TextPage* page = commentPages->findTextPage(node);
+    if (page && page->text[0]) {
+        pushSGFChar('C');
+        pushSGFChar('[');
+        pushSGFComment(page->text);
+        pushSGFChar(']');
     }
 }
 
@@ -1792,7 +1814,8 @@ void lib2sgf(bool isFormat) {
     eCount += 2;
     
     pushSGFSpace(eCount, isFormat);
-    pushSGFChar(';');
+    pushSGFString(";GM[1]CA[gb2312]SZ[15]", 128);
+    /*pushSGFChar(';');
     pushSGFChar('G');
     pushSGFChar('M');
     pushSGFChar('[');
@@ -1812,8 +1835,9 @@ void lib2sgf(bool isFormat) {
     pushSGFChar('[');
     pushSGFChar('1');
     pushSGFChar('5');
-    pushSGFChar(']');
+    pushSGFChar(']');*/
     pushLB(rootMoveNode);
+    pushComment(rootMoveNode);
     pushSGFNewLine(isFormat);
     
     for(int i=0; i < 256; i++) {
@@ -1844,6 +1868,7 @@ void lib2sgf(bool isFormat) {
         pushSGFChar(ALPHA[point.y]);
         pushSGFChar(']');
         pushLB(next);
+        pushComment(next);
         pushSGFNewLine(isFormat);
         
         if(next->mDown) {

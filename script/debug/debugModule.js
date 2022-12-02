@@ -228,13 +228,6 @@
 
     }
 
-    window.testString2Buffer = function(str) {
-        let buf = String2Buffer(str);
-        console.log(`buf: [${buf}]`);
-        let str1 = Buffer2String(buf);
-        console.log(`str: ${str1}`);
-    }
-
     window.testRenjuTree = function() {
         try {
             let tree = new RenjuTree(1, 1024),

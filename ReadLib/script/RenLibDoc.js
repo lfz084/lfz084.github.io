@@ -226,7 +226,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.03";
             strNew.push(buffer[1]);
         }
 
-        strNew = bufferGBK2Unicode(strNew)
+        strNew = TextCoder.decode(new Uint8Array(strNew), "GBK");
         //post("log", `${strNew}`)
         let n = strNew.indexOf(String.fromCharCode(10));
         if (n == -1) {
@@ -260,7 +260,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2108.03";
             strNew.push(buffer[1]);
         }
         strNew.length > 3 ? strNew.length = 3 : strNew;
-        pStrBoardText[0] = bufferGBK2Unicode(strNew);
+        pStrBoardText[0] = TextCoder.decode(new Uint8Array(strNew), "GBK");
         //post("log", strNew)
         //post("log", `${strNew[0].toString(16)}${strNew[1].toString(16)} => ${pStrBoardText[0].charCodeAt(0).toString(16)}`)
         //post("log", pStrBoardText[0])

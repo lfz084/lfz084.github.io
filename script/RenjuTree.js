@@ -266,10 +266,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.03";
             }
         }
         get boardText() {
-            let buf = [];
+            let buf = [], i = -1;
             this.nodeBuf.readMemory(buf, this.pointer + 12, 4);
-            buf.push(0, 0);
-            return Buffer2String(buf);
+            i = buf.indexOf(0);
+            (i + 1) && (buf = buf.slice(0, i));
+            return TextCoder.decode(new Uint8Array(buf), "GBK");
         }
         get comment() {
             let pointer = this.nodeBuf.getUint32(this.pointer + 16),
@@ -277,8 +278,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.03";
             //console.log(`get comment this.pointer = ${this.pointer}, pointer = ${pointer}`)
             if (pointer) {
                 this.commentBuf.readMemory(buf, pointer + 4, COMMENT_SIZE - 4);
-                buf.push(0, 0);
-                return Buffer2String(buf);
+                let i = buf.indexOf(0);
+                (i + 1) && (buf = buf.slice(0, i));
+                return TextCoder.decode(new Uint8Array(buf), "GBK");
             }
             else
                 return "";
@@ -313,14 +315,15 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.03";
         }
         set boardText(str) {
             if (str) {
-                let buf = String2Buffer(str).slice(0, 4);
+                let buf = TextCoder.encode(str, "GBK").slice(0, 4);
                 this.nodeBuf.writeMemory(buf, this.pointer + 12, buf.length);
+                (buf.length < 4) && this.nodeBuf.writeMemory([0], this.pointer + 12 + buf.length, 1);
             }
         }
         set comment(str) {
             if (str) {
                 let pointer = this.nodeBuf.getUint32(this.pointer + 16),
-                    buf = String2Buffer(str).slice(0, COMMENT_SIZE - 4);
+                    buf = TextCoder.encode(str, "GBK").slice(0, COMMENT_SIZE - 4);
                 if (0 == pointer) {
                     pointer = this.commentBuf.alloc();
                     pointer==0 && alert(pointer)
@@ -328,7 +331,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2108.03";
                     this.nodeBuf.setUint32(this.pointer + 16, pointer);
                 }
                 //console.log(`set comment this.pointer = ${this.pointer}, pointer = ${pointer}\n${str}`)
-                pointer && this.commentBuf.writeMemory(buf, pointer + 4, buf.length);
+                if (pointer) {
+                    this.commentBuf.writeMemory(buf, pointer + 4, buf.length);
+                    (buf.length < COMMENT_SIZE - 4) && this.commentBuf.writeMemory([0], pointer + 4 + buf.length, 1);
+                }
             }
         }
 

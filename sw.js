@@ -43,7 +43,7 @@ let load = (() => {
                 "IntervalPost",
                 "RenjuTree",
                 "TypeBuffer",
-                "UNICODE2GBK",
+                "TextCoder",
                 "JFile",
                 "JPoint",
                 "LibraryFile",

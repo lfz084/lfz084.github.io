@@ -209,7 +209,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.03";
             if (buf[i] === 0) break;
             strNew.push(buf[i]);
         }
-        strNew = bufferGBK2Unicode(strNew);
+        strNew = TextCoder.decode(new Uint8Array(strNew), "GBK");
         return strNew.length > 3 ? strNew.slice(0, 3) : strNew;
     }
 
@@ -220,7 +220,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2108.03";
             if (buf[i] === 0) break;
             strNew.push(buf[i]);
         }
-        return bufferGBK2Unicode(strNew);
+        return TextCoder.decode(new Uint8Array(strNew), "GBK");
     }
 
     function getPoint(pBuffer) {

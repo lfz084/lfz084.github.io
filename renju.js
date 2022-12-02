@@ -545,7 +545,6 @@ var loadApp = () => { // 按顺序加载应用
             return loadScriptAll([
                 [SOURCE_FILES["Button"]],
                 [SOURCE_FILES["Evaluator"]],
-                [SOURCE_FILES["String2Buffer"]],
                 [SOURCE_FILES["RenjuTree"]],
                 ], true)
         })
@@ -571,7 +570,7 @@ var loadApp = () => { // 按顺序加载应用
         .then(() => {
             loadAnimation.text("63%");
             return loadScriptAll([
-                [SOURCE_FILES["UNICODE2GBK"]],
+                [SOURCE_FILES["TextCoder"]],
                 [SOURCE_FILES["MoveList"]],
                 [SOURCE_FILES["Stack"]],
                 [SOURCE_FILES["RenjuLib"]],
