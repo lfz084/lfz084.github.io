@@ -303,13 +303,15 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
         for (let i = 0; i < len; i++) {
             let x = this.MS[i] % 15,
                 y = ~~(this.MS[i] / 15);
-            if (x >= this.size ||
+            if(this.MS[i] == 225){  //passMove
+            }
+            else if (x >= this.size ||
                 y >= this.size ||
                 x + col < 0 ||
                 x + col >= this.size ||
                 y + row < 0 ||
                 y + row >= this.size
-            ) {
+            ) { 
                 for (let j = i; j < len; j++) this.free_TYPE_NUMBER(this.MS[j])
                 this.MS.splice(i, len - i);
                 if (this.MSindex >= i) this.MSindex = i - 1;
@@ -799,11 +801,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
 
     // 取消虚线显示棋子位置
     CheckerBoard.prototype.cleAllPointBorder = function() {
-
-        for (let i = 0; i < 225; i++) {
-            this.DIV[i].style.borderStyle = "none";
-        }
-
+        for (let i = 0; i < 225; i++) this.DIV[i].style.borderStyle = "none";
     };
 
 
@@ -844,7 +842,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
 
     // 删除一颗棋子,不删除MS的记录
     CheckerBoard.prototype.cleNb = function(idx, showNum, timeout = 0) {
-
         if (idx < 0 || idx > 225) return;
         if (idx == 225 || this.P[idx].type == TYPE_NUMBER) {
             this.cletLbMoves();
@@ -868,7 +865,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
         }.bind(this), timeout);
 
         function refreshLine(idx) {
-
             let mv = [0, -this.SLTX, this.SLTX, -1, 1];
             for (let i = mv.length - 1; i >= 0; i--) {
                 let nIdx = idx + mv[i];
@@ -883,17 +879,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
 
 
     CheckerBoard.prototype.cletLbMoves = function() {
-
-        for (let i = 0; i < 15 * 15; i++) {
-            if (this.P[i].type == TYPE_MOVE) {
-                this.cleLb(i);
-            }
-        }
+        for (let i = 0; i < 15 * 15; i++) (this.P[i].type == TYPE_MOVE) && this.cleLb(i);
     }
 
 
     CheckerBoard.prototype.cleMarkLine = function(markLine) {
-
         let oldIdx = -1;
         let color = markLine.color;
         markLine.color = this.backgroundColor;

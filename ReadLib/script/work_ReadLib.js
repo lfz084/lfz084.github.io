@@ -4,7 +4,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["work_ReadLib"] = "v2108.03";
 if ("importScripts" in self) {
     self.importScripts(
         "../../script/IntervalPost.js",
-        "../../script/TextCoder.js",
+        "../../script/TextCoder_bin.js",
         "./JFile.js",
         "./JPoint.js",
         "./LibraryFile.js",
