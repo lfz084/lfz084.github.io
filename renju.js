@@ -505,6 +505,7 @@ var loadApp = () => { // 按顺序加载应用
             loadAnimation.open();
             loadAnimation.lock(true);
             loadAnimation.text("0%");
+            console.info("0%");
             return loadCssAll([
                 [SOURCE_FILES["loaders"]],
                 [SOURCE_FILES["main"]],
@@ -512,6 +513,7 @@ var loadApp = () => { // 按顺序加载应用
         })
         .then(() => {
             loadAnimation.text("5%");
+            console.info("5%");
             return loadFontAll([
                 [SOURCE_FILES["PFSCMedium1_woff"]],
                 [SOURCE_FILES["PFSCHeavy1_woff"]],
@@ -522,6 +524,7 @@ var loadApp = () => { // 按顺序加载应用
         })
         .then(() => {
             loadAnimation.text("20%");
+            console.info("20%");
             return loadScriptAll([ //顺序加载
                 [SOURCE_FILES["windowError"]],
                 [SOURCE_FILES["Viewport"], () => {
@@ -542,6 +545,7 @@ var loadApp = () => { // 按顺序加载应用
         })      
         .then(() => {
             loadAnimation.text("30%");
+            console.info("30%");
             return loadScriptAll([
                 [SOURCE_FILES["Button"]],
                 [SOURCE_FILES["Evaluator"]],
@@ -550,6 +554,7 @@ var loadApp = () => { // 按顺序加载应用
         })
         .then(() => {
             loadAnimation.text("35%");
+            console.info("35%");
             return loadScriptAll([
                 [SOURCE_FILES["CheckerBoard"]],
                 [SOURCE_FILES["control"]],
@@ -562,6 +567,7 @@ var loadApp = () => { // 按顺序加载应用
         })
         .then(() => {
             loadAnimation.text("50%");
+            console.info("50%");
             return loadScriptAll([
                 [SOURCE_FILES["PFSCMedium"]],
                 [SOURCE_FILES["PFSCHeavy"]],
@@ -569,16 +575,21 @@ var loadApp = () => { // 按顺序加载应用
         })
         .then(() => {
             loadAnimation.text("63%");
+            console.info("63%");
             return loadScriptAll([
                 [SOURCE_FILES["TextCoder"]],
                 [SOURCE_FILES["MoveList"]],
                 [SOURCE_FILES["Stack"]],
                 [SOURCE_FILES["RenjuLib"]],
                 [SOURCE_FILES["IndexedDB"]],
+                [SOURCE_FILES["gif"]],
+                [SOURCE_FILES["gifFile"]],
+                [SOURCE_FILES["CheckerBoardGIF"]],
                 ], true)
         })
         .then(() => {
             loadAnimation.text("78%");
+            console.info("78%");
             return loadFileAll([
                 [SOURCE_FILES["JFile"]],
                 [SOURCE_FILES["JPoint"]],
@@ -590,10 +601,12 @@ var loadApp = () => { // 按顺序加载应用
                 [SOURCE_FILES["RenLibDoc"]],
                 [SOURCE_FILES["RenLibDoc_wasm"]],
                 [SOURCE_FILES["RenLib_wasm"]],
+                [SOURCE_FILES["gifWorker"]],
                 ], true)
         })
         .then(() => {
             loadAnimation.text("91%");
+            console.info("91%");
             return loadFileAll([
                 [SOURCE_FILES["404_html"]],
                 [SOURCE_FILES["renju_html"]]
@@ -601,6 +614,7 @@ var loadApp = () => { // 按顺序加载应用
         })
         .then(() => {
             loadAnimation.text("99%");
+            console.info("99%");
             initNoSleep();
             removeMlog();
             const UI = createUI();
@@ -613,9 +627,11 @@ var loadApp = () => { // 按顺序加载应用
             logVersions();
         })
         .then(() => {
+            console.info(`autoShowUpDataInformation`)
             return autoShowUpDataInformation() //更新已经完成，弹窗提示
         })
         .then(()=>{
+            console.info(`logCaches`)
             return logCaches()  // print caches information
         })
         .then(() => {
