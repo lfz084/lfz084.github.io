@@ -1,0 +1,214 @@
+//test findVCF
+//game code: {B1D10D1F10F8F1H10H8J8J3L5L3M2}{}
+findVCF(cBoard.getArray(), 1, 1, 180, 1500);
+cBoard.printMoves(vcfWinMoves[0], 1);
+
+cBoard.addTree(new RenjuTree());
+cBoard.firstColor = "black";
+control.setPlayMode(9);
+control.getPlayMode();
+
+let sTime,
+arr = new Array(0xffffff),
+arr1 = new Array(0xffffff);
+
+sTime = new Date().getTime();
+for(let i=0; i<0xffffff; i++) {
+    arr1[i] = i;
+}
+alert(new Date().getTime()-sTime);
+
+
+
+arr = new Array(0xffff
+
+ff);
+arr1 = new Array(0xffffff);
+
+sTime = new Date().getTime();
+arr1 = arr.map(a=>a);
+alert(new Date().getTime()-sTime);
+
+window.t = new Thread("eval/worker.js");
+let sTime = new Date().getTime();
+engine.findVCF({arr:cBoard.getArray(), color:1, maxVCF:1, maxDepth:180, maxNode: 1000000})
+.then(moves => console.warn(`VCF: ${movesToName(moves)}\n\ntime: ${new Date().getTime()-sTime}`))
+
+-------------------------------------------------------
+
+async function f(thread) {
+    setTimeout(() => {
+        thread.unlock();
+        console.log(666);
+    }, 3000);
+}
+
+async function p() {
+    try {
+        for(let i=0; i<30; i++){
+            let thread = await engine.waitFreeThread();
+            f(thread);
+            console.log(i);
+        }
+    }
+    catch(err) {
+        console.error(err);
+    }
+}
+p()
+
+-------------------------------------------------------
+
+async function test() {
+    let vcfMoves = await engine._findVCF({arr: cBoard.getArray(), color:1, maxVCF:1, maxDepth:180, maxNode:1000000}),
+        points = await engine.getBlockVCF({arr: cBoard.getArray(), color:1, vcfMoves: vcfMoves, includeFour: true});
+    console.log(`[${movesToName(vcfMoves)}]`);
+    console.log(`[${movesToName(points)}]`);
+    cBoard.cleLb("all");
+    points.map(idx => cBoard.wLb(idx, EMOJI_ROUND, "blue"));
+}
+test();
+
+engine._findVCF({arr: cBoard.getArray(), color:1, maxVCF:1, maxDepth:180, maxNode:1000000})
+engine.getBlockVCF({arr: cBoard.getArray(), color:1, vcfMoves: [1,2,3], includeFour: true});
+
+
+engine.createTreeVCF({arr: cBoard.getArray(), color: 1, maxVCF: 1}).then(tree=>console.log(tree))
+
+
+let ps = [],
+    p = () => new Promise(resolve => {setTimeout(resolve,3000)})
+
+for(let i=0; i<5; i++) {
+    ps.push(p())
+}
+Promise.all(ps).then(()=>{console.log(5)})
+
+
+selectPoint(cBoard.getArray(), 1, 2, 1, 180, 100000).map((v, idx) => v > 0 && cBoard.wLb(idx, "a", "black"))
+
+{arr: cBoard.getArray(), color: 1, radius: 2, maxVCF: 1, maxDepth: 180, maxNode: 10000, ftype: 0}
+
+let ps = [new Promise((resolve,reject)=>{setTimeout(resolve, 1000)}),
+new Promise((resolve,reject)=>{setTimeout(resolve, 2000)}),
+new Promise((resolve,reject)=>{setTimeout(reject, 1500)}),
+];
+
+
+window.printChilds = function(node){
+    let cur = node.down;
+    while(cur){
+        console.log(`idx: ${cur.idx}, score: ${cur.score}`)
+        cur = cur.right;
+    }
+}
+
+printChilds(cBoard.tree.seek([144,225,114,225,112,225]))
+
+
+let url = "https://lfz084.gitee.io/renju/renju.html";
+async function getText(url) {
+    let rsp = undefined,
+        count = 0;
+    while(!rsp) {
+        console.log(count++);
+        let response = await fetch(url)
+        if (response.ok) rsp = response
+    }
+    console.log(`<<<`)
+    rsp.text().then(console.info)
+}
+getText(url)
+
+
+console.log(`
+${(65536*256-1).toString(2)}\n
+${(~(65536*256-1)).toString(2)}\n
+${(~~(65536*256-1)).toString(2)}\n
+
+${(65536*65536-1).toString(2)}\n
+${(~(65536*65536-1)).toString(2)}\n
+${(~~(65536*65536-1)).toString(2)}\n
+
+${(65536*65536/2-1).toString(2)}\n
+${(~(65536*65536/2-1)).toString(2)}\n
+${(~~(65536*65536/2-1)).toString(2)}\n
+
+${(65536*65536/2).toString(2)}\n
+${(~(65536*65536/2)).toString(2)}\n
+${(~~(65536*65536/2)).toString(2)}\n
+`)
+
+try{
+let count = 0,
+    t = new Date().getTime(),
+    tree = new RenjuTree(1, 3600),
+    cur = tree.root;
+while(count++ < 10000) {
+    let n = tree.newNode();
+    n.level = 666;
+    n.boardText = "a";
+    cur.down = n;
+    cur.right = n;
+    cur = n;
+}
+new Date().getTime() - t;
+}
+catch(err){
+console.error("err")
+}
+
+
+let count = 0;
+try{
+    let t = new RenjuTree(1,500);
+    while(count++ < 80000000) {
+        t.newNode()
+    }
+}
+catch(err){
+    console.error(`count: ${count}\n${err.message}`)
+}
+
+let st = new Date().getTime(),
+    tree = new RenjuTree(1,500),
+    count = 0
+    while(count++<10000000) {
+        let n = tree.newNode();
+        n.idx = 0;
+        n.level = 1;
+        n.boardText = "a";
+    }
+console.log(new Date().getTime()-st)
+
+try{
+let st = new Date().getTime(),
+    tree = new RenjuTree(1,501),
+    count = 0,
+    point = 0;
+    tree.nodeBuf.addPages(500);
+    while(count++<10000000) {
+        point += 20;
+        tree.nodeBuf.setUint8(point,0)
+        tree.nodeBuf.setUint16(point+2,1)
+        tree.nodeBuf.setUint8(point+8,65)
+    }
+console.log(new Date().getTime()-st)
+}
+catch(err){
+console.error(err.stack)
+}
+
+JFile.js
+JPoint.js
+LibraryFile.js
+LibraryTree.js
+
+try{
+let tree = cBoard.tree,
+    current = tree.createPath(cBoard.MS.slice(0, cBoard.MSindex + 2));
+    engine.addBranchIsFoul(112, cBoard.getArray(), tree, current);
+}
+catch(err){
+    console.log(err.stack)
+}

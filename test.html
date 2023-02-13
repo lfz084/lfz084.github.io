@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <link href="./style/main.css" rel="stylesheet" type="text/css">
+    <link rel="preload" href="script/View.js" as="script">
+    <link rel="preload" href="script/utils.js" as="script">
+    <link rel="preload" href="script/bindEvent.js" as="script">
+    <link rel="preload" href="script/Button.js" as="script">
+    <link rel="preload" href="CheckerBoard/CheckerBoard.js" as="script">
+    <link rel="preload" href="script/mainUI.js" as="script">
+
+</head>
+
+<body>
+    <script src="script/View.js"></script>
+    <script src="script/utils.js"></script>
+    <script src="script/bindEvent.js"></script>
+    <script src="script/Button.js"></script>
+    <script src="CheckerBoard/CheckerBoard.js"></script>
+    <script src="script/mainUI.js"></script>
+    <script>
+        function createButtons() {
+            const buttons = [];
+            for (let i = 0; i < 8; i++) {
+                buttons.push(new Button(document.body, "button", 0, 0, mainUI.buttonWidth, mainUI.buttonHeight))
+            }
+            for (let i = 0; i < 2; i++) {
+                buttons.push(new Button(document.body, "select", 0, 0, mainUI.buttonWidth, mainUI.buttonHeight))
+                const but = buttons[buttons.length-1];
+                but.addOptions([1, 1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9])
+            }
+            buttons.length += 2;
+            for (let i = 0; i < 12; i++) {
+                buttons.push(new Button(document.body, "radio", 0, 0, mainUI.buttonWidth, mainUI.buttonHeight))
+            }
+            return buttons;
+        }
+        
+        function createCmdDiv() {
+            const cDiv = mainUI.createCmdDiv();
+            const buttons = createButtons();
+            mainUI.addButtons(buttons, cDiv);
+        }
+
+        function createCBoard() {
+            const cbd = new CheckerBoard(mainUI.upDiv, (mainUI.gridWidth - mainUI.cmdWidth) / 2, (mainUI.gridWidth - mainUI.cmdWidth) / 2, mainUI.cmdWidth, mainUI.cmdWidth);
+            cbd.backgroundColor = "white";
+            cbd.resetCBoardCoordinate();
+            cbd.printEmptyCBoard();
+            return cbd;
+        }
+
+        function addEventListener(cbd) {
+            function ctnBack(idx) { // 触发快速悔棋
+                if (idx + 1 && cbd.P[idx].type == TYPE_NUMBER) {
+                    if (idx != cbd.MS[cbd.MSindex]) {
+                        while (cbd.MS[cbd.MSindex] != idx) {
+                            cbd.cleNb(cbd.MS[cbd.MSindex], true);
+                        }
+                    }
+                }
+            }
+            bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale);
+            bindEvent.addEventListener(cbd.viewBox, "click", (x, y) => {
+                let idx = cbd.getIndex(x, y);
+                if (cbd.P[idx].type == 0) cbd.wNb(idx, "auto", true)
+                else cbd.cleNb(idx, true)
+            })
+            bindEvent.addEventListener(cbd.viewBox, "dblclick", (x, y) => {
+                let idx = cbd.getIndex(x, y);
+                ctnBack(idx)
+            })
+            bindEvent.addEventListener(cbd.viewBox, "zoomstart", (x1, y1, x2, y2) => {
+                
+            })
+            bindEvent.addEventListener(cbd.viewBox, "zoom", (x1, y1, x2, y2, scale) => {
+                cbd.scale *= scale;
+                cbd.scaleBox.style.transformOrigin = `0px 0px`;
+                cbd.scaleBox.style.transform = `scale(${cbd.scale})`;
+            })
+        }
+
+        document.body.onload = () => {
+        try{
+            const cBoard = createCBoard();
+            addEventListener(cBoard);
+            createCmdDiv();
+            mainUI.viewport.resize();
+        }catch(e){alert(e.stack)}
+        }
+    </script>
+</body>
+
+</html>

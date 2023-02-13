@@ -13,12 +13,12 @@
         let max = sw > sh ? sw : sh;
         let min = sw < sh ? sw : sh;
         let localhost = (String(window.location).indexOf("http://localhost") == 0);
-        this.width = width || 1000;
+        this.width = width || dw;
         this.scale = (dw > dh ? max : min) / this.width;
         this.viewport = document.createElement("meta");
         this.viewport.setAttribute("name", "viewport");
         document.head.appendChild(this.viewport);
-        SCALABLE && this.viewport.setAttribute("content", `width=${width}, initial-scale=${this.scale}, minimum-scale=${this.scale}, maximum-scale =${localhost ? this.scale * 5 : this.scale}, user-scalable=${localhost ? "yes" : "no"}`);
+        SCALABLE && this.viewport.setAttribute("content", `width=${this.width}, initial-scale=${this.scale}, minimum-scale=${this.scale}, maximum-scale =${localhost ? this.scale * 5 : this.scale}, user-scalable=${localhost ? "yes" : "no"}`);
     }
 
     view.prototype.resize = function(width, scalable) {

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+</head>
+
+<body>
+    <script>
+        const optionObj = {
+            method: "GET",
+            headers: { "Content-Type": "text/plain;charset=UTF-8" },
+            body: undefined,
+            referrer: "about:client",
+            referrerPolicy: "no-referrer-when-downgrade",
+            mode: "cors",
+            credentials: "same-origin",
+            cache: "default",
+            redirect: "follow",
+            integrity: "",
+            keepalive: false,
+            signal: undefined
+        }
+        
+        window.fetchTXT = function fetchTXT(url) {
+            return new Promise((resolve) => {
+                fetch(url).then(function(response) {
+                    alert(response)
+                    resolve(response.text())
+                })
+            })
+        }
+        
+        async function getTXT(url) {
+            let text = await fetchTXT(url)
+            msg(text, "input")
+        }
+        getTXT("reset.html")
+    </script>
+
+</body>
+
+</html>

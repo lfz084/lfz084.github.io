@@ -57,8 +57,8 @@ var loadApp = () => { // 按顺序加载应用
     window.d = document;
     window.dw = d.documentElement.clientWidth;
     window.dh = d.documentElement.clientHeight;
-    window.cWidth = dw < dh ? dw * 0.95 : dh * 0.95; //棋盘宽度
-    cWidth = dw < dh ? cWidth : dh < ~~(dw / 2 * 0.985) ? dh : ~~(dw / 2 * 0.985);
+    //window.bWidth = 1078; //bodyDiv width
+    window.cWidth = dw * 0.95;//cBoard width
 
     window.viewport1 = null; // 控制缩放
     window.vConsole = null; // 调试工具
@@ -425,8 +425,8 @@ var loadApp = () => { // 按顺序加载应用
             let bodyDiv = d.createElement("div");
             d.body.appendChild(bodyDiv);
             bodyDiv.style.position = "absolute";
-            bodyDiv.style.width = "100%";
-            bodyDiv.style.height = dw < dh ? cWidth * 4 + "px" : "100%";
+            bodyDiv.style.width = dw < dh ? `${cWidth}px` : `${cWidth * 2}px`;
+            bodyDiv.style.height = dw < dh ? `${cWidth * 4}px` : `${cWidth}px`;
             bodyDiv.style.left = "0px";
             bodyDiv.style.top = "0px";
             bodyDiv.style.opacity = "0";
@@ -439,7 +439,7 @@ var loadApp = () => { // 按顺序加载应用
             upDiv.style.position = "absolute";
             upDiv.style.width = "0px";
             upDiv.style.height = "0px";
-            upDiv.style.left = dw > dh ? ~~((dw - cWidth * 2) / 2) + "px" : (dw - cWidth) / 2 + "px";
+            upDiv.style.left = dw > dh ? ~~((dw - cWidth * 2) / 2) + "px" : ((cWidth/0.95) - cWidth) / 2 + "px";
             upDiv.style.top = dw > dh ? (dh - cWidth) / 2 + "px" : cWidth + "px";
             //upDiv.style.backgroundColor = "green";
 
@@ -528,7 +528,7 @@ var loadApp = () => { // 按顺序加载应用
             return loadScriptAll([ //顺序加载
                 [SOURCE_FILES["windowError"]],
                 [SOURCE_FILES["Viewport"], () => {
-                    window.viewport1 = new View(dw);
+                    window.viewport1 = new View(cWidth/0.95);
                 }],
                 [SOURCE_FILES["vconsole"], () => {
                     testBrowser();
@@ -541,6 +541,13 @@ var loadApp = () => { // 按顺序加载应用
                 [SOURCE_FILES["EvaluatorWebassembly"]],
                 [SOURCE_FILES["EvaluatorJScript"]],
                 [SOURCE_FILES["TypeBuffer"]],
+                [SOURCE_FILES["CheckerBoard"]],
+                [SOURCE_FILES["image2board"]],
+                [SOURCE_FILES["markLine"]],
+                [SOURCE_FILES["pdf"]],
+                [SOURCE_FILES["saveFile"]],
+                [SOURCE_FILES["svg"]],
+                [SOURCE_FILES["tree"]]
                 ], false)
         })      
         .then(() => {
@@ -556,7 +563,6 @@ var loadApp = () => { // 按顺序加载应用
             loadAnimation.text("35%");
             console.info("35%");
             return loadScriptAll([
-                [SOURCE_FILES["CheckerBoard"]],
                 [SOURCE_FILES["control"]],
                 [SOURCE_FILES["msgbox"]],
                 [SOURCE_FILES["appData"]],

@@ -1,10 +1,10 @@
 "use strict";
 
-CheckerBoard.prototype.toGIF = function(start = -1, end = this.MSindex, delay = 500, width = this.width, height = this.height) {
+CheckerBoard.prototype.toGIF = function(start = -1, end = this.MSindex, delay = 500, width = this.width, height = this.height, workerScript = "gif/gif.worker.js") {
     let gFile = new gifFile({
         workers: 2,
         quality: 10,
-        workerScript: "gif/gif.worker.js",
+        workerScript: workerScript,
         width: width - 1,
         height: height - 1
     }),

@@ -6,7 +6,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
     const ANIMATION_TIMEOUT = 300;
     const TEST_BUTTON = false; // ==true >>> console.log;
-    let isMenuShow = false; //控制主程序，不允许同时打开两个菜单
+    let isMenuShow = false; //不允许同时打开两个菜单
 
     function log(param, type = "log") {
         const command = {
@@ -30,6 +30,312 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
             print(`[Button.js]\n>>  ${ param}`);
     }
 
+    // ---------------------------------------------- 
+
+    function get_hr(height = 1, marginLeft = -1, padding = 0) {
+        const hr = document.createElement("hr");
+        hr.style.height = height + "px";
+        hr.style.marginLeft = marginLeft + "px";
+        hr.style.padding = padding + "px";
+        return hr;
+    }
+
+    function get_li({text, fontSize, textAlign, lineHeight, width, height, paddingLeft}) {
+        const li = document.createElement("li");
+        li.innerHTML = text;
+        li.style.fontWeight = "normal";
+        li.style.fontFamily = "mHeiTi";
+        li.style.fontSize = ~~fontSize + "px";
+        li.style.textAlign = textAlign;
+        li.style.lineHeight = lineHeight + "px";
+        li.style.width = width - paddingLeft + "px";
+        li.style.height = height + "px";
+        li.style.paddingLeft = paddingLeft + "px";
+        li.style.margin = "0px";
+        return li;
+    }
+    // ----------------------- menu --------------- 
+
+    class Menu {
+        constructor(button, left, top, width, height, fontSize, closeAnimation, isCancelMenuClick = () => {}, scale = 1) {
+            const input = button.input;
+            const optionsHeight = (fontSize * 2.5 + 3) * input.length;
+            const muWindow = document.createElement("div"); // 铺满屏幕最顶层
+            const anima = document.createElement("div"); //控制菜单动画
+            const menu = document.createElement("div"); //菜单
+            const lis = [];
+            muWindow.appendChild(anima);
+            muWindow.style.transformOrigin = `0px 0px`;
+            muWindow.style.transform = `scale(${scale})`;
+            muWindow.onclick = menu.onclick = function() {
+                if (isCancelMenuClick()) return; //safari 长按棋盘会误触发click事件 isCancelMenuClick判断是否是误触发
+                if (event) {
+                    event.cancelBubble = true;
+                    event.preventDefault()
+                };
+                this.hide(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT);
+            }.bind(this);
+            anima.appendChild(menu);
+            menu.setAttribute("class", "menu");
+            menu.setAttribute("id", "menu");
+            
+            height = height || document.clientHeight * 0.8;
+            if (input.length && ((height - (fontSize + 3) * 1) < optionsHeight)) {
+                const li = get_li({
+                    text: "︾", 
+                    fontSize: fontSize, 
+                    textAlign: "center", 
+                    lineHeight: fontSize * 3.5,
+                    width: width,
+                    height: fontSize * 2.5,
+                    paddingLeft: 0
+                });
+                lis["down"] = li;
+                menu.appendChild(li);
+                li.onclick = function() {
+                    if (isCancelMenuClick()) return;
+                    if (event) event.cancelBubble = true;
+                    this.scroll(parseInt(li.style.lineHeight) * 5);
+                }.bind(this);
+            }
+            for (let i = 0; i < input.length; i++) {
+                const hr = get_hr();
+                menu.appendChild(hr);
+                const li = get_li({
+                    text: input[i].innerHTML, 
+                    fontSize: fontSize,
+                    textAlign: "left", 
+                    lineHeight: fontSize * 2.5,
+                    width: width,
+                    height: fontSize * 2.5,
+                    paddingLeft: fontSize
+                });
+                lis.push(li);
+                menu.appendChild(li);
+                li.onclick = function() {
+                    if (isCancelMenuClick()) return;
+                    if (event) event.cancelBubble = true;
+                    input.selectedIndex = i; // input.onchange();
+                    if (muWindow.parentNode) {
+                        this.hide(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT, null /*!closeAnimation ? this.button.change : null*/ );
+                        this.button.change();
+                    }
+                }.bind(this);
+            }
+            const hr = get_hr();
+            menu.appendChild(hr);
+            if (input.length && ((height - (fontSize + 3) * 1) < optionsHeight)) {
+                const li = get_li({
+                    text: "︽",
+                    fontSize: fontSize,
+                    textAlign: "center", 
+                    lineHeight: fontSize * 1.5,
+                    width: width,
+                    height: fontSize * 2.5,
+                    paddingLeft: 0
+                });
+                lis["up"] = li;
+                menu.appendChild(li);
+                li.onclick = function() {
+                    if (isCancelMenuClick()) return;
+                    if (event) event.cancelBubble = true;
+                    this.scroll(-parseInt(li.style.lineHeight) * 5);
+                }.bind(this);
+            }
+            else {
+                height = optionsHeight + 3;
+            }
+
+            this.button = button;
+            this.bodyScale = scale;
+            this.menuWindow = muWindow;
+            this.anima = anima;
+            this.menu = menu;
+            this.lis = lis;
+            this.menuLeft = left;
+            this.menuTop = top;
+            this.menuHeight = height;
+            this.menuWidth = width;
+            this.fontSize = fontSize;
+            this.timerHideMenu = null;
+        }
+    }
+
+    Menu.prototype.show = function show(x, y) {
+        if (isMenuShow) return;
+        const dh = document.documentElement.clientHeight;
+        const dw = document.documentElement.clientWidth;
+        const muWindow = this.menuWindow;
+        muWindow.style.position = "fixed";
+        muWindow.style.zIndex = 9999;
+        muWindow.style.width = dw / this.bodyScale + "px";
+        muWindow.style.height = dh * 2 / this.bodyScale + "px";
+        muWindow.style.top = "0px";
+        muWindow.style.left = "0px";
+
+        this.anima.style.position = "absolute";
+        this.anima.style.width = muWindow.style.width;
+        this.anima.style.height = muWindow.style.height;
+        this.anima.style.left = "0px";
+        this.anima.style.top = "0px";
+        
+        x = !x ? x : x < this.fontSize * 2.5 ? this.fontSize * 2.5 : (x + this.menuWidth) > (dw / this.bodyScale - this.fontSize * 2.5) ? dw / this.bodyScale - this.menuWidth - this.fontSize * 2.5 : x;
+        y = !y ? y : y < this.fontSize * 2.5 ? this.fontSize * 2.5 : (y + this.menuHeight) > (dh / this.bodyScale - this.fontSize * 2.5) ? dh / this.bodyScale - this.menuHeight - this.fontSize * 2.5 : y;
+        this.menu.style.position = "absolute";
+        this.menu.style.left = `${x || this.menuLeft}px`;
+        this.menu.style.top = `${y || this.menuTop}px`;
+        this.menu.style.width = this.menuWidth + "px";
+        this.menu.style.height = this.menuHeight + "px";
+        this.menu.style.borderRadius = parseInt(this.fontSize) * 1.5 + "px";
+        this.menu.style.border = `${parseInt(this.fontSize)/3}px solid ${this.button.selectBackgroundColor}`;
+        this.menu.style.overflow = "scroll";
+        this.menu.style.background = this.button.backgroundColor;
+        this.menu.style.autofocus = "true";
+        this.anima.setAttribute("class", "show");
+        document.body.appendChild(muWindow);
+        
+        isMenuShow = true; // 设置两次
+        setTimeout(() => {
+            if (muWindow.getAttribute("class") == "show") isMenuShow = true;
+        }, ANIMATION_TIMEOUT);
+    }
+
+
+    Menu.prototype.hide = function(ms, callback = function() {}) {
+        const muWindow = this.menuWindow;
+        const input = this.button.input;
+        if (this.timerHideMenu) {
+            clearTimeout(this.timerHideMenu);
+            this.timerHideMenu = null;
+        }
+        this.anima.setAttribute("class", `${0?"hideContextMenu":"hide"}`);
+        ms = parseInt(ms) || 0;
+        if (ms > 0) {
+            this.timerHideMenu = setTimeout(function() {
+                clearTimeout(this.timerHideMenu);
+                this.timerHideMenu = null;
+                muWindow.parentNode.removeChild(muWindow);
+                isMenuShow = false;
+                callback();
+            }, ms);
+        }
+        else {
+            muWindow.parentNode.removeChild(muWindow);
+            isMenuShow = false;
+            callback();
+        }
+    }
+    
+    Menu.prototype.scroll = function(top) {
+        //log("menuScroll")
+        const optionsHeight = (this.fontSize * 2.5 + 3) * (this.button.input.length + 2);
+        const maxScrollTop = optionsHeight - parseInt(this.menuHeight);
+        const targetScrollTop = this.menu.scrollTop + top;
+        const scrollTo = function () {
+            let scl = Math.abs(parseInt((this.targetScrollTop - this.tempScrollTop) / 50)) + Math.abs(top) / 50;
+            //log(`scl=${scl}`)
+            if ((top < 0) && (this.tempScrollTop > this.targetScrollTop)) {
+                this.tempScrollTop -= scl;
+            }
+            else if ((top > 0) && (this.tempScrollTop < this.targetScrollTop)) {
+                this.tempScrollTop += scl;
+            }
+            else { //  to cancelAnimationFrame
+                this.tempScrollTop = top < 0 ? this.targetScrollTop - 1 : this.targetScrollTop + 1;
+            }
+            this.menu.scrollTop = this.tempScrollTop;
+            //log(`animationFrameScroll  ${this.tempScrollTop},  targetScrollTop=${ this.targetScrollTop}`)
+            this.animationFrameScroll = requestAnimationFrame(scrollTo);
+            if (top < 0 ? this.tempScrollTop <= this.targetScrollTop : this.tempScrollTop >= this.targetScrollTop) {
+                cancelAnima();
+            }
+        }.bind(this)
+        const cancelAnima = function () {
+            //log("exit animationFrameScroll")
+            cancelAnimationFrame(this.animationFrameScroll);
+            this.animationFrameScroll = null;
+            this.menu.scrollTop = this.menu.scrollTop < 0 ? 0 : this.menu.scrollTop > maxScrollTop ? maxScrollTop : this.menu.scrollTop;
+        }.bind(this)
+        
+        if (this.animationFrameScroll) cancelAnima();
+        this.targetScrollTop = targetScrollTop;
+        //log(`menu.scrollTop=${this.menu.scrollTop}, top=${top}`)
+        this.tempScrollTop = this.menu.scrollTop;
+        scrollTo();
+    }
+
+    // ---------------------------------------------- 
+
+    function touchstart() {
+        log(`default touchstart......`)
+        if (event) event.cancelBubble = true;
+        this.defaultontouchstart();
+    }
+
+    function mousedown() {
+        log(`default mousedown......`)
+        if (event) {
+            event.cancelBubble = true;
+            event.preventDefault();
+            if (event.button == 0) this.defaultontouchstart();
+        }
+    }
+
+    function touchcancel() {
+        log(`default touchcancel......`)
+        if (event) event.cancelBubble = true;
+        this.isEventMove = true;
+        this.defaultontouchend();
+    }
+
+    function touchleave() {
+        log(`default touchleave......`)
+        if (event) event.cancelBubble = true;
+        this.isEventMove = true;
+        this.defaultontouchend();
+    }
+
+    function touchend() {
+        log(`default touchend......`)
+        if (event) event.cancelBubble = true;
+        this.defaultontouchend();
+    }
+
+    function mouseup() {
+        log(`default mouseup......`)
+        if (event) {
+            event.cancelBubble = true;
+            event.preventDefault();
+        }
+        this.isEventMove = false;
+        if (this.type == "file") {
+            //this.isEventMove = true; //cancel defaultontouchend to click();
+            this.defaultontouchend(); // defaultontouchend() to onchange();
+        } // if "input file" cancel this click; 
+        else {
+            this.touchend();
+        }
+    }
+
+    function click() {
+        log(`default click......`)
+    }
+
+    function change() {
+        log(`default change......`)
+        if (event) event.cancelBubble = true;
+        this.defaultonchange();
+    }
+
+    function touchmove() {
+        log(`default touchmove......`)
+        if (event) event.cancelBubble = true;
+        this.defaultontouchmove();
+    }
+
+
+    //----------------------- button ------------------------------
+
     // 定制按钮，button，file，Radio，select。
     function button(parentNode, type, left, top, width, height) {
 
@@ -51,13 +357,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
         if (type != "select" && type != "file") this.div.appendChild(this.input);
-        this.menuWindow = null;
         this.menu = null;
-        this._menu = null; // 闭包，控制菜单打开和关闭
-
+        
         this.option = [];
         this.type = type;
-        this.position = "absolute";
         this.width = width == null ? "200px" : parseInt(width) + "px";
         this.height = height == null ? "150px" : parseInt(height) + "px";
         this.left = left == null ? "0px" : parseInt(left) + "px";
@@ -88,77 +391,15 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
         this.tempScrollTop = 0;
         this.animationFrameScroll = null;
 
-        let but = this;
-        let funs = []; // 保存每个事件调用 函数 的地址
-
-        this.touchstart = function() {
-            log(`default touchstart......`)
-            if (event) event.cancelBubble = true;
-            but.defaultontouchstart();
-        }
-
-        this.mousedown = function() {
-            log(`default mousedown......`)
-            if (event) event.cancelBubble = true;
-            if (but.type == "select" || but.type == "file") {
-                if (event) event.preventDefault();
-            }
-            else {
-                if (event) event.preventDefault();
-                //log(this.type);
-            }
-            if (event.button == 0) but.defaultontouchstart();
-        };
-
-        this.touchcancel = function() {
-            log(`default touchcancel......`)
-            if (event) event.cancelBubble = true;
-            but.isEventMove = true;
-            but.defaultontouchend();
-        };
-
-        this.touchleave = function() {
-            log(`default touchleave......`)
-            if (event) event.cancelBubble = true;
-            but.isEventMove = true;
-            but.defaultontouchend();
-        };
-
-        this.touchend = function() {
-            log(`default touchend......`)
-            if (event) event.cancelBubble = true;
-            but.defaultontouchend();
-        };
-
-        this.mouseup = function() {
-            log(`default mouseup......`)
-            if (event) event.cancelBubble = true;
-            if (event) event.preventDefault();
-            but.isEventMove = false;
-            if (but.type == "file") {
-                //but.isEventMove = true; //cancel defaultontouchend to click();
-                but.defaultontouchend(); // defaultontouchend() to onchange();
-            } // if "input file" cancel this click; 
-            else {
-                but.touchend();
-            }
-        };
-
-        this.click = function() {
-            log(`default click......`)
-        };
-
-        this.change = function() {
-            log(`default change......`)
-            if (event) event.cancelBubble = true;
-            but.defaultonchange();
-        };
-
-        this.touchmove = function() {
-            log(`default touchmove......`)
-            if (event) event.cancelBubble = true;
-            but.defaultontouchmove();
-        };
+        this.touchstart = touchstart.bind(this);
+        this.mousedown = mousedown.bind(this);
+        this.touchcancel = touchcancel.bind(this);
+        this.touchleave = touchleave.bind(this);
+        this.touchend = touchend.bind(this);
+        this.mouseup = mouseup.bind(this);
+        this.click = click.bind(this);
+        this.change = change.bind(this);
+        this.touchmove = touchmove.bind(this);
 
         if (type == "select" || type == "file") {
             this.div.addEventListener("touchstart", this.touchstart, true);
@@ -187,274 +428,27 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
     // 对 select 添加 option
     button.prototype.addOption = function(value, text) {
-
         //log(`add t=${this.text}`);
         if (this.type != "select") return;
         let op = document.createElement("option");
         op.setAttribute("value", value);
         op.innerHTML = text;
         this.input.appendChild(op);
-
     };
-    
-    
+
+
     // arr = [value, text,value, text...]
     button.prototype.addOptions = function(arr) {
-        for(let i=0; i<arr.length; i+=2) {
-            this.addOption(arr[i], arr[i+1])
+        for (let i = 0; i < arr.length; i += 2) {
+            this.addOption(arr[i], arr[i + 1])
         }
     };
 
 
-
-    button.prototype.createMenu = function(left, top, width, height, fontSize, closeAnimation, isCancelMenuClick = () => {}) { //safari 长按棋盘会误触发click事件 isCancelMenuClick判断是否是误触发
-
-        if (this.type != "select" || this.menuWindow) return;
-
-        let but = this;
-        let muWindow = document.createElement("div");
-        let menu = document.createElement("div");
-        menu.lis = [];
-        muWindow.appendChild(menu);
-        muWindow.onclick = menu.onclick = function() {
-            if (isCancelMenuClick()) return;
-            if (event) {
-                event.cancelBubble = true;
-                event.preventDefault()
-            };
-            but.hideMenu(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT);
-        };
-
-        this.menuWindow = muWindow;
-        this.menu = menu;
-        menu.setAttribute("class", "menu");
-        menu.setAttribute("id", "menu");
-        let dh = document.documentElement.clientHeight;
-        let dw = document.documentElement.clientWidth;
-        let optionsHeight = (fontSize * 2.5 + 3) * this.input.length;
-        height = (fontSize * 2.5 + 3) * (this.input.length + 2);
-        height = height > dh * 0.8 ? dh * 0.8 : height;
-        height = dw > dh ? height : height > dh * (0.5 - 0.05) ? dh * (0.5 - 0.05) : height;
-        top = (dh - height - dh * 0.05);
-        top = top > dh / 2 ? dh / 2 : top;
-        this.menu.menuLeft = left;
-        this.menu.menuTop = top;
-        this.menu.menuHeight = height;
-        this.menu.menuWidth = width;
-        this.menu.fontSize = fontSize;
-
-        if (this.input.length && ((this.menu.menuHeight - (fontSize + 3) * 1) < optionsHeight)) {
-            let li = document.createElement("li");
-            menu.lis["down"] = li;
-            li.innerHTML = "︾";
-            li.style.fontWeight = "normal";
-            li.style.fontFamily = "mHeiTi";
-            li.style.fontSize = parseInt(fontSize) + "px";
-            li.style.lineHeight = fontSize * 2.5 + "px";
-            li.style.paddingLeft = fontSize * 7 + "px";
-            li.style.margin = "0";
-            menu.appendChild(li);
-            let input = this.input;
-            li.onclick = function() {
-                if (isCancelMenuClick()) return;
-                if (event) event.cancelBubble = true;
-                but.menuScroll(parseInt(li.style.lineHeight) * 5);
-            };
-        }
-
-
-        for (let i = 0; i < this.input.length; i++) {
-
-            let hr = document.createElement("hr");
-            menu.appendChild(hr);
-            hr.style.height = "1px";
-            hr.style.marginLeft = "-1px";
-            hr.style.padding = "0";
-            let li = document.createElement("li");
-            menu.lis.push(li);
-            li.innerHTML = this.input[i].innerHTML;
-            li.style.fontWeight = "normal";
-            li.style.fontFamily = "mHeiTi";
-            li.style.fontSize = parseInt(fontSize) + "px";
-            li.style.lineHeight = fontSize * 2.5 + "px";
-            li.style.height = li.style.lineHeight;
-            li.style.paddingLeft = li.style.fontSize;
-            li.style.margin = "0";
-            menu.appendChild(li);
-
-            let input = this.input;
-            let but = this;
-            li.onclick = function() {
-                if (isCancelMenuClick()) return;
-                if (event) event.cancelBubble = true;
-                //input.value = i; //system auto set
-                input.selectedIndex = i; // input.onchange();
-                //alert(`onclick  ,i=${i}, idx=${input.selectedIndex}`);
-                if (muWindow.parentNode) {
-                    but.hideMenu(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT, null/*!closeAnimation ? but.change : null*/);
-                    /*if (closeAnimation)*/ but.change();
-                }
-            };
-        }
-        let hr = document.createElement("hr");
-        menu.appendChild(hr);
-        hr.style.height = "1px";
-        hr.style.marginLeft = "-1px";
-        hr.style.padding = "0";
-        if (this.input.length && ((this.menu.menuHeight - (fontSize + 3) * 1) < optionsHeight)) {
-            let li = document.createElement("li");
-            menu.lis["up"] = li;
-            li.innerHTML = "︽";
-            li.style.fontWeight = "normal";
-            li.style.fontFamily = "mHeiTi";
-            li.style.fontSize = parseInt(fontSize) + "px";
-            li.style.lineHeight = fontSize * 2.5 + "px";
-            li.style.paddingLeft = fontSize * 7 + "px";
-            li.style.margin = "0";
-            menu.appendChild(li);
-            let input = this.input;
-            li.onclick = function() {
-                if (isCancelMenuClick()) return;
-                if (event) event.cancelBubble = true;
-                but.menuScroll(-parseInt(li.style.lineHeight) * 5);
-            };
-        }
-        else {
-            this.menu.menuHeight = optionsHeight + 3;
-        }
-
-        this._menu = ((menuObj) => {
-
-            let busy = false;
-            let timerHideMenu = null;
-
-            function show(x, y) {
-
-                //log(`type=${this.type}, menuWindow=${this.menuWindow }, parentNode=${this.menuWindow.parentNode}`)
-                if (this.type != "select" || !this.menuWindow || isMenuShow) return;
-                //this.input.selectedIndex = -1;
-                let muWindow = this.menuWindow;
-                let s = muWindow.style;
-                s.position = "fixed";
-                s.zIndex = 9999;
-                s.width = document.documentElement.clientWidth + "px";
-                s.height = document.documentElement.clientHeight * 2 + "px";
-                s.top = "0px";
-                s.left = "0px";
-                //s.backgroundColor = "red";
-                //log(`x=${x}, y=${y}`)
-                x = !x ? x : x < this.menu.fontSize * 2.5 ? this.menu.fontSize * 2.5 : (x + this.menu.menuWidth) > (document.documentElement.clientWidth - this.menu.fontSize * 2.5) ? document.documentElement.clientWidth - this.menu.menuWidth - this.menu.fontSize * 2.5 : x;
-                y = !y ? y : y < this.menu.fontSize * 2.5 ? this.menu.fontSize * 2.5 : (y + this.menu.menuHeight) > (document.documentElement.clientHeight - this.menu.fontSize * 2.5) ? document.documentElement.clientHeight - this.menu.menuHeight - this.menu.fontSize * 2.5 : y;
-
-                //log(`x=${x}, y=${y}`)
-                s = this.menu.style;
-                s.position = "absolute";
-                s.left = `${x || this.menu.menuLeft}px`;
-                s.top = `${y || this.menu.menuTop}px`;
-                s.width = this.menu.menuWidth + "px";
-                s.height = this.menu.menuHeight + "px";
-                s.borderRadius = parseInt(this.menu.fontSize) * 1.5 + "px";
-                s.border = `${parseInt(this.menu.fontSize)/3}px solid ${this.selectBackgroundColor}`;
-                s.overflow = "scroll";
-                s.background = this.backgroundColor;
-                s.autofocus = "true";
-                muWindow.setAttribute("class", "show");
-                //alert(`left=${this.menu.menuLeft}, top=${this.menu.menuTop}, width=${this.menu.menuWidth}, height=${this.menu.menuHeight}`);
-                document.body.appendChild(muWindow);
-                isMenuShow = true; // 设置两次
-                setTimeout(() => {
-                    if (muWindow.getAttribute("class") == "show") isMenuShow = true;
-                }, ANIMATION_TIMEOUT);
-                //log(`showend`)
-
-            }
-
-            function hideMenu(ms, callback) {
-                let muWindow = this.menuWindow;
-                let input = this.input;
-                callback = callback || function() {};
-                if (timerHideMenu) {
-                    clearTimeout(timerHideMenu);
-                    timerHideMenu = null;
-                }
-                muWindow.setAttribute("class", `${0?"hideContextMenu":"hide"}`);
-                ms = parseInt(ms);
-                if (ms > 0) {
-                    timerHideMenu = setTimeout(function() {
-                        clearTimeout(timerHideMenu);
-                        timerHideMenu = null;
-                        muWindow.parentNode.removeChild(muWindow);
-                        callback();
-                    }, ms);
-                }
-                else {
-                    muWindow.parentNode.removeChild(muWindow);
-                    callback();
-                }
-            }
-
-            return {
-                "showMenu": (x, y) => {
-                    log(`show=${busy}`)
-                    if (busy) return;
-                    busy = true;
-                    setTimeout(() => { busy = false; }, ANIMATION_TIMEOUT);
-                    show.call(menuObj, x, y);
-                },
-                "hideMenu": (ms, callback) => {
-                    log(`hide=${busy}`)
-                    if (busy) return;
-                    busy = true;
-                    isMenuShow = false;
-                    setTimeout(() => { busy = false; }, ANIMATION_TIMEOUT);
-                    hideMenu.call(menuObj, ms, callback);
-                }
-            };
-        })(this);
+    button.prototype.createMenu = function(left, top, width, height, fontSize, closeAnimation, isCancelMenuClick = () => {}, scale = 1) { 
+        if (this.type != "select" || this.menu) return;//safari 长按棋盘会误触发click事件 isCancelMenuClick判断是否是误触发
+        this.menu = new Menu(this, left, top, width, height, fontSize, closeAnimation, isCancelMenuClick, scale);
     };
-
-
-
-    button.prototype.menuScroll = function(top) {
-        //log("menuScroll")
-        let optionsHeight = (parseInt(this.menu.fontSize) * 2.5 + 3) * (this.input.length + 2);
-        let maxScrollTop = optionsHeight - parseInt(this.menumenuHeight);
-        let targetScrollTop = this.menu.scrollTop + top;
-        let but = this;
-        if (this.animationFrameScroll) cancelAnima();
-        this.targetScrollTop = targetScrollTop;
-        //log(`menu.scrollTop=${this.menu.scrollTop}, top=${top}`)
-        this.tempScrollTop = this.menu.scrollTop;
-        scrollTo();
-
-        function scrollTo() {
-            let scl = Math.abs(parseInt((but.targetScrollTop - but.tempScrollTop) / 50)) + Math.abs(top) / 50;
-            //log(`scl=${scl}`)
-            if ((top < 0) && (but.tempScrollTop > but.targetScrollTop)) {
-                but.tempScrollTop -= scl;
-            }
-            else if ((top > 0) && (but.tempScrollTop < but.targetScrollTop)) {
-                but.tempScrollTop += scl;
-            }
-            else { //  to cancelAnimationFrame
-                but.tempScrollTop = top < 0 ? but.targetScrollTop - 1 : but.targetScrollTop + 1;
-            }
-            but.menu.scrollTop = but.tempScrollTop;
-            //log(`animationFrameScroll  ${but.tempScrollTop},  targetScrollTop=${ but.targetScrollTop}`)
-            but.animationFrameScroll = requestAnimationFrame(scrollTo);
-            if (top < 0 ? but.tempScrollTop <= but.targetScrollTop : but.tempScrollTop >= but.targetScrollTop) {
-                cancelAnima();
-            }
-        }
-
-        function cancelAnima() {
-            //log("exit animationFrameScroll")
-            cancelAnimationFrame(but.animationFrameScroll);
-            but.animationFrameScroll = null;
-            but.menu.scrollTop = but.menu.scrollTop < 0 ? 0 : but.menu.scrollTop > maxScrollTop ? maxScrollTop : but.menu.scrollTop;
-        }
-    };
-
 
 
     button.prototype.defaultontouchstart = function() {
@@ -556,14 +550,17 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
         }
         else if (this.type == "select" && !cancel) {
             //log(`click t=${this.text}`);
-            let top = window.scrollY + this.menu.fontSize * 2.5 * 2;
-            let y = event && event.pageY ? event.pageY - top : event && event.changedTouches[0] ? event.changedTouches[0].pageY - top : undefined;
-            this.showMenu(undefined, y);
+            this.showMenu(undefined, this.autoMenuTop());
         }
         return cancel ? false : true;
     };
 
 
+    button.prototype.autoMenuTop = function() {
+        let top = window.scrollY / this.menu.bodyScale + this.menu.fontSize * 2.5 * 2;
+        top = event && event.pageY ? event.pageY / this.menu.bodyScale - top : event && event.changedTouches[0] ? event.changedTouches[0].pageY / this.menu.bodyScale - top : undefined;
+        return top;
+    }
 
 
     button.prototype.defaultonchange = function() {
@@ -588,13 +585,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
     button.prototype.hideMenu = function(ms, callback) {
-        this._menu.hideMenu(ms, callback);
+        this.menu.hide(ms, callback);
     }
 
 
 
     //  移动和设置大小
-    button.prototype.move = function(left, top, width, height) {
+    button.prototype.move = function(left, top, width, height, parentNode) {
+        parentNode && parentNode.appendChild(this.div)
         let text = this.text;
         this.left = left == null ? this.left : parseInt(left) + "px";
         this.top = top == null ? this.top : parseInt(top) + "px";
@@ -671,14 +669,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
             if (event) event.cancelBubble = true;
             if (but.defaultonchange()) callback.call(this, but)
         }
-        if (this.type == "select" || this.type == "file") {
-            this.input.removeEventListener("change", fun, true);
-            this.input.addEventListener("change", this.change, true);
-        }
-        else {
-            this.input.removeEventListener("change", fun, true);
-            this.input.addEventListener("change", this.change, true);
-        }
+        this.input.removeEventListener("change", fun, true);
+        this.input.addEventListener("change", this.change, true);
     };
 
 
@@ -784,7 +776,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
         if (!this.div.parentNode) this.parentNode.appendChild(this.div);
 
-        this.div.style.position = this.position;
+        this.div.style.position = "absolute";
         if (width) this.width = parseInt(width) + "px";
         this.div.style.width = this.width;
         if (height) this.height = parseInt(height) + "px";
@@ -850,7 +842,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
     button.prototype.showMenu = function(x, y) {
         log(`${this}.showMenu`)
-        this._menu.showMenu(x, y);
+        this.menu.show(x, y);
     };
 
     exports.ANIMATION_TIMEOUT = ANIMATION_TIMEOUT;

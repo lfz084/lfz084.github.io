@@ -127,21 +127,215 @@ window.control = (() => {
         cShareWhite = null,
         cCleLb = null,
         cHelp = null,
+        cLeft = null,
+        cRight = null,
+        cUp = null,
+        cDown = null,
+        cRotate90 = null,
+        cTotate180 = null,
+        cPutMiniBoard =null,
+        cCleMiniBoard = null,
+        cZoomIn = null,
+        cZoomOut = null,
         exWindow,
-        isCancelMenuClick = false, //iOS 长按弹出棋盘菜单后会误触发click事件。
-        isCancelCanvasClick = false; //ios 长按放大棋盘会误触发click事件
+        miniBoard ;
 
+    /*------ 添加定位标记 ------*/
     const setTop = (() => {
         let topMark = document.createElement("div");
         document.body.appendChild(topMark);
         topMark.setAttribute("id", "top");
-        
+
         return (top) => {
             let s = topMark.style;
             s.position = "absolute";
             s.top = top + "px";
             s.zIndex = -100;
         }
+    })();
+
+    /*------ iphone 长按弹出棋盘菜单后会误触发click事件。-----
+    -------- iphone 长按放大棋盘会误触发click事件-----------*/
+    const iphoneCancelClick = (() => {
+        let isCancelClick = false;
+        document.body.addEventListener("touchstart", () => { isCancelClick = false }, true);
+        document.body.addEventListener("touchend", () => { setTimeout(() => { isCancelClick = false }, 250) }, true);
+        return {
+            enable: () => {
+                isCancelClick = !!(navigator.userAgent.indexOf("iPhone") + 1);
+            },
+            isCancel: () => {
+                setTimeout(() => { isCancelClick = false }, 100);
+                return isCancelClick;
+            }
+        }
+    })();
+
+    /*------ 分享图片窗口 ------*/
+    let share = (() => {
+        let sharing = false;
+
+        let shareWindow = document.createElement("div");
+        shareWindow.ontouch = function() { if (event) event.preventDefault(); };
+
+        let imgWindow = document.createElement("div");
+        imgWindow.ontouch = function() { if (event) event.preventDefault(); };
+        shareWindow.appendChild(imgWindow);
+
+        let shareLabel = document.createElement("div");
+        imgWindow.appendChild(shareLabel);
+
+        let checkDiv = document.createElement("div");
+        imgWindow.appendChild(checkDiv);
+
+        let checkbox = document.createElement("input");
+        checkbox.setAttribute("type", "checkbox")
+        checkDiv.appendChild(checkbox);
+
+        let shareLabel2 = document.createElement("div");
+        checkDiv.appendChild(shareLabel2);
+
+        let shareImg = document.createElement("img");
+        imgWindow.appendChild(shareImg);
+
+        //取消按钮
+        const ICO_DOWNLOAD = document.createElement("img");
+        imgWindow.appendChild(ICO_DOWNLOAD);
+        ICO_DOWNLOAD.src = "./pic/docusign-white.svg";
+        ICO_DOWNLOAD.oncontextmenu = (event) => {
+            event.preventDefault();
+        };
+
+        const ICO_CLOSE = document.createElement("img");
+        imgWindow.appendChild(ICO_CLOSE);
+        ICO_CLOSE.src = "./pic/close-white.svg";
+        ICO_CLOSE.oncontextmenu = (event) => {
+            event.preventDefault();
+        };
+
+        function refreshImg(backgroundColor, LbBackgroundColor) {
+            cBd.backgroundColor = backgroundColor;
+            cBd.LbBackgroundColor = LbBackgroundColor;
+            cBd.refreshCheckerBoard();
+            shareImg.src = cBd.cutViewBox().toDataURL();
+        }
+
+        function shareClose() {
+            shareWindow.setAttribute("class", "hide");
+            setTimeout(() => {
+                shareWindow.parentNode.removeChild(shareWindow);
+                sharing = false;
+            }, ANIMATION_TIMEOUT);
+        }
+
+        return () => {
+
+            if (sharing) return;
+            sharing = true;
+            let oldBackgroundColor = cBd.backgroundColor;
+            let oldLbBackgroundColor = cBd.LbBackgroundColor;
+
+            let s = shareWindow.style;
+            s.position = "fixed";
+            s.zIndex = 9998;
+            s.width = dw + "px";
+            s.height = dh * 2 + "px";
+            s.top = "0px";
+            s.left = "0px";
+
+            let imgWidth = dw < dh ? dw : dh;
+            imgWidth = ~~(imgWidth * 3 / 4);
+            s = imgWindow.style;
+            s.position = "relative";
+            s.width = imgWidth + "px";
+            s.height = imgWidth + "px";
+            s.top = ~~((dh - imgWidth) / 2) + "px";
+            s.left = ~~((dw - imgWidth) / 2) + "px";
+            s.backgroundColor = "#666666";
+            s.border = `0px solid `;
+
+            let iWidth = ~~(imgWidth * 3 / 5);
+            s = shareImg.style;
+            s.position = "absolute";
+            s.width = iWidth + "px";
+            s.height = iWidth + "px";
+            s.top = ~~((imgWidth - iWidth) / 2) + "px";
+            s.left = ~~((imgWidth - iWidth) / 2) + "px";
+            s.border = `0px solid black`;
+
+            let h = ~~((imgWidth - iWidth) / 2 / 2);
+            let w = h * 4;
+            let l = (imgWidth - w) / 2;
+            let t = imgWidth - h - (imgWidth - iWidth) / 8;
+
+            shareLabel.innerHTML = `<h1 style = "font-size: ${h*0.45}px;text-align: center;color:#f0f0f0">长按图片分享</h1>`;
+            s = shareLabel.style;
+            s.position = "absolute";
+            s.width = w + "px";
+            s.height = h + "px";
+            s.top = (imgWidth - iWidth) / 8 + "px";
+            s.left = l + "px";
+            s.backgroundColor = imgWindow.style.backgroundColor || "#666666";
+
+            s = checkDiv.style;
+            s.position = "absolute";
+            s.width = w / 2 + "px";
+            s.height = h + "px";
+            s.top = ~~((imgWidth - iWidth) / 2 - h) + "px";
+            s.left = ~~((imgWidth - iWidth) / 2) + "px";
+
+            s = checkbox.style;
+            s.position = "absolute";
+            s.width = h / 3 + "px";
+            s.height = h / 3 + "px";
+            s.top = h / 3 + "px";
+            s.left = 0 + "px";
+            checkbox.onclick = () => {
+                if (checkbox.checked) refreshImg(oldBackgroundColor, oldLbBackgroundColor)
+                else refreshImg("white", "white")
+            };
+
+            s = shareLabel2.style;
+            s.position = "absolute";
+            s.width = h + "px";
+            s.height = h + "px";
+            s.top = h / 3 + "px";
+            s.left = h / 2 + "px";
+            s.fontSize = h / 3 + "px";
+            shareLabel2.innerHTML = `原图`;
+            shareLabel2.onclick = () => checkbox.click()
+
+            s = ICO_DOWNLOAD.style;
+            s.position = "absolute";
+            s.width = (imgWidth - parseInt(shareImg.style.top) - parseInt(shareImg.style.height)) / 2 + "px";
+            s.height = s.width;
+            s.top = imgWidth - parseInt(s.width) * 1.5 + "px";
+            s.left = imgWidth / 2 - parseInt(s.width) * 1.5 + "px";
+            s.backgroundColor = "#787878";
+            s.opacity = "0.8";
+            setButtonClick(ICO_DOWNLOAD, () => {
+                cBd.saveAsImage("png");
+            });
+
+            s = ICO_CLOSE.style;
+            s.position = "absolute";
+            s.width = ICO_DOWNLOAD.style.width;
+            s.height = ICO_DOWNLOAD.style.height;
+            s.top = ICO_DOWNLOAD.style.top;
+            s.left = imgWidth / 2 + parseInt(s.width) * 0.5 + "px";
+            s.backgroundColor = "#787878";
+            s.opacity = "0.8";
+            setButtonClick(ICO_CLOSE, () => {
+                shareClose();
+                if (cBd.backgroundColor != oldBackgroundColor || cBd.LbBackgroundColor != oldLbBackgroundColor) {
+                    refreshImg(oldBackgroundColor, oldLbBackgroundColor);
+                }
+            });
+
+            checkbox.onclick();
+            shareWindow.setAttribute("class", "show");
+            setTimeout(() => { document.body.appendChild(shareWindow); }, 1);
+        };
     })();
 
     const lbTime = new function() {
@@ -253,11 +447,9 @@ window.control = (() => {
     }
 
     function newGame() {
-
-        let h1 = ~~(cBd.width);
-        let h2 = ~~(cBd.canvas.height);
         scaleCBoard(false);
-        cBd.viewBox.style.height = cBd.canvas.style.height;
+        cBd.canvas.width = cBd.canvas.height = cBd.width;
+        cBd.canvas.style.width = cBd.canvas.style.height = cBd.width + "px";
         cBd.cle();
         cBd.resetCBoardCoordinate();
         cBd.printEmptyCBoard();
@@ -268,9 +460,9 @@ window.control = (() => {
         setPlayMode(MODE_RENJU);
         blackwhiteRadioChecked(cSelBlack);
         markRadioChecked(cAutoadd);
-        parentNode.style.top = h1 + parentNode.offsetTop - h2 + "px";
+        parentNode.style.top = parentNode.offsetTop - "px";
         parentNode.appendChild(renjuCmddiv);
-        if (imgCmdDiv.parentNode) imgCmdDiv.parentNode.removeChild(imgCmdDiv);
+        imgCmdDiv.parentNode && imgCmdDiv.parentNode.removeChild(imgCmdDiv);
         viewport1.resize();
         RenjuLib.closeLib();
     }
@@ -299,25 +491,26 @@ window.control = (() => {
 
     let putCheckerBoard = putBoard;
 
-    function putBoard(idx) {
+    function putBoard(idx, board = cBd) {
         if (idx < 0) return;
-        let arr = cBd.getArray2D();
+        let arr = board.getArray2D();
         newGame();
         cBd.unpackArray(!idx ? arr : changeCoordinate(arr, idx));
     }
 
-    function changeCoordinate(arr, idx) {
-        let nArr = getArr2D([]);
-        idx = idx || 112;
-        let l = 7 - ~~(idx % arr[0].length);
-        l = l < 0 ? 0 : l;
-        l = l + arr[0].length > 15 ? 15 - arr[0].length : l;
-        let t = 7 - ~~(idx / arr.length);
-        t = t < 0 ? 0 : t;
-        t = t + arr.length > 15 ? 15 - arr.length : t;
-        for (let i = 0; i < arr.length; i++) {
-            for (let j = 0; j < arr[i].length; j++) {
-                nArr[i + t][j + l] = arr[i][j];
+    function changeCoordinate(arr, idx = 112) {
+        const nArr = getArr2D([]);
+        const x = idx % 15;
+        const y = ~~(idx / 15);
+        const l = 7 - x;
+        const t = 7 - y;
+        for (let i = 0; i < 15; i++) {
+            for(let j = 0; j < 15; j++) {
+                let x1 = i - l;
+                let y1 = j - t;
+                if (x1 >= 0 && x1 < 15 && y1 >= 0 && y1 < 15) {
+                    if (arr[y1][x1]) nArr[j][i] = arr[y1][x1];
+                }
             }
         }
         return nArr;
@@ -445,7 +638,7 @@ window.control = (() => {
             case "AsyncFunction":
                 setBusy(true);
                 callback()
-                    .then(()=>{}).catch(()=>{})
+                    .then(() => {}).catch(() => {})
                     .then(() => { setBusy(false, 800) })
                 break;
         }
@@ -456,20 +649,7 @@ window.control = (() => {
         menu.index = -1;
         menu.addOptions(options);
         menu.setonchange(onchange);
-        menu.createMenu(left,
-            undefined,
-            width,
-            undefined,
-            fontSize,
-            true,
-            () => {
-                //log(`isCancelMenuClick=${isCancelMenuClick}`);
-                let rt = isCancelMenuClick;
-                setTimeout(() => {
-                    isCancelMenuClick = false;
-                }, 100);
-                return rt;
-            });
+        menu.createMenu(left, undefined, width, undefined, fontSize, true, iphoneCancelClick.isCancel);
         return menu;
     }
 
@@ -499,8 +679,8 @@ window.control = (() => {
             function(but) {
                 if (isBusy()) return;
                 let idx = but.idx,
-                    x = but.menu.offsetLeft,
-                    y = but.menu.offsetTop;
+                    x = but.menu.menu.offsetLeft,
+                    y = but.menu.menu.offsetTop;
                 const FUN = {
                     0: () => { cShownum.showMenu(x, y) },
                     1: () => { cLoadImg.showMenu(x, y) },
@@ -534,6 +714,7 @@ window.control = (() => {
                 FUN[but.input.value]();
             });
     }
+
     /*
     function setTreeInit(tree) {
         if (tree && tree.constructor.name == "Tree") {
@@ -562,7 +743,6 @@ window.control = (() => {
     }
 
     function moveButtons(settings) {
-
         let buts = settings.defaultButtons,
             positions = settings.positions,
             buttonsIdx = settings.ButtonsIdx[settings.idx];
@@ -596,7 +776,6 @@ window.control = (() => {
 
     // renju 模式控制面板
     function createRenjuCmdDiv(parentNode, left, top, width, height) {
-
         renjuCmddiv = document.createElement("div");
         parentNode.appendChild(renjuCmddiv);
         renjuCmddiv.style.position = "relative";
@@ -615,7 +794,6 @@ window.control = (() => {
         let menuFontSize = sw / 20;
 
         w = sw / 5;
-
 
         cStart = new Button(renjuCmddiv, "button", 0, 0, w, h);
         cStart.setText("‖<<");
@@ -799,28 +977,16 @@ window.control = (() => {
             but.input.value = 0;
         });
 
-        function putImg() {
-            let img = cBd.bakImg;
-            let w = parseInt(img.width);
-            let h = parseInt(img.height);
-            let w1 = cBd.width;
-            let h1 = cBd.width * h / w;
-            let h2 = cBd.canvas.height;
+        async function openImg() {
             cBd.cle();
             scaleCBoard(false);
-            // 画图之前，设置画布大小
-            cBd.canvas.width = w1;
-            cBd.canvas.height = h1;
-            cBd.canvas.style.width = w1 + "px";
-            cBd.canvas.style.height = h1 + "px";
-            cBd.viewBox.style.height = cBd.canvas.style.height;
-            let ctx = cBd.canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, w, h, w1 / 13, h1 / 13, w1 / 13 * 11, h1 / 13 * 11);
-            parentNode.style.top = h1 + parentNode.offsetTop - h2 + "px";
+            cBd.drawLineEnd();
             cBd.resetCutDiv();
             parentNode.removeChild(renjuCmddiv);
             parentNode.appendChild(imgCmdDiv);
-            //oldPlayMode = playMode;
+            await cBd.loadImgFile(fileInput.files[0]);
+            fileInput.value = "";
+            cBd.putImg(cBd.bakImg, cBd.canvas, cBd.width / 13);
             setPlayMode(MODE_LOADIMG);
             cLockImg.setChecked(0);
             cAddblack2.setChecked(1);
@@ -829,27 +995,12 @@ window.control = (() => {
             cSLTX.setText(cSLTX.input.value + " 列");
             cSLTY.input.value = cBd.SLTY;
             cSLTY.setText(cSLTY.input.value + " 行");
-            ctx = null;
             viewport1.userScalable();
             warn(`长按棋盘，拖动虚线对齐棋子`);
-        }
-
-        function openImg() {
-            cBd.drawLineEnd();
-            let reader = new FileReader();
-            let file = fileInput.files[0];
-            fileInput.value = "";
-            let img = cBd.bakImg;
-            img.src = null;
-            reader.onload = function() {
-                img.src = reader.result;
-            };
-            reader.readAsDataURL(file);
-            img.onload = function() {
-                img.onload = null;
-                cBd.oldXL = cBd.oldXR = 0;
-                putImg();
-            };
+            miniBoard.backgroundColor = cBd.backgroundColor;
+            miniBoard.setSize(cBd.size);
+            miniBoard.setCoordinate(cBd.coordinateType);
+            miniBoard.cle();
         }
 
         function openLib() {
@@ -857,10 +1008,7 @@ window.control = (() => {
             cBd.drawLineEnd();
             let file = fileInput.files[0];
             fileInput.value = "";
-            RenjuLib.openLib(file)
-                .then(function() {
-                    setPlayMode(MODE_RENLIB);
-                })
+            RenjuLib.openLib(file);
         }
 
         cCutImage = new Button(renjuCmddiv, "select", 0, 0, w, h);
@@ -996,7 +1144,7 @@ window.control = (() => {
         for (let i = cLbColor.menu.lis.length - 1; i >= 0; i--) {
             cLbColor.menu.lis[i].style.color = lbColor[i].color;
             let div = document.createElement("div");
-            cLbColor.menu.appendChild(div);
+            cLbColor.menu.menu.appendChild(div);
             div.onclick = cLbColor.menu.lis[i].onclick;
             let s = div.style;
             s.position = "absolute";
@@ -1050,7 +1198,7 @@ window.control = (() => {
 
         cFindPoint = new Button(renjuCmddiv, "select", 0, 0, w, h);
         if (CALCULATE) {
-            cFindPoint.addOption(1, "VCT选点");
+            //cFindPoint.addOption(1, "VCT选点");
             cFindPoint.addOption(2, "做V点");
             cFindPoint.addOption(3, "做43杀(白单冲4杀)");
             cFindPoint.addOption(4, "活三级别");
@@ -1473,19 +1621,19 @@ window.control = (() => {
                 2: () => { cBd.isShowAutoLine = but.menu.lis[2].checked },
                 3: () => { scaleCBoard(but.menu.lis[3].checked, 1) },
                 4: () => { cBd.isTransBranch = but.menu.lis[4].checked },
-                5: () => { gameRulesMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
-                6: () => { cBoardSizeMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
-                7: () => { coordinateMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
-                9: () => { setCBoardLineStyleMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
-                10: () => { saveRenjuSettingsMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
-                11: () => { loadRenjuSettingsMenu.showMenu(but.menu.offsetLeft, but.menu.offsetTop) },
-                12: () => {location.href = "reset.html"},
+                5: () => { gameRulesMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
+                6: () => { cBoardSizeMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
+                7: () => { coordinateMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
+                9: () => { setCBoardLineStyleMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
+                10: () => { saveRenjuSettingsMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
+                11: () => { loadRenjuSettingsMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
+                12: () => { location.href = "reset.html" },
             }
             setMenuCheckBox(but, but.input.selectedIndex, [0, 1, 2, 3]);
             execFunction(FUN[but.input.value]);
-            cBd.autoShow();
+            cBd.stonechange();
         });
-        cBd.onScale = function() {
+        cBd.viewchange = function() {
             if (this.scale == 1) {
                 cShownum.menu.lis[3].checked = false;
                 cShownum.menu.lis[3].innerHTML = cShownum.input[3].text;
@@ -1495,7 +1643,7 @@ window.control = (() => {
                 cShownum.menu.lis[3].innerHTML = cShownum.input[3].text + "  ✔";
             }
         };
-        cBd.onSetSize = function() {
+        cBd.sizechange = function() {
             cBoardSizeMenu.input.selectedIndex = 15 - this.size;
             setMenuRadio(cBoardSizeMenu, cBoardSizeMenu.input.selectedIndex);
             viewport1.scrollTop();
@@ -1505,25 +1653,91 @@ window.control = (() => {
                 if (libSize != cBoardSize) msg(`${EMOJI_FOUL_THREE}${libSize}路棋谱 ${cBoardSize}路棋盘${EMOJI_FOUL_THREE}`);
             }
         };
-        cBd.onSetCoordinate = function() {
+        cBd.boardchange = function() {
             coordinateMenu.input.selectedIndex = this.coordinateType;
             setMenuRadio(coordinateMenu, coordinateMenu.input.selectedIndex);
             viewport1.scrollTop();
+        };
+        cBd.stonechange = function() {
+            if (playMode != MODE_RENJU &&
+                playMode != MODE_RENJU_FREE &&
+                playMode != MODE_RENLIB &&
+                playMode != MODE_READLIB &&
+                playMode != MODE_EDITLIB &&
+                playMode != MODE_ARROW_EDIT &&
+                playMode != MODE_LINE_EDIT) return;
+
+            if (playMode == MODE_READLIB || playMode == MODE_EDITLIB) {
+                this.showBranchs();
+            }
+            else if (playMode == MODE_RENLIB) {
+                RenjuLib.showBranchs({ path: this.MS.slice(0, this.MSindex + 1), position: this.getArray2D() });
+                showFoul.call(this, (findMoves.call(this) + 1) ? false : this.isShowFoul);
+            }
+            else {
+                showFoul.call(this, findMoves.call(this) + 1 ? false : this.isShowFoul);
+                showAutoLine.call(this, findMoves.call(this) + 1 ? false : this.isShowAutoLine);
+            }
+
+            function findMoves() {
+                for (let i = 0; i < this.SLTX; i++) {
+                    for (let j = 0; j < this.SLTY; j++) {
+                        if (this.P[i + j * 15].type == TYPE_MOVE) {
+                            return i;
+                        }
+                    }
+                }
+                return -1;
+            }
+
+            function showFoul(display) {
+                this.P.map((P, i) => {
+                    if (P.type == TYPE_MARKFOUL) {
+                        P.cle();
+                        this.clePointB(i);
+                        this.refreshMarkLine(i);
+                        this.refreshMarkArrow(i);
+                    }
+                });
+                if (display) {
+                    this.getArray().map((color, idx, arr) => {
+                        color == 0 && isFoul(idx, arr) && (
+                            this.P[idx].color = "red",
+                            this.P[idx].bkColor = null,
+                            this.P[idx].type = TYPE_MARKFOUL,
+                            this.P[idx].text = EMOJI_FOUL,
+                            this.refreshMarkLine(idx),
+                            this._printPoint(idx),
+                            this.refreshMarkArrow(idx)
+                        );
+                    });
+                }
+            }
+
+            function showAutoLine(display) {
+                for (let i = this.autoLines.length - 1; i >= 0; i--) {
+                    this.removeMarkLine(i, this.autoLines);
+                }
+                if (display) {
+                    const OBJ_LINES = { THREE_FREE: [], FOUR_NOFREE: [], FOUR_FREE: [], FIVE: [] },
+                        COLOR = { THREE_FREE: "#556B2F", FOUR_NOFREE: "#483D8B", FOUR_FREE: "#86008f", FIVE: "red" };
+                    let arr = this.getArray();
+                    getLines(arr, 1).map(line => OBJ_LINES[line.level].push(line));
+                    getLines(arr, 2).map(line => OBJ_LINES[line.level].push(line));
+                    Object.keys(OBJ_LINES).map(key => {
+                        OBJ_LINES[key].map(line => this.createMarkLine(line.start, line.end, COLOR[line.level], this.autoLines));
+                    });
+                }
+            }
+
         };
         onLoadCmdSettings = function() {
             setMenuRadio(loadRenjuSettingsMenu, renjuCmdSettings.idx);
             viewport1.scrollTop();
         };
-        scaleCBoard = function(isScale, timeout = 0) {
-            if (isScale) {
-                if (cBd.startIdx < 0)
-                    cBd.setScale(1.5, timeout);
-                else
-                    warn(`${EMOJI_STOP} 画线模式,不能放大棋盘`);
-            }
-            else {
-                cBd.setScale(1, timeout);
-            }
+        scaleCBoard = function(isScale, isAnima) {
+            if (isScale) cBd.setScale(1.5, isAnima);
+            else cBd.setScale(1, isAnima);
         };
 
         setShowNum = function(shownum) {
@@ -1909,14 +2123,14 @@ window.control = (() => {
                 newGame: newGame,
                 cBoard: cBd,
                 getShowNum: getShowNum,
-                setPlayMode: setPlayMode
+                setPlayMode: ()=>setPlayMode(MODE_RENLIB)
             });
 
         }, 1000 * 1);
     }
 
     function createImgCmdDiv(parentNode, left, top, width, height) {
-
+        
         imgCmdDiv = document.createElement("div");
         let s = imgCmdDiv.style;
         s.position = "relative";
@@ -1929,10 +2143,28 @@ window.control = (() => {
         let sw = parseInt(s.width);
         let w = sw / 5;
         let h = sw / 9 / 1.5;
-        let t = 0;
+        let t = dw < dh ? 0 - cBd.width - h * 2.5 : 0;
         let menuLeft = parseInt(parentNode.style.left) + parseInt(imgCmdDiv.style.left) + sw * 0.1;
         let menuWidth = sw * 0.8;
         let menuFontSize = sw / 20;
+        
+        cZoomIn = new Button(imgCmdDiv, "button", w * 1.33, t, w, h);
+        cZoomIn.show();
+        cZoomIn.setText("放大");
+        cZoomIn.setontouchend(function() {
+            const scale = Math.min(cBd.scale * 1.5, 3);
+            cBd.setScale(scale);
+        })
+        
+        cZoomOut = new Button(imgCmdDiv, "button", w * 2.66, t, w, h);
+        cZoomOut.show();
+        cZoomOut.setText("缩小");
+        cZoomOut.setontouchend(function() {
+            const scale = Math.max(cBd.scale / 1.5, 1);
+            cBd.setScale(scale);
+        })
+            
+        t = dw < dh ? 0 : t + h * 1.5;
 
         cLockImg = new Button(imgCmdDiv, "checkbox", w * 0, t, w, h);
         cLockImg.show();
@@ -1942,112 +2174,30 @@ window.control = (() => {
                 lockImg();
             }
             else {
-                putImg();
+                unLockImg();
             }
         });
 
-        function putImg() {
-            let img = cBd.bakImg;
-            let w = parseInt(img.width);
-            let h = parseInt(img.height);
-            let w1 = cBd.width;
-            let h1 = cBd.width * h / w;
-            let h2 = cBd.canvas.height;
-            cBd.cle();
-            // 画图之前，设置画布大小
-            cBd.canvas.width = w1;
-            cBd.canvas.height = h1;
-            cBd.canvas.style.width = w1 + "px";
-            cBd.canvas.style.height = h1 + "px";
-            cBd.viewBox.style.height = cBd.canvas.style.height;
-            let ctx = cBd.canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, w, h, w1 / 13, h1 / 13, w1 / 13 * 11, h1 / 13 * 11);
-            parentNode.style.top = h1 + parentNode.offsetTop - h2 + "px";
-            cBd.resetCutDiv();
-            ctx = null;
+        async function unLockImg() {
+            await cBd.unLockArea();
             viewport1.userScalable();
-            //cBd.DIV.map(div => div.setAttribute("class", ""))
         }
-
-        function lockImg(fun) {
-
-            let div = cBd.cutDiv;
-            let w = parseInt(cBd.cutDiv.style.width);
-            let h = parseInt(cBd.cutDiv.style.height);
-            let w2 = w / 11 * 13;
-            let h2 = h / 11 * 13;
-            let l = div.offsetLeft - w / 11 > 0 ? div.offsetLeft - w / 11 : 0;
-            let t = div.offsetTop - h / 11 > 0 ? div.offsetTop - h / 11 : 0;
-            let L2 = l > 0 ? 0 : w / 11 - div.offsetLeft;
-            let t2 = t > 0 ? 0 : h / 11 - div.offsetTop;
-            //alert(`div.offsetLeft${div.offsetLeft},div.offsetTop${div.offsetTop}`)
-            cBd.bakCanvas.width = w2;
-            cBd.bakCanvas.height = h2;
-            cBd.bakCanvas.style.width = w2 + "px";
-            cBd.bakCanvas.style.height = h2 + "px";
-
-            let ctx = cBd.bakCanvas.getContext("2d");
-            ctx.fillStyle = cBd.backgroundColor;
-            ctx.fillRect(0, 0, w2, h2);
-            cBd.cutImg.src = cBd.bakCanvas.toDataURL("image/png");
-
-            cBd.cutImg.onload = function() {
-                cBd.cutImg.onload = null;
-                let w3 = parseInt(cBd.canvas.width) - div.offsetLeft;
-                w3 = w3 < w / 11 * 12 ? w : w / 11 * 12;
-                w3 += l == 0 ? div.offsetLeft : w / 11;
-                let h3 = parseInt(cBd.canvas.height) - div.offsetTop;
-                h3 = h3 < h / 11 * 12 ? h : h / 11 * 12;
-                h3 += t == 0 ? div.offsetTop : h / 11;
-                ctx.drawImage(cBd.canvas, l, t, w3, h3, L2, t2, w3, h3);
-                cBd.cutImg.src = cBd.bakCanvas.toDataURL("image/png");
-
-                cBd.cutImg.onload = function() {
-                    cBd.cutImg.onload = null;
-                    ctx = cBd.canvas.getContext("2d");
-
-                    h = parseInt(cBd.canvas.height);
-                    cBd.canvas.height = parseInt(cBd.width) * h2 / w2;
-                    cBd.canvas.style.height = parseInt(cBd.width) * h2 / w2 + "px";
-                    cBd.viewBox.style.height = cBd.canvas.style.height;
-                    ctx.drawImage(cBd.cutImg, 0, 0, w2, h2, 0, 0, parseInt(cBd.width), parseInt(cBd.width) * h2 / w2);
-
-                    cBd.XL = parseInt(cBd.canvas.width) / 13;
-                    cBd.XR = parseInt(cBd.canvas.width) / 13 * 12;
-                    cBd.YT = parseInt(cBd.canvas.height) / 13;
-                    cBd.YB = parseInt(cBd.canvas.height) / 13 * 12;
-                    cBd.resetP(cBd.XL, cBd.XR, cBd.YT, cBd.YB);
-                    parentNode.style.top = parseInt(cBd.canvas.height) + parentNode.offsetTop - h + "px";
-
-                    cBd.cleAllPointBorder();
-                    cBd.hideCutDiv();
-                    ctx = null;
-                    viewport1.resize();
-                    //cBd.DIV.map(div => div.setAttribute("class", "startPoint"))
-                    if (fun) fun();
-                    /*
-                    cBd.parentNode.appendChild(cBd.bakCanvas);
-                    cBd.bakCanvas.style.top = 2000;
-                    cBd.parentNode.appendChild(cBd.cutImg);
-                    cBd.cutImg.style.top = 1500;
-                    */
-                }
-            }
-
+        
+        async function lockImg() {
+            await cBd.lockArea();
+            viewport1.resize();
         }
 
         cAutoPut = new Button(imgCmdDiv, "button", w * 1.33, t, w, h);
         cAutoPut.show();
-        cAutoPut.setColor("black");
         cAutoPut.setText(" 自动识别");
-        cAutoPut.setontouchend(function() {
+        cAutoPut.setontouchend(async function() {
             if (!cLockImg.checked) {
-                lockImg(function() { cBd.autoPut(); });
+                await lockImg();
                 cLockImg.setChecked(1);
             }
-            else {
-                cBd.autoPut();
-            }
+            cBd.autoPut();
+            miniBoard.unpackArray(cBd.getArray2D());
             autoblackwhiteRadioChecked(cAddwhite2);
         });
 
@@ -2055,7 +2205,6 @@ window.control = (() => {
 
         cPutBoard = new Button(imgCmdDiv, "button", w * 2.66, t, w, h);
         cPutBoard.show();
-        cPutBoard.setColor("black");
         cPutBoard.setText(" 摆入棋盘");
         cPutBoard.setontouchend(function() {
             if (true || cBd.SLTX == cBd.size && cBd.SLTY == cBd.size) {
@@ -2070,7 +2219,6 @@ window.control = (() => {
 
         cCleAll = new Button(imgCmdDiv, "button", w * 3.99, t, w, h);
         cCleAll.show();
-        cCleAll.setColor("black");
         cCleAll.setText(" 清空棋盘");
         cCleAll.setontouchend(function() {
             for (let i = 15 * 15 - 1; i >= 0; i--) cBd.P[i].cle();
@@ -2105,14 +2253,14 @@ window.control = (() => {
         cSLTY.setonchange(function(but) {
             but.setText(but.input.value + " 行");
             cBd.SLTY = but.input.value;
-            cBd.resetP(cBd.XL, cBd.XR, cBd.YT, cBd.YB);
+            cBd.resetP();
             if (!cLockImg.checked) {
-                cBd.cleAllPointBorder();
+                cBd.cleBorder();
                 cBd.printBorder();
             }
             else {
                 cLockImg.setChecked(0);
-                putImg();
+                unLockImg();
             }
         });
 
@@ -2128,16 +2276,87 @@ window.control = (() => {
         cSLTX.setonchange(function(but) {
             but.setText(but.input.value + " 列");
             cBd.SLTX = but.input.value;
-            cBd.resetP(cBd.XL, cBd.XR, cBd.YT, cBd.YB);
+            cBd.resetP();
             if (!cLockImg.checked) {
-                cBd.cleAllPointBorder();
+                cBd.cleBorder();
                 cBd.printBorder();
             }
             else {
                 cLockImg.setChecked(0);
-                putImg();
+                unLockImg();
             }
         });
+        
+        t += h * 1.5;
+        
+        miniBoard = new CheckerBoard(imgCmdDiv, 0, t, w * 2.5, w * 2.5);
+        miniBoard.setCoordinate(5);
+        miniBoard.resetCBoardCoordinate();
+        miniBoard.printEmptyCBoard();
+        miniBoard.viewBox.addEventListener("touchstart", () => event.preventDefault())
+        
+        t += h * 1;
+        
+        cRotate90 = new Button(imgCmdDiv, "button", w * 2.66, t, w, h);
+        cRotate90.show();
+        cRotate90.setText("↗90°");
+        cRotate90.setontouchend(function() {
+            miniBoard.rotate90()
+        })
+        
+        cUp = new Button(imgCmdDiv, "button", w * 3.99, t, w, h);
+        cUp.show();
+        cUp.setText("↑");
+        cUp.setontouchend(function() {
+            miniBoard.translate(-1, 0)
+        })
+        
+        t += h * 1.5;
+        
+        cLeft = new Button(imgCmdDiv, "button", w * 2.66, t, w, h);
+        cLeft.show();
+        cLeft.setText("←");
+        cLeft.setontouchend(function() {
+            miniBoard.translate(0, -1)
+        })
+        cRight = new Button(imgCmdDiv, "button", w * 3.99, t, w, h);
+        cRight.show();
+        cRight.setText("→");
+        cRight.setontouchend(function() {
+            miniBoard.translate(0, 1)
+        })
+        
+        t += h * 1.5;
+        
+        cDown = new Button(imgCmdDiv, "button", w * 3.99, t, w, h);
+        cDown.show();
+        cDown.setText("↓");
+        cDown.setontouchend(function() {
+            miniBoard.translate(1, 0)
+        })
+        
+        cTotate180 = new Button(imgCmdDiv, "button", w * 2.66, t, w, h);
+        cTotate180.show();
+        cTotate180.setText("↔180°");
+        cTotate180.setontouchend(function() {
+            miniBoard.rotateY180()
+        })
+        
+        t += h * 1.5;
+        
+        cPutMiniBoard = new Button(imgCmdDiv, "button", w * 2.66, t, w, h);
+        cPutMiniBoard.show();
+        cPutMiniBoard.setText("摆入棋盘");
+        cPutMiniBoard.setontouchend(function() {
+            putBoard(null, miniBoard)
+        })
+        
+        cCleMiniBoard = new Button(imgCmdDiv, "button", w * 3.99, t, w, h);
+        cCleMiniBoard.show();
+        cCleMiniBoard.setText("清空棋盘");
+        cCleMiniBoard.setontouchend(function() {
+            miniBoard.cle()
+        })
 
 
         autoblackwhiteRadioChecked = setRadio([cAddblack2, cAddwhite2], function() {
@@ -2170,33 +2389,25 @@ window.control = (() => {
             ];
 
         imgCmdSettings.ButtonsIdx[0] = [0, 1, 2, 3, 4, 5, 6, 7];
-
         imgCmdSettings.idx = 0;
-
-        moveButtons(imgCmdSettings);
-
-
+        //moveButtons(imgCmdSettings);
     }
 
-    let setCheckerBoardEvent = (() => {
+//------------------------------ setCheckerBoardEvent ------------------------------ 
 
+    function setCheckerBoardEvent(bodyDiv) {
         //用来保存跟踪正在发送的触摸事件
-        let canvasStartTouches = [];
         let bodyStartTouches = [];
-        let previousTouch = []; // 辅助判断双击
         let bodyPreviousTouch = [];
-        let bodyMoveTouches = [];
         let continueSetCutDivX = 0;
         let continueSetCutDivY = 0;
         let isBodyClick = false; // 辅助判断单击
-        let timerCanvasKeepTouch = null;
         let timerBodyKeepTouch = null;
         let timerContinueSetCutDiv = null;
         let exitContinueSetCutDivMove = null;
 
         //处理触摸开始事件
         function bodyTouchStart(evt) {
-
             let touches = evt.changedTouches; //记录坐标，给continueSetCutDiv使用
             continueSetCutDivX = touches[0].pageX;
             continueSetCutDivY = touches[0].pageY;
@@ -2210,8 +2421,6 @@ window.control = (() => {
                     }
                 }
                 //初始化长按事件
-                isCancelMenuClick = false;
-                isCancelCanvasClick = false;
                 if (!timerBodyKeepTouch) {
                     timerBodyKeepTouch = setTimeout(bodyKeepTouch, 500);
                 }
@@ -2254,18 +2463,13 @@ window.control = (() => {
 
         //处理触摸结束事件
         function bodyTouchEnd(evt) {
-
-            setTimeout(() => {
-                isCancelMenuClick = false;
-                isCancelCanvasClick = false
-            }, 250);
             let cancelClick = false;
             let touches = evt.changedTouches;
             let idx = onTouchesIndex(touches[0].identifier, bodyStartTouches);
             clearTimeout(timerContinueSetCutDiv); // 取消  ContinueSetCutDiv 事件
             if (timerContinueSetCutDiv) {
                 timerContinueSetCutDiv = null;
-                setTimeout(continueSetCutDivEnd, 10);
+                //setTimeout(continueSetCutDivEnd, 10);
             }
             if (timerBodyKeepTouch) { //取消长按事件
                 clearTimeout(timerBodyKeepTouch);
@@ -2341,7 +2545,7 @@ window.control = (() => {
             clearInterval(timerContinueSetCutDiv);
             if (timerContinueSetCutDiv) {
                 timerContinueSetCutDiv = null;
-                setTimeout(continueSetCutDivEnd, 10);
+                //setTimeout(continueSetCutDivEnd, 10);
             }
             if (timerBodyKeepTouch) { // 取消长按事件
                 clearTimeout(timerBodyKeepTouch);
@@ -2389,7 +2593,7 @@ window.control = (() => {
             bodyStartTouches.length = 0;
             //通过 isOut 模拟 canvas事件
             if (!cBd.isOut(x, y, cBd.viewBox)) {
-                isCancelMenuClick = !!(navigator.userAgent.indexOf("iPhone") + 1); //!(event && "contextmenu" == event.type);
+                iphoneCancelClick.enable();
                 setTimeout(canvasKeepTouch(x, y), 10);
                 //log("canvad 长按");
             }
@@ -2421,7 +2625,7 @@ window.control = (() => {
             }
             else {
                 if (cLockImg.checked) {
-                    putCheckerBoard(cBd.getPIndex(x, y));
+                    putCheckerBoard(cBd.getIndex(x, y));
                 }
                 else {
                     if (!timerContinueSetCutDiv)
@@ -2432,7 +2636,7 @@ window.control = (() => {
         }
 
         function canvasClick(x, y) {
-            if (isCancelCanvasClick) return;
+            if (iphoneCancelClick.isCancel()) return;
             //log(`event.button=${event.button}, typeof(x)=${typeof(x)}, x=${x}, y=${y}`);
             x = event.type == "click" ? event.pageX : x;
             y = event.type == "click" ? event.pageY : y;
@@ -2449,7 +2653,7 @@ window.control = (() => {
                 cBd.printBorder();
             }
             else {
-                let idx = cBd.getPIndex(x, y);
+                let idx = cBd.getIndex(x, y);
                 if (idx < 0) return;
                 let color = cAddwhite2.checked ? "white" : "black";
                 if (cBd.P[idx].type != TYPE_EMPTY) {
@@ -2472,56 +2676,23 @@ window.control = (() => {
         }
 
         function continueSetCutDivStart() {
-
-            if (playMode != MODE_LOADIMG ||
-                cLockImg.checked)
-                return;
-            //log("continueSetCutDivStart")
-            cBd.cleAllPointBorder();
-            exitContinueSetCutDivMove = false;
-            continueSetCutDivMove();
+            if (playMode != MODE_LOADIMG || cLockImg.checked)return;
+            cBd.selectArea(continueSetCutDivX, continueSetCutDivY);
         }
 
-        function continueSetCutDivMove() {
-            //log("continueSetCutDivMove ");
-            let x = ~~(continueSetCutDivX);
-            let y = ~~(continueSetCutDivY);
-            let p = { x: x, y: y };
-            if (!cBd.isOut(x, y, cBd.viewBox, ~~(cBd.width) / 17))
-            {
-                cBd.setxy(p, 0.02);
-                cBd.setCutDiv(p.x, p.y, true);
-            }
-            //if (timerContinueSetCutDiv != null) timerContinueSetCutDiv = setTimeout(continueSetCutDivMove, 150);
-            timerContinueSetCutDiv = requestAnimationFrame(continueSetCutDivMove);
-            if (exitContinueSetCutDivMove) {
-                cancelAnimationFrame(timerContinueSetCutDiv);
-                timerContinueSetCutDiv = null;
-            }
-        }
+        bodyDiv.addEventListener("contextmenu", bodyKeepTouch, true);
+        bodyDiv.addEventListener("touchstart", bodyTouchStart, true);
+        bodyDiv.addEventListener("touchend", bodyTouchEnd, true);
+        bodyDiv.addEventListener("touchcancel", bodyTouchCancel, true);
+        bodyDiv.addEventListener("touchleave", bodyTouchCancel, true);
+        bodyDiv.addEventListener("touchmove", bodyTouchMove, true);
+        bodyDiv.addEventListener("click", bodyClick, true);
+        bodyDiv.addEventListener("dblclick", bodyDblClick, true);
+    }
 
-        function continueSetCutDivEnd() {
-            //log("continueSetCutDivEnd")
-            if (playMode != MODE_LOADIMG || cLockImg.checked) return;
-            exitContinueSetCutDivMove = true;
-            cBd.resetP();
-            cBd.printBorder();
-        }
-
-        return (canvas, bodyDiv) => {
-            bodyDiv.addEventListener("contextmenu", bodyKeepTouch, true);
-            bodyDiv.addEventListener("touchstart", bodyTouchStart, true);
-            bodyDiv.addEventListener("touchend", bodyTouchEnd, true);
-            bodyDiv.addEventListener("touchcancel", bodyTouchCancel, true);
-            bodyDiv.addEventListener("touchleave", bodyTouchCancel, true);
-            bodyDiv.addEventListener("touchmove", bodyTouchMove, true);
-            bodyDiv.addEventListener("click", bodyClick, true);
-            bodyDiv.addEventListener("dblclick", bodyDblClick, true);
-        };
-    })();
+//------------------------ helpWindow ------------------------- 
 
     function createHelpWindow() {
-
         let busy = false;
         let dw = document.documentElement.clientWidth;
         let dh = document.documentElement.clientHeight;
@@ -2567,24 +2738,18 @@ window.control = (() => {
         }
         setButtonClick(ICO_CLOSE, closeHelpWindow);
 
-
-
         const CHILD_WINDOW = IFRAME.contentWindow;
         let getDocumentHeight = () => {};
         let getScrollPoints = () => {};
 
-
         function getScrollY() {
-
             return IFRAME_DIV.scrollTop;
         }
-
 
         function setScrollY(top) {
             //log(`IFRAME_DIV setScrollY, ${top}`)
             IFRAME_DIV.scrollTop = top;
         }
-
 
         function openHelpWindow(url) {
             if (busy) return;
@@ -2666,12 +2831,9 @@ window.control = (() => {
             else {
                 IFRAME.src = url;
             }
-
         }
 
-
         function closeHelpWindow() {
-
             FULL_DIV.setAttribute("class", "hide");
             setTimeout(() => {
                 FULL_DIV.style.zIndex = -99999;
@@ -2681,9 +2843,7 @@ window.control = (() => {
             }, 500);
         }
 
-
         IFRAME.onload = () => {
-
             if (navigator.userAgent.indexOf("iPhone") < 0) return;
             const SRC = IFRAME.contentWindow.location.href;
 
@@ -2726,8 +2886,6 @@ window.control = (() => {
                 tempF(url, target);
             }
         }
-
-
     }
 
     function setClick(elem, callback = () => {}, timeout = 300) {
@@ -2858,20 +3016,13 @@ window.control = (() => {
         }
     }
 
-
-
     function getRenjuLbColor() {
         return lbColor[cLbColor.input.value].color;
     }
 
-
-
     function getRenjuSelColor() {
         return cSelBlack.checked ? 1 : 2;
     }
-
-
-
 
     let timerCancelKeepTouch = null; // 防止悔棋触发取消红色显示
 
@@ -2930,9 +3081,8 @@ window.control = (() => {
     }
 
     function renjuClick(x, y) {
-
         if (isBusy(cBd.isOut(x, y, cBd.viewBox) ? false : true)) return;
-        let idx = cBd.getPIndex(x, y),
+        let idx = cBd.getIndex(x, y),
             arr = cBd.getArray(),
             isF = gameRules == RENJU_RULES && isFoul(idx, arr),
             pInfo = createCommandInfo();
@@ -3074,7 +3224,7 @@ window.control = (() => {
                                     .then(function(boardText) {
                                         let node = cBd.tree.seek(path);
                                         node && (node.boardText = boardText);
-                                        cBd.autoShow();
+                                        cBd.stonechange();
                                     })
                             }
                         })
@@ -3086,7 +3236,7 @@ window.control = (() => {
 
     function renjuDblClick(x, y) {
         if (isBusy()) return;
-        let idx = cBd.getPIndex(x, y);
+        let idx = cBd.getIndex(x, y);
         if (idx > -1) {
             // 触发快速悔棋
             if (cBd.P[idx].type == TYPE_NUMBER) {
@@ -3107,15 +3257,15 @@ window.control = (() => {
 
     function renjuKeepTouch(x, y) {
         if (isBusy()) return;
-        let idx = cBd.getPIndex(x, y);
+        let idx = cBd.getIndex(x, y);
         if (idx < 0) return;
 
         if (idx == cBd.MS[cBd.MSindex]) {
             msgbox({
-                title: `确认${cBd.notShowLastNum ? "恢复" : "取消"} 最后一手红色显示。`,
+                title: `确认${cBd.hideLastMove ? "恢复" : "取消"} 最后一手红色显示。`,
                 butNum: 2,
                 enterFunction: () => {
-                    cBd.setNotShowLastNum(!cBd.notShowLastNum)
+                    cBd.hideLastMove = !cBd.hideLastMove;
                     if (getShowNum()) cBd.showNum();
                     else cBd.hideNum();
                 }
@@ -3132,7 +3282,7 @@ window.control = (() => {
                         .then(({ path, nMatch }) => {
                             path = path || cBd.MS.slice(0, cBd.MSindex + 1).concat([idx]);
                             cBd.tree.removeBranch(cBd.tree.transposePath(path, nMatch));
-                            cBd.autoShow();
+                            cBd.stonechange();
                         })
                 })
         }
@@ -3142,7 +3292,7 @@ window.control = (() => {
                 cMenu.showMenu(undefined, y - window.scrollY - cMenu.menu.fontSize * 2.5 * 3);
             }
             else {
-                isCancelCanvasClick = !!(navigator.userAgent.indexOf("iPhone") + 1);
+                iphoneCancelClick.enable();
                 scaleCBoard(cBd.scale == 1, 1);
             }
         }
@@ -3263,187 +3413,19 @@ window.control = (() => {
                 break;
             case MODE_READLIB:
                 cMode.setText("只读");
-                cBd.autoShow();
+                cBd.stonechange();
                 break;
             case MODE_EDITLIB:
                 cMode.setText("编辑");
-                cBd.autoShow();
+                cBd.stonechange();
                 break;
             case MODE_RENLIB:
                 cMode.setText("RenLib");
-                cBd.autoShow();
+                cBd.stonechange();
                 break;
         }
         setBlockUnload();
     }
-
-    let share = (() => {
-        // 创建一个window
-        let sharing = false;
-
-        let shareWindow = document.createElement("div");
-        shareWindow.ontouch = function() { if (event) event.preventDefault(); };
-
-        let imgWindow = document.createElement("div");
-        imgWindow.ontouch = function() { if (event) event.preventDefault(); };
-        shareWindow.appendChild(imgWindow);
-
-        let shareLabel = document.createElement("div");
-        imgWindow.appendChild(shareLabel);
-        
-        let checkDiv = document.createElement("div");
-        imgWindow.appendChild(checkDiv);
-        
-        let checkbox = document.createElement("input");
-        checkbox.setAttribute("type", "checkbox")
-        checkDiv.appendChild(checkbox);
-        
-        let shareLabel2 = document.createElement("div");
-        checkDiv.appendChild(shareLabel2);
-
-        let shareImg = document.createElement("img");
-        imgWindow.appendChild(shareImg);
-
-        //取消按钮
-        const ICO_DOWNLOAD = document.createElement("img");
-        imgWindow.appendChild(ICO_DOWNLOAD);
-        ICO_DOWNLOAD.src = "./pic/docusign-white.svg";
-        ICO_DOWNLOAD.oncontextmenu = (event) => {
-            event.preventDefault();
-        };
-
-        const ICO_CLOSE = document.createElement("img");
-        imgWindow.appendChild(ICO_CLOSE);
-        ICO_CLOSE.src = "./pic/close-white.svg";
-        ICO_CLOSE.oncontextmenu = (event) => {
-            event.preventDefault();
-        };
-        
-        function refreshImg(backgroundColor, LbBackgroundColor) {
-            cBd.backgroundColor = backgroundColor;
-            cBd.LbBackgroundColor = LbBackgroundColor;
-            cBd.refreshCheckerBoard();
-            shareImg.src = cBd.cutViewBox().toDataURL();
-        }
-
-        function shareClose() {
-            shareWindow.setAttribute("class", "hide");
-            setTimeout(() => {
-                shareWindow.parentNode.removeChild(shareWindow);
-                sharing = false;
-            }, ANIMATION_TIMEOUT);
-        }
-
-        return () => {
-
-            if (sharing) return;
-            sharing = true;
-            let oldBackgroundColor = cBd.backgroundColor;
-            let oldLbBackgroundColor = cBd.LbBackgroundColor;
-            
-            let s = shareWindow.style;
-            s.position = "fixed";
-            s.zIndex = 9998;
-            s.width = dw + "px";
-            s.height = dh * 2 + "px";
-            s.top = "0px";
-            s.left = "0px";
-
-            let imgWidth = dw < dh ? dw : dh;
-            imgWidth = ~~(imgWidth * 3 / 4);
-            s = imgWindow.style;
-            s.position = "relative";
-            s.width = imgWidth + "px";
-            s.height = imgWidth + "px";
-            s.top = ~~((dh - imgWidth) / 2) + "px";
-            s.left = ~~((dw - imgWidth) / 2) + "px";
-            s.backgroundColor = "#666666";
-            s.border = `0px solid `;
-
-            let iWidth = ~~(imgWidth * 3 / 5);
-            s = shareImg.style;
-            s.position = "absolute";
-            s.width = iWidth + "px";
-            s.height = iWidth + "px";
-            s.top = ~~((imgWidth - iWidth) / 2) + "px";
-            s.left = ~~((imgWidth - iWidth) / 2) + "px";
-            s.border = `0px solid black`;
-
-            let h = ~~((imgWidth - iWidth) / 2 / 2);
-            let w = h * 4;
-            let l = (imgWidth - w) / 2;
-            let t = imgWidth - h - (imgWidth - iWidth) / 8;
-
-            shareLabel.innerHTML = `<h1 style = "font-size: ${h*0.45}px;text-align: center;color:#f0f0f0">长按图片分享</h1>`;
-            s = shareLabel.style;
-            s.position = "absolute";
-            s.width = w + "px";
-            s.height = h + "px";
-            s.top = (imgWidth - iWidth) / 8 + "px";
-            s.left = l + "px";
-            s.backgroundColor = imgWindow.style.backgroundColor || "#666666";
-            
-            s = checkDiv.style;
-            s.position = "absolute";
-            s.width = w/2 + "px";
-            s.height = h + "px";
-            s.top = ~~((imgWidth - iWidth) / 2 - h) + "px";
-            s.left = ~~((imgWidth - iWidth) / 2) + "px";
-            
-            s = checkbox.style;
-            s.position = "absolute";
-            s.width = h/3 + "px";
-            s.height = h/3 + "px";
-            s.top = h/3 + "px";
-            s.left = 0 + "px";
-            checkbox.onclick = () => {
-                if(checkbox.checked) refreshImg(oldBackgroundColor, oldLbBackgroundColor)
-                else refreshImg("white", "white")
-            };
-            
-            s = shareLabel2.style;
-            s.position = "absolute";
-            s.width = h + "px";
-            s.height = h + "px";
-            s.top = h/3 + "px";
-            s.left = h/2 + "px";
-            s.fontSize = h/3 + "px";
-            shareLabel2.innerHTML = `原图`;
-            shareLabel2.onclick = () => checkbox.click()
-            
-            s = ICO_DOWNLOAD.style;
-            s.position = "absolute";
-            s.width = (imgWidth - parseInt(shareImg.style.top) - parseInt(shareImg.style.height)) / 2 + "px";
-            s.height = s.width;
-            s.top = imgWidth - parseInt(s.width) * 1.5 + "px";
-            s.left = imgWidth / 2 - parseInt(s.width) * 1.5 + "px";
-            s.backgroundColor = "#787878";
-            s.opacity = "0.8";
-            setButtonClick(ICO_DOWNLOAD, () => {
-                cBd.saveAsImage("png");
-            });
-
-            s = ICO_CLOSE.style;
-            s.position = "absolute";
-            s.width = ICO_DOWNLOAD.style.width;
-            s.height = ICO_DOWNLOAD.style.height;
-            s.top = ICO_DOWNLOAD.style.top;
-            s.left = imgWidth / 2 + parseInt(s.width) * 0.5 + "px";
-            s.backgroundColor = "#787878";
-            s.opacity = "0.8"; 
-            setButtonClick(ICO_CLOSE, () => {
-                shareClose();
-                if (cBd.backgroundColor != oldBackgroundColor || cBd.LbBackgroundColor != oldLbBackgroundColor) {
-                    refreshImg(oldBackgroundColor, oldLbBackgroundColor);
-                }
-            });
-            
-            checkbox.onclick();
-            shareWindow.setAttribute("class", "show");
-            setTimeout(() => { document.body.appendChild(shareWindow); }, 1);
-        };
-    })();
-
 
 
     return {
@@ -3458,7 +3440,7 @@ window.control = (() => {
         MODE_READ_FOULPOINT: MODE_READ_FOULPOINT,
         MODE_READLIB: MODE_READLIB,
         MODE_EDITLIB: MODE_EDITLIB,
-        
+
         getPlayMode: getPlayMode,
         setPlayMode: setPlayMode,
         putCheckerBoard: putCheckerBoard,
@@ -3483,7 +3465,7 @@ window.control = (() => {
             createRenjuCmdDiv(param[0], param[1], param[2], param[3], param[4]);
             createImgCmdDiv(param[0], param[1], param[2], param[3], param[4]);
             createHelpWindow();
-            setCheckerBoardEvent(cBoard.canvas, bodyDiv);
+            setCheckerBoardEvent(bodyDiv);
         },
     };
-})(); 
+})();

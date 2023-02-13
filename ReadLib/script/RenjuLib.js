@@ -39,6 +39,7 @@ window.RenjuLib = (() => {
         newGame,
         cBoard,
         getShowNum,
+        setPlayMode,
         isLoading = false,
         colour = false,
         buffer_scale = 5,
@@ -195,7 +196,7 @@ window.RenjuLib = (() => {
         new Date().getTime() - sTime > 30 * 1000 ? onError(new Error("打开文件出错了: 解码过程出现错误")) : undefined;
     }
 
-    function handIsLoading() {
+    function waitFinish() {
         return new Promise((resolve, reject) => {
             isLoading = true;
             let timer = setInterval(() => {
@@ -238,6 +239,7 @@ window.RenjuLib = (() => {
 
     function autoMove(path) {
         if (!cBoard) return;
+        setPlayMode();
         for (let i = 0; i < path.length; i++) {
             cBoard.wNb(path[i], "auto", getShowNum(), undefined, undefined, 100);
         }
@@ -261,6 +263,7 @@ window.RenjuLib = (() => {
             newGame = param.newGame;
             cBoard = param.cBoard;
             getShowNum = param.getShowNum;
+            setPlayMode = param.setPlayMode
         },
         isEmpty: function() {
             return !enable;
@@ -268,7 +271,7 @@ window.RenjuLib = (() => {
         openLib: function(file) {
             if (isBusy()) return Promise.reject();
             load(file);
-            return handIsLoading()
+            return waitFinish()
                 .then(() => enable ? Promise.resolve() : Promise.reject())
         },
         closeLib: function() {
