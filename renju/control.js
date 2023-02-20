@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2108.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2109.00";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
@@ -154,189 +154,6 @@ window.control = (() => {
         }
     })();
 
-    /*------ iphone 长按弹出棋盘菜单后会误触发click事件。-----
-    -------- iphone 长按放大棋盘会误触发click事件-----------*/
-    const iphoneCancelClick = (() => {
-        let isCancelClick = false;
-        document.body.addEventListener("touchstart", () => { isCancelClick = false }, true);
-        document.body.addEventListener("touchend", () => { setTimeout(() => { isCancelClick = false }, 250) }, true);
-        return {
-            enable: () => {
-                isCancelClick = !!(navigator.userAgent.indexOf("iPhone") + 1);
-            },
-            isCancel: () => {
-                setTimeout(() => { isCancelClick = false }, 100);
-                return isCancelClick;
-            }
-        }
-    })();
-
-    /*------ 分享图片窗口 ------*/
-    let share = (() => {
-        let sharing = false;
-
-        let shareWindow = document.createElement("div");
-        shareWindow.ontouch = function() { if (event) event.preventDefault(); };
-
-        let imgWindow = document.createElement("div");
-        imgWindow.ontouch = function() { if (event) event.preventDefault(); };
-        shareWindow.appendChild(imgWindow);
-
-        let shareLabel = document.createElement("div");
-        imgWindow.appendChild(shareLabel);
-
-        let checkDiv = document.createElement("div");
-        imgWindow.appendChild(checkDiv);
-
-        let checkbox = document.createElement("input");
-        checkbox.setAttribute("type", "checkbox")
-        checkDiv.appendChild(checkbox);
-
-        let shareLabel2 = document.createElement("div");
-        checkDiv.appendChild(shareLabel2);
-
-        let shareImg = document.createElement("img");
-        imgWindow.appendChild(shareImg);
-
-        //取消按钮
-        const ICO_DOWNLOAD = document.createElement("img");
-        imgWindow.appendChild(ICO_DOWNLOAD);
-        ICO_DOWNLOAD.src = "./pic/docusign-white.svg";
-        ICO_DOWNLOAD.oncontextmenu = (event) => {
-            event.preventDefault();
-        };
-
-        const ICO_CLOSE = document.createElement("img");
-        imgWindow.appendChild(ICO_CLOSE);
-        ICO_CLOSE.src = "./pic/close-white.svg";
-        ICO_CLOSE.oncontextmenu = (event) => {
-            event.preventDefault();
-        };
-
-        function refreshImg(backgroundColor, LbBackgroundColor) {
-            cBd.backgroundColor = backgroundColor;
-            cBd.LbBackgroundColor = LbBackgroundColor;
-            cBd.refreshCheckerBoard();
-            shareImg.src = cBd.cutViewBox().toDataURL();
-        }
-
-        function shareClose() {
-            shareWindow.setAttribute("class", "hide");
-            setTimeout(() => {
-                shareWindow.parentNode.removeChild(shareWindow);
-                sharing = false;
-            }, ANIMATION_TIMEOUT);
-        }
-
-        return () => {
-
-            if (sharing) return;
-            sharing = true;
-            let oldBackgroundColor = cBd.backgroundColor;
-            let oldLbBackgroundColor = cBd.LbBackgroundColor;
-
-            let s = shareWindow.style;
-            s.position = "fixed";
-            s.zIndex = 9998;
-            s.width = dw + "px";
-            s.height = dh * 2 + "px";
-            s.top = "0px";
-            s.left = "0px";
-
-            let imgWidth = dw < dh ? dw : dh;
-            imgWidth = ~~(imgWidth * 3 / 4);
-            s = imgWindow.style;
-            s.position = "relative";
-            s.width = imgWidth + "px";
-            s.height = imgWidth + "px";
-            s.top = ~~((dh - imgWidth) / 2) + "px";
-            s.left = ~~((dw - imgWidth) / 2) + "px";
-            s.backgroundColor = "#666666";
-            s.border = `0px solid `;
-
-            let iWidth = ~~(imgWidth * 3 / 5);
-            s = shareImg.style;
-            s.position = "absolute";
-            s.width = iWidth + "px";
-            s.height = iWidth + "px";
-            s.top = ~~((imgWidth - iWidth) / 2) + "px";
-            s.left = ~~((imgWidth - iWidth) / 2) + "px";
-            s.border = `0px solid black`;
-
-            let h = ~~((imgWidth - iWidth) / 2 / 2);
-            let w = h * 4;
-            let l = (imgWidth - w) / 2;
-            let t = imgWidth - h - (imgWidth - iWidth) / 8;
-
-            shareLabel.innerHTML = `<h1 style = "font-size: ${h*0.45}px;text-align: center;color:#f0f0f0">长按图片分享</h1>`;
-            s = shareLabel.style;
-            s.position = "absolute";
-            s.width = w + "px";
-            s.height = h + "px";
-            s.top = (imgWidth - iWidth) / 8 + "px";
-            s.left = l + "px";
-            s.backgroundColor = imgWindow.style.backgroundColor || "#666666";
-
-            s = checkDiv.style;
-            s.position = "absolute";
-            s.width = w / 2 + "px";
-            s.height = h + "px";
-            s.top = ~~((imgWidth - iWidth) / 2 - h) + "px";
-            s.left = ~~((imgWidth - iWidth) / 2) + "px";
-
-            s = checkbox.style;
-            s.position = "absolute";
-            s.width = h / 3 + "px";
-            s.height = h / 3 + "px";
-            s.top = h / 3 + "px";
-            s.left = 0 + "px";
-            checkbox.onclick = () => {
-                if (checkbox.checked) refreshImg(oldBackgroundColor, oldLbBackgroundColor)
-                else refreshImg("white", "white")
-            };
-
-            s = shareLabel2.style;
-            s.position = "absolute";
-            s.width = h + "px";
-            s.height = h + "px";
-            s.top = h / 3 + "px";
-            s.left = h / 2 + "px";
-            s.fontSize = h / 3 + "px";
-            shareLabel2.innerHTML = `原图`;
-            shareLabel2.onclick = () => checkbox.click()
-
-            s = ICO_DOWNLOAD.style;
-            s.position = "absolute";
-            s.width = (imgWidth - parseInt(shareImg.style.top) - parseInt(shareImg.style.height)) / 2 + "px";
-            s.height = s.width;
-            s.top = imgWidth - parseInt(s.width) * 1.5 + "px";
-            s.left = imgWidth / 2 - parseInt(s.width) * 1.5 + "px";
-            s.backgroundColor = "#787878";
-            s.opacity = "0.8";
-            setButtonClick(ICO_DOWNLOAD, () => {
-                cBd.saveAsImage("png");
-            });
-
-            s = ICO_CLOSE.style;
-            s.position = "absolute";
-            s.width = ICO_DOWNLOAD.style.width;
-            s.height = ICO_DOWNLOAD.style.height;
-            s.top = ICO_DOWNLOAD.style.top;
-            s.left = imgWidth / 2 + parseInt(s.width) * 0.5 + "px";
-            s.backgroundColor = "#787878";
-            s.opacity = "0.8";
-            setButtonClick(ICO_CLOSE, () => {
-                shareClose();
-                if (cBd.backgroundColor != oldBackgroundColor || cBd.LbBackgroundColor != oldLbBackgroundColor) {
-                    refreshImg(oldBackgroundColor, oldLbBackgroundColor);
-                }
-            });
-
-            checkbox.onclick();
-            shareWindow.setAttribute("class", "show");
-            setTimeout(() => { document.body.appendChild(shareWindow); }, 1);
-        };
-    })();
 
     const lbTime = new function() {
         this.prePostTimer = 0; //记录上次post事件时间，配合lbTime 监控后台是否停止
@@ -505,7 +322,7 @@ window.control = (() => {
         const l = 7 - x;
         const t = 7 - y;
         for (let i = 0; i < 15; i++) {
-            for(let j = 0; j < 15; j++) {
+            for (let j = 0; j < 15; j++) {
                 let x1 = i - l;
                 let y1 = j - t;
                 if (x1 >= 0 && x1 < 15 && y1 >= 0 && y1 < 15) {
@@ -649,11 +466,11 @@ window.control = (() => {
         menu.index = -1;
         menu.addOptions(options);
         menu.setonchange(onchange);
-        menu.createMenu(left, undefined, width, undefined, fontSize, true, iphoneCancelClick.isCancel);
+        menu.createMenu(left, undefined, width, cWidth * 0.8, fontSize, true, iphoneCancelClick.isCancel);
         return menu;
     }
 
-    function createContextMenu(left, top, width, height, fontSize) {
+    function createContextMenu(left, top, width, height = cWidth * 0.8, fontSize) {
         let p = { x: 0, y: 0 };
         cBd.xyObjToPage(p, cBd.viewBox);
         left = p.x + (parseInt(cBd.viewBox.style.width) - width) / 2;
@@ -679,8 +496,8 @@ window.control = (() => {
             function(but) {
                 if (isBusy()) return;
                 let idx = but.idx,
-                    x = but.menu.menu.offsetLeft,
-                    y = but.menu.menu.offsetTop;
+                    x = but.menu.menuLeft,
+                    y = but.menu.menuTop;
                 const FUN = {
                     0: () => { cShownum.showMenu(x, y) },
                     1: () => { cLoadImg.showMenu(x, y) },
@@ -941,7 +758,7 @@ window.control = (() => {
         fileInput.style.display = "none";
         renjuCmddiv.appendChild(fileInput);
 
-        let setMemoryMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+        let setMemoryMenu = createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize,
             [4, "4倍内存",
             5, "5倍内存",
             6, "6倍内存",
@@ -955,7 +772,7 @@ window.control = (() => {
         cLoadImg.addOption(1, "打开 图片");
         cLoadImg.addOption(2, "打开 lib 棋谱");
         cLoadImg.addOption(3, "设置内存大小");
-        cLoadImg.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cLoadImg.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cLoadImg.setText("打开");
         cLoadImg.setonchange(function(but) {
             but.setText(`打开`);
@@ -1020,7 +837,7 @@ window.control = (() => {
         cCutImage.addOption(6, "PDF /(*.pdf) _____ 无损文档");
         //cCutImage.addOption(7, "________棋谱________");
         //cCutImage.addOption(8, "LIB /(*.lib) ______ 棋谱");
-        cCutImage.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cCutImage.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cCutImage.setText(`保存`);
         cCutImage.setonchange(function(but) {
             but.setText(`保存`);
@@ -1079,7 +896,7 @@ window.control = (() => {
         cLABC.addOption(6, `${EMOJI_STAR} 标记`);
         cLABC.addOption(7, `${EMOJI_FOUL} 标记`);
 
-        cLABC.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cLABC.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
 
         cLABC.setonchange(function() {
             if (cLABC.input.value > 1) cBd.drawLineEnd();
@@ -1140,7 +957,7 @@ window.control = (() => {
             cLbColor.addOption(i, lbColor[i].colName);
         }
 
-        cLbColor.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cLbColor.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         for (let i = cLbColor.menu.lis.length - 1; i >= 0; i--) {
             cLbColor.menu.lis[i].style.color = lbColor[i].color;
             let div = document.createElement("div");
@@ -1173,7 +990,7 @@ window.control = (() => {
         cMode.addOption(2, "无序摆棋模式");
         cMode.addOption(3, "棋谱只读模式");
         cMode.addOption(4, "棋谱编辑模式");
-        cMode.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cMode.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cMode.setText("摆棋");
         cMode.setonchange(function(but) {
             if (isBusy()) return;
@@ -1218,7 +1035,7 @@ window.control = (() => {
             }
         }
 
-        cFindPoint.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cFindPoint.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cFindPoint.setText("找点");
         cFindPoint.setonchange(function(but) {
             but.setText("找点");
@@ -1334,7 +1151,7 @@ window.control = (() => {
                 cFindVCF.addOption(i, tMsg[i]);
             }
         }
-        cFindVCF.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cFindVCF.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cFindVCF.setText("解题");
         cFindVCF.setonchange(function(but) {
             but.setText("解题");
@@ -1599,7 +1416,7 @@ window.control = (() => {
         cShownum.addOption(11, "加载按键设置");
         cShownum.addOption(12, "重置数据");
         cShownum.setText(EMOJI_ROUND_ONE);
-        cShownum.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cShownum.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cShownum.menu.lis[0].checked = true;
         cShownum.menu.lis[0].innerHTML = cShownum.input[0].text + "  ✔";
         //cShownum.menu.lis[4].checked = true;
@@ -1621,12 +1438,12 @@ window.control = (() => {
                 2: () => { cBd.isShowAutoLine = but.menu.lis[2].checked },
                 3: () => { scaleCBoard(but.menu.lis[3].checked, 1) },
                 4: () => { cBd.isTransBranch = but.menu.lis[4].checked },
-                5: () => { gameRulesMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
-                6: () => { cBoardSizeMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
-                7: () => { coordinateMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
-                9: () => { setCBoardLineStyleMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
-                10: () => { saveRenjuSettingsMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
-                11: () => { loadRenjuSettingsMenu.showMenu(but.menu.menu.offsetLeft, but.menu.menu.offsetTop) },
+                5: () => { gameRulesMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
+                6: () => { cBoardSizeMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
+                7: () => { coordinateMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
+                9: () => { setCBoardLineStyleMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
+                10: () => { saveRenjuSettingsMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
+                11: () => { loadRenjuSettingsMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
                 12: () => { location.href = "reset.html" },
             }
             setMenuCheckBox(but, but.input.selectedIndex, [0, 1, 2, 3]);
@@ -2179,7 +1996,7 @@ window.control = (() => {
         });
 
         async function unLockImg() {
-            await cBd.unLockArea();
+            await cBd.unlockArea();
             viewport1.userScalable();
         }
         
@@ -2247,7 +2064,7 @@ window.control = (() => {
             cSLTY.addOption(i, i);
         }
 
-        cSLTY.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cSLTY.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cSLTY.show();
         cSLTY.setText(cSLTY.input.value + " 行");
         cSLTY.setonchange(function(but) {
@@ -2270,7 +2087,7 @@ window.control = (() => {
             cSLTX.addOption(i, i);
         }
         //cSLTX.addOption(4, "︽");
-        cSLTX.createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize);
+        cSLTX.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cSLTX.show();
         cSLTX.setText(cSLTX.input.value + " 列");
         cSLTX.setonchange(function(but) {
@@ -2692,241 +2509,9 @@ window.control = (() => {
 
 //------------------------ helpWindow ------------------------- 
 
-    function createHelpWindow() {
-        let busy = false;
-        let dw = document.documentElement.clientWidth;
-        let dh = document.documentElement.clientHeight;
-        let padding = dw > dh ? dw : dh;
-        let scale = cBd.width / 820;
-        const FULL_DIV = document.createElement("div");
-        document.body.appendChild(FULL_DIV);
-        FULL_DIV.style.zIndex = -99999;
-        FULL_DIV.style.display = "none";
-
-        const WIN_DIV = document.createElement("div");
-        FULL_DIV.appendChild(WIN_DIV);
-
-        const IFRAME_DIV = document.createElement("div");
-        IFRAME_DIV.setAttribute("id", "wrapper");
-        WIN_DIV.appendChild(IFRAME_DIV);
-
-        const IFRAME = document.createElement("iframe");
-        IFRAME.setAttribute("id", "helpWindow");
-        IFRAME.setAttribute("name", "helpWindow");
-        IFRAME_DIV.appendChild(IFRAME);
-
-        const BUT_DIV = document.createElement("div");
-        WIN_DIV.appendChild(BUT_DIV);
-
-        const ICO_BACK = document.createElement("img");
-        BUT_DIV.appendChild(ICO_BACK);
-        ICO_BACK.src = "./pic/chevron-left.svg";
-        //ICO_BACK.setAttribute("class", "button");
-        ICO_BACK.oncontextmenu = (event) => {
-            event.preventDefault();
-        };
-        setButtonClick(ICO_BACK, () => {
-            IFRAME.src = "./help/renjuhelp/renjuhelp.html";
-        });
-
-        const ICO_CLOSE = document.createElement("img");
-        BUT_DIV.appendChild(ICO_CLOSE);
-        ICO_CLOSE.src = "./pic/close.svg";
-        //ICO_CLOSE.setAttribute("class", "button");
-        ICO_CLOSE.oncontextmenu = (event) => {
-            event.preventDefault();
-        }
-        setButtonClick(ICO_CLOSE, closeHelpWindow);
-
-        const CHILD_WINDOW = IFRAME.contentWindow;
-        let getDocumentHeight = () => {};
-        let getScrollPoints = () => {};
-
-        function getScrollY() {
-            return IFRAME_DIV.scrollTop;
-        }
-
-        function setScrollY(top) {
-            //log(`IFRAME_DIV setScrollY, ${top}`)
-            IFRAME_DIV.scrollTop = top;
-        }
-
-        function openHelpWindow(url) {
-            if (busy) return;
-            busy = true;
-            let s = FULL_DIV.style;
-            s.position = "fixed";
-            s.backgroundColor = "#666";
-            s.left = -padding + "px";
-            s.top = -padding + "px";
-            s.width = dw + padding * 2 + "px";
-            s.height = dh + padding * 2 + "px";
-
-            s = WIN_DIV.style;
-            s.backgroundColor = "#666";
-            s.position = "absolute";
-            s.left = padding + (dw - 820) / 2 + "px";
-            s.top = padding + 5 + "px";
-            s.width = 820 + "px";
-            s.height = (dh - 15) / scale + "px";
-            s.transform = "scale(" + scale + ")";
-            s.transformOrigin = "center top";
-
-            s = IFRAME_DIV.style;
-            s.backgroundColor = "#ddd";
-            s.position = "absolute";
-            s.left = 10 + "px";
-            s.top = 10 + "px";
-            s.width = 800 + "px";
-            s.height = parseInt(WIN_DIV.style.height) - 20 + "px";
-            s.zIndex = -1;
-
-            s = IFRAME.style;
-            s.backgroundColor = "#ddd";
-            s.position = "absolute";
-            s.left = 0 + "px";
-            s.top = 0 + "px";
-            s.width = "800px";
-            s.height = s.height || "100%"; //保存旧高度，防止滚到顶部
-
-            s = BUT_DIV.style;
-            s.position = "absolute";
-            s.left = (820 - 197) / 2 + "px";
-            s.top = parseInt(WIN_DIV.style.height) - 78 * 1.5 + "px";
-            s.width = "197px";
-            s.height = "78px";
-            s.opacity = "0.5";
-            s.zIndex = 99999;
-
-            s = ICO_BACK.style;
-            s.backgroundColor = "#c0c0c0";
-            s.position = "absolute";
-            s.left = 0 + "px";
-            s.top = 0 + "px";
-            s.width = "78px";
-            s.height = "78px";
-            s.borderStyle = "solid";
-            s.borderColor = "#fff";
-            s.borderWidth = "0px";
-
-            s = ICO_CLOSE.style;
-            s.backgroundColor = "#c0c0c0";
-            s.position = "absolute";
-            s.left = 117 + "px";
-            s.top = 0 + "px";
-            s.width = "78px";
-            s.height = "78px";
-            s.borderStyle = "solid";
-            s.borderColor = "#fff";
-            s.borderWidth = "0px";
-
-            FULL_DIV.style.display = "block";
-            FULL_DIV.style.zIndex = 99999;
-            FULL_DIV.setAttribute("class", "show");
-
-            if (IFRAME.src.indexOf(url) + 1) {
-                IFRAME.src = url; //保持上次滚动值，防止滚到顶部
-                IFRAME.contentWindow.onhashchange(); //onhashchange 滚动目标元素到可视区域
-            }
-            else {
-                IFRAME.src = url;
-            }
-        }
-
-        function closeHelpWindow() {
-            FULL_DIV.setAttribute("class", "hide");
-            setTimeout(() => {
-                FULL_DIV.style.zIndex = -99999;
-                FULL_DIV.style.display = "none";
-                //IFRAME.src = "";
-                busy = false;
-            }, 500);
-        }
-
-        IFRAME.onload = () => {
-            if (navigator.userAgent.indexOf("iPhone") < 0) return;
-            const SRC = IFRAME.contentWindow.location.href;
-
-            getDocumentHeight = (() => { //添加结束标记，准确判断文档高度
-
-                let iDoc = IFRAME.Document || IFRAME.contentWindow.document;
-                const MARK_END = iDoc.createElement("a");
-                iDoc.body.appendChild(MARK_END);
-                return () => {
-                    return CHILD_WINDOW.getAbsolutePos(MARK_END).y;
-                }
-            })();
-
-            getScrollPoints = CHILD_WINDOW.getScrollPoints;
-            if (navigator.userAgent.indexOf("iPhone") + 1) {
-                CHILD_WINDOW.setScrollY = setScrollY;
-                CHILD_WINDOW.getScrollY = getScrollY;
-                const temp = CHILD_WINDOW.scrollToAnimation;
-                CHILD_WINDOW.scrollToAnimation = (top) => {
-                    //alert(`>>>parent animationFrameScroll ${getDocumentHeight()}`)
-                    temp(top);
-                }
-            };
-
-            CHILD_WINDOW.setScrollHeight = () => {
-                IFRAME.style.height = getDocumentHeight() + "px";
-            };
-
-            CHILD_WINDOW.setScrollHeight();
-        }
 
 
-        const tempF = window.open;
-        window.open = (url, target) => {
-            log(`url=${url}, target=${target}`)
-            if (target == "helpWindow") {
-                openHelpWindow(url);
-            }
-            else {
-                tempF(url, target);
-            }
-        }
-    }
-
-    function setClick(elem, callback = () => {}, timeout = 300) {
-        let startX = 0,
-            startY = 0;
-        elem.onclick = (() => {
-            let busy = false;
-            return () => {
-                if (busy) return;
-                busy = true;
-                setTimeout(() => { busy = false; }, 1000);
-                setTimeout(() => {
-                    callback();
-                }, timeout); //延迟，避免某些浏览器触发窗口下一层elem的click事件。
-            };
-        })();
-
-        elem.addEventListener("touchstart", (event) => {
-            startX = event.changedTouches[0].pageX;
-            startY = event.changedTouches[0].pageY;
-        }, true);
-        elem.addEventListener("touchend", (event) => {
-            event.preventDefault();
-            let tX = event.changedTouches[0].pageX;
-            let tY = event.changedTouches[0].pageY;
-            if ((Math.abs(startX - tX) < 30) && (Math.abs(startY - tY) < 30)) {
-                elem.onclick();
-            }
-        }, true);
-    }
-
-    function setButtonClick(elem, callback = () => {}) {
-        setClick(elem, () => {
-            let bkColor = elem.style.opacity;
-            elem.style.opacity = "0.2";
-            setTimeout(() => {
-                elem.style.opacity = bkColor;
-                callback();
-            }, 300);
-        }, 0);
-    }
+    
 
     function mapLb(callback) {
         cBd.map(p => {
@@ -3464,7 +3049,6 @@ window.control = (() => {
             parentNode = param[0];
             createRenjuCmdDiv(param[0], param[1], param[2], param[3], param[4]);
             createImgCmdDiv(param[0], param[1], param[2], param[3], param[4]);
-            createHelpWindow();
             setCheckerBoardEvent(bodyDiv);
         },
     };

@@ -117,8 +117,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
                     if (event) event.cancelBubble = true;
                     input.selectedIndex = i; // input.onchange();
                     if (muWindow.parentNode) {
-                        this.hide(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT, null /*!closeAnimation ? this.button.change : null*/ );
-                        this.button.change();
+                        this.hide(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT, this.button.change.bind(this.button));
                     }
                 }.bind(this);
             }
@@ -181,9 +180,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
         
         x = !x ? x : x < this.fontSize * 2.5 ? this.fontSize * 2.5 : (x + this.menuWidth) > (dw / this.bodyScale - this.fontSize * 2.5) ? dw / this.bodyScale - this.menuWidth - this.fontSize * 2.5 : x;
         y = !y ? y : y < this.fontSize * 2.5 ? this.fontSize * 2.5 : (y + this.menuHeight) > (dh / this.bodyScale - this.fontSize * 2.5) ? dh / this.bodyScale - this.menuHeight - this.fontSize * 2.5 : y;
+        this.menuLeft = x || this.menuLeft;
+        this.menuTop = y || this.menuTop;
         this.menu.style.position = "absolute";
-        this.menu.style.left = `${x || this.menuLeft}px`;
-        this.menu.style.top = `${y || this.menuTop}px`;
+        this.menu.style.left = `${this.menuLeft}px`;
+        this.menu.style.top = `${this.menuTop}px`;
         this.menu.style.width = this.menuWidth + "px";
         this.menu.style.height = this.menuHeight + "px";
         this.menu.style.borderRadius = parseInt(this.fontSize) * 1.5 + "px";
@@ -201,7 +202,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
     }
 
 
-    Menu.prototype.hide = function(ms, callback = function() {}) {
+    Menu.prototype.hide = function(ms, callback = ()=>{}) {
         const muWindow = this.menuWindow;
         const input = this.button.input;
         if (this.timerHideMenu) {
@@ -584,7 +585,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 
-    button.prototype.hideMenu = function(ms, callback) {
+    button.prototype.hideMenu = function(ms, callback = ()=>{}) {
         this.menu.hide(ms, callback);
     }
 
@@ -661,7 +662,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
     // 給事件绑定函数
-    button.prototype.setonchange = function(callback) {
+    button.prototype.setonchange = function(callback = ()=>{}) {
         let fun = this.change;
         let but = this;
         this.change = function() {
@@ -676,7 +677,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
     // 給事件绑定函数
-    button.prototype.setontouchstart = function(callback) {
+    button.prototype.setontouchstart = function(callback = ()=>{}) {
         let fun = this.touchstart;
         let but = this;
         this.touchstart = function() {
@@ -699,8 +700,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
     // 給事件绑定函数
-    button.prototype.setontouchend = function(callback) {
-
+    button.prototype.setontouchend = function(callback = () => {}) {
         let fun = this.touchend;
         let but = this;
         this.touchend = function() {

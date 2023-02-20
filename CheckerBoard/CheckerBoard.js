@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.00";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -19,6 +19,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
     const COORDINATE_RIGHT_UP = 3;
     const COORDINATE_RIGHT_DOWN = 4;
     const COORDINATE_LEFT_DOWN = 5;
+
+    const MAX_SCALE = 1.5;
+    const MAX_ZOOM = 5;
+    const MIN_SCALE = 1;
+    const MIN_ZOOM = 1;
 
     const ALL_STAR_POINTS = {
         15: [112, 48, 56, 168, 176],
@@ -98,6 +103,60 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
         }
     })();
 
+    function animationZoomBoard(x1, y1, x2, y2) {
+        const box = this.viewBox;
+        let isExitAnima = false;
+
+        const setMove = function() {
+            const touches = event.changedTouches;
+            if (touches.length == 2) {
+                x1 = touches[0].pageX / this.bodyScale;
+                y1 = touches[0].pageY / this.bodyScale;
+                x2 = touches[1].pageX / this.bodyScale;
+                y2 = touches[1].pageY / this.bodyScale;
+            }
+        }.bind(this)
+
+        function exitAnima() {
+            isExitAnima = true;
+        }
+
+        const oldScale = this.scale;
+        let distance = Math.hypot(x1 - x2, y1 - y2);
+        let centerX = ((x1 - x2) / 2 + x2); // 缩放中心点，Page 左上角为原点
+        let centerY = ((y1 - y2) / 2 + y2);
+        const p = { x: centerX, y: centerY };
+        this.xyPageToObj(p, this.viewBox); // 转为 viewBox 左上角为原点
+        centerX = p.x; //记录中心点
+        centerY = p.y;
+        p.x += this.viewBox.scrollLeft; // 转为 scaleBox 左上角为原点
+        p.y += this.viewBox.scrollTop;
+        box.addEventListener("touchmove", setMove, true);
+        box.addEventListener("touchend", exitAnima, true);
+        box.addEventListener("touchcancel", exitAnima, true);
+        box.addEventListener("touchleave", exitAnima, true);
+
+        animation(() => !isExitAnima,
+            () => {
+                const oldDistance = distance;
+                distance = Math.hypot(x1 - x2, y1 - y2);
+                this.scale = Math.min(Math.max(MIN_ZOOM, this.scale * distance / oldDistance), MAX_ZOOM);
+                this.scaleBox.style.transformOrigin = `0px 0px`;
+                this.scaleBox.style.transform = `scale(${this.scale})`;
+                this.viewBox.scrollLeft = p.x * this.scale / oldScale - centerX; // 中心点在 viewBox 保存不变
+                this.viewBox.scrollTop = p.y * this.scale / oldScale - centerY;
+                this.setViewBoxBorder(this.scale > 1);
+            },
+            () => {},
+            () => {
+                this.setViewBoxBorder(this.scale > 1);
+                box.removeEventListener("touchmove", setMove, true);
+                box.removeEventListener("touchend", exitAnima, true);
+                box.removeEventListener("touchcancel", exitAnima, true);
+                box.removeEventListener("touchleave", exitAnima, true);
+            })
+    }
+
     function animationScaleBoard(scale) {
         let oldScale = this.scale,
             newScale = scale,
@@ -121,11 +180,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
         animation(() => moves_x.length || moves_y.length || width_arr.length,
             () => {
                 if (width_arr.length) {
-                    cBoard.scaleBox.style.transformOrigin = `0px 0px`;
-                    cBoard.scaleBox.style.transform = `scale(${width_arr.shift()})`;
+                    this.scaleBox.style.transformOrigin = `0px 0px`;
+                    this.scaleBox.style.transform = `scale(${width_arr.shift()})`;
                 }
-                moves_x.length && (cBoard.viewBox.scrollLeft += moves_x.shift());
-                moves_y.length && (cBoard.viewBox.scrollTop += moves_y.shift());
+                moves_x.length && (this.viewBox.scrollLeft += moves_x.shift());
+                moves_y.length && (this.viewBox.scrollTop += moves_y.shift());
             },
             () => {},
             () => this.setViewBoxBorder(newScale > 1))
@@ -528,6 +587,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
             this.viewBox.setAttribute("id", "viewBox");
             this.parentNode.appendChild(this.viewBox);
 
+            this.bodyScale = 1;
             this.scale = 1;
             this.scaleBox = document.createElement("div");
             this.scaleBox.style.position = "absolute";
@@ -620,6 +680,23 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
 
     Board.prototype.map = function(callback) {
         this.P.map(p => callback(p))
+    }
+
+    Board.prototype.move = function(left = this.left, top = this.top, width = this.width, height = this.height, parentNode = this.parentNode) {
+        parentNode.appendChild(this.viewBox);
+        this.parentNode = parentNode;
+        this.XL *= width / this.width;
+        this.XR *= width / this.width;
+        this.YT *= width / this.width;
+        this.YB *= width / this.width;
+        this.left = left;
+        this.top = top;
+        this.width = width;
+        this.height = height;
+        this.viewBox.style.left = left + "px";
+        this.viewBox.style.top = top + "px";
+        this.viewBox.style.width = width + "px";
+        this.viewBox.style.height = height + "px";
     }
 
     // 顺时针 翻转棋盘90°
@@ -1428,37 +1505,49 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
     }
 
 
-    Board.prototype.setScale = function(scl, timeout = 0) {
-        //log(`scl=${scl}`,"info")
+    Board.prototype.zoomStart = function(x1, y1, x2, y2) {
+        animationZoomBoard.call(this, x1, y1, x2, y2);
+    }
+
+    Board.prototype.zoom = function(scale) {
+        scale = Math.min(Math.max(MIN_ZOOM, scale), MAX_ZOOM);
+        this.setViewBoxBorder(scale > 1);
+        this.scaleBox.style.transformOrigin = `0px 0px`;
+        this.scaleBox.style.transform = `scale(${scale})`;
+        this.scale = scale;
+
+    }
+
+
+    Board.prototype.setScale = function(scale, timeout = 0) {
+        //log(`scale=${scale}`,"info")
+        scale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
         if (timeout == 0) {
-            this.setViewBoxBorder(scl > 1);
+            this.setViewBoxBorder(scale > 1);
             this.scaleBox.style.transformOrigin = `0px 0px`;
-            this.scaleBox.style.transform = `scale(${scl})`;
-            this.scale = scl;
+            this.scaleBox.style.transform = `scale(${scale})`;
+            this.scale = scale;
             this.center();
         }
         else {
-            animationScaleBoard.call(this, scl);
-            this.scale = scl;
+            animationScaleBoard.call(this, scale);
+            this.scale = scale;
         }
         this.viewchange();
     }
 
 
     Board.prototype.setViewBoxBorder = function(value) {
+        const bw = ~~(this.width / 100);
         if (value) {
-            let bw = ~~(this.width / 100),
-                p = { x: 0, y: 0 };
-            this.xyObjToPage(p, this.viewBox);
             this.viewBox.style.border = `${bw}px solid #ccc`; // ridge groove
-            //this.viewBox.style.borderRadius = `${bw}px`;
-            this.viewBox.style.left = `${p.x < bw ? -p.x : -bw}px`;
-            this.viewBox.style.top = `${p.y < bw ? -p.y : -bw}px`;
+            this.viewBox.style.left = `${this.left - bw}px`;
+            this.viewBox.style.top = `${this.top - bw}px`;
         }
         else {
             this.viewBox.style.border = `0px`;
-            this.viewBox.style.left = `0px`;
-            this.viewBox.style.top = `0px`;
+            this.viewBox.style.left = `${this.left}px`;
+            this.viewBox.style.top = `${this.top}px`;
         }
     }
 
@@ -1726,10 +1815,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
         while (parentNode != document.body && parentNode != null) {
             l += parentNode.offsetLeft;
             t += parentNode.offsetTop;
-            if (parentNode == this.scaleBox) {
-                l = this.viewBox.scrollLeft + l * this.scale;
-                t = this.viewBox.scrollTop + t * this.scale;
-            }
             parentNode = parentNode.parentNode;
         }
         p.x = p.x - l;
@@ -1746,10 +1831,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2108.03";
         while (parentNode != document.body && parentNode != null) {
             l += parentNode.offsetLeft;
             t += parentNode.offsetTop;
-            if (parentNode == this.scaleBox) {
-                l = this.viewBox.scrollLeft + l * this.scale;
-                t = this.viewBox.scrollTop + t * this.scale;
-            }
             parentNode = parentNode.parentNode;
         }
         p.x = p.x + l;

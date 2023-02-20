@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>makeVCF</title>
+    <title>制作VCF</title>
     <link href="./style/main.css" rel="stylesheet" type="text/css">
     <link rel="preload" href="script/bindEvent.js" as="script">
     <link rel="preload" href="emoji/emoji.js" as="script">
@@ -49,10 +49,10 @@
 
         function $(id) { return document.getElementById(id) }
 
-        function log(str) { $("log").innerText = str + "\n" + $("log").innerText.slice(0,500) }
+        function log(str) { $("log").innerText = str}
         setInterval(() => {
             let info = makeVCF.getStateInfo();
-            //log(`${STATE_STRING[info.state]}  进度${(info.progress*100).toFixed(2)}%   局面:${info.gameCount}  VCF: ${info.vcfGames.length}`)
+            log(`${STATE_STRING[info.state]}  进度${(info.progress*100).toFixed(2)}%   局面:${info.gameCount}  VCF: ${info.vcfGames.length}`)
             if (oldState != info.state) {
                 miniBoard.cle();
                 oldState = info.state;

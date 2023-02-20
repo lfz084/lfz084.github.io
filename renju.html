@@ -37,7 +37,7 @@
         window.setUpdataVersion = function () {
             localStorage.removeItem("RENJU_APP_VERSION");
         }
-        window.NEW_VERSION = "v2108.03";
+        window.NEW_VERSION = "v2109.00";
         window.OLD_VERDION = localStorage.getItem("RENJU_APP_VERSION"); // if window.OLD_VERDION == null then upDate Version
         if (window.OLD_VERDION != window.NEW_VERSION && window.NEW_VERSION.indexOf("up") + 1) window.OLD_VERDION = null; //强制更新
         
@@ -72,10 +72,9 @@
             loadAnimation: "script/loadAnimation.js",
             loadFile: "script/loadFile.js",
             Viewport: "script/View.js",
-            windowError: "script/windowError.js",
             Button: "script/Button.js",
-            control: "script/control.js",
             msgbox: "script/msgbox.js",
+            utils: "script/utils.js",
             
             TextCoder: "script/TextCoder.js",
             NoSleep: "script/NoSleep.min.js",
@@ -95,7 +94,10 @@
             PFSCMedium: "pdf/PFSCMedium.js",
             PFSCHeavy: "pdf/PFSCHeavy.js",
             
-            renju_js: "renju.js",
+            control: "renju/control.js",
+            renju_js: "renju/renju.js",
+            share: "renju/share.js",
+            helpWindow: "renju/helpWindow.js",
             
             "close_svg": "pic/close.svg",
             "chevron-left_svg": "pic/chevron-left.svg",
@@ -165,7 +167,10 @@
             "v1718.02": ["支持打开大棋谱(64位浏览器)",
                         "浏览器内存不够时,打开部分棋谱"],
             "v2015.05": ["添加lib转sgf功能"],
-            "v2108.01": ["修复了解题功能的bug"]
+            "v2108.01": ["修复了解题功能的bug"],
+            "v2109.00": ["输入图片支持双指缩放",
+                        "添加习题编辑器（支持开宝JSON）",
+                        "习题编辑器从帮助页面进入"]
         };
         
         window.alertCache = function() {

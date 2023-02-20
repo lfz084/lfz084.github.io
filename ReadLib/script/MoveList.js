@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["MoveList"] = "v2108.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["MoveList"] = "v2109.00";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {

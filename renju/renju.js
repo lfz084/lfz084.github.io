@@ -1,4 +1,4 @@
-self.SCRIPT_VERSIONS["renju"] = "v2108.03";
+self.SCRIPT_VERSIONS["renju"] = "v2109.00";
 var loadApp = () => { // 按顺序加载应用
     "use strict";
     const TEST_LOADAPP = true;
@@ -57,8 +57,8 @@ var loadApp = () => { // 按顺序加载应用
     window.d = document;
     window.dw = d.documentElement.clientWidth;
     window.dh = d.documentElement.clientHeight;
-    //window.bWidth = 1078; //bodyDiv width
-    window.cWidth = dw * 0.95;//cBoard width
+    window.cWidth = dw < dh ? dw * 0.95 : dh * 0.95; 
+    cWidth = dw < dh ? cWidth : dh < ~~(dw / 2 * 0.985) ? dh : ~~(dw / 2 * 0.985);
 
     window.viewport1 = null; // 控制缩放
     window.vConsole = null; // 调试工具
@@ -419,7 +419,7 @@ var loadApp = () => { // 按顺序加载应用
         window.TEST_INFORMATION = window.BROWSER_INFORMATION = "\nBROWSER_INFORMATION:\n" + Msg;
         //log("testBrowser:\n" + Msg);
     }
-
+    
     function createUI() {
         try {
             let bodyDiv = d.createElement("div");
@@ -526,7 +526,6 @@ var loadApp = () => { // 按顺序加载应用
             loadAnimation.text("20%");
             console.info("20%");
             return loadScriptAll([ //顺序加载
-                [SOURCE_FILES["windowError"]],
                 [SOURCE_FILES["Viewport"], () => {
                     window.viewport1 = new View(cWidth/0.95);
                 }],
@@ -537,6 +536,7 @@ var loadApp = () => { // 按顺序加载应用
                             log(`serviceWorker.state: ${serviceWorker_state_history.join(" --> ")}`, "warn")
                         })
                 }],
+                [SOURCE_FILES["utils"]],
                 [SOURCE_FILES["emoji"]], // first load emoji
                 [SOURCE_FILES["EvaluatorWebassembly"]],
                 [SOURCE_FILES["EvaluatorJScript"]],
@@ -547,7 +547,9 @@ var loadApp = () => { // 按顺序加载应用
                 [SOURCE_FILES["pdf"]],
                 [SOURCE_FILES["saveFile"]],
                 [SOURCE_FILES["svg"]],
-                [SOURCE_FILES["tree"]]
+                [SOURCE_FILES["tree"]],
+                [SOURCE_FILES["share"]],
+                [SOURCE_FILES["helpWindow"]]
                 ], false)
         })      
         .then(() => {

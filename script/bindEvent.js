@@ -5,7 +5,7 @@ window.bindEvent = (function() {
 
     //用来保存跟踪正在发送的触摸事件
     const MAX_TOUCH_NUM = 2; // 最大支持双指触控
-    const MAX_CANCEL_MOVE = 50; // touchStart, touchEnd 移动超过 50 取消事件
+    const MAX_CANCEL_MOVE = 15; // touchStart, touchEnd 移动超过 50 取消事件
     const CONTEXTMENU_COUNTDOWN = 500; // contextmenu 事件倒计时 500 毫秒
     const CANCEL_CONTEXTMEMU_TIMEOUT = 1000; // contextmenu 1秒内只能触发一次
     const DBL_TOUCH_START_COUNTDOWN = 300; // dbltouchstart 事件倒计时 500 毫秒
@@ -18,7 +18,8 @@ window.bindEvent = (function() {
     let isBodyClick = false; // 辅助判断单击
     let timerContextMenu = null;
     let timerClick = null;
-
+    let selectArea = false;
+    
     //拷贝一个触摸对象
     function copyTouch(touch, touchNum) {
         return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY, touchNum: touchNum };
@@ -81,14 +82,11 @@ window.bindEvent = (function() {
         let touches = evt.changedTouches;
         moveX = touches[0].pageX;
         moveY = touches[0].pageY;
-        /*if (timerContextMenu) { //取消长按事件
+        selectArea && event.preventDefault();
+        if (timerContextMenu) { //取消长按事件
             clearTimeout(timerContextMenu);
             timerContextMenu = null;
-        }*/
-        //log(`bodyTouchMove x = ${~~moveX}, y = ${~~moveY}`)
-        /*if ((bodyPreviousTouch.length && Math.abs(bodyPreviousTouch[0].pageX - touches[0].pageX) > MAX_CANCEL_MOVE) && (Math.abs(bodyPreviousTouch[0].pageY - touches[0].pageY) > MAX_CANCEL_MOVE)) {
-            isBodyClick = false; // 取消单击事件。
-        }*/
+        }
         if ((bodyStartTouches.length && Math.abs(bodyStartTouches[0].pageX - touches[0].pageX) > MAX_CANCEL_MOVE) && (Math.abs(bodyStartTouches[0].pageY - touches[0].pageY) > MAX_CANCEL_MOVE)) {
             isBodyClick = false; // 取消单击事件。
         }
@@ -149,6 +147,7 @@ window.bindEvent = (function() {
             bodyStartTouches.length = 0;
         }
         bodyStartTouches.length = 0;
+        selectArea = false;
         distance = 0;
     }
 
@@ -161,6 +160,7 @@ window.bindEvent = (function() {
             timerContextMenu = null;
         }
         bodyStartTouches.length = 0;
+        selectArea = false;
         distance = 0;
     }
 
@@ -187,6 +187,7 @@ window.bindEvent = (function() {
             timerContextMenu = null;
         }
         cancelContextmenu = true;
+        selectArea = true;
         setTimeout(() => {
             cancelContextmenu = false;
         }, CANCEL_CONTEXTMEMU_TIMEOUT);
@@ -331,10 +332,12 @@ window.bindEvent = (function() {
                 if (!checkOut || !isOut(x, y, evtObj.element)) {
                     //log(evtObj.callbackList.length)
                     if (type == "zoom" || type == "zoomstart") {
-                        if (isOut(args[0] / bodyDivScale, args[1] / bodyDivScale, evtObj.element)) return;
+                        args[0] /= bodyDivScale;
+                        args[1] /= bodyDivScale;
+                        if (isOut(args[0], args[1], evtObj.element)) return;
                     }
                     evtObj.callbackList.map(callback => {
-                        setTimeout(callback, 0, x, y, ...args);
+                        setTimeout(callback, 0, x, y, ...args)
                         result = true;
                     })
                 }
