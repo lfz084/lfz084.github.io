@@ -7,6 +7,7 @@ window.main = (() => {
     const UNLOCK = 1;
     const LOCK = 2;
 
+    let warn = true;
     let status = MANUAL;
     let butLock = null;
     let butBlack = null;
@@ -38,12 +39,12 @@ window.main = (() => {
             type: "file",
             text: "打开文件",
             change: async function() {
-                try{
-                await unlockArea();
-                await renjuEditor.openFile(this.files[0], this.value.split("/").pop());
-                filename = getFileName(this.value);
-                setTimeout(() => this.value = "", 0)
-                }catch(e){alert(e.stack)}
+                try {
+                    await unlockArea();
+                    await renjuEditor.openFile(this.files[0], this.value.split("/").pop());
+                    filename = getFileName(this.value);
+                    setTimeout(() => this.value = "", 0)
+                } catch (e) { alert(e.stack) }
             }
         },
         {
@@ -59,6 +60,10 @@ window.main = (() => {
             type: "button",
             text: "加入题集",
             touchend: function() {
+                if (warn && (cBoard.SLTX < 15 || cBoard.SLTY < 15)) {
+                    warn = false;
+                    alert(`长按图片天元点可对齐棋盘\n（鼠标可右键代替长按）`);
+                }
                 const array = cBoard.getArray();
                 array.find(v => v > 0) && pushGame(cBoard.getArray2D());
             }
@@ -207,6 +212,7 @@ window.main = (() => {
                     buttons.push(new Button(document.body, setting.type, 0, 0, mainUI.buttonWidth, mainUI.buttonHeight));
                     const button = buttons[buttons.length - 1];
                     setting.text && button.setText(setting.text);
+                    setting.accept && (button.input.accept = setting.accept);
                     setting.touchend && button.setontouchend(setting.touchend);
                     setting.change && button.setonchange(setting.change);
                     setting.options && button.addOptions(setting.options);
@@ -264,13 +270,12 @@ window.main = (() => {
         return lDiv;
     }
 
-
-
     function createCBoard() {
-        const cbd = new CheckerBoard(document.body, (mainUI.gridWidth - mainUI.cmdWidth) / 2, (mainUI.gridWidth - mainUI.cmdWidth) / 2, mainUI.cmdWidth, mainUI.cmdWidth);
+        const cbd = new CheckerBoard(mainUI.upDiv, (mainUI.gridWidth - mainUI.cmdWidth) / 2, (mainUI.gridWidth - mainUI.cmdWidth) / 2, mainUI.cmdWidth, mainUI.cmdWidth);
         cbd.backgroundColor = "white";
         cbd.resetCBoardCoordinate();
         cbd.printEmptyCBoard();
+        cbd.bodyScale = mainUI.bodyScale;
         return cbd;
     }
 
@@ -278,11 +283,12 @@ window.main = (() => {
         const width = mainUI.buttonHeight * 7;
         const left = (mainUI.cmdWidth / 2 - width) / 1.5;
         const top = dw > dh ? mainUI.buttonHeight * (1.2 + 3) : mainUI.buttonHeight * 1.5;
-        const cbd = new CheckerBoard(document.body, left, top, width, width);
+        const cbd = new CheckerBoard(mainUI.upDiv, left, top, width, width);
         cbd.backgroundColor = "white";
         cbd.resetCBoardCoordinate();
         cbd.printEmptyCBoard();
         cbd.viewBox.style.zIndex = -1;
+        cbd.bodyScale = mainUI.bodyScale;
         return cbd;
     }
 
@@ -293,7 +299,6 @@ window.main = (() => {
         this.div.style.width = width + "px";
         this.div.style.left = left + "px";
         this.div.style.top = top + "px";
-
     }
 
     function log(text) {
@@ -376,7 +381,7 @@ window.main = (() => {
             gameIndex >= games.length && (gameIndex = games.length - 1);
             log1(`第${gameIndex+1}题 / ${games.length}题`);
             gameIndex >= 0 ? loadGame(gameIndex) : miniBoard.cle();
-            
+
         }
     }
 
@@ -397,13 +402,14 @@ window.main = (() => {
 
     async function lockArea() {
         if (status == UNLOCK) {
+            setFirstArea();
             butLock.setChecked(true);
             await cBoard.lockArea();
             setColor(2);
             status = LOCK;
         }
     }
-
+    
     async function unlockArea() {
         if (status == LOCK) {
             butLock.setChecked(false);
@@ -412,6 +418,33 @@ window.main = (() => {
         }
     }
 
+    //------------------------ firstArea -----------------------
+
+    let canSetFirstArea = true;
+    let firstArea = null;
+
+    function setFirstArea() {
+        if (canSetFirstArea) {
+            firstArea = {
+                scale: cBoard.scale,
+                scrollLeft: cBoard.viewBox.scrollLeft,
+                scrollTop: cBoard.viewBox.scrollTop,
+                left: parseInt(cBoard.cutDiv.style.left),
+                top: parseInt(cBoard.cutDiv.style.top)
+            };
+            canSetFirstArea = false;
+        }
+    }
+
+    function getFirstArea() {
+        return {
+            scale: firstArea ? firstArea.scale : 1,
+            scrollLeft: firstArea ? firstArea.scrollLeft : 0,
+            scrollTop: firstArea ? firstArea.scrollTop : 0,
+            left: firstArea ? firstArea.left : 0,
+            top: firstArea ? firstArea.top : 0
+        }
+    }
     //------------------------ Events ---------------------------
 
     function addEventListener(cbd) {
@@ -450,7 +483,7 @@ window.main = (() => {
                 if (cbd.P[idx].type != TYPE_EMPTY) {
                     cbd.cleNb(idx, true);
                 }
-                else{
+                else {
                     cbd.wNb(idx, "auto", true);
                 }
             }
@@ -476,20 +509,17 @@ window.main = (() => {
         bindEvent.addEventListener(cbd.viewBox, "zoomstart", (x1, y1, x2, y2) => {
             status == UNLOCK && cbd.zoomStart(x1, y1, x2, y2)
         })
-        /*bindEvent.addEventListener(cbd.viewBox, "zoom", (x1, y1, x2, y2, scale) => {
-            cbd.scale *= scale;
-            cbd.scaleBox.style.transformOrigin = `0px 0px`;
-            cbd.scaleBox.style.transform = `scale(${cbd.scale})`;
-        })*/
     }
 
     async function onloadPage(pageIndex, numPages, url) {
+        const {scale, scrollLeft, scrollTop, left, top} = getFirstArea();
+        canSetFirstArea = true;
         await cBoard.loadImgURL(url);
         cBoard.putImg(cBoard.bakImg, cBoard.canvas);
-        cBoard.zoom(1);
-        cBoard.viewBox.scrollLeft = 0;
-        cBoard.viewBox.scrollTop = 0;
-        if (cBoard.cutDiv.parentNode) cBoard.moveArea(0, 0)
+        cBoard.zoom(scale);
+        cBoard.viewBox.scrollLeft = scrollLeft;
+        cBoard.viewBox.scrollTop = scrollTop;
+        if (cBoard.cutDiv.parentNode) cBoard.moveArea(left, top);
         else cBoard.resetCutDiv();
         status = UNLOCK;
         butLock.setChecked(false);
@@ -499,10 +529,8 @@ window.main = (() => {
     document.body.onload = () => {
         try {
             addEventListener(cBoard);
-            cBoard.move(undefined, undefined, undefined, undefined, mainUI.upDiv);
             miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv);
             mainUI.viewport.resize();
-            cBoard.bodyScale = mainUI.bodyScale;
             renjuEditor.onloadPage = onloadPage;
             log("打开(pdf,zip,jpg,png)");
             log1(`第${0}题 / ${0}题`);

@@ -1,67 +1,70 @@
-
 /*------ 分享图片窗口 ------*/
 window.share = (() => {
-        let sharing = false;
+    const d = document;
+    const dw = d.documentElement.clientWidth;
+    const dh = d.documentElement.clientHeight;
+    
+    let sharing = false;
 
-        let shareWindow = document.createElement("div");
-        shareWindow.ontouch = function() { if (event) event.preventDefault(); };
+    let shareWindow = document.createElement("div");
+    shareWindow.ontouch = function() { if (event) event.preventDefault(); };
 
-        let imgWindow = document.createElement("div");
-        imgWindow.ontouch = function() { if (event) event.preventDefault(); };
-        shareWindow.appendChild(imgWindow);
+    let imgWindow = document.createElement("div");
+    imgWindow.ontouch = function() { if (event) event.preventDefault(); };
+    shareWindow.appendChild(imgWindow);
 
-        let shareLabel = document.createElement("div");
-        imgWindow.appendChild(shareLabel);
+    let shareLabel = document.createElement("div");
+    imgWindow.appendChild(shareLabel);
 
-        let checkDiv = document.createElement("div");
-        imgWindow.appendChild(checkDiv);
+    let checkDiv = document.createElement("div");
+    imgWindow.appendChild(checkDiv);
 
-        let checkbox = document.createElement("input");
-        checkbox.setAttribute("type", "checkbox")
-        checkDiv.appendChild(checkbox);
+    let checkbox = document.createElement("input");
+    checkbox.setAttribute("type", "checkbox")
+    checkDiv.appendChild(checkbox);
 
-        let shareLabel2 = document.createElement("div");
-        checkDiv.appendChild(shareLabel2);
+    let shareLabel2 = document.createElement("div");
+    checkDiv.appendChild(shareLabel2);
 
-        let shareImg = document.createElement("img");
-        imgWindow.appendChild(shareImg);
+    let shareImg = document.createElement("img");
+    imgWindow.appendChild(shareImg);
 
-        //取消按钮
-        const ICO_DOWNLOAD = document.createElement("img");
-        imgWindow.appendChild(ICO_DOWNLOAD);
-        ICO_DOWNLOAD.src = "./pic/docusign-white.svg";
-        ICO_DOWNLOAD.oncontextmenu = (event) => {
-            event.preventDefault();
-        };
+    //取消按钮
+    const ICO_DOWNLOAD = document.createElement("img");
+    imgWindow.appendChild(ICO_DOWNLOAD);
+    ICO_DOWNLOAD.src = "./pic/docusign-white.svg";
+    ICO_DOWNLOAD.oncontextmenu = (event) => {
+        event.preventDefault();
+    };
 
-        const ICO_CLOSE = document.createElement("img");
-        imgWindow.appendChild(ICO_CLOSE);
-        ICO_CLOSE.src = "./pic/close-white.svg";
-        ICO_CLOSE.oncontextmenu = (event) => {
-            event.preventDefault();
-        };
+    const ICO_CLOSE = document.createElement("img");
+    imgWindow.appendChild(ICO_CLOSE);
+    ICO_CLOSE.src = "./pic/close-white.svg";
+    ICO_CLOSE.oncontextmenu = (event) => {
+        event.preventDefault();
+    };
 
-        function refreshImg(backgroundColor, LbBackgroundColor) {
-            cBoard.backgroundColor = backgroundColor;
-            cBoard.LbBackgroundColor = LbBackgroundColor;
-            cBoard.refreshCheckerBoard();
-            shareImg.src = cBoard.cutViewBox().toDataURL();
-        }
+    function refreshImg(_cBoard, backgroundColor, LbBackgroundColor) {
+        _cBoard.backgroundColor = backgroundColor;
+        _cBoard.LbBackgroundColor = LbBackgroundColor;
+        _cBoard.refreshCheckerBoard();
+        shareImg.src = _cBoard.cutViewBox().toDataURL();
+    }
 
-        function shareClose() {
-            shareWindow.setAttribute("class", "hide");
-            setTimeout(() => {
-                shareWindow.parentNode.removeChild(shareWindow);
-                sharing = false;
-            }, ANIMATION_TIMEOUT);
-        }
+    function shareClose() {
+        shareWindow.setAttribute("class", "hide");
+        setTimeout(() => {
+            shareWindow.parentNode.removeChild(shareWindow);
+            sharing = false;
+        }, ANIMATION_TIMEOUT);
+    }
 
-        return () => {
-try{
+    return (_cBoard) => {
+        try {
             if (sharing) return;
             sharing = true;
-            let oldBackgroundColor = cBoard.backgroundColor;
-            let oldLbBackgroundColor = cBoard.LbBackgroundColor;
+            let oldBackgroundColor = _cBoard.backgroundColor;
+            let oldLbBackgroundColor = _cBoard.LbBackgroundColor;
 
             let s = shareWindow.style;
             s.position = "fixed";
@@ -119,8 +122,8 @@ try{
             s.top = h / 3 + "px";
             s.left = 0 + "px";
             checkbox.onclick = () => {
-                if (checkbox.checked) refreshImg(oldBackgroundColor, oldLbBackgroundColor)
-                else refreshImg("white", "white")
+                if (checkbox.checked) refreshImg(_cBoard, oldBackgroundColor, oldLbBackgroundColor)
+                else refreshImg(_cBoard, "white", "white")
             };
 
             s = shareLabel2.style;
@@ -142,7 +145,9 @@ try{
             s.backgroundColor = "#787878";
             s.opacity = "0.8";
             setButtonClick(ICO_DOWNLOAD, () => {
-                cBoard.saveAsImage("png");
+                try{
+                _cBoard.saveAsImage("png");
+                }catch(e){alert(e.stack)}
             });
 
             s = ICO_CLOSE.style;
@@ -155,14 +160,14 @@ try{
             s.opacity = "0.8";
             setButtonClick(ICO_CLOSE, () => {
                 shareClose();
-                if (cBoard.backgroundColor != oldBackgroundColor || cBoard.LbBackgroundColor != oldLbBackgroundColor) {
-                    refreshImg(oldBackgroundColor, oldLbBackgroundColor);
+                if (_cBoard.backgroundColor != oldBackgroundColor || _cBoard.LbBackgroundColor != oldLbBackgroundColor) {
+                    refreshImg(_cBoard, oldBackgroundColor, oldLbBackgroundColor);
                 }
             });
 
             checkbox.onclick();
             shareWindow.setAttribute("class", "show");
             setTimeout(() => { document.body.appendChild(shareWindow); }, 1);
-        }catch(e){alert(e.stack)}
-        };
-    })();
+        } catch (e) { alert(e.stack) }
+    };
+})();

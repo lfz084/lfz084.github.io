@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.01";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -284,11 +284,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.00";
         this.d.style.position = "absolute";
         this.d.style.width = size + "px";
         this.d.style.height = size + "px";
-        this.d.style.left = this.x - ~~(size / 2) + "px";
-        this.d.style.top = this.y - ~~(size / 2) + "px";
-        this.d.style.borderStyle = "dashed";
-        this.d.style.borderWidth = "1px";
-        this.d.style.borderColor = "red";
+        this.d.style.left = this.x - (size / 2) + "px";
+        this.d.style.top = this.y - (size / 2) + "px";
+        this.d.style.border = `${Math.max(size/10, 1)}px dashed red`;
         this.d.style.zIndex = 0;
     }
 
@@ -1311,7 +1309,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.00";
     Board.prototype.printMoves = function(moves, firstColor) {
         let nowTime = new Date().getTime();
         let idx = 0;
-        if (nowTime - this.printMovesTime < 1000) return;
+        if (nowTime - this.printMovesTime < 100) return;
         this.printMovesTime = nowTime;
         this.cleLb("all");
         for (let i = 0; i < moves.length; i++) {
@@ -1461,9 +1459,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.00";
         this.gH = (yB - yT) / (this.SLTY - 1);
 
         for (j = 0; j < 15; j++) {
-            y = ~~(this.gH * j) + yT;
+            y = (this.gH * j) + yT;
             for (i = 0; i < 15; i++) {
-                x = ~~(this.gW * i) + xL;
+                x = (this.gW * i) + xL;
                 l = j * 15 + i;
                 //if (i >= this.size || j >= this.size) x = y = 0;
                 this.P[l].setxy(x, y);
@@ -1515,7 +1513,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.00";
         this.scaleBox.style.transformOrigin = `0px 0px`;
         this.scaleBox.style.transform = `scale(${scale})`;
         this.scale = scale;
-
     }
 
 

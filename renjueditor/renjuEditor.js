@@ -1,8 +1,20 @@
 window.renjuEditor = (() => {
     "use strict";
+    
+    function log(msg) {
+        let elm = document.getElementById("log");
+        elm && (elm.innerText = `${msg}\n`);
+    }
+    
+    
+    async function wait(time) {
+        return new Promise(resolve => {
+            setTimeout(resolve, time);
+        })
+    }
 
     //---------------------- save file -----------------------
-
+    
     function text2blob(text) {
         return new Blob([text], { type: "application/json" })
     }
@@ -74,13 +86,16 @@ window.renjuEditor = (() => {
         alert(`第${index + 1}题在棋盘第15行上面，不可避免的出现了棋子。这题在开宝五子棋里面会缺少第15行的棋子（这是开宝五子棋的bug）`)
     }
 
-    async function toKaiBaoJSON(games) {
+    async function toKaiBaoJSON(games, callback = () => {}) {
         try {
             let codes = [];
             for (let j = 0; j < games.length; j++) {
+                await wait(0);
                 cBoard.unpackArray(games[j]);
                 autoRotate(j) && codes.push(toKaiBaoCode());
+                log(`生成json...${j+1}/${games.length}`);
             }
+            log(`成功${codes.length}题`);
             return JSON.stringify(codes);
         } catch (e) { alert(e.stack) }
     }

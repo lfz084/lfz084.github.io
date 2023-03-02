@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2109.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2109.01";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
@@ -771,7 +771,7 @@ window.control = (() => {
         cLoadImg = new Button(renjuCmddiv, "select", 0, 0, w, h);
         cLoadImg.addOption(1, "打开 图片");
         cLoadImg.addOption(2, "打开 lib 棋谱");
-        cLoadImg.addOption(3, "设置内存大小");
+        //cLoadImg.addOption(3, "设置内存大小");
         cLoadImg.createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize);
         cLoadImg.setText("打开");
         cLoadImg.setonchange(function(but) {
@@ -1294,7 +1294,7 @@ window.control = (() => {
         cShareWhite.setText(" 分享图片");
         cShareWhite.setontouchend(function() {
             if (isBusy()) return;
-            share();
+            share(cBoard);
         });
 
         cShare = new Button(renjuCmddiv, "button", 0, 0, w, h);

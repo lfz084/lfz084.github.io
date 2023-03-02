@@ -1,3 +1,6 @@
+// import View from "./View.js"
+// import xyObjToPage from "./utils.js"
+
 window.mainUI = (function() {
     'use strict';
 
@@ -15,7 +18,7 @@ window.mainUI = (function() {
     const bodyHeight = dw < dh ? gridWidth * 4 : Math.max(gridWidth, gridWidth * 2 * dh / dw);
     const bodyLeft = `0px`;
     const bodyTop = `0px`;
-    const bodyScale = 0 || dw / bodyWidth;
+    const bodyScale = dw / bodyWidth;
     const sw = ~~(cmdWidth * 0.87);
     const buttonWidth = sw / 5;
     const buttonHeight = sw / 9 / 1.5;
@@ -41,7 +44,7 @@ window.mainUI = (function() {
     bodyDiv.setAttribute("class", "finish");
     setTimeout(() => { bodyDiv.style.opacity = "1" }, 300);
     debug && (bodyDiv.style.backgroundColor = "red");
-
+    
     const upDiv = d.createElement("div");
     bodyDiv.appendChild(upDiv);
     upDiv.style.position = "absolute";
@@ -104,7 +107,7 @@ window.mainUI = (function() {
         const buttonSettings = settings[settingIndex].buttonSettings;
         for (let i = 0; i < buttons.length; i++) {
             if (buttons[i] && buttons[i].move) {
-                if (buttons[i].type == "div") buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttons[i].width, buttons[i].height, cmdDiv);
+                if (buttons[i].type == "div" || buttons[i].type == "canvas") buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttons[i].width, buttons[i].height, cmdDiv);
                 else buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttonSettings[i].width, buttonSettings[i].height, cmdDiv);
             }
         }

@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2109.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2109.01";
 
 (function(global, factory) {
     (global = global || self, factory(global));

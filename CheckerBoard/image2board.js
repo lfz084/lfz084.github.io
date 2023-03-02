@@ -8,6 +8,38 @@
         const AREA1_LB = 3;
         const AREA1_RB = 4;
         const BORDER_WIDTH = 3;
+        
+        //----------------------------------------------
+        
+        function gray(imageData) {
+            let min = 256, max = 0;
+            const c = new Array(256).fill(0);
+            const data = imageData.data;
+            for (let i = (data.length >>> 2) - 1; i >= 0; i--) {
+                const r = data[i * 4 + 0];
+                const g = data[i * 4 + 1];
+                const b = data[i * 4 + 2];
+                const gy = ~~(r * 0.3 + g * 0.59 + b * 0.11);
+                data[i * 4 + 0] = gy;
+                data[i * 4 + 1] = gy;
+                data[i * 4 + 2] = gy;
+                c[gy]++;
+                min > gy && (min = gy);
+                max < gy && (max = gy);
+            }
+            return min + (max - min) / 2;
+        }
+        
+        function binarization(imageData, threshold) {
+            const data = imageData.data;
+            for (let i = (data.length >>> 2) - 1; i >= 0; i--) {
+                const v = data[i * 4 + 0] >= threshold ? 255 : 0;
+                data[i * 4 + 0] = v;
+                data[i * 4 + 1] = v;
+                data[i * 4 + 2] = v;
+            }
+        }
+        
 
         //----------------------- Animation ------------------
 
@@ -570,10 +602,10 @@
                 ctx.fillStyle = this.backgroundColor;
                 ctx.fillRect(0, 0, w2, h2);
                 let w3 = parseInt(canvas.width) - cutDiv.offsetLeft;
-                w3 = w3 < w / 11 * 12 ? w : w / 11 * 12;
+                w3 = w3 < w / 11 * 12 ? w3 : w / 11 * 12;
                 w3 += l == 0 ? cutDiv.offsetLeft : w / 11;
                 let h3 = parseInt(canvas.height) - cutDiv.offsetTop;
-                h3 = h3 < h / 11 * 12 ? h : h / 11 * 12;
+                h3 = h3 < h / 11 * 12 ? h3 : h / 11 * 12;
                 h3 += t == 0 ? cutDiv.offsetTop : h / 11;
                 ctx.drawImage(canvas, l, t, w3, h3, l2, t2, w3, h3);
 
@@ -607,7 +639,12 @@
                     this.YT = t + h / 13;
                     this.YB = t + h / 13 * 12;
                 }
-
+                
+                /*const imgData = ctx.getImageData(0, 0, this.width, this.height);
+                const threshold = gray(imgData);
+                binarization(imgData, threshold);
+                ctx.putImageData(imgData, 0, 0);*/
+            
                 this.resetP();
                 this.cleBorder();
                 this.hideCutDiv();
@@ -645,8 +682,9 @@
             let idx;
             let wBoard = true; // 默认白色棋盘
             let ctx = this.canvas.getContext("2d");
-            let imgData = ctx.getImageData(0, 0, this.width, this.height).data;
-
+            let imgData = ctx.getImageData(0, 0, this.width, this.height);
+            let data = imgData.data;
+            
             for (let i = this.SLTY - 1; i >= 0; i--) {
                 for (let j = this.SLTX - 1; j >= 0; j--) {
                     idx = i * 15 + j;
@@ -668,8 +706,6 @@
                 }
             }
 
-
-            imgData = null;
             ctx = null;
             // 棋盘上只有一种颜色时重新设置 max，min
             if (Math.abs(max - min) < 30) {
@@ -719,10 +755,10 @@
                     for (let j = 0; j < h; j++) {
                         //let black = (i>w/4*1.5 && i<w/4*2.5 || j>h/4*1.5 && j<h/4*2.5) && c[0]<50 && c[1]<50 && c[2]<50 ? -38 : 0;
                         arr[i][j] = [];
-                        arr[i][j][0] = imgData[(width * (t + j) + l + i) * 4];
-                        arr[i][j][1] = imgData[(width * (t + j) + l + i) * 4 + 1];
-                        arr[i][j][2] = imgData[(width * (t + j) + l + i) * 4 + 2];
-                        arr[i][j][3] = imgData[(width * (t + j) + l + i) * 4 + 3];
+                        arr[i][j][0] = data[(width * (t + j) + l + i) * 4];
+                        arr[i][j][1] = data[(width * (t + j) + l + i) * 4 + 1];
+                        arr[i][j][2] = data[(width * (t + j) + l + i) * 4 + 2];
+                        arr[i][j][3] = data[(width * (t + j) + l + i) * 4 + 3];
                         r += arr[i][j][0];
                         g += arr[i][j][1];
                         b += arr[i][j][2];
@@ -780,7 +816,7 @@
                         }
                         str+="\n"
                     }
-                    //alert(str)
+                    alert(str)
                     */
 
                     // 针对白底棋盘，搜索棋盘网格线

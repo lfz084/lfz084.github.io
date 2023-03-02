@@ -19,7 +19,7 @@ window.bindEvent = (function() {
     let timerContextMenu = null;
     let timerClick = null;
     let selectArea = false;
-    
+
     //拷贝一个触摸对象
     function copyTouch(touch, touchNum) {
         return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY, touchNum: touchNum };
@@ -67,12 +67,13 @@ window.bindEvent = (function() {
                 timerContextMenu = null;
             }
             let touchNum = bodyStartTouches.length + 1; //判断是第几个手指触摸屏幕
-            if (touchNum > MAX_TOUCH_NUM) return; //超过最大触控点数忽略
-            // 多点触摸 取消单击事件。
-            isBodyClick = false;
-            bodyStartTouches.push(copyTouch(touches[0], touchNum));
-            if (bodyStartTouches.length == 2) {
-                bodyZoomStart(); // 两指缩放开始
+            if (touchNum <= MAX_TOUCH_NUM) { //超过最大触控点数忽略
+                // 多点触摸 取消单击事件。
+                isBodyClick = false;
+                bodyStartTouches.push(copyTouch(touches[0], touchNum));
+                if (bodyStartTouches.length == 2) {
+                    bodyZoomStart(); // 两指缩放开始
+                }
             }
         }
     }
@@ -83,12 +84,12 @@ window.bindEvent = (function() {
         moveX = touches[0].pageX;
         moveY = touches[0].pageY;
         selectArea && event.preventDefault();
-        if (timerContextMenu) { //取消长按事件
-            clearTimeout(timerContextMenu);
-            timerContextMenu = null;
-        }
-        if ((bodyStartTouches.length && Math.abs(bodyStartTouches[0].pageX - touches[0].pageX) > MAX_CANCEL_MOVE) && (Math.abs(bodyStartTouches[0].pageY - touches[0].pageY) > MAX_CANCEL_MOVE)) {
+    if (bodyStartTouches.length && Math.abs(bodyStartTouches[0].pageX - touches[0].pageX) && Math.abs(bodyStartTouches[0].pageY - touches[0].pageY)) {
             isBodyClick = false; // 取消单击事件。
+            if (timerContextMenu) { //取消长按事件
+                clearTimeout(timerContextMenu);
+                timerContextMenu = null;
+            }
         }
         if (bodyStartTouches.length == 2) {
             bodyZoom(); // 两指缩放中
@@ -207,14 +208,14 @@ window.bindEvent = (function() {
         //log(`bodyDblTouchStart x = ${x}, y = ${y}`)
         loopEvents("dbltouchstart", true, x, y);
     }
-    
+
     function bodyZoomStart() {
         const x1 = bodyStartTouches[0].pageX;
         const y1 = bodyStartTouches[0].pageY;
         const x2 = bodyStartTouches[1].pageX;
         const y2 = bodyStartTouches[1].pageY;
         const rt = loopEvents("zoomstart", true, x1, y1, x2, y2);
-        if (rt) {//  如果有 htmlElement 触发 zoomstart 事件
+        if (rt) { //  如果有 htmlElement 触发 zoomstart 事件
             event.preventDefault();
             distance = Math.hypot(x1 - x2, y1 - y2);
         }
@@ -269,7 +270,7 @@ window.bindEvent = (function() {
         point.y = point.y + t;
         return point;
     }
-    
+
     function isOut(x, y, htmlElement, width = 0) {
         let p = { x: 0 - width, y: 0 - width };
         toPageCoordinate(p, htmlElement);

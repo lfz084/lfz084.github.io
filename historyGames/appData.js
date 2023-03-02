@@ -1,8 +1,6 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["appData"] = "v2109.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["appData"] = "v2109.01";
  window.appData = (() => {
     "use strict";
-    const TYPE_BLACK = 3; // 无序号 添加的黑棋
-    const TYPE_WHITE = 4; // 无序号 添加的黑棋
     let timerSave = null; // 保存,定时器
 
     let renjuSave = () => {
@@ -41,9 +39,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["appData"] = "v2109.00";
                 control.loadCmdSettings("renjuCmdSettings", data.renjuCmdSettings);
             if (data.firstColor != "undefined" && data.firstColor) cBoard.firstColor = data.firstColor;
             if (parseInt(data.resetNum) > 0) cBoard.resetNum = parseInt(data.resetNum);
-            if (data.moves) cBoard.unpackCodeType(true, "auto", data.moves);
-            if (data.whiteMoves) cBoard.unpackCodeType(true, "white", data.whiteMoves);
-            if (data.blackMoves) cBoard.unpackCodeType(true, "black", data.blackMoves);
+            if (data.moves) cBoard.unpackCodeType(true, TYPE_NUMBER, TYPE_NUMBER, data.moves);
+            if (data.whiteMoves) cBoard.unpackCodeType(true, TYPE_WHITE, TYPE_WHITE, data.whiteMoves);
+            if (data.blackMoves) cBoard.unpackCodeType(true, TYPE_BLACK, TYPE_BLACK, data.blackMoves);
         }, 300);
     };
 
