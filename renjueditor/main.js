@@ -1,4 +1,4 @@
-window.main = (() => {
+(() => {
     "use strict";
     const d = document;
     const dw = d.documentElement.clientWidth;
@@ -447,7 +447,7 @@ window.main = (() => {
     }
     //------------------------ Events ---------------------------
 
-    function addEventListener(cbd) {
+    function addEvents(cbd) {
         function ctnBack(idx) { // 触发快速悔棋
             if (idx + 1 && cbd.P[idx].type == TYPE_NUMBER) {
                 if (idx != cbd.MS[cbd.MSindex]) {
@@ -526,14 +526,14 @@ window.main = (() => {
         log(`第${pageIndex}页 / ${numPages}页`);
     }
 
-    document.body.onload = () => {
+    addEventListener("load", () => {
         try {
-            addEventListener(cBoard);
+            addEvents(cBoard);
             miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv);
             mainUI.viewport.resize();
             renjuEditor.onloadPage = onloadPage;
             log("打开(pdf,zip,jpg,png)");
             log1(`第${0}题 / ${0}题`);
         } catch (e) { alert(e.stack) }
-    }
+    })
 })()

@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2109.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2109.02";
 window.RenjuLib = (() => {
     "use strict";
     //console.log(exports);
@@ -232,9 +232,9 @@ window.RenjuLib = (() => {
             }
         }
         if (cBoard.MSindex + 1 === cBoard.MS.length && nextMove.idx > -1) cBoard.MS.push(nextMove.idx);
-        let exWindow = control.getEXWindow();
+        let exWindow = window.exWindow;
         exWindow.innerHTML(innerHTML);
-        if (innerHTML) exWindow.openWindow();
+        if (innerHTML) exWindow.open();
     }
 
     function autoMove(path) {

@@ -3,7 +3,7 @@
 }(this, (function(exports) {
     'use strict';
     
-    //control.getEXWindow
+    //window.exWindow
     
     class Board extends CheckerBoard {
         constructor(...args) {
@@ -79,7 +79,7 @@
         this.firstColor = "black";
         this.tree = undefined;
         this.cleLb("all");
-        control.getEXWindow().close();
+        window.exWindow.close();
     }
     
     Board.prototype.showBranchs = function() {
@@ -113,9 +113,9 @@
             }
         });
 
-        let exWindow = control.getEXWindow();
+        let exWindow = window.exWindow;
         exWindow.innerHTML(iHtml);
-        iHtml && exWindow.openWindow();
+        iHtml && exWindow.open();
 
         if (this.MSindex + 1 === this.MS.length && nextMove.idx > -1 && nextMove.idx < 225) {
             (this.MSindex & 1) + 1 == nextMove.idxColor && this.MS.push(225);

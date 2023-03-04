@@ -27,10 +27,10 @@ CheckerBoard.prototype.toGIF = function(start = -1, end = this.MSindex, delay = 
 }
 
 CheckerBoard.prototype.showGIF = async function(start, end) {
-    let exWindow = control.getEXWindow(),
+    let exWindow = window.exWindow,
         base64Img = await this.toGIF(start, end).toBase64(),
         innerHTML = `<image src="${base64Img}"></image>`;
     exWindow.innerHTML(innerHTML);
-    if (innerHTML) exWindow.openWindow();
+    if (innerHTML) exWindow.open();
     
 }

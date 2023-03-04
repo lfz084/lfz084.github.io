@@ -1,4 +1,4 @@
-window.main = (() => {
+(() => {
     "use strict";
     const d = document;
     const dw = d.documentElement.clientWidth;
@@ -289,7 +289,7 @@ window.main = (() => {
         })
     }
 
-    document.body.onload = () => {
+    addEventListener("load", () => {
         try {
             miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv);
             createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv);
@@ -305,6 +305,6 @@ window.main = (() => {
                 }
             }, 1000)
         } catch (e) { alert(e.stack) }
-    }
+    })
 
 })()

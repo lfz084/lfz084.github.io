@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="Cache-Control" content="no-store">
@@ -37,7 +36,7 @@
         window.setUpdataVersion = function () {
             localStorage.removeItem("RENJU_APP_VERSION");
         }
-        window.NEW_VERSION = "v2109.01";
+        window.NEW_VERSION = "v2109.02";
         window.OLD_VERDION = localStorage.getItem("RENJU_APP_VERSION"); // if window.OLD_VERDION == null then upDate Version
         if (window.OLD_VERDION != window.NEW_VERSION && window.NEW_VERSION.indexOf("up") + 1) window.OLD_VERDION = null; //强制更新
         
@@ -171,7 +170,7 @@
             "v2109.00": ["输入图片支持双指缩放",
                         "添加习题编辑器（支持开宝JSON）",
                         "习题编辑器从帮助页面进入"],
-            "v2109.01": ["更新制作VCF功能（导出开宝JSON）",
+            "v2109.02": ["更新制作VCF功能（导出开宝JSON）",
                         "制作VCF从帮助页面进入"]
         };
         

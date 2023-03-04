@@ -83,3 +83,17 @@ window.loadAnimation = (function() { //控制加载动画
         },
     };
 })();
+
+"serviceWorker" in navigator && navigator.serviceWorker.addEventListener("message", event => {
+    if (typeof event.data == "string") {
+        const MSG = event.data;
+        if (MSG.indexOf("loading...") + 1) {
+            loadAnimation.open();
+            console.info(`open`);
+        }
+        else if (MSG.indexOf("load finish") + 1) {
+            loadAnimation.close(); 
+            console.info(`close`);
+        }
+    }
+})

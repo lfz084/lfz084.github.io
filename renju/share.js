@@ -1,8 +1,12 @@
 /*------ 分享图片窗口 ------*/
 window.share = (() => {
+    "use strict";
     const d = document;
     const dw = d.documentElement.clientWidth;
     const dh = d.documentElement.clientHeight;
+    const winWidth = 980;
+    const winHeight = winWidth * dh / dw;
+    const scale = dw / 980;
     
     let sharing = false;
 
@@ -52,7 +56,7 @@ window.share = (() => {
     }
 
     function shareClose() {
-        shareWindow.setAttribute("class", "hide");
+        imgWindow.setAttribute("class", "hide");
         setTimeout(() => {
             shareWindow.parentNode.removeChild(shareWindow);
             sharing = false;
@@ -69,19 +73,21 @@ window.share = (() => {
             let s = shareWindow.style;
             s.position = "fixed";
             s.zIndex = 9998;
-            s.width = dw + "px";
-            s.height = dh * 2 + "px";
+            s.width = winWidth + "px";
+            s.height = winHeight * 2 + "px";
             s.top = "0px";
             s.left = "0px";
+            s.transformOrigin = `0px 0px`;
+            s.transform = `scale(${scale})`;
 
-            let imgWidth = dw < dh ? dw : dh;
+            let imgWidth = winWidth < winHeight ? winWidth : winHeight;
             imgWidth = ~~(imgWidth * 3 / 4);
             s = imgWindow.style;
             s.position = "relative";
             s.width = imgWidth + "px";
             s.height = imgWidth + "px";
-            s.top = ~~((dh - imgWidth) / 2) + "px";
-            s.left = ~~((dw - imgWidth) / 2) + "px";
+            s.top = ~~((winHeight - imgWidth) / 2) + "px";
+            s.left = ~~((winWidth - imgWidth) / 2) + "px";
             s.backgroundColor = "#666666";
             s.border = `0px solid `;
 
@@ -166,7 +172,7 @@ window.share = (() => {
             });
 
             checkbox.onclick();
-            shareWindow.setAttribute("class", "show");
+            imgWindow.setAttribute("class", "show");
             setTimeout(() => { document.body.appendChild(shareWindow); }, 1);
         } catch (e) { alert(e.stack) }
     };

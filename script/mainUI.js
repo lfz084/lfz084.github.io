@@ -3,8 +3,9 @@
 
 window.mainUI = (function() {
     'use strict';
-
     const debug = 0
+
+    //--------------------------- 设置主界面框架，调整窗口比例 --------------------------------------------------
 
     const d = document;
     const dw = d.documentElement.clientWidth;
@@ -44,7 +45,7 @@ window.mainUI = (function() {
     bodyDiv.setAttribute("class", "finish");
     setTimeout(() => { bodyDiv.style.opacity = "1" }, 300);
     debug && (bodyDiv.style.backgroundColor = "red");
-    
+
     const upDiv = d.createElement("div");
     bodyDiv.appendChild(upDiv);
     upDiv.style.position = "absolute";
@@ -78,41 +79,6 @@ window.mainUI = (function() {
 
     const settings = [];
     createSettings();
-
-    function createCmdDiv() {
-        const cmdDiv = d.createElement("div");
-        downDiv.appendChild(cmdDiv);
-        cmdDiv.style.position = "absolute";
-        cmdDiv.style.width = `${cmdWidth}px`;
-        cmdDiv.style.height = `${cmdWidth}px`;
-        cmdDiv.style.left = `${(gridWidth - cmdWidth) / 2}px`;
-        cmdDiv.style.top = `${(gridWidth - cmdWidth) / 2}px`;
-        debug && (cmdDiv.style.backgroundColor = "white");
-        return cmdDiv;
-    }
-
-    function autoMenuHeight(button) {
-        return Math.min(gridWidth * 0.8, (menuFontSize * 2.5 + 3) * (button.input.length + 2));
-    }
-
-    function autoMenuTop(button) {
-        return (bodyHeight - ((button.menu && button.menu.menuHeight) || autoMenuHeight(button))) / 2;
-    }
-    
-    function createMenu(button) {
-        button.createMenu(menuLeft + (dw > dh ? gridWidth : 0), autoMenuTop(button), menuWidth, autoMenuHeight(button), menuFontSize, true, undefined, bodyScale);
-    }
-
-    function addButtons(buttons, cmdDiv, settingIndex = 0) {
-        const buttonSettings = settings[settingIndex].buttonSettings;
-        for (let i = 0; i < buttons.length; i++) {
-            if (buttons[i] && buttons[i].move) {
-                if (buttons[i].type == "div" || buttons[i].type == "canvas") buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttons[i].width, buttons[i].height, cmdDiv);
-                else buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttonSettings[i].width, buttonSettings[i].height, cmdDiv);
-            }
-        }
-        markTop.style.top = `${settings[settingIndex].marktopSetting.top}px`;
-    }
 
     //---------------------  生成按键布局  ---------------------------------
 
@@ -152,7 +118,7 @@ window.mainUI = (function() {
             }
         }
         settings.push({ buttonSettings: buttonSettings, marktopSetting: marktopSetting });
-        
+
         const buttonSettings1 = [];
         const marktopSetting1 = [];
         for (let i = 0; i < 15; i++) { // set positions
@@ -181,7 +147,103 @@ window.mainUI = (function() {
             }
         }
         settings.push({ buttonSettings: buttonSettings1, marktopSetting: marktopSetting1 });
-        
+    }
+    
+    //----------------------- CheckerBoard  -------------------------------------------------
+    
+    
+    function createCBoard() {
+        const cbd = new CheckerBoard(mainUI.upDiv, (mainUI.gridWidth - mainUI.cmdWidth) / 2, (mainUI.gridWidth - mainUI.cmdWidth) / 2, mainUI.cmdWidth, mainUI.cmdWidth);
+        cbd.backgroundColor = "white";
+        cbd.resetCBoardCoordinate();
+        cbd.printEmptyCBoard();
+        cbd.bodyScale = mainUI.bodyScale;
+        return cbd;
+    }
+
+    function createMiniBoard() {
+        const width = mainUI.buttonHeight * 7;
+        const left = (mainUI.cmdWidth / 2 - width) / 1.5;
+        const top = dw > dh ? mainUI.buttonHeight * (1.2 + 3) : mainUI.buttonHeight * 1.5;
+        const cbd = new CheckerBoard(mainUI.upDiv, left, top, width, width);
+        cbd.backgroundColor = "white";
+        cbd.resetCBoardCoordinate();
+        cbd.printEmptyCBoard();
+        cbd.viewBox.style.zIndex = -1;
+        cbd.bodyScale = mainUI.bodyScale;
+        return cbd;
+    }
+
+    //----------------------- Menu -----------------------------------------------------------
+
+    function autoMenuHeight(button) {
+        return Math.min(gridWidth * 0.8, (menuFontSize * 2.5 + 3) * (button.input.length + 2));
+    }
+
+    function autoMenuTop(button) {
+        return (bodyHeight - ((button.menu && button.menu.menuHeight) || autoMenuHeight(button))) / 2;
+    }
+
+    function createMenu(button) {
+        button.createMenu(menuLeft + (dw > dh ? gridWidth : 0), autoMenuTop(button), menuWidth, autoMenuHeight(button), menuFontSize, true, undefined, bodyScale);
+    }
+
+    //----------------------- button  -----------------------------------------------------------
+    
+    function move(left = this.left, top = this.top, width = this.width, height = this.height, parentNode = this.parentNode) {
+        parentNode.appendChild(this.div);
+        this.div.style.position = "absolute";
+        this.div.style.height = height + "px";
+        this.div.style.width = width + "px";
+        this.div.style.left = left + "px";
+        this.div.style.top = top + "px";
+    }
+    
+    function createButtons(settings) {
+        settings.map(setting => {
+            if (setting) {
+                if (setting.type == "div") {
+                    buttons.push(setting);
+                }
+                else {
+                    buttons.push(new Button(document.body, setting.type, 0, 0, mainUI.buttonWidth, mainUI.buttonHeight));
+                    const button = buttons[buttons.length - 1];
+                    setting.text && button.setText(setting.text);
+                    setting.accept && (button.input.accept = setting.accept);
+                    setting.touchend && button.setontouchend(setting.touchend);
+                    setting.change && button.setonchange(setting.change);
+                    setting.options && button.addOptions(setting.options);
+                    setting.type == "select" && mainUI.createMenu(button);
+                }
+            }
+            else buttons.push(undefined);
+        })
+        return buttons;
+    }
+
+    function addButtons(buttons, cmdDiv, settingIndex = 0) {
+        const buttonSettings = settings[settingIndex].buttonSettings;
+        for (let i = 0; i < buttons.length; i++) {
+            if (buttons[i] && buttons[i].move) {
+                if (buttons[i].type == "div" || buttons[i].type == "canvas") buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttons[i].width, buttons[i].height, cmdDiv);
+                else buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttonSettings[i].width, buttonSettings[i].height, cmdDiv);
+            }
+        }
+        markTop.style.top = `${settings[settingIndex].marktopSetting.top}px`;
+    }
+
+    //----------------------------- cmdDiv  ------------------------------- 
+    
+    function createCmdDiv() {
+        const cmdDiv = d.createElement("div");
+        downDiv.appendChild(cmdDiv);
+        cmdDiv.style.position = "absolute";
+        cmdDiv.style.width = `${cmdWidth}px`;
+        cmdDiv.style.height = `${cmdWidth}px`;
+        cmdDiv.style.left = `${(gridWidth - cmdWidth) / 2}px`;
+        cmdDiv.style.top = `${(gridWidth - cmdWidth) / 2}px`;
+        debug && (cmdDiv.style.backgroundColor = "white");
+        return cmdDiv;
     }
 
     //----------------------------- exports ------------------------------- 

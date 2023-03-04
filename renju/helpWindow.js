@@ -1,9 +1,12 @@
 (function createHelpWindow() {
+    "use strict";
     let busy = false;
-    let dw = document.documentElement.clientWidth;
-    let dh = document.documentElement.clientHeight;
-    let padding = dw > dh ? dw : dh;
-    let scale = 820 / 820;
+    const dw = document.documentElement.clientWidth;
+    const dh = document.documentElement.clientHeight;
+    const winWidth = 980 * (dw > dh ? 2 : 1);
+    const winHeight = winWidth * dh / dw;
+    const padding = dw > dh ? winWidth / 5 : winHeight / 5;
+    const scale = dw / winWidth;
     const FULL_DIV = document.createElement("div");
     document.body.appendChild(FULL_DIV);
     FULL_DIV.style.zIndex = -99999;
@@ -65,18 +68,18 @@
         s.backgroundColor = "#666";
         s.left = -padding + "px";
         s.top = -padding + "px";
-        s.width = dw + padding * 2 + "px";
-        s.height = dh + padding * 2 + "px";
+        s.width = winWidth + padding * 2 + "px";
+        s.height = winHeight + padding * 2 + "px";
+        s.transformOrigin = `${padding}px ${padding}px`;
+        s.transform = `scale(${scale})`;
 
         s = WIN_DIV.style;
         s.backgroundColor = "#666";
         s.position = "absolute";
-        s.left = padding + (dw - 820) / 2 + "px";
+        s.left = padding + (winWidth - 820) / 2 + "px";
         s.top = padding + 5 + "px";
         s.width = 820 + "px";
-        s.height = (dh - 15) / scale + "px";
-        s.transform = "scale(" + scale + ")";
-        s.transformOrigin = "center top";
+        s.height = (winHeight - 15) + "px";
 
         s = IFRAME_DIV.style;
         s.backgroundColor = "#ddd";
@@ -85,7 +88,7 @@
         s.top = 10 + "px";
         s.width = 800 + "px";
         s.height = parseInt(WIN_DIV.style.height) - 20 + "px";
-        s.zIndex = -1;
+        //s.zIndex = -1;
 
         s = IFRAME.style;
         s.backgroundColor = "#ddd";
@@ -128,7 +131,7 @@
 
         FULL_DIV.style.display = "block";
         FULL_DIV.style.zIndex = 99999;
-        FULL_DIV.setAttribute("class", "show");
+        WIN_DIV.setAttribute("class", "show");
 
         if (IFRAME.src.indexOf(url) + 1) {
             IFRAME.src = url; //保持上次滚动值，防止滚到顶部
@@ -140,7 +143,7 @@
     }
 
     function closeHelpWindow() {
-        FULL_DIV.setAttribute("class", "hide");
+        WIN_DIV.setAttribute("class", "hide");
         setTimeout(() => {
             FULL_DIV.style.zIndex = -99999;
             FULL_DIV.style.display = "none";
