@@ -92,7 +92,7 @@ window.loadAnimation = (function() { //控制加载动画
             console.info(`open`);
         }
         else if (MSG.indexOf("load finish") + 1) {
-            loadAnimation.close(); 
+            loadAnimation.close();
             console.info(`close`);
         }
     }

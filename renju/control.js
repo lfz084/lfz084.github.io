@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2109.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2109.03";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
@@ -395,16 +395,6 @@ window.control = (() => {
                 appData.setKey("debug", false);
             }
             vConsole = null;
-            return;
-        }
-        else if (msgStr.indexOf("caches") > -1) {
-
-            window.logCaches();
-            return;
-        }
-        else if (msgStr.indexOf("cache") > -1) {
-
-            logCache(window.CURRENT_VERSION)
             return;
         }
         else if (msgStr.indexOf("offline") > -1 || msgStr.indexOf("icon") > -1) {

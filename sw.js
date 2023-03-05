@@ -1,4 +1,4 @@
-    var VERSION = "v2109.02";
+    var VERSION = "v2109.03";
     var myInit = {
         cache: "no-store"
     };
@@ -226,7 +226,6 @@
 
     // 捕获请求并返回缓存数据
     self.addEventListener('fetch', function(event) {
-
         const URL_VERSION = getUrlVersion(VERSION);
         const _URL = event.request.url.split("?")[0] + URL_VERSION;
         const filename = _URL.split("?")[0].split("/").pop();
@@ -248,7 +247,7 @@
 
     self.addEventListener('message', function(event) {
         if (typeof event.data == "object") {
-            if (event.data.type == "NEW_VERSION") {
+            if (event.data.type == "newVersion") {
                 if (event.data.version != VERSION) {
                     VERSION = event.data.version;
                     myInit = {

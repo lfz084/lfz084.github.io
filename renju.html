@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="Cache-Control" content="no-store">
@@ -29,307 +30,19 @@
 </head>
 
 <body>
+    <version v="v2109.03"></version>
     <div id="mlog"></div>
-    <script language="javascript">
-        // updata 
-        "use strict";
-        window.setUpdataVersion = function () {
-            localStorage.removeItem("RENJU_APP_VERSION");
-        }
-        window.NEW_VERSION = "v2109.02";
-        window.OLD_VERDION = localStorage.getItem("RENJU_APP_VERSION"); // if window.OLD_VERDION == null then upDate Version
-        if (window.OLD_VERDION != window.NEW_VERSION && window.NEW_VERSION.indexOf("up") + 1) window.OLD_VERDION = null; //强制更新
-        
-        window.CURRENT_VERSION = window.OLD_VERDION || window.NEW_VERSION;
-        //alert(`o:${window.OLD_VERDION}\nc:${window.CURRENT_VERSION}\nn:${window.NEW_VERSION}`)
-        window.URL_VERSION = "?v=" + window.CURRENT_VERSION;
-        window.CHECK_VERSION = true;
-        window.SOURCE_FILES = {
-            loaders: "style/loaders.css",
-            main: "style/main.css",
-            
-            PFSCMedium1_woff: "style/font/PFSCMedium1.woff",
-            PFSCMedium1_ttf: "style/font/PFSCMedium1.ttf",
-            PFSCHeavy1_ttf: "style/font/PFSCHeavy1.ttf",
-            PFSCHeavy1_woff: "style/font/PFSCHeavy1.woff",
-            
-            debugModule: "debug/debugModule.js",
-            vconsole: "debug/vconsole.min.js",
-            
-            appData: "historyGames/appData.js",
-            
-            emoji: "emoji/emoji.js",
-            
-            CheckerBoard: "CheckerBoard/CheckerBoard.js",
-            image2board: "CheckerBoard/image2board.js",
-            markLine: "CheckerBoard/markLine.js",
-            pdf: "CheckerBoard/pdf.js",
-            saveFile: "CheckerBoard/saveFile.js",
-            svg: "CheckerBoard/svg.js",
-            tree: "CheckerBoard/tree.js",
-            
-            loadAnimation: "script/loadAnimation.js",
-            loadFile: "script/loadFile.js",
-            Viewport: "script/View.js",
-            Button: "script/Button.js",
-            msgbox: "script/msgbox.js",
-            utils: "script/utils.js",
-            
-            TextCoder: "script/TextCoder.js",
-            NoSleep: "script/NoSleep.min.js",
-            IntervalPost: "script/IntervalPost.js",
-            RenjuTree: "script/RenjuTree.js",
-            
-            Evaluator_wasm: "eval/Evaluator.wasm",
-            EvaluatorWebassembly: "eval/EvaluatorWebassembly.js",
-            EvaluatorJScript: "eval/EvaluatorJScript.js",
-            Evaluator: "eval/Evaluator.js",
-            worker: "eval/worker.js",
-            engine: "eval/engine.js",
-            
-            TypeBuffer: "TypeBuffer/TypeBuffer.js",
-            
-            jspdf: "pdf/jspdf.umd_01.js",
-            PFSCMedium: "pdf/PFSCMedium.js",
-            PFSCHeavy: "pdf/PFSCHeavy.js",
-            
-            control: "renju/control.js",
-            renju_js: "renju/renju.js",
-            share: "renju/share.js",
-            helpWindow: "renju/helpWindow.js",
-            
-            "close_svg": "pic/close.svg",
-            "chevron-left_svg": "pic/chevron-left.svg",
-            "close-white_svg": "pic/close-white.svg",
-            "docusign-white_svg": "pic/docusign-white.svg",
-            "icon_png": "https://lfz084.github.io/icon.png",
-            "icon_ico": "https://lfz084.github.io/icon.ico",
-
-            JFile: "ReadLib/script/JFile.js",
-            JPoint: "ReadLib/script/JPoint.js",
-            LibraryFile: "ReadLib/script/LibraryFile.js",
-            MoveList: "ReadLib/script/MoveList.js",
-            MoveNode: "ReadLib/script/MoveNode.js",
-            Stack: "ReadLib/script/Stack.js",
-            RenLibDoc: "ReadLib/script/RenLibDoc.js",
-            work_ReadLib: "ReadLib/script/work_ReadLib.js",
-            RenjuLib: "ReadLib/script/RenjuLib.js",
-            RenLibDoc_wasm: "ReadLib/script/RenLibDoc_wasm.js",
-            RenLib_wasm: "ReadLib/script/RenLib.wasm",
-            
-            IndexedDB: "IndexedDB/IndexedDB.js",
-            
-            gif: "gif/gif.js",
-            gifWorker: "gif/gif.worker.js",
-            gifFile: "gif/gifFile.js",
-            CheckerBoardGIF: "gif/CheckerBoardGIF.js",
-
-            '404_html': "404.html",
-            renju_html: "renju.html",
-        }
-        window.SCRIPT_VERSIONS = {
-            viewport: "???",
-            button: "???",
-            CheckerBoard: "???",
-            control: "???",
-            msgbox: "???",
-            appData: "???",
-            Evaluator: "???",
-            engine: "???",
-            worker: "???",
-            renju: "???"
-        };
-        window.UPDATA_INFO = {
-            "v0912.00": ["更新说明:增加了lib棋谱读取功能，适合读取一些小棋谱。建议打开1MB以下的棋谱，5M以内勉强可以应付。以后会支持打开更大的棋谱"],
-            "v0928.02": ["支持lib棋谱增加到 30M",
-                         "打开大棋谱时间缩短 30%",
-                         "暂时还不支持显示对称点", ],
-            "v0929.02": ["更新说明: lib 棋谱已支持显示对称点。之前因为不支持对称点，导致很多棋谱分支显示不完整的bug已被修复。"],
-            "v0929.03": ["更新说明: 增加 设置 lib棋谱棋盘大小 的功能。修复了 小棋盘棋谱 不能正确显示对称点的bug"],
-            "v1006.00": ["更新内容: 兼容 Rapfi制谱 保存的 lib棋谱。"],
-            "v1031.02": ["重写了lib棋谱的解码程序,打开速度不再蜗牛",
-                         "已经支持打开 100M 以上的lib棋谱",
-                         "调整了部分按键位置"],
-            "v1101.03": ["更新内容: 再次优化lib文件打开速度。",
-                         "要体验快速模式,需要浏览器支持 WebAssembly"],
-            "v1108.03": ["增加设置棋盘大小功能",
-                         "增加设置棋盘坐标功能",
-                         "暂时只支持15路棋盘计算"],
-            "v1111.06": ["增加棋盘放大功能",
-                         "长按棋盘边框放大/缩小",
-                         "增加退出提示,防止误操作丢失数据"],
-            "v1116.05": ["增加设置按钮位置功能",
-                         "你可以保存5个按钮布局"],
-            "v1202.12": ["修复了,浏览lib棋谱时,部分节点丢失文字标记的bug"],
-            "v1623.09": ["增加无禁模式",
-                         "增加3种摆棋模式"],
-            "v1718.02": ["支持打开大棋谱(64位浏览器)",
-                        "浏览器内存不够时,打开部分棋谱"],
-            "v2015.05": ["添加lib转sgf功能"],
-            "v2108.01": ["修复了解题功能的bug"],
-            "v2109.00": ["输入图片支持双指缩放",
-                        "添加习题编辑器（支持开宝JSON）",
-                        "习题编辑器从帮助页面进入"],
-            "v2109.02": ["更新制作VCF功能（导出开宝JSON）",
-                        "制作VCF从帮助页面进入"]
-        };
-        
-        window.alertCache = function() {
-            return new Promise((resolve, reject) => {
-                alert(`localStorage:\n${Object.keys(localStorage).join("\n")}`);
-                caches.keys()
-                    .then(ks => alert(`${ks.join("\n")}`))
-                    .then(() => caches.open(window.CURRENT_VERSION))
-                    .then(cache => cache.keys())
-                    .then(rps => rps.map(rp => rp.url))
-                    .then(s => alert(`${s.join("\n")}`))
-                    .then(resolve)
-                    .catch(reject)
-            })
-        };
-        
-        window.removeServiceWorker = function() {
-            return new Promise((resolve, reject) => {
-                if ("serviceWorker" in navigator) {
-                    navigator.serviceWorker.getRegistrations()
-                        .then(registrations => {
-                            registrations.map(registration => {
-                                if (window.location.href.indexOf(registration.scope) + 1) {
-                                    registration.unregister()
-                                }
-                            })
-                        })
-                        .then(() => resolve())
-                        .catch(() => {
-                            resolve();
-                            alert("删除serviceWorker失败")
-                        })
-                }
-                else resolve()
-            })
-        };
-        
-        window.removeAppCache = function(filter = () => true) {
-            return new Promise((resolve, reject) => {
-                if ("caches" in window) {
-                    caches.keys()
-                        .then(function(cacheNames) {
-                            cacheNames.map(function(cacheName) {
-                                filter(cacheName) && caches.delete(cacheName);
-                            })
-                        })
-                        .then(() => resolve())
-                        .catch(err => { 
-                            resolve();
-                            alert(`删除缓存失败，请手动删除缓存\n${err.stack}`)
-                        })
-                }
-                else resolve()
-            })
-        };
-        
-        window.removeOldAppCache = function() {
-            return window.removeAppCache(cacheName => cacheName != window.CURRENT_VERSION && cacheName != window.NEW_VERSION)
-        };
-        
-        window.resetApp = function() {
-            return window.removeServiceWorker().then(window.removeAppCache)
-        };
-        
-        window.checkScriptVersion = function(filename) {
-            return new Promise((resolve, reject) => {
-                let ver = self.SCRIPT_VERSIONS[filename];
-                mlog(`[index] \n>> checkScriptVersion \n[${[filename, ver || "undefined"]}]`);
-                if (ver && (ver != window.CURRENT_VERSION)) {
-                    const ERR = `reload`;
-                    const ASK = `版本号不一致，可能影响正常运行\n_____________________\n\n${strLen("主页", 25)}版本号: ${window.CURRENT_VERSION} \n${strLen(filename + ".js", 25)}版本号: ${self.SCRIPT_VERSIONS[filename]} \n_____________________\n\n`;
-                    const PS = `是否更新？\n\n${strLen("",15)}[取消] = 不更新${strLen("",10)}[确定] = 更新`;
-                    if (window.CHECK_VERSION && confirm(ASK + PS)) {
-                        window.resetApp()
-                        .then(() => {
-                            window.setUpdataVersion();
-                            window.reloadApp()
-                        })
-                        .then(resolve)
-                    }
-                    else {
-                        resolve();
-                        window.CHECK_VERSION = false;
-                    }
-                }
-                else resolve();
-            });
-        };
-        
-        window.checkAppVersion = function() {
-            return new Promise((resolve, reject) => {
-                mlog("checkAppVersion ...")
-                if ("localStorage" in window) {
-                    const ASK = `有新的更新\n\n 当前版本号: ${window.CURRENT_VERSION} \n 新的版本号: ${window.NEW_VERSION}\n\n`;
-                    const PS = `是否更新？\n\n${strLen("",15)}[取消] = 不更新${strLen("",10)}[确定] = 更新`;
-                    if (window.CURRENT_VERSION != window.NEW_VERSION) {
-                        if (confirm(ASK + PS)) {
-                            window.removeServiceWorker()
-                            .then(window.removeOldAppCache)
-                            .then(() => {
-                                window.setUpdataVersion();
-                                window.reloadApp()
-                            })
-                            .then(resolve)
-                        }
-                        else {
-                            resolve()
-                            window.CHECK_VERSION = false;
-                        }
-                    }
-                    else resolve()
-                }
-                else resolve()
-            })
-        };
-        
-        window.postVersion = function() {
-            return new Promise((resolve, reject) => {
-                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                    let timer;
-                    navigator.serviceWorker.onmessage = function(event) {
-                        const MSG = event.data;
-                        if (typeof MSG == "object" && MSG.type == "NEW_VERSION" && MSG.version == window.CURRENT_VERSION) {
-                            mlog("[NEW_VERSION]");
-                            rm();
-                        }
-                        else {
-                            mlog(`[${MSG}]`);
-                        }
-                    }
-
-                    function rm() {
-                        navigator.serviceWorker.onmessage = undefined;
-                        clearTimeout(timer);
-                        resolve();
-                    }
-                    navigator.serviceWorker.controller.postMessage({ type: "NEW_VERSION", version: window.CURRENT_VERSION });
-                    timer = setTimeout(() => {
-                        mlog("postVersion Timeout");
-                        rm();
-                    }, 3 * 1000);
-                }
-                else {
-                    resolve();
-                }
-            })
-        };
-    </script>
-    
+    <script src="script/serviceWorker.js"></script>
+    <script src="script/upData.js"></script>
     <script>
         let re1 = /\?(v|V)\=/,
             reCode = /#/;
-        window.reloadApp = function(codeURL) {
+        window.reloadApp = async function(codeURL) {
             let reloadCount = localStorage.getItem("reloadCount") || 0,
                 url = window.location.href.split("?")[0] + `?v=${new Date().getTime()}${codeURL ? "#" + codeURL : ""}`
-            Promise.resolve()//如果反复刷新，就删除缓存文件
-                .then(() => ++reloadCount % 15 == 0 ? window.resetApp() : true)
-                .then(() => { 
+            Promise.resolve() //如果反复刷新，就删除缓存文件
+                .then(() => ++reloadCount % 15 == 0 ? upData.resetApp() : true)
+                .then(() => {
                     localStorage.setItem("reloadCount", reloadCount);
                     window.onbeforeunload = null;
                     window.location.href = url;
@@ -337,7 +50,7 @@
         };
         window.codeURL = window.location.href.split(reCode)[1];
     </script>
-    
+
     <script>
         const BUT = document.getElementById("mlog");
         window.mlog = (function() {
@@ -373,7 +86,7 @@
         document.body.onload = () => {
 
             function _loadScript(url) { //加载脚本
-                url = url.split("?")[0] + window.URL_VERSION;
+                url = url.split("?")[0];
                 const filename = url.split("/").pop().split("?")[0];
                 return new Promise((resolve, reject) => {
                     let oHead = document.getElementsByTagName('HEAD').item(0);
@@ -397,14 +110,14 @@
             }
             mlog(`body onload`)
             window.DEBUG = true;
-            window.checkAppVersion()
+            upData.checkAppVersion()
                 .then(() => {
                     mlog("removeOldAppCache ......");
-                    return window.removeOldAppCache()
+                    //return window.removeOldAppCache()
                 })
                 .then(() => {
                     mlog("postVersion ......");
-                    return window.postVersion()
+                    return upData.postVersion()
                 })
                 .then(() => {
                     mlog("load App ......");
@@ -425,10 +138,6 @@
                     window.SOURCE_FILES = undefined;
                     window.SCRIPT_VERSIONS = undefined;
                     //window.UPDATA_INFO = undefined;
-                    window.alertCache = undefined;
-                    window.checkScriptVersion = undefined;
-                    window.checkAppVersion = undefined;
-                    window.postVersion = undefined;
                 })
                 .catch((err) => {
                     const MSG = "❌" + "加载过程出现了错误，准备刷新" + "\n" + (err.stack || err)

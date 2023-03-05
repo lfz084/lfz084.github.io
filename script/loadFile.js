@@ -33,7 +33,7 @@
             }
 
             function loadCss(url) { //加载css
-                url = url.split("?")[0] + (window.URL_VERSION || "");
+                url = url.split("?")[0];
                 const filename = url.split("/").pop().split("?")[0];
                 return new Promise((resolve, reject) => {
                     let head = document.getElementsByTagName('head')[0];
@@ -62,7 +62,7 @@
             }
 
             function loadFile(url, msgTitle = "loadFile_Error") { //加载文件
-                url = url.split("?")[0] + (window.URL_VERSION || "");
+                url = url.split("?")[0];
                 const filename = url.split("/").pop().split("?")[0];
                 return new Promise((resolve, reject) => {
                     function reqListener() {
@@ -94,7 +94,7 @@
             }
 
             function loadScript(url) { //加载脚本
-                url = url.split("?")[0] + (window.URL_VERSION || "");
+                url = url.split("?")[0];
                 const filename = url.split("/").pop().split("?")[0];
                 return new Promise((resolve, reject) => {
                     let oHead = document.getElementsByTagName('HEAD').item(0);
@@ -107,7 +107,7 @@
                         //log(`loadScript "${filename}"`);
                         setTimeout(() => {
                             let key = filename.split(/[\-\_\.]/)[0];
-                            window.checkScriptVersion(key)
+                            upData.checkScriptVersion(key)
                             setTimeout(resolve, 0)
                         }, 0);
                     }
@@ -208,7 +208,7 @@
                         fontAll: loadFontAll,
                         scriptAll: loadScriptAll
                     }
-                    !("loadAnimation" in window) && await loadScriptAll([["script/loadAnimation.js"]]);
+                    !("loadAnimation" in window) && await loadScript("script/loadAnimation.js");
                     loadAnimation.open();
                     loadAnimation.lock(true);
                     let source;
