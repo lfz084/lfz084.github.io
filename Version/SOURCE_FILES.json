@@ -89,6 +89,11 @@
     "renju_html": "renju.html",
     "renjueditor_html": "renjueditor.html",
     "tuya_html": "tuya.html",
+    "mylz4": "lz4/mylz4.js",
+    "databass": "rapfi/databass.js",
+    "dbclient": "rapfi/dbclient.js",
+    "dbTypes": "rapfi/dbTypes.js",
+    "dbreadMain": "rapfi/main.js",
     "SOURCE_FILES": "Version/SOURCE_FILES.json",
     "UPDATA_INFO": "Version/UPDATA_INFO.json"
 }

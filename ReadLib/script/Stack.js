@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Stack"] = "v2109.08";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Stack"] = "v2109.09";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
