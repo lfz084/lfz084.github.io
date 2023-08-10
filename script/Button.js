@@ -9,25 +9,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
     let isMenuShow = false; //不允许同时打开两个菜单
 
     function log(param, type = "log") {
-        const command = {
-            log: () => { console.log(param) },
-            info: () => { console.info(param) },
-            error: () => { console.error(param) },
-            warn: () => { console.warn(param) },
-            assert: () => { console.assert(param) },
-            clear: () => { console.clear(param) },
-            count: () => { console.count(param) },
-            group: () => { console.group(param) },
-            groupCollapsed: () => { console.groupCollapsed(param) },
-            groupEnd: () => { console.groupEnd(param) },
-            table: () => { console.table(param) },
-            time: () => { console.time(param) },
-            timeEnd: () => { console.timeEnd(param) },
-            trace: () => { console.trace(param) },
-        }
-        let print = command[type] || console.log;
-        if (TEST_BUTTON && DEBUG)
-            print(`[Button.js]\n>>  ${ param}`);
+        const print = console[type] || console.log;
+        TEST_BUTTON && window.DEBUG && print(`[Button.js]\n>>  ${ param}`);
     }
 
     // ---------------------------------------------- 
@@ -79,6 +62,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
             menu.setAttribute("class", "menu");
             menu.setAttribute("id", "menu");
             
+            const borderWidth = parseInt(fontSize)/3;
             height = height || document.clientHeight * 0.8;
             if (input.length && ((height - (fontSize + 3) * 1) < optionsHeight)) {
                 const li = get_li({
@@ -86,7 +70,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
                     fontSize: fontSize, 
                     textAlign: "center", 
                     lineHeight: fontSize * 3.5,
-                    width: width,
+                    width: width - borderWidth * 2,
                     height: fontSize * 2.5,
                     paddingLeft: 0
                 });
@@ -106,7 +90,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
                     fontSize: fontSize,
                     textAlign: "left", 
                     lineHeight: fontSize * 2.5,
-                    width: width,
+                    width: width - borderWidth * 2,
                     height: fontSize * 2.5,
                     paddingLeft: fontSize
                 });
@@ -129,7 +113,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
                     fontSize: fontSize,
                     textAlign: "center", 
                     lineHeight: fontSize * 1.5,
-                    width: width,
+                    width: width - borderWidth * 2,
                     height: fontSize * 2.5,
                     paddingLeft: 0
                 });
@@ -142,7 +126,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
                 }.bind(this);
             }
             else {
-                height = optionsHeight + 3;
+                height = optionsHeight + 3 + borderWidth * 2;
             }
 
             this.button = button;
@@ -177,18 +161,18 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
         this.anima.style.height = muWindow.style.height;
         this.anima.style.left = "0px";
         this.anima.style.top = "0px";
-        
-        x = !x ? x : x < this.fontSize * 2.5 ? this.fontSize * 2.5 : (x + this.menuWidth) > (dw / this.bodyScale - this.fontSize * 2.5) ? dw / this.bodyScale - this.menuWidth - this.fontSize * 2.5 : x;
-        y = !y ? y : y < this.fontSize * 2.5 ? this.fontSize * 2.5 : (y + this.menuHeight) > (dh / this.bodyScale - this.fontSize * 2.5) ? dh / this.bodyScale - this.menuHeight - this.fontSize * 2.5 : y;
-        this.menuLeft = x || this.menuLeft;
-        this.menuTop = y || this.menuTop;
+        x = x || this.menuLeft;
+        x = x < this.fontSize * 2.5 ? this.fontSize * 2.5 : (x + this.menuWidth) > (dw / this.bodyScale - this.fontSize * 2.5) ? dw / this.bodyScale - this.menuWidth - this.fontSize * 2.5 : x;
+        y = y || this.menuTop;
+        y = y < this.fontSize * 2.5 ? this.fontSize * 2.5 : (y + this.menuHeight) > (dh / this.bodyScale - this.fontSize * 2.5) ? dh / this.bodyScale - this.menuHeight - this.fontSize * 2.5 : y;
+        const borderWidth = parseInt(this.fontSize)/3;
         this.menu.style.position = "absolute";
-        this.menu.style.left = `${this.menuLeft}px`;
-        this.menu.style.top = `${this.menuTop}px`;
-        this.menu.style.width = this.menuWidth + "px";
-        this.menu.style.height = this.menuHeight + "px";
+        this.menu.style.left = `${x}px`;
+        this.menu.style.top = `${y}px`;
+        this.menu.style.width = `${this.menuWidth - borderWidth * 2}px`;
+        this.menu.style.height = `${this.menuHeight - borderWidth * 2}px`;
         this.menu.style.borderRadius = parseInt(this.fontSize) * 1.5 + "px";
-        this.menu.style.border = `${parseInt(this.fontSize)/3}px solid ${this.button.selectBackgroundColor}`;
+        this.menu.style.border = `${borderWidth}px solid ${this.button.selectBackgroundColor}`;
         this.menu.style.overflow = "scroll";
         this.menu.style.background = this.button.backgroundColor;
         this.menu.style.autofocus = "true";

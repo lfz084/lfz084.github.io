@@ -5,6 +5,12 @@ window.addEventListener("error", (event) => {
 })
 
 //------------------------------------------------------------
+
+async function wait(timeout) {
+    return new Promise(resolve => setTimeout(resolve, timeout))
+}
+
+//------------------------------------------------------------
 window.alert = function(name) { //更改默认标题
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
@@ -174,8 +180,8 @@ window.iphoneCancelClick = (() => {
 
 //----------------------  退出前确认 ------------------------------------
 
-function setBlockUnload(callback) {
-    function enable() {
+function setBlockUnload(enable) {
+    if (enable) {
         window.onbeforeunload = function(e) {
             e = e || window.event;
             // 兼容IE8和Firefox 4之前的版本
@@ -187,12 +193,10 @@ function setBlockUnload(callback) {
         }
         console.log("blockUnload: enable", "info");
     }
-
-    function disable() {
+    else {
         window.onbeforeunload = null;
         console.log("blockUnload: disable", "info");
     }
-    setTimeout(callback, 0)
 }
 
 //----------------------  bufferToBase64String ----------------

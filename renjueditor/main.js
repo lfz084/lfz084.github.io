@@ -3,6 +3,13 @@
     const d = document;
     const dw = d.documentElement.clientWidth;
     const dh = d.documentElement.clientHeight;
+    
+    function log(text) {document.getElementById("log").innerText = text}
+    
+    function log1(text) {document.getElementById("log1").innerText = text}
+    
+    //-----------------------------------------------------------------------
+    
     const MANUAL = 0;
     const UNLOCK = 1;
     const LOCK = 2;
@@ -198,144 +205,70 @@
     buttonSettings.splice(12, 0, null, null);
     buttonSettings.splice(16, 0, null, null);
     buttonSettings.splice(20, 0, null, null);
-    if (dw > dh) {
-        buttonSettings.splice(0, 0, null, null, null, null);
-    }
-
-    function createButtons(settings) {
-        settings.map(setting => {
-            if (setting) {
-                if (setting.type == "div") {
-                    buttons.push(setting);
-                }
-                else {
-                    buttons.push(new Button(document.body, setting.type, 0, 0, mainUI.buttonWidth, mainUI.buttonHeight));
-                    const button = buttons[buttons.length - 1];
-                    setting.text && button.setText(setting.text);
-                    setting.accept && (button.input.accept = setting.accept);
-                    setting.touchend && button.setontouchend(setting.touchend);
-                    setting.change && button.setonchange(setting.change);
-                    setting.options && button.addOptions(setting.options);
-                    setting.type == "select" && mainUI.createMenu(button);
-                }
-            }
-            else buttons.push(undefined);
-        })
-        return buttons;
-    }
+    dw > dh && buttonSettings.splice(0, 0, null, null, null, null);
 
     function createCmdDiv() {
         const cDiv = mainUI.createCmdDiv();
-        const buttons = createButtons(buttonSettings);
+        buttons.push(...mainUI.createButtons(buttonSettings));
         mainUI.addButtons(buttons, cDiv, 1);
         return cDiv;
     }
 
     function createLogDiv() {
-        const lDiv = document.createElement("div");
         const fontSize = mainUI.buttonHeight / 1.8;
-        lDiv.style.fontSize = `${fontSize}px`;
-        lDiv.style.textAlign = "center";
-        lDiv.style.lineHeight = mainUI.buttonHeight + "px";
-        lDiv.setAttribute("id", "log");
-        return {
+        return mainUI.createLogDiv({
+            id: "log",
             type: "div",
-            div: lDiv,
-            move: move,
-            //left: mainUI.cmdPadding + mainUI.buttonWidth * 1.33,
-            //top: 0,
             width: mainUI.buttonWidth * 2.33,
-            height: mainUI.buttonHeight
-        }
-        return lDiv;
+            height: mainUI.buttonHeight,
+            style: {
+                fontSize: `${fontSize}px`,
+                textAlign: "center",
+                lineHeight: `${mainUI.buttonHeight}px`
+            },
+            click: async () => {
+                if (status == LOCK || status == UNLOCK) {
+                    const numPage = parseInt(prompt(`输入要跳转的页码（1 - ${renjuEditor.numPages})`));
+                    if (numPage === +numPage && 0 < numPage && numPage <= renjuEditor.numPages) {
+                        unlockArea();
+                        renjuEditor.loadPage(numPage);
+                    }
+                }
+            }
+        })
     }
 
     function createLogDiv1() {
-        const lDiv = document.createElement("div");
         const fontSize = mainUI.buttonHeight / 2;
-        lDiv.style.fontSize = `${fontSize}px`;
-        lDiv.style.textAlign = "center";
-        lDiv.style.lineHeight = fontSize / 2 + "px";
-        lDiv.style.backgroundColor = "white";
-        lDiv.setAttribute("id", "log1");
-        return {
+        return mainUI.createLogDiv({
+            id: "log1",
             type: "div",
-            div: lDiv,
-            move: move,
-            //left: mainUI.cmdPadding + mainUI.buttonWidth * 1.33,
-            //top: 0,
             width: mainUI.buttonWidth * 2.33,
-            height: fontSize / 1.8
-        }
-        return lDiv;
+            height: fontSize / 1.8,
+            style: {
+                fontSize: `${fontSize}px`,
+                textAlign: "center",
+                lineHeight: fontSize / 2 + "px",
+                backgroundColor: "white"
+            },
+            click: () => {
+                if (games.length) {
+                    const idx = parseInt(prompt(`输入要跳转的题号（1 - ${games.length})`));
+                    if (idx === +idx && 0 < idx && idx <= games.length) {
+                        loadGame(idx - 1);
+                    }
+                }
+            }
+        })
     }
 
-    function createCBoard() {
-        const cbd = new CheckerBoard(mainUI.upDiv, (mainUI.gridWidth - mainUI.cmdWidth) / 2, (mainUI.gridWidth - mainUI.cmdWidth) / 2, mainUI.cmdWidth, mainUI.cmdWidth);
-        cbd.backgroundColor = "white";
-        cbd.resetCBoardCoordinate();
-        cbd.printEmptyCBoard();
-        cbd.bodyScale = mainUI.bodyScale;
-        return cbd;
-    }
-
-    function createMiniBoard() {
-        const width = mainUI.buttonHeight * 7;
-        const left = (mainUI.cmdWidth / 2 - width) / 1.5;
-        const top = dw > dh ? mainUI.buttonHeight * (1.2 + 3) : mainUI.buttonHeight * 1.5;
-        const cbd = new CheckerBoard(mainUI.upDiv, left, top, width, width);
-        cbd.backgroundColor = "white";
-        cbd.resetCBoardCoordinate();
-        cbd.printEmptyCBoard();
-        cbd.viewBox.style.zIndex = -1;
-        cbd.bodyScale = mainUI.bodyScale;
-        return cbd;
-    }
-
-    function move(left = this.left, top = this.top, width = this.width, height = this.height, parentNode = this.parentNode) {
-        parentNode.appendChild(this.div);
-        this.div.style.position = "absolute";
-        this.div.style.height = height + "px";
-        this.div.style.width = width + "px";
-        this.div.style.left = left + "px";
-        this.div.style.top = top + "px";
-    }
-
-    function log(text) {
-        document.getElementById("log").innerText = text;
-    }
-
-    function log1(text) {
-        document.getElementById("log1").innerText = text;
-    }
-
-
-    const cBoard = createCBoard();
-    const miniBoard = createMiniBoard();
+    const cBoard = mainUI.createCBoard();
+    const miniBoard = mainUI.createMiniBoard();
     const cmdDiv = createCmdDiv();
     butLock = getButton("checkbox", "选定棋盘");
     butBlack = getButton("radio", "● 棋");
     butWhite = getButton("radio", "○ 棋");
-    logDiv = document.getElementById("log");
-    logDiv1 = document.getElementById("log1");
-    setButtonClick(logDiv, async () => {
-        if (status == LOCK || status == UNLOCK) {
-            const numPage = parseInt(prompt(`输入要跳转的页码（1 - ${renjuEditor.numPages})`));
-            if (numPage === +numPage && 0 < numPage && numPage <= renjuEditor.numPages) {
-                unlockArea();
-                renjuEditor.loadPage(numPage);
-            }
-        }
-    })
-    setButtonClick(logDiv1, () => {
-        if (games.length) {
-            const idx = parseInt(prompt(`输入要跳转的题号（1 - ${games.length})`));
-            if (idx === +idx && 0 < idx && idx <= games.length) {
-                loadGame(idx - 1);
-            }
-        }
-    })
-
+    
     function getFileName(path) {
         let temp = path.split(".");
         temp.pop();
@@ -445,6 +378,7 @@
             top: firstArea ? firstArea.top : 0
         }
     }
+    
     //------------------------ Events ---------------------------
 
     function addEvents(cbd) {

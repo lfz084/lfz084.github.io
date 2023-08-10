@@ -398,7 +398,7 @@
                                 */
 
 
-            /*let arr = /*cBoard.getArray2D(),*/ cBoard.getArray(),
+            /*let arr = /*cBoard.getArray2D(),cBoard.getArray(),
                 newarr = getArr2D([]),
                 markArr = new Array(225),
                 around = [];
@@ -466,6 +466,7 @@
 
             //console.log(markArr)
             //let level = getLevel(arr, arr[idx]);
+            
 
             //findVCF(arr, arr[idx]);
             //alert(`${new Date().getTime() - st}\n`)
@@ -666,4 +667,19 @@
         }
         alert(str)
     }
+    try {
+        const ctx = cBoard.cutCanvas.getContext("2d");
+        const l = cBoard.P[48].x - cBoard.gW * 3 / 5;
+        const t = l;
+        const w = cBoard.gW * 6 / 5;
+        const h = w;
+        cBoard.cutCanvas.width = 192;
+        cBoard.cutCanvas.height = 192;
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, 192, 192);
+        ctx.drawImage(cBoard.canvas, l, t, w, h, 0, 0, 192, 192)
+        document.body.appendChild(cBoard.cutCanvas);
+        cBoard.saveAsImage("png", cBoard.cutCanvas);
+    }catch(e){alert(e.stack)}
+    
 })()

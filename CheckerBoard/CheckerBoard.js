@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.08";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -39,25 +39,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.03";
     }
 
     function log(param, type = "log") {
-        const command = {
-            log: () => { console.log(param) },
-            info: () => { console.info(param) },
-            error: () => { console.error(param) },
-            warn: () => { console.warn(param) },
-            assert: () => { console.assert(param) },
-            clear: () => { console.clear(param) },
-            count: () => { console.count(param) },
-            group: () => { console.group(param) },
-            groupCollapsed: () => { console.groupCollapsed(param) },
-            groupEnd: () => { console.groupEnd(param) },
-            table: () => { console.table(param) },
-            time: () => { console.time(param) },
-            timeEnd: () => { console.timeEnd(param) },
-            trace: () => { console.trace(param) },
-        }
-        let print = command[type] || console.log;
-        if (TEST_CHECKER_BOARD && DEBUG)
-            print(`[CheckerBoard.js]\n>>  ${ param}`);
+        const print = console[type] || console.log;
+        TEST_CHECKER_BOARD && window.DEBUG && print(`[CheckerBoard.js]\n>>  ${ param}`);
     }
 
 
@@ -928,6 +911,24 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.03";
     }
 
 
+    Board.prototype.codeString2CodeArray = function(codeString) {
+        let codeArray = [],
+            start = 0,
+            end = 1,
+            len = codeString.length;
+        codeString = codeString.toUpperCase();
+        while (++end < len) {
+            let charCode = codeString.charCodeAt(end);
+            if (charCode > 64 && charCode < 91) {
+                codeArray.push(codeString.slice(start, end));
+                start = end;
+            }
+        }
+        start < len && codeArray.push(codeString.slice(start, end));
+        return codeArray;
+    }
+
+
     // 当前棋盘显示的棋子， 转成棋谱返回
     Board.prototype.getCodeType = function(type) {
         let ml = "";
@@ -1487,7 +1488,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.03";
 
 
     Board.prototype.setSize = function(size = 15) {
-        size = ~~(size);
+        size = parseInt(size);
         size = size < 6 ? 6 : size > 15 ? 15 : size;
         this.size = size;
         this.resetCBoardCoordinate();

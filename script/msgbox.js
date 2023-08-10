@@ -1,9 +1,9 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2109.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2109.08";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
     'use strict';
-    
+
     let isMsgShow = false; // =true 屏蔽 bodytouch 事件;
     let msgWindow = (() => {
         const TYPE_MSG = 1;
@@ -202,21 +202,16 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2109.03";
             textAlign = data.textAlign || textAlign;
         }
 
-        return new Promise((resolve, reject) => {
-            try {
-                let newCallEnter = (param) => {
-                        callEnter(param);
-                        resolve({ butCode: MSG_ENTER, inputStr: param });
-                    },
-                    newCallCancel = (param) => {
-                        callCancel(param);
-                        resolve({ butCode: MSG_CANCEL });
-                    }
-                msgWindow.msg(text, type, left, top, width, height, enterTXT, cancelTXT, newCallEnter, newCallCancel, butNum, lineNum, textAlign);
+        return new Promise(resolve => {
+            const newCallEnter = (param) => {
+                callEnter(param);
+                resolve({ butCode: MSG_ENTER, inputStr: param });
             }
-            catch (err) {
-                reject(err)
+            const newCallCancel = (param) => {
+                callCancel(param);
+                resolve({ butCode: MSG_CANCEL });
             }
+            msgWindow.msg(text, type, left, top, width, height, enterTXT, cancelTXT, newCallEnter, newCallCancel, butNum, lineNum, textAlign);
         })
     }
 
@@ -231,45 +226,37 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2109.03";
             butNum = data.butNum || butNum;
             timeout = data.timeout || timeout;
         }
-        
-        return new Promise((resolve, reject) => {
-            try {
-                let newEnterFunction = (param) => {
-                        enterFunction(param);
-                        resolve({ butCode: MSG_ENTER, inputStr: param });
-                    },
-                    newCancelFunction = (param) => {
-                        cancelFunction(param);
-                        resolve({ butCode: MSG_CANCEL });
-                    }
-                msgWindow.msg(title, "msgbox", undefined, undefined, undefined, undefined, enterTXT, cancelTXT, newEnterFunction, newCancelFunction, butNum == undefined ? cancelTXT ? 2 : 1 : butNum, butNum == 0 ? 1 : undefined);
-                (butNum == 0) && exports.closeMsg(timeout).then(resolve).catch(resolve);
+
+        return new Promise(resolve => {
+            const newEnterFunction = (param) => {
+                enterFunction(param);
+                resolve({ butCode: MSG_ENTER, inputStr: param });
             }
-            catch (err) {
-                reject(err)
+            const newCancelFunction = (param) => {
+                cancelFunction(param);
+                resolve({ butCode: MSG_CANCEL });
             }
+            msgWindow.msg(title, "msgbox", undefined, undefined, undefined, undefined, enterTXT, cancelTXT, newEnterFunction, newCancelFunction, butNum == undefined ? cancelTXT ? 2 : 1 : butNum, butNum == 0 ? 1 : undefined);
+            (butNum == 0) && exports.closeMsg(timeout).then(resolve).catch(resolve);
         })
     }
 
     exports.closeMsg = function closeMsg(timeout) {
         timeout = parseInt(timeout) > 0 ? parseInt(timeout) : 300;
         msgWindow.closeMsg(timeout);
-        
-        return new Promise((resolve, reject) => {
+
+        return new Promise(resolve => {
             setTimeout(resolve, timeout);
         })
     }
 
     exports.warn = (() => {
         let isShowLabel = true;
-        return (txt, timeout = 2000) => new Promise((resolve, reject) => {
-            if (!isShowLabel) resolve();
+        return async (txt, timeout = 2000) => {
+            if (!isShowLabel) return;
             isShowLabel = false;
-            msgbox(txt, undefined, undefined, undefined, undefined, 0, timeout)
-                .then(() => {
-                    isShowLabel = true;
-                    resolve();
-                })
-        })
+            await msgbox(txt, undefined, undefined, undefined, undefined, 0, timeout)
+            isShowLabel = true;
+        }
     })();
 })))

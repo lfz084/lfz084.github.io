@@ -1,32 +1,15 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2109.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2109.08";
 window.RenjuLib = (() => {
     "use strict";
     //console.log(exports);
     const TEST_RENLIB = true;
 
     function log(param, type = "log") {
-        const command = {
-            log: () => { console.log(param) },
-            info: () => { console.info(param) },
-            error: () => { console.error(param) },
-            warn: () => { console.warn(param) },
-            assert: () => { console.assert(param) },
-            clear: () => { console.clear(param) },
-            count: () => { console.count(param) },
-            group: () => { console.group(param) },
-            groupCollapsed: () => { console.groupCollapsed(param) },
-            groupEnd: () => { console.groupEnd(param) },
-            table: () => { console.table(param) },
-            time: () => { console.time(param) },
-            timeEnd: () => { console.timeEnd(param) },
-            trace: () => { console.trace(param) }
-        }
-        let print = command[type] || console.log;
-        if (TEST_RENLIB && DEBUG)
-            print(`[RenjuLib.js]\n>>  ${ param}`);
+        const  print = console[type] || console.log;
+        TEST_RENLIB && window.DEBUG && print(`[RenjuLib.js]\n>>  ${ param}`);
     }
 
-    let url = "./ReadLib/script/work_ReadLib.js",
+    let url = "./ReadLib/script/RenjuLib_worker.js",
         enable = false,
         errCount = 0,
         wk,
@@ -239,7 +222,6 @@ window.RenjuLib = (() => {
 
     function autoMove(path) {
         if (!cBoard) return;
-        setPlayMode();
         for (let i = 0; i < path.length; i++) {
             cBoard.wNb(path[i], "auto", getShowNum(), undefined, undefined, 100);
         }
@@ -272,7 +254,7 @@ window.RenjuLib = (() => {
             if (isBusy()) return Promise.reject();
             load(file);
             return waitFinish()
-                .then(() => enable ? Promise.resolve() : Promise.reject())
+                .then(() => enable ? Promise.resolve(setPlayMode()) : Promise.reject())
         },
         closeLib: function() {
             wk && removeWorker();

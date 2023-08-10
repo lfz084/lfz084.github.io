@@ -67,10 +67,28 @@ window.renjuEditor = (() => {
     }
 
     function toKaiBaoCode() {
-        let code = [];
-        cBoard.MS.map((idx, i) => {
-            code.push(`${idxToName(idx)},${(i & 1) + 1}`)
-        })
+        let code = [],
+            codeArray = cBoard.codeString2CodeArray(cBoard.getCodeType(TYPE_NUMBER)),
+            idx = -1,
+            len = codeArray.length;
+        while(++idx < len) {
+            code.push(`${codeArray[idx]},${(idx & 1) + 1}`)
+        }
+        
+        codeArray = cBoard.codeString2CodeArray(cBoard.getCodeType(TYPE_BLACK));
+        idx = -1;
+        len = codeArray.length;
+        while (++idx < len) {
+            code.push(`${codeArray[idx]},1`)
+        }
+        
+        codeArray = cBoard.codeString2CodeArray(cBoard.getCodeType(TYPE_WHITE));
+        idx = -1;
+        len = codeArray.length;
+        while (++idx < len) {
+            code.push(`${codeArray[idx]},2`)
+        }
+
         return code;
     }
 

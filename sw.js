@@ -1,4 +1,4 @@
-    var VERSION = "v2109.03";
+    var VERSION = "v2109.08";
     var myInit = {
         cache: "no-store"
     };
@@ -79,11 +79,7 @@
     function myFetch(url, version, clientID) {
         let url_version = getUrlVersion(version);
         return new Promise((resolve, reject) => {
-            let req = url == "https://lfz084.github.io/icon.ico" + url_version ?
-                new Request("https://lfz084.gitee.io/renju/icon.ico" + "?v=" + new Date().getTime(), myInit) :
-                url == "https://lfz084.github.io/icon.png" + url_version ?
-                new Request("https://lfz084.gitee.io/renju/icon.png" + "?v=" + new Date().getTime(), myInit) :
-                new Request(url, myInit),
+            let req = new Request(url, myInit),
                 nRequest = new Request(req.url.split("?")[0] + "?v=" + new Date().getTime(), myInit);
             fetch(nRequest)
                 .then(response => {
@@ -172,7 +168,7 @@
     function upData(files, version, clientID) {
         return new Promise((resolve, reject) => {
             let count = 0,
-                maxCount = files.length;
+                maxCount = 10;
 
             function nextFile() {
                 if (files.length) {
@@ -227,7 +223,7 @@
     // 捕获请求并返回缓存数据
     self.addEventListener('fetch', function(event) {
         const URL_VERSION = getUrlVersion(VERSION);
-        const _URL = event.request.url.split("?")[0] + URL_VERSION;
+        const _URL = (event.request.url.split("?")[0]).split("#")[0] + URL_VERSION;
         const filename = _URL.split("?")[0].split("/").pop();
         const type = _URL.split("?")[0].split(".").pop();
         const NEW_CACHE = ["html", "htm"].indexOf(type) + 1 > 0;
@@ -247,7 +243,7 @@
 
     self.addEventListener('message', function(event) {
         if (typeof event.data == "object") {
-            if (event.data.type == "newVersion") {
+            if (event.data.type == "NEW_VERSION") {
                 if (event.data.version != VERSION) {
                     VERSION = event.data.version;
                     myInit = {
@@ -257,8 +253,8 @@
                 postMsg(event.data, event.clientID)
             }
             else if (event.data.cmd == "upData") {
-                let version = event.data.version,
-                    files = event.data.files.map(url => url.split("?")[0] + getUrlVersion(version));
+                let version = event.data.version;
+                let files = event.data.files.map(url => url.split("?")[0] + getUrlVersion(version));
                 upData(files, version, event.clientID)
                     .then(() => {
                         postMsg({ cmd: "upData", ok: true, version: version }, event.clientID)

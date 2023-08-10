@@ -43,7 +43,7 @@
         }
     }
     
-    CheckerBoard.prototype.saveAsImage = function(type) {
+    CheckerBoard.prototype.saveAsImage = function(type = "png", canvas = this.cutViewBox()) {
         function toBlob(callback, type, quality) {
             function reqListener() {
                 let blob = new Blob([oReq.response]);
@@ -57,8 +57,7 @@
             oReq.send();
         }
     
-        let canvas = this.cutViewBox(),
-            filename = `${this.autoFileName()}.${type}`;
+        let filename = `${this.autoFileName()}.${type}`;
         //保存
         canvas.toBlob = canvas.toBlob || toBlob.bind(canvas);
         canvas.toBlob(blob => {

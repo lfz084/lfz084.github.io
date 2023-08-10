@@ -90,6 +90,18 @@ a:active {
     text-decoration: underline;
 }
 
+#mlog {
+    text-align: center;
+    width: 100%;
+    opacity: 0.3;
+}
+
+.refresh {
+    font-size: 100px;
+    opacity: 0.93;
+    position: absolute;
+    top: 100px;
+}
 
 .menu {
     overflow-x: hidden;

@@ -1,5 +1,5 @@
 "use strict";
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2109.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2109.08";
 const DIRECTIONS = [0, 1, 2, 3] //[→, ↓, ↘, ↗]; // 米字线
 const FIND_ALL = 0;
 const ONLY_FREE = 1; // 只找活3，活4
@@ -167,92 +167,87 @@ for (let direction = 0; direction < 4; direction++) {
 //return lines[]
 //line: { start: idx, end: idx, "level": ["THREE_FREE" | "FOUR_NOFREE" | "FOUR_FREE" | "FIVE"] }
 function getLines(arr, color) {
-    try {
-        let infoArr = new Array(226),
-            lineINFO = new Uint32Array(226),
-            lines = [];
-        testThree(arr, color, infoArr); //取得活三以上的点
+    let infoArr = new Array(226),
+        lineINFO = new Uint32Array(226),
+        lines = [];
+    testThree(arr, color, infoArr); //取得活三以上的点
 
-        infoArr.map((info, idx) => { //分析每个点保存路线,3开始,1结束
-            if (THREE_FREE <= (info & FOUL_MAX_FREE) && (info & FOUL_MAX_FREE) <= FIVE) {
-                for (let direction = 0; direction < 4; direction++) {
-                    let lineInfo = testLineThree(idx, direction, color, arr),
-                        move = (lineInfo & 0xff) >>> 5,
-                        i;
-                    switch (FOUL_MAX_FREE & lineInfo) {
-                        case FIVE:
-                            for (let m = -4; m < 0; m++) {
-                                i = moveIdx(idx, m + (move), direction);
-                                lineINFO[i] |= (3 << 6 << direction * 8);
-                            }
-                            i = moveIdx(idx, move, direction);
-                            lineINFO[i] |= (1 << 6 << direction * 8);
-                            break;
-                        case FOUR_FREE:
-                            for (let m = -5; m < 0; m++) {
-                                i = moveIdx(idx, m + (move), direction);
-                                lineINFO[i] |= (3 << 4 << direction * 8);
-                            }
-                            i = moveIdx(idx, move, direction);
-                            lineINFO[i] |= (1 << 4 << direction * 8);
-                            break;
-                        case FOUR_NOFREE:
-                            for (let m = -4; m < 0; m++) {
-                                i = moveIdx(idx, m + (move), direction);
-                                lineINFO[i] |= (3 << 2 << direction * 8);
-                            }
-                            i = moveIdx(idx, move, direction);
-                            lineINFO[i] |= (1 << 2 << direction * 8);
-                            break;
-                        case THREE_FREE:
-                            for (let m = -5; m < 0; m++) {
-                                i = moveIdx(idx, m + (move), direction);
-                                lineINFO[i] |= (3 << direction * 8);
-                            }
-                            i = moveIdx(idx, move, direction);
-                            lineINFO[i] |= (1 << direction * 8);
-                            break;
-                    }
+    infoArr.map((info, idx) => { //分析每个点保存路线,3开始,1结束
+        if (THREE_FREE <= (info & FOUL_MAX_FREE) && (info & FOUL_MAX_FREE) <= FIVE) {
+            for (let direction = 0; direction < 4; direction++) {
+                let lineInfo = testLineThree(idx, direction, color, arr),
+                    move = (lineInfo & 0xff) >>> 5,
+                    i;
+                switch (FOUL_MAX_FREE & lineInfo) {
+                    case FIVE:
+                        for (let m = -4; m < 0; m++) {
+                            i = moveIdx(idx, m + (move), direction);
+                            lineINFO[i] |= (3 << 6 << direction * 8);
+                        }
+                        i = moveIdx(idx, move, direction);
+                        lineINFO[i] |= (1 << 6 << direction * 8);
+                        break;
+                    case FOUR_FREE:
+                        for (let m = -5; m < 0; m++) {
+                            i = moveIdx(idx, m + (move), direction);
+                            lineINFO[i] |= (3 << 4 << direction * 8);
+                        }
+                        i = moveIdx(idx, move, direction);
+                        lineINFO[i] |= (1 << 4 << direction * 8);
+                        break;
+                    case FOUR_NOFREE:
+                        for (let m = -4; m < 0; m++) {
+                            i = moveIdx(idx, m + (move), direction);
+                            lineINFO[i] |= (3 << 2 << direction * 8);
+                        }
+                        i = moveIdx(idx, move, direction);
+                        lineINFO[i] |= (1 << 2 << direction * 8);
+                        break;
+                    case THREE_FREE:
+                        for (let m = -5; m < 0; m++) {
+                            i = moveIdx(idx, m + (move), direction);
+                            lineINFO[i] |= (3 << direction * 8);
+                        }
+                        i = moveIdx(idx, move, direction);
+                        lineINFO[i] |= (1 << direction * 8);
+                        break;
                 }
             }
-        });
-
-        for (let direction = 0; direction < 4; direction++) {
-
-            //console.warn(`direction: ${direction}`)
-            IDX_LISTS[direction].map(list => { //找出每一条线
-                const LVL = ["THREE_FREE", "FOUR_NOFREE", "FOUR_FREE", "FIVE"];
-                let lineStart = [-1, -1, -1, -1],
-                    lineEnd = [-1, -1, -1, -1];
-                //console.log(list);
-                list.map(idx => {
-                    let v = [0, 0, 0, 0];
-                    v[0] = (lineINFO[idx] & (3 << direction * 8)) >>> direction * 8;
-                    v[1] = (lineINFO[idx] & (3 << 2 << direction * 8)) >>> 2 >>> direction * 8;
-                    v[2] = (lineINFO[idx] & (3 << 4 << direction * 8)) >>> 4 >>> direction * 8;
-                    v[3] = (lineINFO[idx] & (3 << 6 << direction * 8)) >>> 6 >>> direction * 8;
-                    //console.log(`direction: ${direction}, ${lineINFO[idx].toString(2)},\n${v[0].toString(2)}, ${v[1].toString(2)}, ${v[2].toString(2)}, ${v[3].toString(2)}`)
-                    for (let vi = 0; vi < 4; vi++) {
-                        if (v[vi] == 3) {
-                            if (lineStart[vi] == -1) lineStart[vi] = idx;
-                            else lineEnd[vi] = idx;
-                        }
-                        else if (v[vi] == 1) {
-                            if (lineStart[vi] > -1 && lineEnd[vi] > -1) {
-                                lines.push({ "start": lineStart[vi], "end": idx, "level": LVL[vi] });
-                            }
-                            lineStart[vi] = lineEnd[vi] = -1;
-                        }
-                    }
-                });
-            });
         }
+    });
 
-        return lines;
+    for (let direction = 0; direction < 4; direction++) {
+
+        //console.warn(`direction: ${direction}`)
+        IDX_LISTS[direction].map(list => { //找出每一条线
+            const LVL = ["THREE_FREE", "FOUR_NOFREE", "FOUR_FREE", "FIVE"];
+            let lineStart = [-1, -1, -1, -1],
+                lineEnd = [-1, -1, -1, -1];
+            //console.log(list);
+            list.map(idx => {
+                let v = [0, 0, 0, 0];
+                v[0] = (lineINFO[idx] & (3 << direction * 8)) >>> direction * 8;
+                v[1] = (lineINFO[idx] & (3 << 2 << direction * 8)) >>> 2 >>> direction * 8;
+                v[2] = (lineINFO[idx] & (3 << 4 << direction * 8)) >>> 4 >>> direction * 8;
+                v[3] = (lineINFO[idx] & (3 << 6 << direction * 8)) >>> 6 >>> direction * 8;
+                //console.log(`direction: ${direction}, ${lineINFO[idx].toString(2)},\n${v[0].toString(2)}, ${v[1].toString(2)}, ${v[2].toString(2)}, ${v[3].toString(2)}`)
+                for (let vi = 0; vi < 4; vi++) {
+                    if (v[vi] == 3) {
+                        if (lineStart[vi] == -1) lineStart[vi] = idx;
+                        else lineEnd[vi] = idx;
+                    }
+                    else if (v[vi] == 1) {
+                        if (lineStart[vi] > -1 && lineEnd[vi] > -1) {
+                            lines.push({ "start": lineStart[vi], "end": idx, "level": LVL[vi] });
+                        }
+                        lineStart[vi] = lineEnd[vi] = -1;
+                    }
+                }
+            });
+        });
     }
-    catch (err) {
-        console.error(err)
-    }
+
+    return lines;
 }
 
 //---------------  ------------------ ------------------
@@ -483,7 +478,7 @@ let vcfInfo = {
         levelInfo: 0,
         winMoves: undefined
     };
-    
+
 function resetVCF(arr, color, maxVCF, maxDepth, maxNode) {
     vcfInfo.initArr = arr.slice(0);
     vcfInfo.color = color;
@@ -559,7 +554,7 @@ function continueFour(arr, color, maxVCF, maxDepth, maxNode) {
 
 function aroundPoint(arr, color, radius = 4, ctnInfo = [new Array(225), new Array(225), new Array(225), new Array(225)]) {
     let rtArr = new Array(225);
-    
+
     for (let i = 0; i < 225; i++) {
         ctnInfo[0][i] = arr[i] | (ctnInfo[color][i] && color);
     }
@@ -619,7 +614,7 @@ function selectPointsLevel(arr, color, radius = 4, maxVCF = 1, maxDepth = 10, ma
                 points.map(idx => rtArr[idx] = 1)
             }
             break;
-        default :
+        default:
             rtArr = selectPoints(arr, color, radius, maxVCF, maxDepth, maxNode)
     }
     return rtArr;
@@ -752,4 +747,3 @@ function getScore(idx, color, arr) {
     }
     return score < 0xFD ? score : 0xFD;
 }
-

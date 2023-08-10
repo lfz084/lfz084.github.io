@@ -1,28 +1,11 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2109.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2109.08";
 window.engine = (function() {
-"use strict";
+            "use strict";
             const TEST_ENGINE = false;
 
             function log(param, type = "log") {
-                const command = {
-                    log: () => { console.log(param) },
-                    info: () => { console.info(param) },
-                    error: () => { console.error(param) },
-                    warn: () => { console.warn(param) },
-                    assert: () => { console.assert(param) },
-                    clear: () => { console.clear(param) },
-                    count: () => { console.count(param) },
-                    group: () => { console.group(param) },
-                    groupCollapsed: () => { console.groupCollapsed(param) },
-                    groupEnd: () => { console.groupEnd(param) },
-                    table: () => { console.table(param) },
-                    time: () => { console.time(param) },
-                    timeEnd: () => { console.timeEnd(param) },
-                    trace: () => { console.trace(param) },
-                }
-                let print = command[type] || console.log;
-                if (TEST_ENGINE && DEBUG)
-                    print(`[engine.js]\n>>  ${ param}`);
+                const print = console[type] || console.log;
+                TEST_ENGINE && window.DEBUG && print(`[engine.js]\n>>  ${ param}`);
             }
 
             //------------------------  ListNode   ------------------------ 
@@ -711,6 +694,12 @@ window.engine = (function() {
             //return Promise resolve: levelBInfo
             async function _getLevelB(param) {
                 return await run("getLevelB", param) || levelBInfo;
+            }
+            
+            //param: {arr, color, moves}
+            //return Promise resolve: isVCF
+            async function isVCF(param) {
+                return await run("isVCF", param);
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
@@ -2179,6 +2168,7 @@ window.engine = (function() {
         // async function //
         wait: wait,
         removeFinallyPromise: removeFinallyPromise,
+        isVCF: async (param) => isVCF(copyParam(param)),
         findVCF: async (param) => findVCF(copyParam(param)),
         createTreeVCF: async (param) => exe(param, createTreeVCF),
         createTreeFive: async (param) => exe(param, createTreeFive),

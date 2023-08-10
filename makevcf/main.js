@@ -83,9 +83,9 @@
             type: "button",
             text: "分享连接",
             touchend: async function() {
-                let hash = `${miniBoard.getCodeURL()}`,
-                    url = window.location.href.split("makevcf.html")[0] + "renju.html" + `#${hash}`;
-                if((/^%%%/).test(hash)) return;
+                const hash = `${miniBoard.getCodeURL()}`;
+                const url = window.location.href.split("makevcf.html")[0] + "renju.html" + `#${hash}`;
+                if ((/^%%%/).test(hash)) return;
                 if (navigator.canShare) {
                     navigator.share({
                         title: "摆棋小工具",
@@ -114,12 +114,16 @@
             type: "button",
             text: "筛选条件",
             touchend: function() {
-                const input = prompt(`输入最短手数,最长手数\n例：3,30`).split(/[\,|，]/) ;
+                const input = prompt(`输入最短手数,最长手数\n例：3,30`).split(/[\,|，]/);
                 input[0] = parseInt(input[0]);
                 input[1] = parseInt(input[1]);
                 let min = input[0] === +input[0] ? input[0] : 0;
                 let max = input[1] === +input[1] ? input[1] : 225;
-                if(min > max) {const temp = min;min = max;max = temp;}
+                if (min > max) {
+                    const temp = min;
+                    min = max;
+                    max = temp;
+                }
                 makeVCF.filter(min, max);
             }
         },
@@ -127,19 +131,19 @@
             type: "button",
             text: "导出JSON",
             touchend: async function() {
-                try{
-                const info = makeVCF.getStateInfo();
-                const games = [];
-                for (let idx = 0; idx < info.filterArr.length; idx++) {
-                    miniBoard.unpackArray(makeVCF.getVCF(idx).array);
-                    games.push(miniBoard.getArray2D());
-                    log(`读取... ${idx+1} / ${info.filterArr.length}`);
-                    await makeVCF.wait(0);
-                }
-                if (games.length == 0) return;
-                const json = await renjuEditor.toKaiBaoJSON(games);
-                renjuEditor.downloadKaiBaoJSON(json, "vcf");
-                }catch(e){alert(e.stac)}
+                try {
+                    const info = makeVCF.getStateInfo();
+                    const games = [];
+                    for (let idx = 0; idx < info.filterArr.length; idx++) {
+                        miniBoard.unpackArray(makeVCF.getVCF(idx).array);
+                        games.push(miniBoard.getArray2D());
+                        log(`读取... ${idx+1} / ${info.filterArr.length}`);
+                        await makeVCF.wait(0);
+                    }
+                    if (games.length == 0) return;
+                    const json = await renjuEditor.toKaiBaoJSON(games);
+                    renjuEditor.downloadKaiBaoJSON(json, "vcf");
+                } catch (e) { alert(e.stac) }
             }
         }
     ];
@@ -149,108 +153,48 @@
     buttonSettings.splice(12, 0, null, null);
     buttonSettings.splice(16, 0, null, null);
     buttonSettings.splice(20, 0, null, null);
-    if (dw > dh) {
-        buttonSettings.splice(0, 0, null, null, null, null);
-    }
-
-    function createButtons(settings) {
-        settings.map(setting => {
-            if (setting) {
-                if (setting.type == "div") {
-                    buttons.push(setting);
-                }
-                else {
-                    buttons.push(new Button(document.body, setting.type, 0, 0, mainUI.buttonWidth, mainUI.buttonHeight));
-                    const button = buttons[buttons.length - 1];
-                    setting.text && button.setText(setting.text);
-                    setting.accept && (button.input.accept = setting.accept);
-                    setting.touchend && button.setontouchend(setting.touchend);
-                    setting.change && button.setonchange(setting.change);
-                    setting.options && button.addOptions(setting.options);
-                    setting.type == "select" && mainUI.createMenu(button);
-                }
-            }
-            else buttons.push(undefined);
-        })
-        return buttons;
-    }
+    dw > dh && buttonSettings.splice(0, 0, null, null, null, null);
 
     function createCmdDiv() {
         const cDiv = mainUI.createCmdDiv();
-        const buttons = createButtons(buttonSettings);
+        const buttons = mainUI.createButtons(buttonSettings);
         mainUI.addButtons(buttons, cDiv, 1);
         return cDiv;
     }
 
     function createLogDiv() {
-        const lDiv = document.createElement("div");
-        const fontSize = mainUI.buttonHeight / 1.8;
-        lDiv.style.fontSize = `${fontSize}px`;
-        lDiv.style.textAlign = "center";
-        lDiv.style.lineHeight = mainUI.buttonHeight + "px";
-        lDiv.setAttribute("id", "log");
-        return {
+        return mainUI.createLogDiv({
+            id: "log",
             type: "div",
-            div: lDiv,
-            move: move,
             width: mainUI.cmdWidth,
-            height: mainUI.buttonHeight
-        }
+            height: mainUI.buttonHeight,
+            style: {
+                fontSize: `${mainUI.buttonHeight / 1.8}px`,
+                textAlign: "center",
+                lineHeight: `${mainUI.buttonHeight}px`
+            }
+        })
     }
 
     function createLogDiv1() {
-        const lDiv = document.createElement("div");
-        const fontSize = mainUI.buttonHeight / 2;
-        lDiv.style.fontSize = `${fontSize}px`;
-        lDiv.style.textAlign = "center";
-        lDiv.style.lineHeight = fontSize / 2 + "px";
-        lDiv.style.backgroundColor = "white";
-        lDiv.setAttribute("id", "log1");
-        return {
+        const lineHeight = mainUI.buttonHeight;
+        return mainUI.createLogDiv({
+            id: "log1",
             type: "div",
-            div: lDiv,
-            move: move,
             width: mainUI.buttonWidth * 2.33,
-            height: fontSize / 1.8
-        }
+            height: lineHeight / 1.8,
+            style: {
+                fontSize: `${mainUI.buttonHeight / 2}px`,
+                textAlign: "center",
+                lineHeight: `${lineHeight / 2}px`,
+                backgroundColor: "white",
+            }
+        })
     }
 
-    function createCBoard() {
-        const cbd = new CheckerBoard(mainUI.upDiv, (mainUI.gridWidth - mainUI.cmdWidth) / 2, (mainUI.gridWidth - mainUI.cmdWidth) / 2, mainUI.cmdWidth, mainUI.cmdWidth);
-        cbd.backgroundColor = "white";
-        cbd.resetCBoardCoordinate();
-        cbd.printEmptyCBoard();
-        cbd.bodyScale = mainUI.bodyScale;
-        return cbd;
-    }
-
-    function createMiniBoard() {
-        const width = mainUI.buttonHeight * 7;
-        const left = (mainUI.cmdWidth / 2 - width) / 1.5;
-        const top = dw > dh ? mainUI.buttonHeight * (1.2 + 3) : mainUI.buttonHeight * 1.5;
-        const cbd = new CheckerBoard(mainUI.upDiv, left, top, width, width);
-        cbd.backgroundColor = "white";
-        cbd.resetCBoardCoordinate();
-        cbd.printEmptyCBoard();
-        cbd.viewBox.style.zIndex = -1;
-        cbd.bodyScale = mainUI.bodyScale;
-        return cbd;
-    }
-
-    function move(left = this.left, top = this.top, width = this.width, height = this.height, parentNode = this.parentNode) {
-        parentNode.appendChild(this.div);
-        this.div.style.position = "absolute";
-        this.div.style.height = height + "px";
-        this.div.style.width = width + "px";
-        this.div.style.left = left + "px";
-        this.div.style.top = top + "px";
-    }
-
-    const cBoard = createCBoard();
-    const miniBoard = createMiniBoard();
+    const cBoard = mainUI.createCBoard();
+    const miniBoard = mainUI.createMiniBoard();
     const cmdDiv = createCmdDiv();
-
-
 
     function addEvents() {
         function ctnBack(idx) { // 触发快速悔棋

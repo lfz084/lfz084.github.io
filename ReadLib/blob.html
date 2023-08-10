@@ -87,7 +87,7 @@
         }
 
 
-        let wk = new Worker("./script/work_ReadLib.js")
+        let wk = new Worker("./script/RenjuLib_worker.js")
         alert(wk)
         //wk.postMessage(file);
         wk.onmessage = (e) => {

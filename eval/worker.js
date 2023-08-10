@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["worker"] = "v2109.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["worker"] = "v2109.08";
 /Worker/.exec(`${self}`) && (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -28,6 +28,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["worker"] = "v2109.03";
             //post({ cmd: "levelBInfo", param: { levelBInfo: levelBInfo } });
             //post(MSG_RESOLVE);
             post({cmd: "resolve", param: levelBInfo})
+        },
+        isVCF: function({color, arr, moves}) {
+            const result = isVCF(color, arr, moves);
+            post({cmd: "resolve", param: result})
         },
         findVCF: function({ arr, color, maxVCF, maxDepth, maxNode }) {
             findVCF(arr, color, maxVCF, maxDepth, maxNode);

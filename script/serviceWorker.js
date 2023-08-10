@@ -45,10 +45,8 @@ window.serviceWorker = (() => {
             else resolve()
         })
         //首次使用， ServiceWorker 没有正常工作就刷新
-        if (sWorker && "controller" in navigator.serviceWorker) {
-            if (!navigator.serviceWorker.controller) {
-                window.reloadApp(window.codeURL);
-            }
+        if (sWorker && !navigator.serviceWorker.controller) {
+            window.reloadApp();
         }
     }
     

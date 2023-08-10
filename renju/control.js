@@ -1,43 +1,26 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2109.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2109.08";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
 
     function log(param, type = "log") {
-        const command = {
-            log: () => { console.log(param) },
-            info: () => { console.info(param) },
-            error: () => { console.error(param) },
-            warn: () => { console.warn(param) },
-            assert: () => { console.assert(param) },
-            clear: () => { console.clear(param) },
-            count: () => { console.count(param) },
-            group: () => { console.group(param) },
-            groupCollapsed: () => { console.groupCollapsed(param) },
-            groupEnd: () => { console.groupEnd(param) },
-            table: () => { console.table(param) },
-            time: () => { console.time(param) },
-            timeEnd: () => { console.timeEnd(param) },
-            trace: () => { console.trace(param) },
-        }
-        let print = command[type] || console.log;
-        if (TEST_CONTROL && DEBUG)
-            print(`[control.js]\n>>  ${ param}`);
+        const print = console[type] || console.log;
+        TEST_CONTROL && window.DEBUG && print(`[control.js]\n>>  ${ param}`);
     }
 
     //--------------------------------------------------------------
 
-    const MODE_RENJU = 0,
-        MODE_LOADIMG = 1,
-        MODE_LINE_EDIT = 2,
-        MODE_ARROW_EDIT = 3,
-        MODE_READ_TREE = 4,
-        MODE_READ_THREEPOINT = 5,
-        MODE_READ_FOULPOINT = 6,
-        MODE_RENLIB = 7,
-        MODE_READLIB = 8,
-        MODE_EDITLIB = 9,
-        MODE_RENJU_FREE = 10;
+    const MODE_RENJU = 0;
+    const MODE_LOADIMG = 1;
+    const MODE_LINE_EDIT = 2;
+    const MODE_ARROW_EDIT = 3;
+    const MODE_READ_TREE = 4;
+    const MODE_READ_THREEPOINT = 5;
+    const MODE_READ_FOULPOINT = 6;
+    const MODE_RENLIB = 7;
+    const MODE_READLIB = 8;
+    const MODE_EDITLIB = 9;
+    const MODE_RENJU_FREE = 10;
 
     let cBd,
         engine,
@@ -49,7 +32,7 @@ window.control = (() => {
 
     let playMode = MODE_RENJU;
     //let oldPlayMode = playMode;
-    let lbColor = [
+    const lbColor = [
         { "colName": "黑色标记", "color": "black" },
         { "colName": "红色标记", "color": "red" },
         { "colName": "蓝色标记", "color": "#3333ff" },
@@ -155,7 +138,6 @@ window.control = (() => {
 
 
     const lbTime = new function() {
-        this.prePostTimer = 0; //记录上次post事件时间，配合lbTime 监控后台是否停止
         this.div = document.createElement("div");
         this.startTime = 0;
         this.timer = null;
@@ -177,13 +159,8 @@ window.control = (() => {
             this.div.innerHTML = "00:00:00"
             let lbDiv = this.div;
             let sTime = this.startTime;
-            this.prePostTimer = this.startTime;
             this.timer = setInterval(function() {
                 let t = new Date().getTime();
-                if (t - this.prePostTimer > 180000) {
-                    sTime = sTime + t - this.prePostTimer;
-                    this.prePostTimer = t;
-                }
                 t -= sTime;
                 let h = ~~(t / 3600000);
                 h = h < 10 ? "0" + h : h;
@@ -193,51 +170,16 @@ window.control = (() => {
                 s = s < 10 ? "0" + s : s;
                 lbDiv.innerHTML = `${h}:${m}:${s}`;
             }, 1000);
-        };
+        }
         this.close = function() {
             if (this.div.parentNode) this.div.parentNode.removeChild(this.div);
             clearInterval(this.timer);
-        };
-        this.setPrePostTimer = function(time) {
-            this.prePostTimer = this.prePostTimer < time ? time : this.prePostTimer;
-        };
-    };
-
-    function setBlockUnload() {
-        function enable() {
-            window.onbeforeunload = function(e) {
-                e = e || window.event;
-                // 兼容IE8和Firefox 4之前的版本
-                if (e) {
-                    e.returnValue = '离开提示';
-                }
-                // Chrome, Safari, Firefox 4+, Opera 12+ , IE 9+
-                return '离开提示';
-            }
-            log("blockUnload: enable", "info");
         }
+    }
 
-        function disable() {
-            window.onbeforeunload = null;
-            log("blockUnload: disable", "info");
-        }
-
-        setTimeout(function() {
-            if (isBusy(false)) {
-                enable();
-            }
-            else {
-                switch (playMode) {
-                    case MODE_RENLIB:
-                    case MODE_READLIB:
-                    case MODE_EDITLIB:
-                        enable();
-                        break;
-                    default:
-                        disable();
-                }
-            }
-        }, 0)
+    function _setBlockUnload() {
+        const enable = isBusy(false) || [MODE_RENLIB, MODE_READLIB, MODE_EDITLIB].indexOf(playMode) + 1
+        setBlockUnload(enable);
     }
 
     function setRadio(buttons = [], callback = () => {}) {
@@ -461,27 +403,27 @@ window.control = (() => {
 
     function createContextMenu(left, top, width, height = cWidth * 0.8, fontSize) {
         let p = { x: 0, y: 0 };
-        cBd.xyObjToPage(p, cBd.viewBox);
+        xyObjToPage(p, cBd.viewBox);
         left = p.x + (parseInt(cBd.viewBox.style.width) - width) / 2;
         cMenu = createMenu(left, top, width, height, fontSize, [
-            0, "设置",
-            1, "打开",
-            2, `保存`,
-            3, `${EMOJI_SEARCH} 找点`,
-            4, `${EMOJI_QUESTION} 解题`,
-            5, "新棋局",
-            6, "添加标记",
-            7, "清空标记",
-            8, "分享图片",
-            9, "分享原图",
-            10, `下手为${EMOJI_ROUND_ONE}`,
-            11, "重置手数",
-            12, "显示手数",
-            13, "隐藏手数",
-            14, "输入代码",
-            15, "输出代码",
-            16, `🔄 刷新页面`
-        ],
+                0, "设置",
+                1, "打开",
+                2, `保存`,
+                3, `${EMOJI_SEARCH} 找点`,
+                4, `${EMOJI_QUESTION} 解题`,
+                5, "新棋局",
+                6, "添加标记",
+                7, "清空标记",
+                8, "分享图片",
+                9, "分享原图",
+                10, `下手为${EMOJI_ROUND_ONE}`,
+                11, "重置手数",
+                12, "显示手数",
+                13, "隐藏手数",
+                14, "输入代码",
+                15, "输出代码",
+                16, `🔄 刷新页面`
+            ],
             function(but) {
                 if (isBusy()) return;
                 let idx = but.idx,
@@ -697,28 +639,25 @@ window.control = (() => {
         cInputcode.setColor("black");
         cInputcode.setText("输入代码");
 
-        function inputText(initStr = "") {
+        async function inputText(initStr = "") {
             let w = cBd.width * 0.8;
             let h = w;
             let l = (dw - w) / 2;
             let t = (dh - dw) / 4;
             t = t < 0 ? 1 : t;
-            return msg({
-                    text: initStr,
-                    type: "input",
-                    left: l,
-                    top: t,
-                    width: w,
-                    height: h,
-                    enterTXT: "输入代码",
-                    lineNum: 10
-                })
-                .then(({ inputStr }) => {
-                    return Promise.resolve(inputStr);
-                })
+            return (await msg({
+                text: initStr,
+                type: "input",
+                left: l,
+                top: t,
+                width: w,
+                height: h,
+                enterTXT: "输入代码",
+                lineNum: 10
+            })).inputStr
         }
 
-        function inputCode(initStr = "") {
+        async function inputCode(initStr = "") {
             inputText(initStr)
                 .then(inputStr => {
                     let type = (playMode == MODE_READLIB || playMode == MODE_EDITLIB) ? TYPE_NUMBER : undefined;
@@ -814,7 +753,7 @@ window.control = (() => {
             cBd.drawLineEnd();
             let file = fileInput.files[0];
             fileInput.value = "";
-            RenjuLib.openLib(file);
+            RenjuLib.openLib(file)
         }
 
         cCutImage = new Button(renjuCmddiv, "select", 0, 0, w, h);
@@ -1674,7 +1613,7 @@ window.control = (() => {
                 DefaultButtons = [];
 
             p = { x: cBd.viewBox.offsetLeft, y: cBd.viewBox.offsetTop };
-            cBd.xyObjToPage(p, cBd.viewBox);
+            xyObjToPage(p, cBd.viewBox);
             cBdLeft = p.x;
             cBdTop = p.y;
 
@@ -1812,7 +1751,7 @@ window.control = (() => {
                     defaultButtons = settings.defaultButtons,
                     buttonsIdx = settings.ButtonsIdx[settings.idx],
                     p = { x: renjuCmddiv.offsetLeft, y: renjuCmddiv.offsetTop };
-                cBd.xyObjToPage(p, renjuCmddiv.parentNode);
+                xyObjToPage(p, renjuCmddiv.parentNode);
                 let paddingLeft = p.x - cBdLeft,
                     paddingTop = ~~(CLOSE_BUTTON.offsetTop + parseInt(CLOSE_BUTTON.style.height) * 1.5);
                 settingsKey = key;
@@ -1838,96 +1777,109 @@ window.control = (() => {
             }
         })();
 
-        window.exWindow = (() => {
-    "use strict";
-    const d = document;
-    const dw = d.documentElement.clientWidth;
-    const dh = d.documentElement.clientHeight;
-    const winWidth = 980;
-    const winHeight = winWidth * dh / dw;
-    const scale = dw / 980;
 
-    const EX_WINDOW = document.createElement("div");
+        let p = { x: 0, y: 0 };
+        xyObjToPage(p, renjuCmddiv);
+        
+        const FONT_SIZE = sw / 28;
+        const EX_WINDOW_LEFT = parseInt(renjuCmdSettings.positions[8].left) + p.x;
+        const EX_WINDOW_TOP = parseInt(renjuCmdSettings.positions[8].top) + p.y;
+        const EX_WINDOW_WIDTH = w * 5;
+        const EX_WINDOW_HEIGHT = h * 1.5 * 7 + h;
+        try{window.exWindow.setStyle(EX_WINDOW_LEFT, EX_WINDOW_TOP, EX_WINDOW_WIDTH, EX_WINDOW_HEIGHT, FONT_SIZE);
+        }catch(e){alert(e.stack)}
+        
+        /*window.exWindow = (() => {
+            "use strict";
+            const d = document;
+            const dw = d.documentElement.clientWidth;
+            const dh = d.documentElement.clientHeight;
+            const winWidth = 980;
+            const winHeight = winWidth * dh / dw;
+            const scale = dw / 980;
 
-    const IFRAME = document.createElement("div");
-    IFRAME.setAttribute("id", "exWindow");
-    EX_WINDOW.appendChild(IFRAME);
+            const EX_WINDOW = document.createElement("div");
 
-    const CLOSE_BUTTON = document.createElement("img");
-    CLOSE_BUTTON.src = "./pic/close.svg";
-    //CLOSE_BUTTON.setAttribute("class", "button");
-    CLOSE_BUTTON.oncontextmenu = (event) => {
-        event.preventDefault();
-    }
-    setButtonClick(CLOSE_BUTTON, closeWindow);
-    EX_WINDOW.appendChild(CLOSE_BUTTON);
+            const IFRAME = document.createElement("div");
+            IFRAME.setAttribute("id", "exWindow");
+            EX_WINDOW.appendChild(IFRAME);
 
-    let p = { x: 0, y: 0 };
-    cBd.xyObjToPage(p, renjuCmddiv);
+            const CLOSE_BUTTON = document.createElement("img");
+            CLOSE_BUTTON.src = "./pic/close.svg";
+            //CLOSE_BUTTON.setAttribute("class", "button");
+            CLOSE_BUTTON.oncontextmenu = (event) => {
+                event.preventDefault();
+            }
+            setButtonClick(CLOSE_BUTTON, closeWindow);
+            EX_WINDOW.appendChild(CLOSE_BUTTON);
 
-    const FONT_SIZE = sw / 28 + "px";
-    const EX_WINDOW_LEFT = parseInt(renjuCmdSettings.positions[8].left) + p.x + "px";
-    const EX_WINDOW_TOP = parseInt(renjuCmdSettings.positions[8].top) + p.y + "px";
-    const EX_WINDOW_WIDTH = w * 5 - parseInt(FONT_SIZE) * 2 + "px";
-    const EX_WINDOW_HEIGHT = h * 1.5 * 7 + h + "px";
+            let p = { x: 0, y: 0 };
+            xyObjToPage(p, renjuCmddiv);
 
-    function resetStyle() {
+            const FONT_SIZE = sw / 28 + "px";
+            const EX_WINDOW_LEFT = parseInt(renjuCmdSettings.positions[8].left) + p.x + "px";
+            const EX_WINDOW_TOP = parseInt(renjuCmdSettings.positions[8].top) + p.y + "px";
+            const EX_WINDOW_WIDTH = w * 5 + "px";
+            const EX_WINDOW_HEIGHT = h * 1.5 * 7 + h + "px";
 
-        let s = EX_WINDOW.style;
-        s.position = "absolute";
-        s.left = EX_WINDOW_LEFT;
-        s.top = EX_WINDOW_TOP;
-        s.width = EX_WINDOW_WIDTH;
-        s.height = EX_WINDOW_HEIGHT;
-        s.zIndex = 9999;
+            function resetStyle() {
 
-        s = IFRAME.style;
-        s.position = "absolute";
-        s.left = 0;
-        s.top = 0;
-        s.width = EX_WINDOW_WIDTH;
-        s.height = EX_WINDOW_HEIGHT;
-        s.fontSize = FONT_SIZE;
-        s.borderStyle = "solid";
-        s.borderWidth = `${sw/260}px`;
-        s.borderColor = "black";
-        s.background = "white";
-        s.fontWeight = "normal";
-        s.padding = `${0} ${FONT_SIZE} ${0} ${FONT_SIZE}`;
+                let s = EX_WINDOW.style;
+                s.position = "absolute";
+                s.left = EX_WINDOW_LEFT;
+                s.top = EX_WINDOW_TOP;
+                s.width = EX_WINDOW_WIDTH;
+                s.height = EX_WINDOW_HEIGHT;
+                s.zIndex = 9999;
 
-        s = CLOSE_BUTTON.style;
-        let sz = parseInt(EX_WINDOW_WIDTH) / 10 + "px";
-        s.position = "absolute";
-        s.left = (parseInt(EX_WINDOW_WIDTH) - parseInt(sz)) / 2 + "px";
-        s.top = "0px";
-        s.width = sz;
-        s.height = sz;
-        s.opacity = "0.5";
-        s.backgroundColor = "#c0c0c0";
-    }
+                s = IFRAME.style;
+                s.position = "absolute";
+                s.left = 0;
+                s.top = 0;
+                s.width = parseInt(EX_WINDOW_WIDTH) - parseInt(FONT_SIZE) * 2 + "px";
+                s.height = EX_WINDOW_HEIGHT;
+                s.fontSize = FONT_SIZE;
+                s.borderStyle = "solid";
+                s.borderWidth = `${sw/260}px`;
+                s.borderColor = "black";
+                s.background = "white";
+                s.fontWeight = "normal";
+                s.padding = `${0} ${FONT_SIZE} ${0} ${FONT_SIZE}`;
+                
+                s = CLOSE_BUTTON.style;
+                let sz = parseInt(EX_WINDOW_WIDTH) / 10 + "px";
+                s.position = "absolute";
+                s.left = (parseInt(EX_WINDOW_WIDTH) - parseInt(sz)) / 2 + "px";
+                s.top = "0px";
+                s.width = sz;
+                s.height = sz;
+                s.opacity = "0.5";
+                s.backgroundColor = "#c0c0c0";
+            }
 
-    function openWindow() {
-        if (EX_WINDOW.parentNode) return;
-        resetStyle();
-        EX_WINDOW.setAttribute("class", "showEXWindow");
-        document.body.appendChild(EX_WINDOW); //插入body内，保证a标签可以工作。因为renjuCmddiv.parentNode屏蔽了浏览器触摸click
-    }
+            function openWindow() {
+                if (EX_WINDOW.parentNode) return;
+                resetStyle();
+                EX_WINDOW.setAttribute("class", "showEXWindow");
+                document.body.appendChild(EX_WINDOW); //插入body内，保证a标签可以工作。因为renjuCmddiv.parentNode屏蔽了浏览器触摸click
+            }
 
-    function closeWindow() {
-        IFRAME.innerHTML = "";
-        EX_WINDOW.setAttribute("class", "hideEXWindow");
-        if (EX_WINDOW.parentNode) setTimeout(() => EX_WINDOW.parentNode.removeChild(EX_WINDOW), 350);
-    }
+            function closeWindow() {
+                IFRAME.innerHTML = "";
+                EX_WINDOW.setAttribute("class", "hideEXWindow");
+                if (EX_WINDOW.parentNode) setTimeout(() => EX_WINDOW.parentNode.removeChild(EX_WINDOW), 350);
+            }
 
-    function setHTML(iHtml) {
-        IFRAME.innerHTML = iHtml;
-    }
-    return {
-        get innerHTML() {return setHTML},
-        get open() {return openWindow},
-        get close() {return closeWindow}
-    }
-})()
+            function setHTML(iHtml) {
+                IFRAME.innerHTML = iHtml;
+            }
+            return {
+                get innerHTML() { return setHTML },
+                get open() { return openWindow },
+                get close() { return closeWindow }
+            }
+        })()
+        */
 
 
 
@@ -2927,7 +2879,7 @@ window.control = (() => {
             setTimeout(() => cCancelFind.hide(), timeout);
             lbTime.close()
         }
-        setBlockUnload();
+        _setBlockUnload();
     }
 
     function getPlayMode() {
@@ -3007,7 +2959,7 @@ window.control = (() => {
                 cBd.stonechange();
                 break;
         }
-        setBlockUnload();
+        _setBlockUnload();
     }
 
 
