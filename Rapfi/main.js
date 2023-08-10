@@ -259,7 +259,7 @@
             addEvents();
             resetEXWindow();
             mainUI.viewport.resize();
-            log("你可以打开rapfi保存的db棋谱")
+            log("你可以打开Rapfi保存的db棋谱")
         } catch (e) { alert(e.stack) }
     })
 })()
