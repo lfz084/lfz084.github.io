@@ -1,15 +1,22 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2109.09";
+
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.00";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
     'use strict';
+    
+    const d = document;
+    const dw = d.documentElement.clientWidth;
+    const dh = d.documentElement.clientHeight;
 
     let isMsgShow = false; // =true 屏蔽 bodytouch 事件;
     let msgWindow = (() => {
         const TYPE_MSG = 1;
         const TYPE_INPUT = 2;
+        
+        const scale = Math.min(dw,dh )/ 980;
+        
         let closeTimer = null;
-
 
         // 创建一个屏蔽层
         let MsgBoxobj = document.createElement("div");
@@ -18,12 +25,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2109.09";
         let windowDiv = document.createElement("div");
         MsgBoxobj.appendChild(windowDiv);
         windowDiv.style.position = "relative";
-
+        windowDiv.style.transform = `scale(${scale})`;
+        
         // 文本框
         let msgTextarea = document.createElement("textarea");
         windowDiv.appendChild(msgTextarea);
         msgTextarea.style.position = "relative";
         msgTextarea.style.fontFamily = "mHeiTi";
+        
         /*
         msgTextarea.oninput = function(event){
           //alert(event.keyCode);
@@ -173,16 +182,25 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2109.09";
                 }, ANIMATION_TIMEOUT);
             }, timeout);
         }
+        
+        function msgScale(scl) {
+            //windowDiv.style.transformOrigin = `0px 0px`;
+            windowDiv.style.transform = `scale(${scl})`;
+        }
 
 
         return {
             "msg": msg,
             "closeMsg": closeMsg,
+            "msgScale": msgScale
         }
     })();
+    
 
     exports.MSG_ENTER = 1;
     exports.MSG_CANCEL = -1;
+
+    exports.msgScale = msgWindow.msgScale;
 
     exports.msg = function msg(text, type = `msgbox`, left, top, width, height, enterTXT, cancelTXT, callEnter = () => {}, callCancel = () => {}, butNum, lineNum, textAlign) {
         if (typeof text == "object") {

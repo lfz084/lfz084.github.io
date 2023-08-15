@@ -1,19 +1,96 @@
 "use strict";
+//-------------------- rotate -------------------------
 
-/// DBLabel represents a one-byte tag that attached to a node in the game DAG.
-const LABEL_NULL = 0; /// Null record, default constructed, only stores key in database
-const LABEL_NONE = 0xFF //c++ = -1; /// Undetermined result
+function rotate90(centerX, centerY, _x, _y) {
+    let x = centerX - _x,
+        y = centerY - _y;
+    return (centerX + y) + (centerY - x) * 15;
+}
 
-const LABEL_RESULT_MARKS_BEGIN = 32;
+function reflectX(centerY, _x, _y) {
+    return _x + (centerY * 2 - _y) * 15;
+}
 
-const LABEL_FORCEMOVE = '!'.charCodeAt(); /// the forced move (will be used as root move if exist)
-const LABEL_WIN = 'w'.charCodeAt(); /// a winning position
-const LABEL_LOSE = 'l'.charCodeAt(); /// a losing position
-const LABEL_DRAW = 'd'.charCodeAt(); /// a draw position
-const LABEL_BLOCKMOVE = 'x'.charCodeAt(); /// a blocked position (will not be considered in search)
+function rotatePosstion(w, h, posstion) {
+    const nPosstion = new Array(225).fill(0);
+    for (let i = 0; i < 225; i++) {
+        if (posstion[i]) {
+            const idx = rotate90((w - 1) / 2, (h - 1) / 2, i % 15, ~~(i / 15))
+            nPosstion[idx] = posstion[i];
+        }
+    }
+    return nPosstion;
+}
 
-const LABEL_RESULT_MARKS_END = 127;
+function reflectPosstion(w, h, posstion) {
+    const nPosstion = new Array(225).fill(0);
+    for (let i = 0; i < 225; i++) {
+        if (posstion[i]) {
+            const idx = reflectX((h - 1) / 2, i % 15, ~~(i / 15))
+            nPosstion[idx] = posstion[i];
+        }
+    }
+    return nPosstion;
+}
 
+//------------------------- getStones --------------------------
+
+function getStones(posstion, sideToMove) {
+    let blackIndex = 0;
+    let whiteIndex = 0;
+    const blackStones = [];
+    const whiteStones = [];
+    for (let x = 0; x < 15; x++) {
+        for (let y = 0; y < 15; y++) {
+            const idx = x + y * 15;
+            if (posstion[idx] == 1) {
+                blackStones[blackIndex++] = x;
+                blackStones[blackIndex++] = y;
+            }
+            else if (posstion[idx] == 2) {
+                whiteStones[whiteIndex++] = x;
+                whiteStones[whiteIndex++] = y;
+            }
+        }
+    }
+    const numBlackStones = blackStones.length >>> 1;
+    const numWhiteStones = whiteStones.length >>> 1;
+    const side = numBlackStones - numWhiteStones;
+    if (side < sideToMove) { //add passMove
+        for (let i = side; i < sideToMove; i++) {
+            blackStones.push(0xFF, 0xFF);
+        }
+    }
+    else if (side > sideToMove) {
+        for (let i = side; i > sideToMove; i--) {
+            whiteStones.push(0xFF, 0xFF);
+        }
+    }
+    
+    return blackStones.concat(whiteStones);
+}
+
+function compareStone(lx, ly, rx, ry) {
+    return (lx * 32 + ly) - (rx * 32 + ry);
+}
+
+function compareStones(lStones, rStones, numCompare = lStones.length, sIndex = 0) {
+    for (let i = 0; i < numCompare; i += 2) {
+        const diff = compareStone(lStones[sIndex + i], lStones[sIndex + i + 1], rStones[sIndex + i], rStones[sIndex + i + 1]);
+        if (diff == 0) continue;
+        else return diff;
+    }
+    return 0;
+}
+
+function smallStones(lStones, rStones) {
+    const diff = compareStones(lStones, rStones);
+    return diff <= 0 ? lStones : rStones;
+}
+
+//---------------------- CompactDBKey -------------------
+
+/*
 class CompactDBKey {
     constructor(rule, boardWidth, boardHeight, sideToMove, numBlackStones, numWhiteStones, stones) {
         this.uint8 = new Uint8Array([rule, boardWidth, boardHeight, sideToMove, numBlackStones, numWhiteStones].concat(...stones)); //(stones.length + 6);
@@ -47,7 +124,7 @@ CompactDBKey.prototype.blackStonesEnd = function() { return 6 + this.uint8[4] };
 CompactDBKey.prototype.whiteStonesBegin = function() { return 6 + this.uint8[4] };
 CompactDBKey.prototype.whiteStonesEnd = function() { return 6 + this.uint8[4] + this.uint8[5] };
 
-/*
+
 class DBKey extends CompactDBKey{
     constructor(rule, boardWidth, boardHeight, sideToMove, numBlackStones, numWhiteStones, stones) {
         super(rule, boardWidth, boardHeight, sideToMove, numBlackStones, numWhiteStones, stones);
@@ -56,8 +133,73 @@ class DBKey extends CompactDBKey{
 */
 
 
+function constructDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {
+    let small = [0xFFFF, 0xFFFF];
+    for (let i = 0; i < 8; i++) {
+        if (i == 4) {
+            posstion = reflectPosstion(boardWidth, boardHeight, posstion);
+        }
+        else if (i) { // 1,2,3,5,6,7
+            posstion = rotatePosstion(boardWidth, boardHeight, posstion);
+        }
+        const stones = getStones(posstion, sideToMove);
+        small = smallStones(stones, small);
+    }
+    const numKeyBytes = 3 + small.length;
+    const keyArray = [numKeyBytes & 0xFF, numKeyBytes >>> 8, rule, boardWidth, boardHeight].concat(small);
+    return keyArray;
+}
+
+/// The three-way comparator of two database key.
+/// DBKey is sorted using an "ascending" lexicographical order, in the following:
+///     1. rule
+///     2. board width
+///     3. board height
+///     4. stone positions
+///     5. side to move (black=0, white=1)
+/// @return Negative if lhs < rhs; 0 if lhs > rhs; Positive if lhs > rhs.
+
+function databaseKeyCompare(lUint8, rUint8) {
+    let diff = lUint8[2] - rUint8[2]; //rule
+    if (diff != 0) return diff;
+    diff = lUint8[3] - rUint8[3]; //board width
+    if (diff != 0) return diff;
+    diff = lUint8[4] - rUint8[4]; //board height
+    if (diff != 0) return diff;
+
+    const numBytesLhs = (lUint8[0] | lUint8[1] << 8) - 3;
+    const numBytesRhs = (rUint8[0] | rUint8[1] << 8) - 3;
+    const numCompare = Math.min(numBytesLhs, numBytesRhs);
+    if (numBytesLhs != numBytesRhs) return numBytesLhs - numBytesRhs;
+    diff = compareStones(lUint8, rUint8, numCompare, 5);
+    if (diff != 0) return diff;
+
+    const numBlackStonesL = ((numBytesLhs >>> 1) + 1) >>> 1;
+    const numWhiteStonesL = numBytesLhs >>> 1 >>> 1;
+    const sideToMoveL = numBlackStonesL == numWhiteStonesL ? Color.BLACK : Color.WHITE;
+
+    const numBlackStonesR = ((numBytesRhs >>> 1) + 1) >>> 1;
+    const numWhiteStonesR = numBytesRhs >>> 1 >>> 1;
+    const sideToMoveR = numBlackStonesR == numWhiteStonesR ? Color.BLACK : Color.WHITE;
+
+    return sideToMoveL - sideToMoveR;
+}
 
 
+//-------------------------- DBRecord -----------------------
+/// DBLabel represents a one-byte tag that attached to a node in the game DAG.
+const LABEL_NULL = 0; /// Null record, default constructed, only stores key in database
+const LABEL_NONE = 0xFF //c++ = -1; /// Undetermined result
+
+const LABEL_RESULT_MARKS_BEGIN = 32;
+
+const LABEL_FORCEMOVE = '!'.charCodeAt(); /// the forced move (will be used as root move if exist)
+const LABEL_WIN = 'w'.charCodeAt(); /// a winning position
+const LABEL_LOSE = 'l'.charCodeAt(); /// a losing position
+const LABEL_DRAW = 'd'.charCodeAt(); /// a draw position
+const LABEL_BLOCKMOVE = 'x'.charCodeAt(); /// a blocked position (will not be considered in search)
+
+const LABEL_RESULT_MARKS_END = 127;
 
 /// DBRecordMask specify what parts of a record are selected.
 const RECORD_MASK_NONE = 0x0;
@@ -75,7 +217,7 @@ const RECORD_MASK_ALL = RECORD_MASK_LVDB | RECORD_MASK_TEXT;
 //this.text       // utf-8 text message (string ending with '\0', (n3 - 5) bytes, optional)
 
 class DBRecord {
-    constructor(buf, encoding) {
+    constructor(buf) {
         this.uint8 = new Uint8Array(buf)
     }
 

@@ -1,8 +1,8 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2109.09";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2110.00";
 window.RenjuLib = (() => {
     "use strict";
     //console.log(exports);
-    const TEST_RENLIB = true;
+    const TEST_RENLIB = false;
 
     function log(param, type = "log") {
         const  print = console[type] || console.log;

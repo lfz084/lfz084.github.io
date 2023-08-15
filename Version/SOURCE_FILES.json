@@ -63,6 +63,7 @@
     "loadApp": "script/loadApp.js",
     "loadFile": "script/loadFile.js",
     "mainUI": "script/mainUI.js",
+    "maxBuffer": "script/maxBuffer.js",
     "msgbox": "script/msgbox.js",
     "RenjuTree": "script/RenjuTree.js",
     "saveFile_js": "script/saveFile.js",

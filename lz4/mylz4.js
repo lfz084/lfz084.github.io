@@ -562,7 +562,7 @@
     };
 
     // Decompresses a frame of Lz4 data.
-    exports.lz4.decompressFrame = function decompressFrame(src, dst) {
+    exports.lz4.decompressFrame = function decompressFrame(src, dst, callback) {
         var useBlockSum, useContentSum, useContentSize, descriptor;
         var sIndex = 0;
         var dIndex = 0;
@@ -602,7 +602,7 @@
         sIndex++;
 
         // Read blocks.
-        while (true) {
+        lineExit: while (true) {
             var compSize;
 
             compSize = readU32(src, sIndex);
@@ -624,13 +624,16 @@
 
                 // Copy uncompressed data into destination buffer.
                 for (var j = 0; j < compSize; j++) {
+                    if (sIndex >= dst.length) break lineExit;
                     dst[dIndex++] = src[sIndex++];
                 }
             } else {
                 // Decompress into blockBuf
+                if((compSize + dIndex) > dst.length) break lineExit;
                 dIndex = exports.lz4.decompressBlock(src, dst, sIndex, compSize, dIndex);
                 sIndex += compSize;
             }
+            callback && callback(dIndex);
         }
 
         if (useContentSum) {
@@ -708,17 +711,18 @@
     // buffer returned will always be perfectly-sized.
     exports.lz4.decompress = function decompress(src, maxSize) {
         var dst, size;
-
+        
         if (maxSize === undefined) {
             maxSize = exports.lz4.decompressBound(src);
         }
+        
         dst = exports.lz4.makeBuffer(maxSize);
         size = exports.lz4.decompressFrame(src, dst);
-
+    
         if (size !== maxSize) {
             dst = sliceArray(dst, 0, size);
         }
-
+        
         return dst;
     };
 

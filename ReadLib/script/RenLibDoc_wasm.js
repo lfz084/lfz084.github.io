@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2109.09";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2110.00";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -365,7 +365,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2109.09";
                 _Z7loadingjj: function(current, end) {
                     post("loading", { current: current, end: end });
                 },
-                _Z11memoryBoundv: ()=>{
+                _Z11memoryBoundv: () => {
                     post("alert", `请使用64位浏览器获得更大的内存\n当前浏览器内存只能打开 ${parseInt((jFile.m_current / jFile.m_end)*10000)/100}% 棋谱`);
                 },
                 _Z14outputSGFCachePcj: outputSGFCache,

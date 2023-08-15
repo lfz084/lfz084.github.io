@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.09";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.00";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -1039,7 +1039,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.09";
         }
         else {
             txt = this.P[idx].text || "";
-            radius = this.P[idx].bkColor || this.P[idx].type == TYPE_MARKFOUL ? w : txt.length > 1 ? w * 0.8 : w / 2;
+            radius = this.P[idx].type == TYPE_MARKFOUL ? w : txt.length > 1 ? w * 0.8 : w / 2;
             if (txt.length == 1) { // 两位数数数字不需要放大字体
                 let code = txt.charCodeAt(); // 再把一位数字排除
                 if (code < "0".charCodeAt() || code > "9".charCodeAt()) {
@@ -1057,8 +1057,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2109.09";
                     }
                 }
             }
-            else if (txt.length == 3) {
-                fontSize = ~~(w * 0.9);
+            else if (txt.length >= 4) {
+                fontSize = ~~(w * 2.7 / txt.split(".").join("").length);
+                radius = w * 1.18;
             }
             pointInfo = {
                 circle: {
