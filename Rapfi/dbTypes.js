@@ -1,4 +1,43 @@
 "use strict";
+
+const ACTUAL_BOARD_SIZE = 15;
+
+/// Rule is the fundamental rule of the game
+const Rule = {
+    FREESTYLE: 0,
+    STANDARD: 1,
+    RENJU: 2,
+    RULE_NB: 3
+};
+
+const Color = {
+    BLACK: 0,
+    WHITE: 1,
+    WALL: 2,
+    EMPTY: 3,
+    COLOR_NB: 4, // Total number of color on board
+    SIDE_NB: 2 // Two side of stones (Black and White)
+};
+
+// Integer value that representing the result of a search
+const Value = {
+    VALUE_ZERO: 0,
+    VALUE_DRAW: 0,
+    VALUE_MATE: 30000,
+    VALUE_INFINITE: 30001,
+    VALUE_NONE: -30002,
+    VALUE_BLOCKED: -30003,
+
+    VALUE_MATE_IN_MAX_PLY: 30000 - 500,
+    VALUE_MATED_IN_MAX_PLY: -30000 + 500,
+    VALUE_MATE_FROM_DATABASE: 30000 - 500,
+    VALUE_MATED_FROM_DATABASE: -30000 + 500,
+
+    VALUE_EVAL_MAX: 20000,
+    VALUE_EVAL_MIN: -20000
+};
+
+
 //-------------------- rotate -------------------------
 
 function rotate90(centerX, centerY, _x, _y) {
@@ -131,6 +170,22 @@ class DBKey extends CompactDBKey{
     }
 }
 */
+
+function constructAllDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {
+    const Keys = [];
+    for (let i = 0; i < 8; i++) {
+        if (i == 4) {
+            posstion = reflectPosstion(boardWidth, boardHeight, posstion);
+        }
+        else if (i) { // 1,2,3,5,6,7
+            posstion = rotatePosstion(boardWidth, boardHeight, posstion);
+        }
+        const stones = getStones(posstion, sideToMove);
+        const numKeyBytes = 3 + stones.length;
+        Keys[i] = [numKeyBytes & 0xFF, numKeyBytes >>> 8, rule, boardWidth, boardHeight].concat(stones);
+    }
+    return Keys;
+}
 
 
 function constructDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {

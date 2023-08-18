@@ -3,7 +3,7 @@
     const d = document;
     const dw = d.documentElement.clientWidth;
     const dh = d.documentElement.clientHeight;
-    
+
     const DBREAD_HELP = `DB阅读器使用技巧<br>1.点击棋子悔棋<br>2.双击棋子悔到双击的那一手<br>3.长按棋盘放大缩、小棋盘<br>4.棋谱注解乱码可以选择gbk以外的编码<br>5.棋谱规则和棋盘大小需要设置正确才能正常显示`
 
     //-----------------------------------------------------------------------
@@ -74,14 +74,14 @@
             type: "button",
             text: "保存图片",
             touchend: async function() {
-                 game.saveAsImage();
+                game.saveAsImage();
             }
         },
         {
             type: "button",
             text: "清空标记",
             touchend: async function() {
-                 game.cleLabel();
+                game.cleLabel();
             }
         },
         {
@@ -102,12 +102,12 @@
             type: "button",
             text: "输出代码",
             touchend: async function() {
-                try{
-                 game.outCode();
-                }catch(e){alert(e.stack)}
+                try {
+                    game.outCode();
+                } catch (e) { alert(e.stack) }
             }
         },
-        
+
         {
             type: "button",
             text: "重置手数",
@@ -146,16 +146,17 @@
     ];
 
     buttonSettings.splice(0, 0, createLogDiv(), null, null, null);
-    buttonSettings.splice(8, 0,createCommentDiv(), null);
-    buttonSettings.splice(12, 0,null, null);
-    buttonSettings.splice(16, 0,null, null);
-    buttonSettings.splice(20, 0,null, null);
-    buttonSettings.splice(24, 0,null, null);
-    buttonSettings.splice(28, 0,null, null);
-    buttonSettings.splice(32, 0,null, null);
+    buttonSettings.splice(8, 0, createCommentDiv(), null);
+    buttonSettings.splice(12, 0, null, null);
+    buttonSettings.splice(16, 0, null, null);
+    buttonSettings.splice(20, 0, null, null);
+    buttonSettings.splice(24, 0, null, null);
+    buttonSettings.splice(28, 0, null, null);
+    buttonSettings.splice(32, 0, null, null);
     //dw > dh && buttonSettings.splice(0, 0, null, null, null, null);
 
-    function $(id) {return document.getElementById(id)};
+    function $(id) { return document.getElementById(id) };
+
     function log(text) { $("log").innerText = text }
 
     function createLogDiv() {
@@ -171,44 +172,44 @@
             }
         })
     }
-    
+
     function createCommentDiv() {
         return mainUI.createLogDiv({
             id: "comment",
             type: "div",
-            width: 8 ,
+            width: 8,
             height: 8
         })
     }
-    
+
     function resetCommentStyle() {
-        try{
-        const commentDiv = $("comment");
-        const left = 0;
-        const width = mainUI.buttonWidth * 2.33;
-        const height = mainUI.buttonHeight * 8.5;
-        const fontSize = mainUI.cmdWidth / 28;
-        
-        let s = commentDiv.style;
-        s.position = "absolute";
-        //s.left = left + "px";
-        s.width = width - fontSize + "px";
-        s.height = height - fontSize + "px";
-        
-        s.fontSize = fontSize + "px";
-        s.wordBreak = "break-all";
-        s.overflowY = "auto";
-        
-        s.borderStyle = "solid";
-        s.borderWidth = `${fontSize / 20}px`;
-        s.borderColor = "black";
-        s.background = "white";
-        s.fontWeight = "normal";
-        s.padding = `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`;
-        
-        
-        s.zIndex = 9999;
-        }catch(e){alert(e.stack)}
+        try {
+            const commentDiv = $("comment");
+            const left = 0;
+            const width = mainUI.buttonWidth * 2.33;
+            const height = mainUI.buttonHeight * 8.5;
+            const fontSize = mainUI.cmdWidth / 28;
+
+            let s = commentDiv.style;
+            s.position = "absolute";
+            //s.left = left + "px";
+            s.width = width - fontSize + "px";
+            s.height = height - fontSize + "px";
+
+            s.fontSize = fontSize + "px";
+            s.wordBreak = "break-all";
+            s.overflowY = "auto";
+
+            s.borderStyle = "solid";
+            s.borderWidth = `${fontSize / 20}px`;
+            s.borderColor = "black";
+            s.background = "white";
+            s.fontWeight = "normal";
+            s.padding = `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`;
+
+
+            s.zIndex = 9999;
+        } catch (e) { alert(e.stack) }
     }
 
     function createCmdDiv() {
@@ -231,29 +232,85 @@
     //------------------------ 
 
     let textDecoder = new TextDecoder("gbk");
+    let output = "";
 
-    function toWinPercentage(value) {
-        //const wp = parseInt(((value & 0x8000) ? value - 0x10000 : value) / 30000 * 10000) / 100;
-        const wp = parseInt(value / 0xFFFF * 10000) / 100;
-        const strWP = wp.toString().slice(0, wp < 0 ? 5 : 4) + "%";
-        return strWP;
+
+    /*
+    if (record.label > 0) {
+        displayLabel.push_back(record.label);
+    
+        if (record.label == LABEL_WIN || record.label == LABEL_LOSE) {
+            Value mateValue = Value(-record.value);
+            if (record.label == LABEL_WIN && mateValue > VALUE_MATE_IN_MAX_PLY ||
+                record.label == LABEL_LOSE && mateValue < VALUE_MATED_IN_MAX_PLY)
+                displayLabel += std::to_string(mate_step(mateValue, -1));
+            else
+                displayLabel.push_back('*');
+        }
+    }
+    else if (record.label == LABEL_NONE && record.bound() == BOUND_EXACT) {
+        float winRate = Config::valueToWinRate(Value(-record.value));
+        int winRateLabel = std::clamp(int(winRate * 100), 0, 99);
+    
+        displayLabel = std::to_string(winRateLabel);
+        displayLabel.push_back('%');
+    }
+    
+    
+    i
+    
+
+*/
+    function Uint16ToInt16(value) {
+        return value & 0x8000 ? value - 0x10000: value;
+    }
+
+    function clamp(min, v, max) {
+        return v < min ? min : v > max ? max : v;
+    }
+
+    function valueToWinRate(v) {
+        if (v >= Value.VALUE_MATE_IN_MAX_PLY)
+            return 1;
+        if (v <= Value.VALUE_MATED_IN_MAX_PLY)
+            return 0;
+        return 1 / (1 + Math.exp(-v * (1 / 200)));
+    }
+
+    /// Get number of steps to mate from value and current ply
+    function mate_step(v, ply) {
+        return Value.VALUE_MATE - ply - (v < 0 ? -v : v);
     }
 
     function readLabel(buffer) {
         const record = new DBRecord(buffer);
         const label = record.label;
-        const value = record.value;
+        const value = Uint16ToInt16(record.value);
         let sLabel = "";
-        if (record.isNull() || value == 0) sLabel = [EMOJI_ROUND_BLACK, EMOJI_ROUND][game.sideToMove];
-        else if (label > LABEL_RESULT_MARKS_BEGIN && label < LABEL_RESULT_MARKS_END)
-            sLabel = String.fromCharCode(label) + record.depth;
-        else {
-            sLabel = toWinPercentage(value);
+        if (0 < label && label < 0xFF) {
+            sLabel += String.fromCharCode(label);
+            if (label == LABEL_WIN || label == LABEL_LOSE) {
+                const mateValue = -value;
+                if (label == LABEL_WIN && mateValue > Value.VALUE_MATE_IN_MAX_PLY ||
+                    label == LABEL_LOSE && mateValue < Value.VALUE_MATED_IN_MAX_PLY)
+                    sLabel += mate_step(mateValue, -1).toString();
+                else
+                    sLabel += '*';
+            }
+            sLabel.length < 3 && (sLabel = "  ".slice(0,3 - sLabel.length) + sLabel);
         }
-
+        else if (label == LABEL_NONE && record.bound == 0b11) {
+            const winRate = valueToWinRate(-value);
+            const winRateLabel = parseInt(clamp(0, winRate * 100, 99)).toString();
+            sLabel = `${"  ".slice(0,2 - winRateLabel.length)}${winRateLabel}%`;
+        }
+        else {
+            sLabel = [EMOJI_ROUND_BLACK, EMOJI_ROUND][game.sideToMove];
+        }
+        output += `${sLabel}: ${label}, ${value}, ${record.depth}, ${record.bound}\n`
         return sLabel.toLocaleUpperCase();
     }
-    
+
     async function inputText(initStr = "") {
         let w = cBoard.width * 0.8;
         let h = w;
@@ -332,7 +389,7 @@
             inputText(code);
         },
         scaleBoard: function() {
-            const scale = cBoard.scale != 1 ? 1: 2;
+            const scale = cBoard.scale != 1 ? 1 : 2;
             cBoard.setScale(scale, true);
         },
         ctnBack: function(idx) { // 触发快速悔棋
@@ -376,11 +433,14 @@
                 }
                 else $("comment").innerHTML = DBREAD_HELP;
                 cBoard.cleLb("all");
+                output = "";
                 //alert(info.records);
                 info.records.map(record => {
                     const label = readLabel(record.buffer);
                     cBoard.wLb(record.idx, label, "black");
                 })
+                //inputText(output);
+
             } catch (e) { alert(e.stack) }
         },
 

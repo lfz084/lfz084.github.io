@@ -1,23 +1,5 @@
 "use strict";
-const ACTUAL_BOARD_SIZE = 15;
 
-/// Rule is the fundamental rule of the game
-const Rule = {
-    FREESTYLE: 0,
-    STANDARD: 1,
-    RENJU: 2,
-    RULE_NB: 3
-};
-
-
-const Color = {
-    BLACK: 0,
-    WHITE: 1,
-    WALL: 2,
-    EMPTY: 3,
-    COLOR_NB: 4, // Total number of color on board
-    SIDE_NB: 2 // Two side of stones (Black and White)
-};
 /*
 // Returns the opposite of a color (Black <-> White, Wall <-> Empty)
 constexpr Color operator~(Color p)
@@ -36,8 +18,9 @@ function load(ignoreCorrupted, callback = () => {}) {
     const numRecords = uint8[u8Index++] | uint8[u8Index++] << 8 | uint8[u8Index++] << 16 | uint8[u8Index++] << 24;
 
     let byteBuffer; // reserve initial space
-    
-    let compareBufferL = new Uint8Array([3,0,0,0,0,]);
+
+    let compareBufferL = new Uint8Array([3, 0, 0, 0, 0, ]);
+
 
     let maxNum = 0;
     let recordIdx;
@@ -53,18 +36,17 @@ function load(ignoreCorrupted, callback = () => {}) {
         const numKeyBytes = uint8[u8Index++] | uint8[u8Index++] << 8;
         if (numKeyBytes == 0)
             continue;
-        
+
         //----------- debug start -----------------------
         //----------- 测试 record 是否按 key 排除好------
-        
-        const compareBufferR = uint8.slice(u8Index-2, u8Index + numKeyBytes);
+
+        const compareBufferR = uint8.slice(u8Index - 2, u8Index + numKeyBytes);
         /*
         const diff = databaseKeyCompare(compareBufferL, compareBufferR);
-        if (diff <= 0) compareBufferL = compareBufferR;
-        else throw new Error(`db文件record记录的排序可能不对\ndiff = ${diff}\nL:[${compareBufferL}]\nR:[${compareBufferR}]`);
+        compareBufferL = compareBufferR;
         */
         //----------- debug end -------------------------
-        
+
         if (u8Index + numKeyBytes > u8IndexEnd) break;
         byteBuffer = uint8.slice(u8Index, u8Index += numKeyBytes);
 
@@ -131,14 +113,14 @@ function load(ignoreCorrupted, callback = () => {}) {
         const numRecordBytes = uint8[u8Index++] | uint8[u8Index++] << 8;
         if (u8Index + numRecordBytes > u8IndexEnd) break;
         byteBuffer = uint8.slice(u8Index, u8Index += numRecordBytes);
-        
+
         recordDB.map.set(compareBufferR.toString(), listValue);
-        
+
         /*
         list[listIndex++] = listValue;
         if (listIndex > listIndexEnd) break;
         */
-        
+
         /*
         if((recordIdx > 380 && recordIdx < 388)) {
             const cmpDBKey = new CompactDBKey(rule, boardXLen, boardYLen, sideToMove, numBlackStones, numWhiteStones, stones);
@@ -155,7 +137,6 @@ function load(ignoreCorrupted, callback = () => {}) {
         else if (newNum > maxNum) maxNum = newNum;
         if (recordIdx > 389) break;*/
     }
-
     return recordIdx / numRecords;
 }
 
@@ -178,7 +159,8 @@ async function openDatabass(file, callback) {
         let uint8 = new Uint8Array(await getArrBuf(file));
 
         const _islz4 = isLZ4(uint8);
-        const listBytes = getNumRecords(uint8) * 4;
+        const listBytes = 0; //getNumRecords(uint8);
+        //post("alert", listBytes*4 /1024/1024)
         const fileBytes = _islz4 ? lz4.decompressBound(uint8) : 0;
         callback(`申请内存......`) //
         const buffers = await getMaxBuffes(1, 0, listBytes, fileBytes);

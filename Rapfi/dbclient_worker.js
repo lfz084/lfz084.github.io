@@ -1,5 +1,5 @@
 "use strict"
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2110.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2110.01";
 
 if ("importScripts" in self) {
     self.importScripts(
@@ -114,14 +114,19 @@ function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, posstion}) {
         //alert(comment)
     }
 
-    forEveryEmpty(posstion, function(i) {
+    forEveryEmpty(posstion, function(idx) {
         const nPosstion = posstion.slice(0);
-        nPosstion[i] = sideToMove + 1;
-        const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosstion);
-        //alert(`i: ${i} \n ${sKey}`)
-        const recordBuffer = recordDB.get(sKey);
+        nPosstion[idx] = sideToMove + 1;
+        const sKeys = constructAllDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosstion);
+        let recordBuffer;
+        for (let i = 0; i < 8; i++) {
+            if (recordBuffer = recordDB.get(sKeys[i])) break;
+        }
+        //const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosstion);
+        //alert(`idx: ${idx} \n ${sKey}`)
+        //const recordBuffer = recordDB.get(sKey);
         if (recordBuffer) {
-            const record = {idx: i, buffer: recordBuffer};
+            const record = {idx: idx, buffer: recordBuffer};
             records.push(record);
         }
     })

@@ -44,7 +44,7 @@ function getBuffers(scl, freeBytes, ...byteBuffers) {
         const buf = freeBytes ? new Uint8Array(freeBytes) : null;
         
         const numByteBuffers = parseInt(scl * byteBuffers.reduce((a, c) => a + c, 0));
-        const numGrowPages = Math.max(0, parseInt((numByteBuffers - memory.buffer.byteLength) / (64 * 1024))) + 1;
+        const numGrowPages = byteBuffers.length + Math.max(0, parseInt((numByteBuffers - memory.buffer.byteLength) / (64 * 1024))) + 1;
         if (numGrowPages != grow(numGrowPages)) throw new Error("grow error");
 
         let start = 0;
@@ -54,7 +54,7 @@ function getBuffers(scl, freeBytes, ...byteBuffers) {
             const uint16 = new Uint16Array(memory.buffer, start, nBytes / 2);
             const uint32 = new Uint32Array(memory.buffer, start, nBytes / 4);
             uint32.fill(0);
-            start += nBytes + 2048;
+            start += nBytes + 64*1024;
             return { uint8, uint16, uint32 };
         })
         return buffers;

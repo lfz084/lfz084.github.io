@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.01";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -1057,9 +1057,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.00";
                     }
                 }
             }
-            else if (txt.length >= 4) {
+            else if (txt.length >= 3) {
                 fontSize = ~~(w * 2.7 / txt.split(".").join("").length);
-                radius = w * 1.18;
+                radius = txt.length > 3 ? w * 1.18 : radius;
             }
             pointInfo = {
                 circle: {
