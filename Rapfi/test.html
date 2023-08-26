@@ -26,11 +26,15 @@
         </div>
         <div id="status">
         </div>
-        <a id = "downlink"> </a>
+        <a id="downlink"> </a>
     </div>
-    <script> function $(id) {return document.getElementById(id)}</script>
-    <script>window.SCRIPT_VERSIONS = {};</script>
-    <script src = "../script/TextCoder.js"></script>
+    <script>
+        function $(id) { return document.getElementById(id) }
+    </script>
+    <script>
+        window.SCRIPT_VERSIONS = {};
+    </script>
+    <script src="../script/TextCoder.js"></script>
     <script src="../script/View.js"></script>
     <script src="../script/Button.js"></script>
     <script src="../script/msgbox.js"></script>
@@ -40,6 +44,7 @@
     <script src="./dbTypes.js"></script>
     <script src="./dbclient.js"></script>
     <script src="./databass.js"></script>
+    <script src="./simpleAVL.js"></script>
     <script>
         let d = document;
         let dw = 0; //网页可见宽度
@@ -51,81 +56,87 @@
 
         let viewport = new View(dw);
         viewport.resize();
-
+        function post(type,msg){alert(msg)}
         document.body.onload = () => {
-            window.loadAnimation = (() => {
-                let status = $("status");
-                return {
-                    open: () => {},
-                    close: () => { status.innerHTML = "" },
-                    text: (txt) => { status.innerHTML = txt }
+            try {
+                
+                $("downlink").innerHTML = AVL.test();
+                
+                return;
+                window.loadAnimation = (() => {
+                    let status = $("status");
+                    return {
+                        open: () => {},
+                        close: () => { status.innerHTML = "" },
+                        text: (txt) => { status.innerHTML = txt }
+                    }
+                })()
+
+                let div = $("w");
+                let s = div.style;
+                s.position = "absolute";
+                s.left = parseInt((dw - cWidth) / 2) + "px";
+                s.textAlign = "center";
+
+                div = $("title");
+                s = div.style;
+                s.position = "absolute";
+                s.left = "0px";
+                s.top = "0px";
+                s.width = cWidth + "px";
+                s.fontSize = "100px";
+
+                div = $("but");
+                s = div.style;
+                s.position = "absolute";
+                s.left = (cWidth - 300) / 2 + "px";
+                s.top = "150px";
+
+                let fileField = new Button(div, "file", 0, 0, 300, 100);
+                fileField.show();
+                fileField.setText("选择文件");
+                fileField.setonchange(async function() {
+                    try {
+                        let file = this.files[0],
+                            filename = (this.value).split("\\").pop();
+                        this.value = "";
+                        $("filename").innerHTML = filename;
+                        openDatabass(file);
+                    } catch (e) { alert(e.stack) }
+                });
+
+                div = $("filename");
+                s = div.style;
+                s.position = "absolute";
+                s.left = "0px";
+                s.top = "300px";
+                s.width = cWidth + "px";
+                s.fontSize = "50px";
+
+
+                div = $("status");
+                s = div.style;
+                s.position = "absolute";
+                s.left = "0px";
+                s.top = "450px";
+                s.width = cWidth + "px";
+                s.fontSize = "50px";
+
+                div = $("downlink");
+                s = div.style;
+                s.position = "absolute";
+                s.left = "0px";
+                s.top = "600px";
+                s.width = cWidth + "px";
+                s.fontSize = "50px";
+                div.onclick = function() {
+                    div.innerHTML = "";
+                    div.href && setTimeout(() => URL.revokeObjectURL(div.href), 1000 * 60);
                 }
-            })()
-
-            let div = $("w");
-            let s = div.style;
-            s.position = "absolute";
-            s.left = parseInt((dw - cWidth) / 2) + "px";
-            s.textAlign = "center";
-
-            div = $("title");
-            s = div.style;
-            s.position = "absolute";
-            s.left = "0px";
-            s.top = "0px";
-            s.width = cWidth + "px";
-            s.fontSize = "100px";
-
-            div = $("but");
-            s = div.style;
-            s.position = "absolute";
-            s.left = (cWidth-300)/2 + "px";
-            s.top = "150px";
-
-            let fileField = new Button(div, "file", 0, 0, 300, 100);
-            fileField.show();
-            fileField.setText("选择文件");
-            fileField.setonchange(async function() {
-                try{
-                let file = this.files[0],
-                    filename = (this.value).split("\\").pop();
-                this.value = "";
-                $("filename").innerHTML = filename;
-                openDatabass(file);
-                }catch(e){alert(e.stack)}
-            });
-
-            div = $("filename");
-            s = div.style;
-            s.position = "absolute";
-            s.left = "0px";
-            s.top = "300px";
-            s.width = cWidth + "px";
-            s.fontSize = "50px";
-
-
-            div = $("status");
-            s = div.style;
-            s.position = "absolute";
-            s.left = "0px";
-            s.top = "450px";
-            s.width = cWidth + "px";
-            s.fontSize = "50px";
-            
-            div = $("downlink");
-            s = div.style;
-            s.position = "absolute";
-            s.left = "0px";
-            s.top = "600px";
-            s.width = cWidth + "px";
-            s.fontSize = "50px";
-            div.onclick =  function() {
-                div.innerHTML = "";
-                div.href && setTimeout(() => URL.revokeObjectURL(div.href), 1000 * 60);
-            }
+            } catch (e) { alert(e.stack) }
         }
     </script>
-    
+
 </body>
 
 </html>

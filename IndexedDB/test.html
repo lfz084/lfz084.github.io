@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IndexedDB</title>
+
+    <script src="IndexedDB.js"></script>
+    <script src="../debug/vconsole.min.js"></script>
+</head>
+
+<body>
+    <script>
+        document.body.onload = async function() {
+            try {
+                vConsole = new VConsole()
+                //IndexedDB.test()
+                const db = await IndexedDB.open("test", 2, [{
+                    name: "test",
+                    optionalParameters: {
+                        keyPath: "id",
+                        autoIncrement: false
+                    }
+                }]);
+
+
+                for (let i = 0; i < 100; i++) {
+                    const dList = []
+                    for (let j = 0; j < 10000; j++) {
+                        dList.push({id: i*j, name: i*j})
+                    }
+                    await IndexedDB.putData("test", dList);
+                    console.log(i)
+                }
+                const data = await IndexedDB.getDataByKey("test", new Uint8Array([1, 2, 3]));
+                console.log(data)
+            } catch (e) { alert(e.stack) }
+        }
+    </script>
+
+</body>
+
+</html>

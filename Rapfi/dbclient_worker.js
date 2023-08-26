@@ -1,12 +1,14 @@
 "use strict"
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2110.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2110.02";
 
 if ("importScripts" in self) {
     self.importScripts(
         "../script/maxBuffer.js",
         "../lz4/mylz4.js",
         "./dbTypes.js",
-        "./databass.js"
+        "./databass.js",
+        "./hash.js",
+        "./simpleHashTable.js"
     );
 }
 else
@@ -38,62 +40,27 @@ async function getArrBuf(file) {
 var recordDB = {
     map: new Map(),
     fileBuffer: new ArrayBuffer(0),
-    listBuffer: new ArrayBuffer(0),
+    avlBuffer: new ArrayBuffer(0),
     get clear() {
         return function() {
             const fileBuffer = this.fileBuffer;
-            const listBuffer = this.listBuffer;
+            const avlBuffer = this.avlBuffer;
             if (fileBuffer.uint8) fileBuffer.uint8 = undefined;
             if (fileBuffer.uint16) fileBuffer.uint16 = undefined;
             if (fileBuffer.uint32) fileBuffer.uint32 = undefined;
-            if (listBuffer.uint8) listBuffer.uint8 = undefined;
-            if (listBuffer.uint16) listBuffer.uint16 = undefined;
-            if (listBuffer.uint32) listBuffer.uint32 = undefined;
+            if (avlBuffer.uint8) avlBuffer.uint8 = undefined;
+            if (avlBuffer.uint16) avlBuffer.uint16 = undefined;
+            if (avlBuffer.uint32) avlBuffer.uint32 = undefined;
         }
     },
     
     get(key) {
         const uint8 = this.fileBuffer.uint8;
-        const keyStart = this.map.get(key.toString());
+        const keyStart = this.map.get(key);
         if (keyStart > -1) {
-            const numKeyBytes = uint8[keyStart] | uint8[keyStart + 1] << 8;
-            const recordStart = keyStart + 2 + numKeyBytes;
-            const numRecordBytes = uint8[recordStart] | uint8[recordStart + 1] << 8;
-            return uint8.slice(recordStart + 2, recordStart + 2 + numRecordBytes);
+            return getRecordMessage(uint8, keyStart);
         }
     }
-    
-    /*
-    get search() {
-        return function(key) { //search keyStart indexBytes
-            const uint8 = this.fileBuffer.uint8;
-            const list = this.listBuffer.uint32;
-            const numCompareBytes = key.length;
-            let lIndex = 0;
-            let rIndex = list.length;
-            let count = 0;
-            while (lIndex <= rIndex && count++ < 0x20) {
-                const mIndex = lIndex + ((rIndex - lIndex) >>> 1);
-                const keyStart = list[mIndex];
-                const diff = databaseKeyCompare(key, uint8.slice(keyStart, keyStart + numCompareBytes));
-                if (diff == 0) return keyStart;
-                else if (diff < 0) rIndex = mIndex - 1;
-                else lIndex = mIndex + 1;
-            }
-            return -1;
-        }
-    },
-    get(key) {
-        const uint8 = this.fileBuffer.uint8;
-        const keyStart = this.search(key);
-        if (keyStart > -1) {
-            const numKeyBytes = uint8[keyStart] | uint8[keyStart + 1] << 8;
-            const recordStart = keyStart + 2 + numKeyBytes;
-            const numRecordBytes = uint8[recordStart] | uint8[recordStart + 1] << 8;
-            return uint8.slice(recordStart + 2, recordStart + 2 + numRecordBytes);
-        }
-    }
-    */
 };
 
 function forEveryEmpty(posstion, callback) {
@@ -117,14 +84,15 @@ function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, posstion}) {
     forEveryEmpty(posstion, function(idx) {
         const nPosstion = posstion.slice(0);
         nPosstion[idx] = sideToMove + 1;
+        /*
         const sKeys = constructAllDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosstion);
         let recordBuffer;
         for (let i = 0; i < 8; i++) {
             if (recordBuffer = recordDB.get(sKeys[i])) break;
         }
-        //const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosstion);
-        //alert(`idx: ${idx} \n ${sKey}`)
-        //const recordBuffer = recordDB.get(sKey);
+        */
+        const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosstion);
+        const recordBuffer = recordDB.get(sKey);
         if (recordBuffer) {
             const record = {idx: idx, buffer: recordBuffer};
             records.push(record);
@@ -151,11 +119,10 @@ const CMD = {
     getBranchNodes: function(param) {
         const cmd = "resolve";
         const parameter = getBranchNodes(param);
+        parameter.posstion = param.posstion;
         post(cmd, parameter);
     },
     close: function() {
-        recordDB.map && recordDB.map.clear();
-        recordDB.map = undefined;
         const cmd = "resolve";
         const parameter = undefined;
         post(cmd, parameter);

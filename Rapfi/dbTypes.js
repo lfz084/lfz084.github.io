@@ -110,6 +110,10 @@ function getStones(posstion, sideToMove) {
 }
 
 function compareStone(lx, ly, rx, ry) {
+    lx == 0xFF && (lx = -1);
+    ly == 0xFF && (ly = -1);
+    rx == 0xFF && (rx = -1);
+    ry == 0xFF && (ry = -1);
     return (lx * 32 + ly) - (rx * 32 + ry);
 }
 
@@ -215,13 +219,14 @@ function constructDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {
 /// @return Negative if lhs < rhs; 0 if lhs > rhs; Positive if lhs > rhs.
 
 function databaseKeyCompare(lUint8, rUint8) {
+    
     let diff = lUint8[2] - rUint8[2]; //rule
     if (diff != 0) return diff;
     diff = lUint8[3] - rUint8[3]; //board width
     if (diff != 0) return diff;
     diff = lUint8[4] - rUint8[4]; //board height
     if (diff != 0) return diff;
-
+    
     const numBytesLhs = (lUint8[0] | lUint8[1] << 8) - 3;
     const numBytesRhs = (rUint8[0] | rUint8[1] << 8) - 3;
     const numCompare = Math.min(numBytesLhs, numBytesRhs);
@@ -229,6 +234,7 @@ function databaseKeyCompare(lUint8, rUint8) {
     diff = compareStones(lUint8, rUint8, numCompare, 5);
     if (diff != 0) return diff;
 
+    
     const numBlackStonesL = ((numBytesLhs >>> 1) + 1) >>> 1;
     const numWhiteStonesL = numBytesLhs >>> 1 >>> 1;
     const sideToMoveL = numBlackStonesL == numWhiteStonesL ? Color.BLACK : Color.WHITE;
@@ -236,7 +242,7 @@ function databaseKeyCompare(lUint8, rUint8) {
     const numBlackStonesR = ((numBytesRhs >>> 1) + 1) >>> 1;
     const numWhiteStonesR = numBytesRhs >>> 1 >>> 1;
     const sideToMoveR = numBlackStonesR == numWhiteStonesR ? Color.BLACK : Color.WHITE;
-
+    
     return sideToMoveL - sideToMoveR;
 }
 

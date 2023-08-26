@@ -1,5 +1,5 @@
 window.SCRIPT_VERSIONS = [];
-self.SCRIPT_VERSIONS["renju"] = "v2110.01";
+self.SCRIPT_VERSIONS["renju"] = "v2110.02";
 (() => { // 按顺序加载应用
     "use strict";
     window.DEBUG = true;
