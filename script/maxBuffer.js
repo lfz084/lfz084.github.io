@@ -25,8 +25,6 @@ async function loadWASM(url) {
     } catch (e) { post("alert", e.stack) }
 }
 
-loadWASM("../script/maxBuffer.wasm");
-
 function grow(pages = 100) {
     try {
         memory.grow(pages);

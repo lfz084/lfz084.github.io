@@ -60,23 +60,13 @@ function loadTest_AVL(ignoreCorrupted, outputProgress = () => {}) {
 //-------------------- HashTable -------------------------
 
 function resetHashTable() {
-    //post("alert", Math.log2(HashTable.tableSize))
     const MOVE = 2;
-    const numAnd = (1 << MOVE) - 1;
+    const numAnd = HashTable.tableSize - 1;
     const nodeBuffer = recordDB.avlBuffer.uint32;
     const dataBuffer = recordDB.fileBuffer.uint8;
     HashTable.init(nodeBuffer, dataBuffer);
-    /*
     HashTable.toHash = function(key) {
-        let hash = 0;
-        for (let i = key.length - 6, j = Math.log2(HashTable.tableSize) / MOVE; i >= 0, j > 0; i--, j--) {
-            hash = hash << MOVE | (key[i] & numAnd);
-        }
-        return hash;
-    };
-    */
-    HashTable.toHash = function(key) {
-        return hash(0, key, 0, key.length) & 0xFFFFFF;
+        return hash(0, key, 0, key.length) & numAnd;
     };
     HashTable.toKey = function(ptr) {
         return getKeyBuffer(dataBuffer, ptr);
@@ -312,6 +302,7 @@ async function openDatabass(file, callback) {
 
         const fileBytes = _islz4 ? lz4.decompressBound(uint8) : 0;
         callback(`申请内存......`) //
+        await loadWASM("../script/maxBuffer.wasm");
         const buffers = await getMaxBuffes(1, 0, fileBytes, avlBytes);
 
         if (!buffers) return;

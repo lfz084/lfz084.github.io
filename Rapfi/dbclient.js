@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient"] = "v2110.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient"] = "v2110.03";
 window.DBClient = (() => {
     "use strict";
     //console.log(exports);
@@ -140,7 +140,7 @@ window.DBClient = (() => {
             if (enable) {
                 return await wk.promiseMessage({ cmd: "getBranchNodes", parameter: param });
             }
-            return {comment: undefined, records: []};
+            return {comment: undefined, records: [], posstion: param.posstion};
         }
     }
 })()
