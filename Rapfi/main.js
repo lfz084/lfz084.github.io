@@ -191,7 +191,7 @@
             const fontSize = mainUI.cmdWidth / 28;
 
             let s = commentDiv.style;
-            s.position = "absolute";
+            s.posstion = "absolute";
             //s.left = left + "px";
             s.width = width - fontSize + "px";
             s.height = height - fontSize + "px";
@@ -408,7 +408,7 @@
                     else if (v >= (1024 * 1024 * 1024)) {
                         log(`正在解压 ${parseInt(v / (1024 * 1024 * 1024) * 100) / 100}GB`);
                     }
-                    else if (v >= 512 * (1024 * 1024)) {
+                    else if (v >= 2 * (1024 * 1024)) {
                         log(`正在解压 ${parseInt(v / (1024 * 1024) * 100) / 100}MB`);
                     }
                 }
@@ -440,8 +440,12 @@
                     const label = readLabel(record.buffer);
                     cBoard.wLb(record.idx, label, "black");
                 })
+                game.rule == Rule.RENJU && game.sideToMove == 0 && info.posstion.map((v,i) => {
+                    if (v == 0 && isFoul(i, info.posstion)) {
+                        cBoard.wLb(i, EMOJI_FOUL, "red");
+                    }
+                })
                 //inputText(output);
-
             } catch (e) { alert(e.stack) }
         },
 

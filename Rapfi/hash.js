@@ -123,10 +123,12 @@ self.hash = function() {
       seed,
       seed - prime1
     ];
+    let s = "";
+    s += `${h.length} : ${h.map(v => v.toString(10))}\n`
 
             while (len >= 16) {
                 h = xxh16(h, src, index);
-
+                s += `${h.length} : ${h.map(v => v.toString(10))}\n`
                 index += 16;
                 len -= 16;
             }
@@ -156,4 +158,17 @@ self.hash = function() {
     }
 
     return xxh32;
+    return {
+        readU32,
+        imul,
+        rotl32,
+        rotmul32,
+        shiftxor32,
+        xxhapply,
+        xxh1,
+        xxh4,
+        xxh16,
+        xxh32,
+        readU32
+    };
 }()

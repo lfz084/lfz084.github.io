@@ -1,209 +1,403 @@
-const int ACTUAL_BOARD_SIZE = 15;
 
-/// Rule is the fundamental rule of the game
-enum Rule: int {
-    FREESTYLE: 0,
-    STANDARD: 1,
-    RENJU: 2,
-    RULE_NB: 3
-};
+typedef unsigned char BYTE;
+typedef unsigned int UINT;
+typedef long long LLNG; 
+typedef unsigned short DWORD;
 
-enum Color: int {
-    BLACK: 0,
-    WHITE: 1,
-    WALL: 2,
-    EMPTY: 3,
-    COLOR_NB: 4, // Total number of color on board
-    SIDE_NB: 2 // Two side of stones (Black and White)
-};
-
-// Integer value that representing the result of a search
-enum Value: int {
-    VALUE_ZERO: 0,
-    VALUE_DRAW: 0,
-    VALUE_MATE: 30000,
-    VALUE_INFINITE: 30001,
-    VALUE_NONE: -30002,
-    VALUE_BLOCKED: -30003,
-
-    VALUE_MATE_IN_MAX_PLY: 30000 - 500,
-    VALUE_MATED_IN_MAX_PLY: -30000 + 500,
-    VALUE_MATE_FROM_DATABASE: 30000 - 500,
-    VALUE_MATED_FROM_DATABASE: -30000 + 500,
-
-    VALUE_EVAL_MAX: 20000,
-    VALUE_EVAL_MIN: -20000
+/// Color represents the type of piece on board
+enum Color : BYTE {
+    BLACK,
+    WHITE,
+    WALL,
+    EMPTY,
+    COLOR_NB,     // Total number of color on board
+    SIDE_NB = 2,  // Two side of stones (Black and White)
 };
 
 
-//-------------------- rotate ------------------------
-int rotate90(float centerX, float centerY, int _x, int _y) {
-    float x = centerX - _x;
-    float y = centerY - _y;
-    return (centerX + y) + (centerY - x) * 15;
+extern void outputArray(int* ptr);
+extern void outputParam(UINT p1, UINT p2, UINT p3, UINT p4, UINT p5);
+extern void outputKey(BYTE* ptr, UINT len);
+extern void outputProgress(double progress);
+extern void lz4Callback(UINT idx);
+extern void onError(char* message);
+
+LLNG tempLL[4] = {0};
+BYTE INPUT[1024] = {0};
+BYTE OUTPUT[1024] = {0};
+
+//-------------------- IO ------------------------------
+
+BYTE* input() {
+    return INPUT;
 }
 
-int reflectX(float centerY, int _x, int  _y) {
-    return _x + (centerY * 2 - _y) * 15;
+BYTE* output() {{
+    return OUTPUT;
+}}
+
+//-------------------- xxhash32 ------------------------
+
+// Simple hash function, from: http://burtleburtle.net/bob/hash/integer.html.
+// Chosen because it doesn't use multiply and achieves full avalanche.
+int hashU32(int a) {
+    a = a + 2127912214 + (a << 12);
+    a = a ^ -949894596 ^ (UINT)a >> 19;
+    a = a + 374761393 + (a << 5);
+    a = a + -744332180 ^ a << 9;
+    a = a + -42973499 + (a << 3);
+    return a ^ -1252372727 ^ (UINT)a >> 16;
 }
 
-char* rotatePosstion(int w, int h, char* posstion) {
-    char nPosstion[225];
-    for (char i = 0; i < 225; i++) {
-        if (posstion[i]) {
-            int idx = rotate90((w - 1) / 2, (h - 1) / 2, i % 15, i / 15);
-            nPosstion[idx] = posstion[i];
-        }
-    }
-    return nPosstion;
+// Reads a 64-bit little-endian integer from an array.
+LLNG readU64(BYTE* b, UINT n) {
+    LLNG x = 0;
+    x |= b[n++] << 0;
+    x |= b[n++] << 8;
+    x |= b[n++] << 16;
+    x |= b[n++] << 24;
+    x |= b[n++] << 32;
+    x |= b[n++] << 40;
+    x |= b[n++] << 48;
+    x |= b[n++] << 56;
+    return x;
 }
 
-char* reflectPosstion(int w, int h, char* posstion) {
-    char nPosstion[225];
-    for (char i = 0; i < 225; i++) {
-        if (posstion[i]) {
-            int idx = reflectX((h - 1) / 2, i % 15, i / 15);
-            nPosstion[idx] = posstion[i];
-        }
-    }
-    return nPosstion;
+
+// Reads a 32-bit little-endian integer from an array.
+int readU32(BYTE* b, UINT n) {
+    int x = 0;
+    x |= b[n++] << 0;
+    x |= b[n++] << 8;
+    x |= b[n++] << 16;
+    x |= b[n++] << 24;
+    return x;
 }
 
-//------------------------- getStones --------------------------
+// Multiplies two numbers using 32-bit integer multiplication.
+// Algorithm from Emscripten.
+int imul(int a, int b) {
+    LLNG ah = (UINT)a >> 16;
+    LLNG al = a & 65535;
+    LLNG bh = (UINT)b >> 16;
+    LLNG bl = b & 65535;
 
-chat* getStones(char* posstion, int sideToMove) {
-    let blackIndex = 0;
-    let whiteIndex = 0;
-    const blackStones = [];
-    const whiteStones = [];
-    for (let x = 0; x < 15; x++) {
-        for (let y = 0; y < 15; y++) {
-            const idx = x + y * 15;
-            if (posstion[idx] == 1) {
-                blackStones[blackIndex++] = x;
-                blackStones[blackIndex++] = y;
-            }
-            else if (posstion[idx] == 2) {
-                whiteStones[whiteIndex++] = x;
-                whiteStones[whiteIndex++] = y;
-            }
-        }
-    }
-    const numBlackStones = blackStones.length >>> 1;
-    const numWhiteStones = whiteStones.length >>> 1;
-    const side = numBlackStones - numWhiteStones;
-    if (side < sideToMove) { //add passMove
-        for (let i = side; i < sideToMove; i++) {
-            blackStones.push(0xFF, 0xFF);
-        }
-    }
-    else if (side > sideToMove) {
-        for (let i = side; i > sideToMove; i--) {
-            whiteStones.push(0xFF, 0xFF);
-        }
-    }
+    return al * bl + (ah * bl + al * bh << 16);
+}
+
+// xxh32.js - implementation of xxhash32 in plain JavaScript
     
-    return blackStones.concat(whiteStones);
+// xxhash32 primes
+UINT prime1 = 0x9e3779b1;
+UINT prime2 = 0x85ebca77;
+UINT prime3 = 0xc2b2ae3d;
+UINT prime4 = 0x27d4eb2f;
+UINT prime5 = 0x165667b1;
+
+// Utility functions/primitives
+// --
+
+int rotl32(int x, int r) {
+    return (UINT)x >> (int)(32 - r) | x << r | 0;
 }
 
-function compareStone(lx, ly, rx, ry) {
-    lx == 0xFF && (lx = -1);
-    ly == 0xFF && (ly = -1);
-    rx == 0xFF && (rx = -1);
-    ry == 0xFF && (ry = -1);
-    return (lx * 32 + ly) - (rx * 32 + ry);
+int rotmul32(int h, int r, int m) {
+    return imul((UINT)h >> (int)(32 - r) | h << r, m) | 0;
 }
 
-function compareStones(lStones, rStones, numCompare = lStones.length, sIndex = 0) {
-    for (let i = 0; i < numCompare; i += 2) {
-        const diff = compareStone(lStones[sIndex + i], lStones[sIndex + i + 1], rStones[sIndex + i], rStones[sIndex + i + 1]);
+int shiftxor32(int h, int s) {
+    return (UINT)h >> s ^ h;
+}
+
+// Implementation
+// --
+
+int xxhapply(int h, int src, int m0, int s, int m1) {
+    return rotmul32(imul(src, m0) + h, s, m1);
+}
+
+int xxh1(int h, BYTE* src, int index) {
+    return rotmul32((h + imul(src[index], prime5)), 11, prime1);
+}
+
+int xxh4(int h, BYTE* src, int index) {
+    return xxhapply(h, readU32(src, index), prime3, 17, prime4);
+}
+
+LLNG* xxh16(LLNG* h, BYTE* src, int index) {
+    h[0] = xxhapply(h[0], readU32(src, index + 0), prime2, 13, prime1);
+    h[1] = xxhapply(h[1], readU32(src, index + 4), prime2, 13, prime1);
+    h[2] = xxhapply(h[2], readU32(src, index + 8), prime2, 13, prime1);
+    h[3] = xxhapply(h[3], readU32(src, index + 12), prime2, 13, prime1);
+    return h;
+}
+
+UINT xxh32(UINT seed, BYTE* src, UINT index, int len) {
+    int h;
+    int l;
+    l = len;
+    //outputKey(src, len);
+    if (len >= 16) {
+        LLNG* hp = tempLL;
+        hp[0] = seed + prime1 + prime2;
+        hp[1] = seed + prime2;
+        hp[2] = seed;
+        hp[3] = seed - prime1;
+        //outputArray(hp);
+
+        while (len >= 16) {
+            hp = xxh16(hp, src, index);
+            //outputArray(hp);
+            index += 16;
+            len -= 16;
+        }
+
+        h = rotl32(hp[0], 1) + rotl32(hp[1], 7) + rotl32(hp[2], 12) + rotl32(hp[3], 18) + l;
+    } else {
+        h = (UINT)(seed + prime5 + len);
+    }
+
+    while (len >= 4) {
+        h = xxh4(h, src, index);
+
+        index += 4;
+        len -= 4;
+    }
+
+    while (len > 0) {
+        h = xxh1(h, src, index);
+
+        index++;
+        len--;
+    }
+
+    h = shiftxor32(imul(shiftxor32(imul(shiftxor32(h, 15), prime2), 13), prime3), 16);
+
+    return (UINT)h;
+}
+
+//---------------------- lz4 -----------------------------
+
+
+// Compression format parameters/constants.
+UINT minMatch = 4;
+    
+// Frame constants.
+UINT magicNum = 0x184D2204;
+
+// Frame descriptor flags.
+UINT fdContentChksum = 0x4;
+UINT fdContentSize = 0x8;
+UINT fdBlockChksum = 0x10;
+
+UINT fdVersion = 0x40;
+UINT fdVersionMask = 0xC0;
+
+// Block sizes.
+UINT bsUncompressed = 0x80000000;
+UINT bsShift = 4;
+UINT bsMask = 7;
+UINT bsMap[16] = {0,0,0,0,
+    0x10000,
+    0x40000,
+    0x100000,
+    0x400000
+};
+    
+// Decompresses a block of Lz4.
+UINT decompressBlock(BYTE* src, BYTE* dst, UINT sIndex, UINT sLength, UINT dIndex) {
+    UINT mLength, mOffset, sEnd, n, i;
+    
+    // Setup initial state.
+    sEnd = sIndex + sLength;
+
+    // Consume entire input block.
+    while (sIndex < sEnd) {
+        UINT token = src[sIndex++];
+
+        // Copy literals.
+        UINT literalCount = (token >> 4);
+        if (literalCount > 0) {
+            // Parse length.
+            if (literalCount == 0xf) {
+                while (true) {
+                    literalCount += src[sIndex];
+                    if (src[sIndex++] != 0xff) {
+                        break;
+                    }
+                }
+            }
+
+            // Copy literals
+            for (n = sIndex + literalCount; sIndex < n;) {
+                dst[dIndex++] = src[sIndex++];
+            }
+        }
+
+        if (sIndex >= sEnd) {
+            break;
+        }
+
+        // Copy match.
+        mLength = (token & 0xf);
+
+        // Parse offset.
+        mOffset = src[sIndex++] | (src[sIndex++] << 8);
+
+        // Parse length.
+        if (mLength == 0xf) {
+            while (true) {
+                mLength += src[sIndex];
+                if (src[sIndex++] != 0xff) {
+                    break;
+                }
+            }
+        }
+
+        mLength += minMatch;
+        // Copy match
+        // prefer to use typedarray.copyWithin for larger matches
+        // NOTE: copyWithin doesn't work as required by LZ4 for overlapping sequences
+        // e.g. mOffset=1, mLength=30 (repeach char 30 times)
+        // we special case the repeat char w/ array.fill
+        if (mOffset == 1) {
+            for(UINT idx = dIndex; idx < dIndex + mLength; idx++) {
+                dst[idx] = dst[dIndex - 1];
+            }
+            dIndex += mLength;
+        } else if (mOffset > mLength && mLength > 31) {
+            for (UINT move = 0; move < mLength; move++) {
+                dst[dIndex + move] = dst[dIndex - mOffset + move];
+            }
+            dIndex += mLength;
+        } else {
+            for (i = dIndex - mOffset, n = i + mLength; i < n;) {
+                dst[dIndex++] = dst[i++];
+            }
+        }
+
+    }
+
+    return dIndex;
+}
+
+
+// Decompresses a frame of Lz4 data.
+UINT decompressFrame(BYTE* src, UINT cLen, BYTE* dst, UINT dLen) {
+    bool useBlockSum, useContentSum, useContentSize;
+    UINT descriptor;
+    UINT sIndex = 0;
+    UINT dIndex = 0;
+    UINT callIndex = 0;
+
+    /*
+    // Read magic number
+    if (readU32(src, sIndex) != magicNum) {
+        onError("invalid magic number");
+        return 0;
+    }
+    */
+
+    sIndex += 4;
+
+    // Read descriptor
+    descriptor = src[sIndex++];
+
+    // Check version
+    if ((descriptor & fdVersionMask) != fdVersion) {
+        onError("incompatible descriptor version");
+        return 0;
+    }
+
+    // Read flags
+    useBlockSum = (descriptor & fdBlockChksum) != 0;
+    useContentSum = (descriptor & fdContentChksum) != 0;
+    useContentSize = (descriptor & fdContentSize) != 0;
+
+    // Read block size
+    UINT bsIdx = (src[sIndex++] >> bsShift) & bsMask;
+
+    if (bsMap[bsIdx] == 0) {
+        onError("invalid block size");
+        return 0;
+    }
+
+    if (useContentSize) {
+        // TODO: read content size
+        sIndex += 8;
+    }
+
+    sIndex++;
+
+    // Read blocks.
+    while (true) {
+        int compSize;
+
+        compSize = readU32(src, sIndex);
+        sIndex += 4;
+
+        if (compSize == 0) {
+            break;
+        }
+
+        if (useBlockSum) {
+            // TODO: read block checksum
+            sIndex += 4;
+        }
+
+        //outputParam(compSize, src[sIndex-4], src[sIndex-3], src[sIndex-2], src[sIndex-1]);
+        // Check if block is compressed
+        if ((compSize & bsUncompressed) != 0) {
+            // Mask off the 'uncompressed' bit
+            compSize &= ~bsUncompressed;
+
+            //outputParam(sIndex, compSize, dIndex, 1, 1);
+            // Copy uncompressed data into destination buffer.
+            for (UINT j = 0; j < compSize; j++) {
+                if (sIndex >= dLen) goto lineExit;
+                dst[dIndex++] = src[sIndex++];
+            }
+        } else {
+            //outputParam(sIndex, compSize, dIndex, 2, 2);
+            // Decompress into blockBuf
+            if((compSize + dIndex) > dLen) goto lineExit;
+            dIndex = decompressBlock(src, dst, sIndex, compSize, dIndex);
+            sIndex += compSize;
+        }
+        
+        if ((dIndex >> 27) > callIndex) {
+            callIndex++;
+            lz4Callback(dIndex);
+        }
+        
+    }
+        
+    lineExit:;
+
+    if (useContentSum) {
+        // TODO: read content checksum
+        sIndex += 4;
+    }
+
+    return dIndex;
+}
+
+
+
+//---------------------- dbTypes ---------------------------
+
+
+int compareStone(BYTE lx, BYTE ly, BYTE rx, BYTE ry) {
+    return ((int)lx * 32 + ly) - ((int)rx * 32 + ry);
+}
+
+int compareStones(BYTE* lStones, BYTE* rStones, int numCompare, int sIndex) {
+    for (int i = 0; i < numCompare; i += 2) {
+        const int diff = compareStone(lStones[sIndex + i], lStones[sIndex + i + 1], rStones[sIndex + i], rStones[sIndex + i + 1]);
         if (diff == 0) continue;
         else return diff;
     }
     return 0;
-}
-
-function smallStones(lStones, rStones) {
-    const diff = compareStones(lStones, rStones);
-    return diff <= 0 ? lStones : rStones;
-}
-
-//---------------------- CompactDBKey -------------------
-
-/*
-class CompactDBKey {
-    constructor(rule, boardWidth, boardHeight, sideToMove, numBlackStones, numWhiteStones, stones) {
-        this.uint8 = new Uint8Array([rule, boardWidth, boardHeight, sideToMove, numBlackStones, numWhiteStones].concat(...stones)); //(stones.length + 6);
-    }
-
-    get rule() { return this.uint8[0] };
-    get boardWidth() { return this.uint8[1] };
-    get boardHeight() { return this.uint8[2] };
-    get sideToMove() { return this.uint8[3] };
-    get numBlackStones() { return this.uint8[4] };
-    get numWhiteStones() { return this.uint8[5] };
-
-    set rule(r) { this.uint8[0] = r };
-    set boardWidth(w) { this.uint8[1] = w };
-    set boardHeight(h) { this.uint8[2] = h };
-    set sideToMove(s) { this.uint8[3] = s };
-    set numBlackStones(b) { this.uint8[4] = b };
-    set numWhiteStones(w) { this.uint8[5] = w };
-
-    static isEqual(key1, key2) {
-
-    }
-
-    static toStringKey(key) {
-        return String.fromCharCode(...key.uint8);
-    }
-}
-
-CompactDBKey.prototype.blackStonesBegin = function() { return 6 };
-CompactDBKey.prototype.blackStonesEnd = function() { return 6 + this.uint8[4] };
-CompactDBKey.prototype.whiteStonesBegin = function() { return 6 + this.uint8[4] };
-CompactDBKey.prototype.whiteStonesEnd = function() { return 6 + this.uint8[4] + this.uint8[5] };
-
-
-class DBKey extends CompactDBKey{
-    constructor(rule, boardWidth, boardHeight, sideToMove, numBlackStones, numWhiteStones, stones) {
-        super(rule, boardWidth, boardHeight, sideToMove, numBlackStones, numWhiteStones, stones);
-    }
-}
-*/
-
-function constructAllDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {
-    const Keys = [];
-    for (let i = 0; i < 8; i++) {
-        if (i == 4) {
-            posstion = reflectPosstion(boardWidth, boardHeight, posstion);
-        }
-        else if (i) { // 1,2,3,5,6,7
-            posstion = rotatePosstion(boardWidth, boardHeight, posstion);
-        }
-        const stones = getStones(posstion, sideToMove);
-        const numKeyBytes = 3 + stones.length;
-        Keys[i] = [numKeyBytes & 0xFF, numKeyBytes >>> 8, rule, boardWidth, boardHeight].concat(stones);
-    }
-    return Keys;
-}
-
-
-function constructDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {
-    let small = [0xFFFF, 0xFFFF];
-    for (let i = 0; i < 8; i++) {
-        if (i == 4) {
-            posstion = reflectPosstion(boardWidth, boardHeight, posstion);
-        }
-        else if (i) { // 1,2,3,5,6,7
-            posstion = rotatePosstion(boardWidth, boardHeight, posstion);
-        }
-        const stones = getStones(posstion, sideToMove);
-        small = smallStones(stones, small);
-    }
-    const numKeyBytes = 3 + small.length;
-    const keyArray = [numKeyBytes & 0xFF, numKeyBytes >>> 8, rule, boardWidth, boardHeight].concat(small);
-    return keyArray;
 }
 
 /// The three-way comparator of two database key.
@@ -215,123 +409,244 @@ function constructDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {
 ///     5. side to move (black=0, white=1)
 /// @return Negative if lhs < rhs; 0 if lhs > rhs; Positive if lhs > rhs.
 
-function databaseKeyCompare(lUint8, rUint8) {
+int databaseKeyCompare(BYTE* lUint8, BYTE* rUint8) {
     
-    let diff = lUint8[2] - rUint8[2]; //rule
+    int diff = lUint8[2] - rUint8[2]; //rule
     if (diff != 0) return diff;
     diff = lUint8[3] - rUint8[3]; //board width
     if (diff != 0) return diff;
     diff = lUint8[4] - rUint8[4]; //board height
     if (diff != 0) return diff;
     
-    const numBytesLhs = (lUint8[0] | lUint8[1] << 8) - 3;
-    const numBytesRhs = (rUint8[0] | rUint8[1] << 8) - 3;
-    const numCompare = Math.min(numBytesLhs, numBytesRhs);
+    const int numBytesLhs = (lUint8[0] | lUint8[1] << 8) - 3;
+    const int numBytesRhs = (rUint8[0] | rUint8[1] << 8) - 3;
     if (numBytesLhs != numBytesRhs) return numBytesLhs - numBytesRhs;
-    diff = compareStones(lUint8, rUint8, numCompare, 5);
+    diff = compareStones(lUint8, rUint8, numBytesLhs, 5);
     if (diff != 0) return diff;
 
     
-    const numBlackStonesL = ((numBytesLhs >>> 1) + 1) >>> 1;
-    const numWhiteStonesL = numBytesLhs >>> 1 >>> 1;
-    const sideToMoveL = numBlackStonesL == numWhiteStonesL ? Color.BLACK : Color.WHITE;
+    const int numBlackStonesL = ((numBytesLhs >> 1) + 1) >> 1;
+    const int numWhiteStonesL = numBytesLhs >> 2;
+    const Color sideToMoveL = numBlackStonesL == numWhiteStonesL ? BLACK : WHITE;
 
-    const numBlackStonesR = ((numBytesRhs >>> 1) + 1) >>> 1;
-    const numWhiteStonesR = numBytesRhs >>> 1 >>> 1;
-    const sideToMoveR = numBlackStonesR == numWhiteStonesR ? Color.BLACK : Color.WHITE;
+    const int numBlackStonesR = ((numBytesRhs >> 1) + 1) >> 1;
+    const int numWhiteStonesR = numBytesRhs >> 2;
+    const Color sideToMoveR = numBlackStonesR == numWhiteStonesR ? BLACK : WHITE;
     
     return sideToMoveL - sideToMoveR;
 }
 
+//----------------------- hashTable --------------------------
 
-//-------------------------- DBRecord -----------------------
-/// DBLabel represents a one-byte tag that attached to a node in the game DAG.
-const LABEL_NULL = 0; /// Null record, default constructed, only stores key in database
-const LABEL_NONE = 0xFF //c++ = -1; /// Undetermined result
+const UINT TABLE_SIZE = 1 << 22;
+const UINT NODE_SIZE = 2;
+const UINT NODE_BYTES = NODE_SIZE * 4;
 
-const LABEL_RESULT_MARKS_BEGIN = 32;
+const UINT numAnd = TABLE_SIZE - 1;
 
-const LABEL_FORCEMOVE = '!'.charCodeAt(); /// the forced move (will be used as root move if exist)
-const LABEL_WIN = 'w'.charCodeAt(); /// a winning position
-const LABEL_LOSE = 'l'.charCodeAt(); /// a losing position
-const LABEL_DRAW = 'd'.charCodeAt(); /// a draw position
-const LABEL_BLOCKMOVE = 'x'.charCodeAt(); /// a blocked position (will not be considered in search)
+UINT size = 0;
+UINT lastNode = 0;
+UINT nodeEnd = 0;
+UINT* table = 0;
+UINT tabel_len = 0;
+BYTE* dataBuffer_uint8 = 0;
+UINT dataBuffer_uint8_len = 0;
+UINT* nodeBuffer_uint32 = 0;
+UINT nodeBuffer_uint32_len = 0;
 
-const LABEL_RESULT_MARKS_END = 127;
+LLNG nextNewNode() {
+    size++;
+    lastNode += NODE_SIZE;
+    if (lastNode < nodeEnd) return lastNode;
+    else return -1;
+}
 
-/// DBRecordMask specify what parts of a record are selected.
-const RECORD_MASK_NONE = 0x0;
-const RECORD_MASK_LABEL = 0x1;
-const RECORD_MASK_VALUE = 0x2;
-const RECORD_MASK_DEPTHBOUND = 0x4;
-const RECORD_MASK_TEXT = 0x8;
+UINT nodeValue(UINT ptr) {
+    return nodeBuffer_uint32[ptr];
+}
 
-const RECORD_MASK_LVDB = RECORD_MASK_LABEL | RECORD_MASK_VALUE | RECORD_MASK_DEPTHBOUND;
-const RECORD_MASK_ALL = RECORD_MASK_LVDB | RECORD_MASK_TEXT;
+UINT nodeNext(UINT ptr) {
+    return nodeBuffer_uint32[ptr + 1];
+}
 
-//this.label      // label ('l' or 'w' or '\0', 1 byte)
-//this.value      // value (int16, 2 bytes, optional)
-//this.depthbound // depth & bound (int16, 2 bytes, optional)
-//this.text       // utf-8 text message (string ending with '\0', (n3 - 5) bytes, optional)
+UINT setValue(UINT ptr, UINT value) {
+    return nodeBuffer_uint32[ptr] = value;
+}
 
-class DBRecord {
-    constructor(buf) {
-        this.uint8 = new Uint8Array(buf)
+UINT setNext(UINT ptr, UINT next) {
+    return nodeBuffer_uint32[ptr + 1] = next;
+}
+
+UINT toHash(BYTE* key) {
+    const UINT len = (key[0] | key[1] << 8) + 2;
+    return xxh32(0, key, 0, len) & numAnd;
+}
+
+BYTE* toKey(UINT ptr) {
+    return &dataBuffer_uint8[ptr];
+}
+
+int compare(BYTE* l, BYTE* r) {
+    return databaseKeyCompare(l, r);
+}
+
+int init(UINT* tb, UINT tbLen, UINT* buffer_uint32, UINT uint32Len, BYTE* buffer_uint8, UINT uint8Len) {
+    size = 0;
+    lastNode = 0;
+    nodeEnd = uint32Len - NODE_SIZE + 1;
+    table = tb;
+    tabel_len = tbLen;
+    dataBuffer_uint8 = buffer_uint8;
+    dataBuffer_uint8_len = uint8Len;
+    nodeBuffer_uint32 = buffer_uint32;
+    nodeBuffer_uint32_len = uint32Len;
+    return 1;
+}
+
+UINT get(BYTE* key) {
+    const UINT ptr = toHash(key) * NODE_SIZE;
+    UINT node = table[ptr];
+    while (node) {
+        BYTE* key2 = toKey(nodeValue(node));
+        if (0 == compare(key, key2)) return nodeValue(node);
+        node = nodeNext(node);
+    }
+    return -1;
+}
+
+UINT set(BYTE* key, UINT value) {
+    const UINT ptr = toHash(key) * NODE_SIZE;
+    const UINT first = table[ptr];
+    const LLNG newNode = nextNewNode();
+    if (newNode == -1) return newNode;
+    setValue(newNode, value);
+    setNext(newNode, first);
+    table[ptr] = newNode;
+    table[ptr + 1]++;
+    return newNode;
+}
+
+UINT getMaxLength() {
+    UINT maxLen = 0;
+    UINT count8 = 0;
+    UINT count300 = 0;
+    UINT count500 = 0;
+    for (int ptr = TABLE_SIZE * NODE_SIZE - NODE_SIZE; ptr >= 0; ptr -= NODE_SIZE) {
+        UINT len = table[ptr + 1];
+        if (len > 8) count8++;
+        if (len > 309) count300++;
+        if (len > 1000) count500++;
+        if (len > maxLen) maxLen = len;
+    }
+    return maxLen;
+}
+
+UINT nodeBytes() {
+    return NODE_BYTES;
+}
+
+UINT nodeSize() {
+    return NODE_SIZE;
+}
+
+UINT tableSize() {
+    return TABLE_SIZE;
+}
+
+UINT tableBytes() {
+    return TABLE_SIZE * NODE_SIZE * 4;
+}
+
+UINT getSize() {
+    return size;
+}
+
+//---------------------- load ----------------------------
+
+double load() {
+    BYTE* uint8 = dataBuffer_uint8;
+    UINT u8Index = 0;
+    const UINT u8IndexEnd = dataBuffer_uint8_len;
+    const UINT numRecords = uint8[u8Index++] | uint8[u8Index++] << 8 | uint8[u8Index++] << 16 | uint8[u8Index++] << 24;
+
+    UINT recordIdx;
+    for (recordIdx = 0; recordIdx < numRecords; recordIdx++) {
+        if (0 == (recordIdx & 0x7FFFF)) {
+            outputProgress(1.0 * recordIdx / numRecords);
+        }
+
+        const UINT recordStart = u8Index;
+
+        // Read record key
+        if (u8Index + 2 > u8IndexEnd) break;
+        const UINT numKeyBytes = uint8[u8Index++] | uint8[u8Index++] << 8;
+        if (numKeyBytes == 0) break;
+        
+        if (u8Index + numKeyBytes > u8IndexEnd) break;
+        u8Index += numKeyBytes;
+
+        // Read record message
+        if (u8Index + 2 > u8IndexEnd) break;
+        const UINT numRecordBytes = uint8[u8Index++] | uint8[u8Index++] << 8;
+        if (u8Index + numRecordBytes > u8IndexEnd) break;
+        u8Index += numRecordBytes;
+        
+        BYTE* key =  uint8 + recordStart; //getKeyBuffer(uint8, recordStart);
+        UINT rt = set(key, recordStart);
+        
+        if (rt == 0xFFFFFFFF) break;
     }
 
-    get label() { return this.uint8[0] }
-    get value() { return this.uint8[1] | this.uint8[2] << 8 }
-    get depthbound() { return this.uint8[3] | this.uint8[4] << 8 }
-    get text() { return this.uint8.slice(5) }
-
-    /// Return the depth component of a depth bound.
-    get depth() { return this.depthbound >> 2 }
-    /// Return the bound component of a depth bound.
-    get bound() { return this.depthbound & 0b11 }
-
-    set depthbound(depthbound) {
-        this.uint8[3] = depthbound;
-        this.uint8[4] = depthbound >>> 8;
-    }
-
-    set text(codebuf) {
-        this.uint8 = new Uint8Array([this.uint8.slice(0, 5)].concat(...codebuf));
-    }
+    return 1.0 * recordIdx / numRecords;
 }
 
-/// Set a new depth and bound for this record.
-DBRecord.prototype.setDepthBound = function(depth, bound) {
-    const depthbound = depth << 2 | bound;
-    this.uint8[3] = depthbound;
-    this.uint8[4] = depthbound >>> 8;
-    return depthbound;
+//-------------------- test -----------------------------
+/*
+UINT maxUint32() {
+    return 0xFFFFFFFF;
 }
 
-
-/// Checks if this record is a null record
-DBRecord.prototype.isNull = function() {
-    return this.label == LABEL_NULL;
+UINT minusOneUint32() {
+    return -1;
 }
 
-/// Update label, value, depth, bound of this record
-DBRecord.prototype.update = function(rhs, mask) {
-    if (mask & RECORD_MASK_LABEL)
-        this.label = rhs.label;
-    if (mask & RECORD_MASK_VALUE)
-        this.value = rhs.value;
-    if (mask & RECORD_MASK_DEPTHBOUND)
-        this.depthbound = rhs.depthbound;
-    if (mask & RECORD_MASK_TEXT) {
-        this.text = rhs.text;
-        // Make sure text is not saved as null label
-        if (this.label == LABEL_NULL && !text.empty())
-            this.label = LABEL_NONE;
-    }
+LLNG maxLongLong() {
+    return 0xFFFFFFFFF;
 }
 
-
-
-
-void main() {
-    
+char testChar(char c) {
+    return c;
 }
+
+BYTE testUChar(BYTE uc) {
+    return uc;
+}
+
+int testInt(int i) {
+    return i;
+}
+
+UINT testUint(UINT ui) {
+    return ui;
+}
+
+int testLong(int l) {
+    return l;
+}
+
+unsigned long testUlng(unsigned ul) {
+    return ul;
+}
+
+LLNG testLLNG(LLNG ll) {
+    return ll;
+}
+
+float testFloat(float f) {
+    return f;
+}
+
+double testDouble(double d) {
+    return d;
+}
+*/

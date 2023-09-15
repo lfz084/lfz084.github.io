@@ -8,8 +8,10 @@ constexpr Color operator~(Color p)
 }
 */
 
-//----------------------- AVL ----------------------------
+let wasmExports;
 
+//----------------------- AVL ----------------------------
+/*
 function resetAVL() {
     const avlBuffer = recordDB.avlBuffer.uint32;
     const dataBuffer = recordDB.fileBuffer.uint8;
@@ -56,27 +58,27 @@ function loadTest_AVL(ignoreCorrupted, outputProgress = () => {}) {
 
     return progress;
 }
-
+*/
 //-------------------- HashTable -------------------------
 
 function resetHashTable() {
-    const MOVE = 2;
-    const numAnd = HashTable.tableSize - 1;
-    const nodeBuffer = recordDB.avlBuffer.uint32;
-    const dataBuffer = recordDB.fileBuffer.uint8;
-    HashTable.init(nodeBuffer, dataBuffer);
-    HashTable.toHash = function(key) {
-        return hash(0, key, 0, key.length) & numAnd;
+    recordDB.map = {
+        get init() { return wasmExports.init; },
+        get get() {
+            return function(key) {
+                const inPtr = wasmExports.input();
+                const uint8_input = new Uint8Array(wasmExports.memory.buffer, inPtr, 1024);
+                key.map((v, i) => uint8_input[i] = v);
+                const rt = wasmExports.get(inPtr) >>> 0;
+                return rt == 0xFFFFFFFF ? -1 : rt;
+            }
+        },
+        get set() { return wasmExports.set; },
+        get getMaxLength() { return wasmExports.getMaxLength; },
+        get nodeBytes() { return wasmExports.nodeBytes(); },
+        get tableSize() { return wasmExports.tableSize(); },
+        get size() { return wasmExports.size(); },
     };
-    HashTable.toKey = function(ptr) {
-        return getKeyBuffer(dataBuffer, ptr);
-    };
-    HashTable.compare = function(lUint8, rUint8) {
-        const cmp = databaseKeyCompare(lUint8, rUint8);
-        return cmp;
-    };
-
-    recordDB.map = HashTable;
 }
 
 function loadTest_HashTable(ignoreCorrupted, outputProgress = () => {}) {
@@ -87,13 +89,13 @@ function loadTest_HashTable(ignoreCorrupted, outputProgress = () => {}) {
         return recordDB.map.set(key, recordStart);
     }, outputProgress);
 
-    post("alert", `numRecords: ${getNumRecords(uint8)} \nsize: ${recordDB.map.size}, \nMaxLength: ${recordDB.map.getMaxLength()}`)
+    post("alert", `numRecords: ${getNumRecords(uint8)} \nsize: ${recordDB.map.size}, \nMaxLength: ${recordDB.map.getMaxLength()>>>0}`)
 
-    /*progress = forEveryRecord(function(key, recordStart) {
+    progress = forEveryRecord(function(key, recordStart) {
         const rt = recordDB.map.get(key);
         if (rt > -1) return rt;
         else throw new Error(`recordDB.map.get(key) = ${rt}\nkey: = [${key}]`);
-    }, outputProgress);*/
+    }, outputProgress);
 
     return progress;
 }
@@ -106,7 +108,6 @@ function forEveryRecord(callbackRecord, outputProgress) {
     const u8IndexEnd = uint8.length;
     const numRecords = uint8[u8Index++] | uint8[u8Index++] << 8 | uint8[u8Index++] << 16 | uint8[u8Index++] << 24;
 
-    let maxNum = 0;
     let recordIdx;
     for (recordIdx = 0; recordIdx < numRecords; recordIdx++) {
         if (0 == (recordIdx & 0x7FFF)) {
@@ -141,14 +142,8 @@ function load(ignoreCorrupted, outputProgress = () => {}) {
     const uint8 = recordDB.fileBuffer.uint8;
     let u8Index = 0;
     const u8IndexEnd = uint8.length;
-    const numRecords = uint8[u8Index++] | uint8[u8Index++] << 8 | uint8[u8Index++] << 16 | uint8[u8Index++] << 24;
-
-    let byteBuffer; // reserve initial space
-
-    let compareBufferL = new Uint8Array([3, 0, 0, 0, 0, ]);
-
-
-    let maxNum = 0;
+    const numRecords = (uint8[u8Index++] | uint8[u8Index++] << 8 | uint8[u8Index++] << 16 | uint8[u8Index++] << 24) >>> 0;
+    
     let recordIdx;
     next_record: for (recordIdx = 0; recordIdx < numRecords; recordIdx++) {
         if (0 == (recordIdx & 0x3FFFF)) {
@@ -160,96 +155,35 @@ function load(ignoreCorrupted, outputProgress = () => {}) {
         // Read record key
         if (u8Index + 2 > u8IndexEnd) break;
         const numKeyBytes = uint8[u8Index++] | uint8[u8Index++] << 8;
-        if (numKeyBytes == 0)
-            continue;
+        if (numKeyBytes == 0) break;
 
         //----------- debug start -----------------------
         //----------- 测试 record 是否按 key 排除好------
-
         /*
-        const compareBufferR = uint8.slice(u8Index - 2, u8Index + numKeyBytes);
-        const diff = databaseKeyCompare(compareBufferL, compareBufferR);
-        compareBufferL = compareBufferR;
+        if (recordIdx < 25) {
+            const key = getKeyBuffer(uint8, recordStart);
+            const hs = hash(0, key, 0, key.length);
+            const key2 = new Uint8Array(wasmExports.memory.buffer, recordDB.fileBuffer.begin + recordStart, key.length);
+            const hs1 = wasmExports.hash(0, recordDB.fileBuffer.begin + recordStart, 0, key.length) >>> 0;
+            post("alert", `0x${(wasmExports.memory.buffer.byteLength).toString(16)}\n0x${(recordDB.fileBuffer.begin + recordStart).toString(16)}\n0x${(recordDB.fileBuffer.begin + recordStart + key.length).toString(16)}`)
+            post("alert", `key: [${key}]\nkey2: ${recordDB.fileBuffer.begin + recordStart},${key.length}\n[${key2}]\n${hs}\n${hs1}`)
+        }
         */
         //----------- debug end -------------------------
 
         if (u8Index + numKeyBytes > u8IndexEnd) break;
         u8Index += numKeyBytes;
 
-        /*
-        byteBuffer = uint8.slice(u8Index, u8Index += numKeyBytes);
-        
-        // Parse record key
-        const rule = byteBuffer[0];
-        if (rule >= Rule.RULE_NB) {
-            if (ignoreCorrupted) continue;
-            throw new Error(`with invalid rule at index ${recordIdx}: {${rule}}`);
-        }
-
-        const boardXLen = byteBuffer[1];
-        const boardYLen = byteBuffer[2];
-        if (boardXLen > ACTUAL_BOARD_SIZE || boardYLen > ACTUAL_BOARD_SIZE) {
-            if (ignoreCorrupted) continue;
-            throw new Error(`with invalid board size at index ${recordIdx}: {${boardXLen} X ${boardYLen}}`);
-        }
-
-        const numStones = (numKeyBytes - 3) >>> 1;
-        if (numStones > boardXLen * boardYLen) {
-            if (ignoreCorrupted) continue;
-            throw new Error(`with invalid number of stones at index ${recordIdx}: {${numStones}}`);
-        }
-
-        const numBlackStones = (numStones + 1) >>> 1;
-        const numWhiteStones = numStones >>> 1;
-        const sideToMove = numBlackStones == numWhiteStones ? Color.BLACK : Color.WHITE;
-
-        const stones = [];
-        //let blackPass = 0;
-        let stoneIdx = 0;
-        for (let blackIdx = 0; blackIdx < numBlackStones; blackIdx++) {
-            const x = byteBuffer[3 + blackIdx * 2];
-            const y = byteBuffer[4 + blackIdx * 2];
-            if (x == 0xFF && y == 0xFF) { // the last pass move 
-                //blackPass = 1;
-                break;
-            }
-            else if (x >= 0 && y >= 0 && x < boardXLen && y < boardYLen)
-                stones[stoneIdx++] = x + y * 15;
-            else if (ignoreCorrupted)
-                continue next_record;
-            else
-                throw new Error(`with invalid black pos at index ${recordIdx}: {x:${x}, y:${y}}`);
-        }
-        for (let whiteIdx = 0; whiteIdx < numWhiteStones; whiteIdx++) {
-            const x = byteBuffer[3 + (numBlackStones + whiteIdx) * 2];
-            const y = byteBuffer[4 + (numBlackStones + whiteIdx) * 2];
-            if (x == 0xFF && y == 0xFF) { // the last pass move 
-                //if(blackPass) throw new Error(`${recordIdx}: blackPass + whitePass`);
-                break;
-            }
-            else if (x >= 0 && y >= 0 && x < boardXLen && y < boardYLen)
-                stones[stoneIdx++] = x + y * 15;
-            else if (ignoreCorrupted)
-                continue next_record;
-            else
-                throw new Error(`with invalid white pos at index ${recordIdx}: {x:${x}, y:${y}}`);
-        }
-        */
-
         // Read record message
         if (u8Index + 2 > u8IndexEnd) break;
         const numRecordBytes = uint8[u8Index++] | uint8[u8Index++] << 8;
         if (u8Index + numRecordBytes > u8IndexEnd) break;
         u8Index += numRecordBytes;
-        /*
-        byteBuffer = uint8.slice(u8Index, u8Index += numRecordBytes);
-        */
-        const key = getKeyBuffer(uint8, recordStart);
-        const rt = recordDB.map.set(key, recordStart);
-        //post("alert", `set: ${recordStart}, rt: ${rt}`);
-        if (rt == 0) break;
+        
+        const key = recordDB.fileBuffer.begin + recordStart; //getKeyBuffer(uint8, recordStart);
+        const rt = recordDB.map.set(key, recordStart) | 0;
+        if (rt <= 0) break;
     }
-    //post("alert", `AVL size: ${AVL.size}, height: ${AVL.height} \n root: ${AVL.root} \n parent: ${AVL.nodeParent(AVL.root)},left: ${AVL.nodeLeft(AVL.root)},right: ${AVL.nodeRight(AVL.root)},value: ${AVL.nodeValue(AVL.root)}, balanceFactor: ${AVL.nodeBalanceFactor(AVL.root)}\n [${getRecordBuffer(uint8, AVL.nodeValue(AVL.root))}]\n [${getKeyBuffer(uint8, AVL.nodeValue(AVL.root))}]\n [${getValueBuffer(uint8, AVL.nodeValue(AVL.root))}]\n [${getRecordMessage(uint8, AVL.nodeValue(AVL.root))}] \n minNode: ${AVL.getMinNode()}\n parent: ${AVL.nodeParent(AVL.getMinNode())},left: ${AVL.nodeLeft(AVL.getMinNode())},right: ${AVL.nodeRight(AVL.getMinNode())},value: ${AVL.nodeValue(AVL.getMinNode())}, balanceFactor: ${AVL.nodeBalanceFactor(AVL.getMinNode())}\n [${getRecordBuffer(uint8, AVL.nodeValue(AVL.getMinNode()))}]\n [${getKeyBuffer(uint8, AVL.nodeValue(AVL.getMinNode()))}]\n [${getValueBuffer(uint8, AVL.nodeValue(AVL.getMinNode()))}]\n [${getRecordMessage(uint8, AVL.nodeValue(AVL.getMinNode()))}]`);
     return recordIdx / numRecords;
 }
 
@@ -286,7 +220,7 @@ function isLZ4(uint8) {
 // 读取db记录数，方便分配内存
 function getNumRecords(uint8) {
     if (isLZ4(uint8)) {
-        uint8 = lz4.decompress(uint8, 1 << 16);
+        uint8 = lz4.decompress(uint8, Math.min(uint8.length, 1 << 16));
     }
     return uint8[0] | uint8[1] << 8 | uint8[2] << 16 | uint8[3] << 24;
 }
@@ -294,32 +228,87 @@ function getNumRecords(uint8) {
 async function openDatabass(file, callback) {
     try {
         recordDB.clear();
+        const importObject = {
+            env: {
+                _Z11outputParamjjjjj: function(p1, p2, p3, p4, p5) {
+                    //post("alert", `${p1}, ${p2}, ${p3}, ${p4}, ${p5} `)
+                },
+                _Z11lz4Callbackj: function(idx) {
+                    callback(idx >>> 0);
+                },
+                _Z7onErrorPc: function(ptr) {
+                    const u8 = new Uint8Array(wasmExports.memory.buffer, ptr, 1024);
+                    const textBuf = [];
+                    for(let i = 0; i < 1024; i++) {
+                        const v = u8[i];
+                        if(v) textBuf.push(v);
+                        else break;
+                    }
+                    throw new Error(new TextDecoder().decode(new Uint8Array(textBuf)));
+                },
+                _Z9outputKeyPcj: function(ptr, len) {
+                    //post("alert", `ptr: ${ptr},${len}\nwasm: ${new Uint8Array(wasmExports.memory.buffer, ptr, len)}`);
+                },
+                _Z14outputProgressd: function(v) {
+                    callback(v);
+                }
+            }
+        };
+        wasmExports = await loadWASM("../Rapfi/databass.wasm", importObject);
+        const hashTableBytes = wasmExports.tableBytes();
+
         callback("打开文件......");
         let uint8 = new Uint8Array(await getArrBuf(file));
-
         const _islz4 = isLZ4(uint8);
-        const avlBytes = (getNumRecords(uint8) + 1) * HashTable.nodeBytes;
+        const avlBytes = (getNumRecords(uint8) + 1) * wasmExports.nodeBytes();
+        const fileBytes = _islz4 ? uint8.length * 6 : Math.max(uint8.length, avlBytes);
+        callback(`申请内存......`);
 
-        const fileBytes = _islz4 ? lz4.decompressBound(uint8) : 0;
-        callback(`申请内存......`) //
-        await loadWASM("../script/maxBuffer.wasm");
-        const buffers = await getMaxBuffes(1, 0, fileBytes, avlBytes);
+        const buffers = await getMaxBuffes(1, hashTableBytes, Math.max(uint8.length, avlBytes), fileBytes);
+        if (!buffers) return 0;
+        
+        const end = Math.min(uint8.length, buffers[1].uint8.length);
+        for(let i = 0; i < end; i++) buffers[1].uint8[i] = uint8[i];
 
-        if (!buffers) return;
-        callback(`${fileBytes == buffers[0].uint8.length ? "完全" : "部分"}解压文件......`);
-        if (_islz4) lz4.decompressFrame(uint8, buffers[0].uint8, callback);
+        callback(`${fileBytes <= buffers[2].uint8.length ? "完全" : "部分"}解压文件......`);
+        if (_islz4) wasmExports.decompressFrame(buffers[1].begin, buffers[1].uint8.length, buffers[2].begin, buffers[2].uint8.length);
+        else buffers[2].uint8.map((v, i) => buffers[2].uint8[i] = uint8[i]);
+        
+        buffers[1].uint32.fill(0);
+        
+        wasmExports.init(buffers[0].begin, hashTableBytes >>> 2, buffers[1].begin, buffers[1].uint32.length, buffers[2].begin, buffers[2].uint8.length);
 
         recordDB.avlBuffer = buffers[1];
-        recordDB.fileBuffer = { uint8: _islz4 ? buffers[0].uint8 : uint8 };
+        recordDB.fileBuffer = buffers[2];
 
-        //resetAVL();
         resetHashTable();
 
-        uint8 = undefined;
-
-        //return loadTest_AVL(false, callback);
-        //return loadTest_HashTable(false, callback);
-        return load(false, callback);
+        return wasmExports.load();
 
     } catch (e) { post("onerror", e.stack || e) }
 }
+
+/*
+function testType() {
+    post("alert", `
+    maxUint32: ${wasmExports.maxUint32().toString(16)}\n
+    minusOneUint32: ${wasmExports.minusOneUint32().toString(16)}\n
+    maxLongLong: ${wasmExports.maxLongLong().toString(16)}\n
+    testChar: ${wasmExports.testChar(0xFFF).toString(16)}\n
+    testUChar: ${wasmExports.testUChar(0xFFF).toString(16)}\n
+    testInt: ${wasmExports.testInt(0xFFFFFFFF).toString(16)}\n
+    testUint: ${wasmExports.testUint(0xFFFFFFFF).toString(16)}\n
+    testLong: ${wasmExports.testLong(0xFFFFFFFF).toString(16)}\n
+    testUlong: ${wasmExports.testUlong(0xFFFFFFFF).toString(16)}\n
+    testFloat: ${wasmExports.testFloat(0xFFFFFF).toString(16)}\n
+    testDouble: ${wasmExports.testDouble(0xFFFFFFFF).toString(16)}\n
+    `)
+}
+
+function compareArray(arrL, arrR) {
+    for (let i = 0; i < arrL.length; i++) {
+        if (arrL[i] != arrR[i]) return `arrL[${i}] != arrR[${i}]\n${arrL[i]} != ${arrR[i]}`;
+    }
+    return true;
+}
+*/

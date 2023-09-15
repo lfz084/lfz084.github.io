@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2110.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2110.05";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
@@ -1446,7 +1446,7 @@ window.control = (() => {
                 });
                 if (display) {
                     this.getArray().map((color, idx, arr) => {
-                        color == 0 && isFoul(idx, arr) && (
+                        color == 0 && gameRules == RENJU_RULES &&isFoul(idx, arr) && (
                             this.P[idx].color = "red",
                             this.P[idx].bkColor = null,
                             this.P[idx].type = TYPE_MARKFOUL,

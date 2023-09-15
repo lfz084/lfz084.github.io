@@ -1,5 +1,5 @@
 "use strict"
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2110.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2110.05";
 
 if ("importScripts" in self) {
     self.importScripts(
@@ -24,17 +24,8 @@ function post(cmd, param, transfer) {
         postMessage({ "cmd": cmd, "parameter": param }, transfer)
 }
 
-async function getArrBuf(file) {
-    return new Promise(function(resolve, reject) {
-        let fr = new FileReader();
-        fr.onload = function() {
-            resolve(fr.result)
-        };
-        fr.onerror = function() {
-            reject("打开文件失败");
-        };
-        fr.readAsArrayBuffer(file);
-    });
+async function getArrBuf(file, start = 0, byteLength = file.size) {
+    return await file.slice(start, start + byteLength).arrayBuffer();
 }
 
 var recordDB = {
@@ -73,7 +64,6 @@ function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, posstion}) {
     let comment = new Uint8Array();
     let records = [];
     const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove, posstion);
-    //alert(sKey)
     const recordBuffer = recordDB.get(sKey);
     if (recordBuffer) {
         const record = new DBRecord(recordBuffer);
