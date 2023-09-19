@@ -1,5 +1,5 @@
 
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.06";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -31,7 +31,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.05";
         let msgTextarea = document.createElement("textarea");
         windowDiv.appendChild(msgTextarea);
         msgTextarea.style.position = "relative";
-        msgTextarea.style.fontFamily = "mHeiTi";
+        msgTextarea.style.fontFamily = "mHeiTi, emjFont";
         
         /*
         msgTextarea.oninput = function(event){

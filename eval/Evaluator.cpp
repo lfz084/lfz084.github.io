@@ -1252,6 +1252,7 @@ UINT getFreeFourPoint(BYTE idx, char* arr, DWORD lineInfo) {
 
 
 bool isFoul(BYTE idx, char* arr) {
+    if (gameRules != RENJU_RULES) return false;
     const BYTE LEN = 12, // [value, count, pIdx, idx, info[4]]
         VALUE = 0, // if value > 1 then isFoul = true
         COUNT = 1,

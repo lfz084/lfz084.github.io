@@ -28,10 +28,18 @@
     <script src="../help.js"></script>
     <script>
         const LINE = "<div class='line'><div></div></div>",
+            CUR_VER = window.top.upData && window.top.upData.currentVersion,
             UPDATA_INFO = window.top.UPDATA_INFO || {"无":["请在app内打开本页面"]};
         let innerHTML = "<noHide>",
             keys = Object.keys(UPDATA_INFO),
             firstIdx = keys.length - 1;
+            
+        if (CUR_VER && !UPDATA_INFO[CUR_VER]) {
+            UPDATA_INFO[CUR_VER] = [];
+            keys.push(CUR_VER);
+            firstIdx++;
+        }
+        
         for (let j = firstIdx; j >= 0; j--) {
             let key = keys[j],
                 infoArr = UPDATA_INFO[key],
@@ -49,7 +57,6 @@
         innerHTML += LINE;
         innerHTML += "</noHide>";
         document.body.innerHTML = innerHTML;
-        
     </script>
 </body>
 

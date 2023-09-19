@@ -907,7 +907,7 @@
                 DIV[i].style.border = '1px solid red';
                 DIV[i].style.borderRadius = '50%';
                 DIV[i].style.position = "absolute";
-                DIV[i].style.fontFamily = "mHeiTi";
+                DIV[i].style.fontFamily = "mHeiTi, emjFont";
                 //DIV[i].onclick = Click;
 
             }
@@ -2209,17 +2209,17 @@
                     if (MS[0].color == "black" || MS[0].color == "white") {
                         ctx.fill(); // 填充
                         ctx.stroke(); // 描边
-                        ctx.font = "bolder " + parseInt(w * 1.08) + "px mHeiTi";
+                        ctx.font = "bolder " + parseInt(w * 1.08) + "px mHeiTi, emjFont";
                     }
                     else {
-                        ctx.font = "bolder " + parseInt(w * 1.08 / 1.8 * 3) + "px mHeiTi";
+                        ctx.font = "bolder " + parseInt(w * 1.08 / 1.8 * 3) + "px mHeiTi, emjFont";
                     }
                     ctx.fillStyle = numColor;
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     ctx.fillText(i + 1, p.x, p.y);
                 }
-                ctx.font = "bolder " + parseInt(w * 1.08 / 1.8 * 2) + "px mHeiTi";
+                ctx.font = "bolder " + parseInt(w * 1.08 / 1.8 * 2) + "px mHeiTi, emjFont";
                 for (let i = 0; i < P.length; i++) {
                     if (P[i].type == TYPE_MARK) {
                         p.x = P[i].x + lw;

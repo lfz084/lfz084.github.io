@@ -27,7 +27,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
         const li = document.createElement("li");
         li.innerHTML = text;
         li.style.fontWeight = "normal";
-        li.style.fontFamily = "mHeiTi";
+        li.style.fontFamily = "mHeiTi, emjFont";
         li.style.fontSize = ~~fontSize + "px";
         li.style.textAlign = textAlign;
         li.style.lineHeight = lineHeight + "px";
@@ -709,7 +709,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
         let s;
         this.text = txt == null ? "" : txt;
         this.text2 = txt2 == null ? "" : txt2;
-        this.button.style.fontFamily = "mHeiTi";
+        this.button.style.fontFamily = "mHeiTi, emjFont";
         if (this.checked) {
             s = this.type == "radio" ? "☞" : this.type == "checkbox" ? "✔" : "";
             s += this.text2 == "" ? this.text : this.text2;

@@ -285,6 +285,7 @@ window.upData = (function() {
         get checkAppVersion() { return checkAppVersion },
         get checkScriptVersion() { return checkScriptVersion },
         get resetApp() { return resetApp },
-        get fetchTXT() { return fetchTXT }
+        get fetchTXT() { return fetchTXT },
+        get currentVersion() { return currentVersion}
     }
 })()

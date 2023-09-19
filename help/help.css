@@ -1,31 +1,27 @@
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/PingFang-Regular-subfont.woff') format('woff'),
-        url('../style/font/PingFang Regular.ttf') format('truetype');
+    src: url('../style/font/PingFang Regular.subset.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/PingFang-Medium-subfont.woff') format('woff'),
-        url('../style/font/PingFang Medium.ttf') format('truetype');
+    src: url('../style/font/PingFang Medium.subset.ttf') format('truetype');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/PingFang-Bold-subfont.woff') format('woff'),
-        url('../style/font/PingFang Bold.ttf') format('truetype');
+    src: url('../style/font/PingFang Bold.subset.ttf') format('truetype');
     font-weight: 600;
     font-style: normal;
 }
 
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/PingFang-Heavy-subfont.woff') format('woff'),
-        url('../style/font/PingFang Heavy.ttf') format('truetype');
+    src: url('../style/font/PingFang Heavy.subset.ttf') format('truetype');
     font-weight: 900;
     font-style: normal;
 }
@@ -38,7 +34,7 @@ body {
     width: 800px;
     /*viewport width=800*/
     font-size: 30px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 300;
     line-height: 2;
     scroll-behavior: auto;
@@ -84,7 +80,7 @@ div.topDiv {
     height: 200px;
     margin: 15px 15px;
     font-size: 30px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 300;
     /*
     border-bottom: 5px outset #ccc;
@@ -98,7 +94,7 @@ div.buttomDiv {
     height: 200px;
     margin: 15px 15px;
     font-size: 30px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 300;
     /*
     border-top: 5px inset #ccc;
@@ -111,14 +107,14 @@ div.bodyDiv {
     width: 750px;
     margin: 25px 25px;
     font-size: 30px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 300;
 }
 
 a {
     color: #683366;
     font-size: 30px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 600;
     line-height: 2;
     cursor: pointer;
@@ -150,7 +146,7 @@ a:active {
 h3 {
     color: #222;
     font-size: 36px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 600;
     line-height: 1.5;
     margin: 10px 10px;
@@ -161,7 +157,7 @@ h3 {
 h4 {
     color: #222;
     font-size: 32px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 600;
     line-height: 1.5;
     margin: 10px 10px;
@@ -209,7 +205,7 @@ ul,
 ol {
     color: #228;
     font-size: 25px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 300;
     line-height: 2;
 }
@@ -261,7 +257,7 @@ ol[colorDepth="6"] {
 li {
     color: #222;
     font-size: 30px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 600;
     line-height: 2;
 }
@@ -273,7 +269,7 @@ img {
 text {
     color: #333;
     font-size: 30px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 300;
     line-height: 2;
 }
@@ -282,7 +278,7 @@ mark {
     color: #333;
     background-color: #dddd88;
     font-size: 30px;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: 300;
     line-height: 2;
 }

@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2110.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2110.06";
 window.control = (() => {
     "use strict";
     const TEST_CONTROL = true;
@@ -150,7 +150,7 @@ window.control = (() => {
             this.div.style.top = top + "px";
             this.div.style.height = parseInt(height) + "px";
             this.div.style.width = parseInt(width) + "px";
-            this.div.style.fontFamily = "mHeiTi";
+            this.div.style.fontFamily = "mHeiTi, emjFont";
             this.div.style.fontSize = fontSize;
             this.div.style.textAlign = "center";
             this.div.style.lineHeight = height;
@@ -1446,7 +1446,7 @@ window.control = (() => {
                 });
                 if (display) {
                     this.getArray().map((color, idx, arr) => {
-                        color == 0 && gameRules == RENJU_RULES &&isFoul(idx, arr) && (
+                        color == 0 && isFoul(idx, arr) && (
                             this.P[idx].color = "red",
                             this.P[idx].bkColor = null,
                             this.P[idx].type = TYPE_MARKFOUL,

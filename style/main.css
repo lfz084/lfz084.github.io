@@ -1,21 +1,41 @@
 @font-face {
     font-family: mHeiTi;
-    src: url('./font/PFSCMedium1.woff') format('woff'),
-        url('./font/PFSCMedium1.ttf') format('truetype');
+    src: url('./font/PFSCMedium1.ttf') format('truetype');
     font-weight: normal;
 }
-
-
+/*
 @font-face {
     font-family: mHeiTi;
-    src: url('./font/PFSCHeavy1.woff') format('woff'),
-        url('./font/PFSCHeavy1.ttf') format('truetype');
+    src: url('./font/PingFang Bold.subset.ttf') format('truetype');
+    font-weight: bold;
+}
+*/
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/PFSCHeavy1.ttf') format('truetype');
     font-weight: bolder;
 }
 
+@font-face {
+    font-family: emjFont;
+    src: url('./font/SourceHanSansCN-Medium.subset.ttf') format('truetype');
+    font-weight: normal;
+}
+/*
+@font-face {
+    font-family: emjFont;
+    src: url('./font/SourceHanSansCN-Bold.subset.ttf') format('truetype');
+    font-weight: bold;
+}
+*/
+@font-face {
+    font-family: emjFont;
+    src: url('./font/SourceHanSansCN-Heavy.subset.ttf') format('truetype');
+    font-weight: bolder;
+}
 
 font {
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     font-weight: bold;
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
@@ -24,14 +44,14 @@ font {
 
 
 button {
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
 }
 
 
 div {
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     /*font-weight: bolder;*/
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
@@ -39,7 +59,7 @@ div {
 
 
 h1 {
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
 }
@@ -51,7 +71,7 @@ body {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-family: mHeiTi, SimHei;
+    font-family: mHeiTi, emjFont;
     scroll-behavior: smooth;
     -webkit-user-select: none;
     /*background-color: #303030*/

@@ -1,4 +1,4 @@
-    var VERSION = "v2110.05";
+    var VERSION = "v2110.06";
     var myInit = {
         cache: "no-store"
     };

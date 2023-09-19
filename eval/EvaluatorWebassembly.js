@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2110.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2110.06";
 
 function loadEvaluatorWebassembly() {
 
@@ -235,6 +235,7 @@ function loadEvaluatorWebassembly() {
                 }
 
                 function isFoul(idx, arr) {
+                    if (gameRules != RENJU_RULES) return false;
                     return wGlobal._Z6isFoulhPc(idx, putArr(arr));
                 }
 

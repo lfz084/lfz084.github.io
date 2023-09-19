@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -1032,7 +1032,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.05";
                     y: y,
                     color: this.P[idx].color == this.wNumColor ? this.wNumFontColor : this.bNumFontColor,
                     weight: "bolder",
-                    family: "mHeiTi",
+                    family: "mHeiTi, emjFont",
                     size: fontSize
                 }
             }
@@ -1076,7 +1076,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.05";
                     y: y,
                     color: this.P[idx].color,
                     weight: "bolder",
-                    family: "mHeiTi",
+                    family: "mHeiTi, emjFont",
                     size: fontSize
                 }
             }
@@ -1146,7 +1146,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.05";
                     y: this.P[i + j].y + m,
                     color: this.coordinateColor,
                     weight: "normal",
-                    family: "mHeiTi",
+                    family: "mHeiTi, emjFont",
                     size: ~~(this.gW * 0.5)
                 })
             }
@@ -1160,7 +1160,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.05";
                     y: this.P[i * 15 + j].y,
                     color: this.coordinateColor,
                     weight: "normal",
-                    family: "mHeiTi",
+                    family: "mHeiTi, emjFont",
                     size: ~~(this.gW * 0.5)
                 })
             }

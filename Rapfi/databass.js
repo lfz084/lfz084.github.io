@@ -80,7 +80,7 @@ function resetHashTable() {
         get size() { return wasmExports.size(); },
     };
 }
-
+/*
 function loadTest_HashTable(ignoreCorrupted, outputProgress = () => {}) {
     let progress = 0;
     const uint8 = recordDB.fileBuffer.uint8;
@@ -137,7 +137,7 @@ function forEveryRecord(callbackRecord, outputProgress) {
 
     return recordIdx / numRecords;
 }
-
+*/
 function load(ignoreCorrupted, outputProgress = () => {}) {
     const uint8 = recordDB.fileBuffer.uint8;
     let u8Index = 0;
@@ -159,16 +159,16 @@ function load(ignoreCorrupted, outputProgress = () => {}) {
 
         //----------- debug start -----------------------
         //----------- 测试 record 是否按 key 排除好------
-        /*
-        if (recordIdx < 25) {
-            const key = getKeyBuffer(uint8, recordStart);
-            const hs = hash(0, key, 0, key.length);
-            const key2 = new Uint8Array(wasmExports.memory.buffer, recordDB.fileBuffer.begin + recordStart, key.length);
-            const hs1 = wasmExports.hash(0, recordDB.fileBuffer.begin + recordStart, 0, key.length) >>> 0;
-            post("alert", `0x${(wasmExports.memory.buffer.byteLength).toString(16)}\n0x${(recordDB.fileBuffer.begin + recordStart).toString(16)}\n0x${(recordDB.fileBuffer.begin + recordStart + key.length).toString(16)}`)
-            post("alert", `key: [${key}]\nkey2: ${recordDB.fileBuffer.begin + recordStart},${key.length}\n[${key2}]\n${hs}\n${hs1}`)
-        }
-        */
+        
+        //if (recordIdx < 25) {
+            //const key = getKeyBuffer(uint8, recordStart);
+            //const hs = hash(0, key, 0, key.length);
+            //const key2 = new Uint8Array(wasmExports.memory.buffer, recordDB.fileBuffer.begin + recordStart, key.length);
+            //const hs1 = wasmExports.hash(0, recordDB.fileBuffer.begin + recordStart, 0, key.length) >>> 0;
+            //post("alert", `0x${(wasmExports.memory.buffer.byteLength).toString(16)}\n0x${(recordDB.fileBuffer.begin + recordStart).toString(16)}\n0x${(recordDB.fileBuffer.begin + recordStart + key.length).toString(16)}`)
+            //post("alert", `key: [${key}]\nkey2: ${recordDB.fileBuffer.begin + recordStart},${key.length}\n[${key2}]\n${hs}\n${hs1}`)
+        //}
+        
         //----------- debug end -------------------------
 
         if (u8Index + numKeyBytes > u8IndexEnd) break;
@@ -186,7 +186,8 @@ function load(ignoreCorrupted, outputProgress = () => {}) {
     }
     return recordIdx / numRecords;
 }
-
+/*
+*/
 function getRecordBuffer(uint8, ptr) {
     const numKeyBytes = uint8[ptr] | uint8[ptr + 1] << 8;
     const recordStart = ptr + 2 + numKeyBytes;
@@ -282,7 +283,7 @@ async function openDatabass(file, callback) {
         recordDB.fileBuffer = buffers[2];
 
         resetHashTable();
-
+        
         return wasmExports.load();
 
     } catch (e) { post("onerror", e.stack || e) }

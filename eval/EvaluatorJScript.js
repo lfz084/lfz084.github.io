@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2110.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2110.06";
 
 function loadEvaluatorJScript() {
     (function(global, factory) {
@@ -1001,6 +1001,7 @@ function loadEvaluatorJScript() {
 
 
         function isFoul(idx, arr) {
+            if (gameRules != RENJU_RULES) return false;
             const LEN = 8,
                 VALUE = 0,
                 COUNT = 1,
