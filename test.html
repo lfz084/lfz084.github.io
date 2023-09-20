@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="./style/main.css" rel="stylesheet" type="text/css">
+    <script src="CheckerBoard/CheckerBoard.js"></script>
+    <title></title>
+</head>
+
+<body>
+    <div style="font: normal 150px mHeiTi, emjFont, Symbola">|||...</div>
+    <div style="font: bold 150px mHeiTi, emjFont, Symbola">|||...</div>
+    <div style="font: 900 150px mHeiTi, emjFont, Symbola">|||...</div>
+    <canvas id="draw" style="width: 500px; height: 500px"></canvas>
+    <script>
+        const cBoard = new CheckerBoard(document.body, 0, 1200, 980, 980);
+        const draw = document.getElementById("draw");
+        document.body.onload = function() {
+            let canvas = draw;
+            canvas.width = 500;
+            canvas.height = 500;
+            let ctx = canvas.getContext("2d");
+            ctx.fillStyle = "green";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            cBoard.showCheckerBoard();
+        }
+        draw.onclick = function() {
+            try {
+                const canvasList = [draw, cBoard.canvas];
+                while (canvasList.length) {
+                    const ctx = canvasList.pop().getContext("2d");
+
+                    ctx.font = `normal 150px mHeiTi, emjFont, Symbola`;
+                    ctx.fillStyle = "black";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("|||...", 250, 50);
+
+                    ctx.font = `bold 150px mHeiTi, emjFont, Symbola`;
+                    ctx.fillStyle = "black";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("|||...", 250, 150);
+
+                    ctx.font = `900 150px mHeiTi, emjFont, Symbola`;
+                    ctx.fillStyle = "black";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("|||...", 250, 250);
+            
+                }
+                
+                for (let i=0; i < 15; i++)
+                    cBoard.wNb(200 + i,"auto", true);
+                
+
+            } catch (e) { alert(e.stack) }
+        }
+    </script>
+</body>
+
+</html>

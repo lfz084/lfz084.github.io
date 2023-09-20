@@ -264,8 +264,7 @@
         function createCBoard() {
             const cbd = new CheckerBoard(mainUI.upDiv, (mainUI.gridWidth - mainUI.cmdWidth) / 2, (mainUI.gridWidth - mainUI.cmdWidth) / 2, mainUI.cmdWidth, mainUI.cmdWidth);
             cbd.backgroundColor = "white";
-            cbd.resetCBoardCoordinate();
-            cbd.printEmptyCBoard();
+            cbd.showCheckerBoard();
             cbd.bodyScale = mainUI.bodyScale;
             return cbd;
         }
@@ -280,8 +279,7 @@
         }
 
         const cBoard = new CheckerBoard(mainUI.upDiv, (mainUI.gridWidth - mainUI.cmdWidth) / 2, (mainUI.gridWidth - mainUI.cmdWidth) / 2, mainUI.cmdWidth, mainUI.cmdWidth);
-        cBoard.resetCBoardCoordinate();
-        cBoard.printEmptyCBoard();
+        cBoard.showCheckerBoard();
         const cmdDiv = createCmdDiv();
         const canvas = document.getElementById("canvas");
         document.body.onload = () => {

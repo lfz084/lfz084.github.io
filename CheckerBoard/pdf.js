@@ -21,7 +21,7 @@
             fontName_bold = "PFSCHeavy"; //"arial";
         txt = txt.split("").map(char => char == EMOJI_FOUL ? "×" : char).join("")
         doc.setTextColor(color);
-        doc.setFont(weight == "bolder" ? fontName_bold : fontName_normal, "normal", "normal");
+        doc.setFont(weight == "900" ? fontName_bold : fontName_normal, "normal", "normal");
         doc.setFontSize(~~(size * scale));
         doc.text(txt, ~~(x * scale + this.pdfOriginPoint.x), ~~(y * scale + this.pdfOriginPoint.y), { baseline: "middle", align: "center" });
     }

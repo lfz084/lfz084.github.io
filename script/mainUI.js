@@ -159,8 +159,7 @@ window.mainUI = (function() {
     function createCBoard() {
         const cbd = new CheckerBoard(upDiv, (gridWidth - cmdWidth) / 2, (gridWidth - cmdWidth) / 2, cmdWidth, cmdWidth);
         cbd.backgroundColor = "white";
-        cbd.resetCBoardCoordinate();
-        cbd.printEmptyCBoard();
+        cbd.showCheckerBoard();
         cbd.bodyScale = bodyScale;
         return cbd;
     }
@@ -171,8 +170,7 @@ window.mainUI = (function() {
         const top = dw > dh ? buttonHeight * (1.2 + 3) : buttonHeight * 1.5;
         const cbd = new CheckerBoard(upDiv, left, top, width, width);
         cbd.backgroundColor = "white";
-        cbd.resetCBoardCoordinate();
-        cbd.printEmptyCBoard();
+        cbd.showCheckerBoard();
         cbd.viewBox.style.zIndex = -1;
         cbd.bodyScale = bodyScale;
         return cbd;

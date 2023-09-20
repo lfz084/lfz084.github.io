@@ -1023,7 +1023,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     y: y,
                     radius: radius,
                     color: "black",
-                    lineWidth: this.lineStyle == "bolder" ? w / 9 : this.lineStyle == "bold" ? w / 15 : 1,
+                    lineWidth: this.lineStyle == "heavy" ? w / 9 : this.lineStyle == "bold" ? w / 15 : 1,
                     fill: this.P[idx].color
                 },
                 text: {
@@ -1031,8 +1031,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     x: x,
                     y: y,
                     color: this.P[idx].color == this.wNumColor ? this.wNumFontColor : this.bNumFontColor,
-                    weight: "bolder",
-                    family: "mHeiTi, emjFont",
+                    weight: "900",
+                    family: "mHeiTi, emjFont, Symbola",
                     size: fontSize
                 }
             }
@@ -1075,8 +1075,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     x: x,
                     y: y,
                     color: this.P[idx].color,
-                    weight: "bolder",
-                    family: "mHeiTi, emjFont",
+                    weight: "900",
+                    family: "mHeiTi, emjFont, Symbola",
                     size: fontSize
                 }
             }
@@ -1096,7 +1096,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
 
     Board.prototype.getBoardLinesInfo = function() {
         let boardLines = [],
-            normalLineWidth = this.lineStyle == "bolder" ? Math.min(this.gW, this.gH) / 18 : this.lineStyle == "bold" ? Math.min(this.gW, this.gH) / 23 : this.width / 500,
+            normalLineWidth = this.lineStyle == "heavy" ? Math.min(this.gW, this.gH) / 18 : this.lineStyle == "bold" ? Math.min(this.gW, this.gH) / 23 : this.width / 500,
             boldLineWidth = normalLineWidth * 2;
         for (let i = 0; i < this.SLTX; i++) {
             let lineWidth = i == 0 || i == (this.SLTX - 1) ? boldLineWidth : normalLineWidth,
@@ -1145,8 +1145,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     x: this.P[i + j].x,
                     y: this.P[i + j].y + m,
                     color: this.coordinateColor,
-                    weight: "normal",
-                    family: "mHeiTi, emjFont",
+                    weight: "bold",
+                    family: "mHeiTi, emjFont, Symbola",
                     size: ~~(this.gW * 0.5)
                 })
             }
@@ -1159,8 +1159,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     x: this.P[i * 15 + j].x + m,
                     y: this.P[i * 15 + j].y,
                     color: this.coordinateColor,
-                    weight: "normal",
-                    family: "mHeiTi, emjFont",
+                    weight: "bold",
+                    family: "mHeiTi, emjFont, Symbola",
                     size: ~~(this.gW * 0.5)
                 })
             }
@@ -1470,7 +1470,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
             }
         }
     }
-
+    
+    Board.prototype.showCheckerBoard = function() {
+        this.resetCBoardCoordinate();
+        this.printEmptyCBoard();
+        setTimeout(() => { // refresh font
+            this.refreshCheckerBoard();
+        }, 1500);
+    }
 
     Board.prototype.setCoordinate = function(coordinateType) {
         if (coordinateType < 0 || coordinateType > 5) return;
@@ -1499,7 +1506,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
 
 
     Board.prototype.setLineStyle = function(keyNum) {
-        const WEIGHT = ["normal", "bold", "bolder"];
+        const WEIGHT = ["normal", "bold", "heavy"];
         WEIGHT[keyNum] && (this.lineStyle = WEIGHT[keyNum]);
         this.refreshCheckerBoard();
     }

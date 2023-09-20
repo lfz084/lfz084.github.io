@@ -12,7 +12,7 @@
     }
     
     CheckerBoard.prototype.printTextSVG = function({ txt, x, y, color, weight, family, size }, scale) {
-        family = "黑体"
+        family = "mHeiTi, emjFont, Symbola, 黑体";
         return !txt ? "" : `<text x="${~~(x*scale)}" y="${~~(y*scale)}" stroke="${color}" fill="${color}" font-weight="${weight}" font-family="${family}" font-size="${~~(size*scale)}" text-anchor="middle" dominant-baseline="central">${txt}</text>`;
     }
     

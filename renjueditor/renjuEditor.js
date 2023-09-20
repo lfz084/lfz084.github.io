@@ -52,8 +52,7 @@ window.renjuEditor = (() => {
 
     const cBoard = new CheckerBoard(document.createElement("div"), 0, 0, 500, 500);
     cBoard.backgroundColor = "white";
-    cBoard.resetCBoardCoordinate();
-    cBoard.printEmptyCBoard();
+    cBoard.showCheckerBoard();
         
     // index ，转字母数字坐标
     function idxToName(idx) {

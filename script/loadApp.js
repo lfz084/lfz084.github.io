@@ -194,8 +194,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
             //downDiv.style.backgroundColor = "blue";
 
             cBoard = new CheckerBoard(upDiv, 0, 0, cWidth, cWidth);
-            cBoard.resetCBoardCoordinate();
-            cBoard.printEmptyCBoard();
+            cBoard.showCheckerBoard();
 
             control.reset(cBoard, engine, msg, closeMsg, appData, dw, dh, [downDiv, 0, 0, cWidth, cWidth], bodyDiv);
 
@@ -247,6 +246,11 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
                 [SOURCE_FILES["PFSCHeavy1_woff"]],
                 [SOURCE_FILES["PFSCMedium1_ttf"]],
                 [SOURCE_FILES["PFSCHeavy1_ttf"]],
+                [SOURCE_FILES["PFSCBold1_ttf"]],
+                [SOURCE_FILES["emjMedium_ttf"]],
+                [SOURCE_FILES["emjBold_ttf"]],
+                [SOURCE_FILES["emjHeavy_ttf"]],
+                [SOURCE_FILES["Symbola_ttf"]],
                 [SOURCE_FILES["Evaluator_wasm"]]]
         }, {
                 progress: "20%",
@@ -293,8 +297,8 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
                 progress: "50%",
                 type: "scriptAll",
                 isAsync: true,
-                sources: [[SOURCE_FILES["PFSCMedium"]],
-                [SOURCE_FILES["PFSCHeavy"]]]
+                sources: [[SOURCE_FILES["PFSCMedium_js"]],
+                [SOURCE_FILES["PFSCHeavy_js"]]]
         }, {
                 progress: "63%",
                 type: "scriptAll",

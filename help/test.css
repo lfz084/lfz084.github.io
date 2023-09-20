@@ -35,7 +35,7 @@ body {
     width: 800px;
     /*viewport width=800*/
     font-size: 30px;
-    font-family: mHeiTi, emjFont;
+    font-family: mHeiTi, emjFont, Symbola;
     font-weight: 300;
     line-height: 2;
     scroll-behavior: auto;

@@ -150,7 +150,7 @@ window.control = (() => {
             this.div.style.top = top + "px";
             this.div.style.height = parseInt(height) + "px";
             this.div.style.width = parseInt(width) + "px";
-            this.div.style.fontFamily = "mHeiTi, emjFont";
+            this.div.style.fontFamily = "mHeiTi, emjFont, Symbola";
             this.div.style.fontSize = fontSize;
             this.div.style.textAlign = "center";
             this.div.style.lineHeight = height;
@@ -2058,8 +2058,7 @@ window.control = (() => {
 
         miniBoard = new CheckerBoard(imgCmdDiv, 0, t, w * 2.5, w * 2.5);
         miniBoard.setCoordinate(5);
-        miniBoard.resetCBoardCoordinate();
-        miniBoard.printEmptyCBoard();
+        miniBoard.showCheckerBoard();
         miniBoard.viewBox.addEventListener("touchstart", () => event.preventDefault())
 
         t += h * 1;

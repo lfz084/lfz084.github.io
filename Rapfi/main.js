@@ -204,7 +204,6 @@
             s.borderWidth = `${fontSize / 20}px`;
             s.borderColor = "black";
             s.background = "white";
-            s.fontWeight = "normal";
             s.padding = `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`;
 
 

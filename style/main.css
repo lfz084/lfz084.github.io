@@ -3,17 +3,17 @@
     src: url('./font/PFSCMedium1.ttf') format('truetype');
     font-weight: normal;
 }
-/*
+
 @font-face {
     font-family: mHeiTi;
     src: url('./font/PingFang Bold.subset.ttf') format('truetype');
     font-weight: bold;
 }
-*/
+
 @font-face {
     font-family: mHeiTi;
     src: url('./font/PFSCHeavy1.ttf') format('truetype');
-    font-weight: bolder;
+    font-weight: 900;
 }
 
 @font-face {
@@ -21,22 +21,40 @@
     src: url('./font/SourceHanSansCN-Medium.subset.ttf') format('truetype');
     font-weight: normal;
 }
-/*
+
 @font-face {
     font-family: emjFont;
     src: url('./font/SourceHanSansCN-Bold.subset.ttf') format('truetype');
     font-weight: bold;
 }
-*/
+
 @font-face {
     font-family: emjFont;
     src: url('./font/SourceHanSansCN-Heavy.subset.ttf') format('truetype');
-    font-weight: bolder;
+    font-weight: 900;
+}
+/*
+@font-face {
+    font-family: Symbola;
+    src: url('./font/Symbola.subset.ttf') format('truetype');
+    font-weight: normal;
 }
 
-font {
-    font-family: mHeiTi, emjFont;
+@font-face {
+    font-family: Symbola;
+    src: url('./font/Symbola.subset.ttf') format('truetype');
     font-weight: bold;
+}
+
+@font-face {
+    font-family: Symbola;
+    src: url('./font/Symbola.subset.ttf') format('truetype');
+    font-weight: 900;
+}
+*/
+font {
+    font-family: mHeiTi, emjFont, Symbola;
+    font-weight: 900;
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
 }
@@ -44,22 +62,22 @@ font {
 
 
 button {
-    font-family: mHeiTi, emjFont;
+    font-family: mHeiTi, emjFont, Symbola;
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
 }
 
 
 div {
-    font-family: mHeiTi, emjFont;
-    /*font-weight: bolder;*/
+    font-family: mHeiTi, emjFont, Symbola;
+    /*font-weight: 900;*/
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
 }
 
 
 h1 {
-    font-family: mHeiTi, emjFont;
+    font-family: mHeiTi, emjFont, Symbola;
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
 }
@@ -71,7 +89,8 @@ body {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-family: mHeiTi, emjFont;
+    font-family: mHeiTi, emjFont, Symbola;
+    font-weight: bold;
     scroll-behavior: smooth;
     -webkit-user-select: none;
     /*background-color: #303030*/
