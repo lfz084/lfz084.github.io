@@ -72,7 +72,7 @@ window.share = (() => {
 
             let s = shareWindow.style;
             s.position = "fixed";
-            s.zIndex = 9998;
+            s.zIndex = 9999;
             s.width = winWidth + "px";
             s.height = winHeight * 2 + "px";
             s.top = "0px";
@@ -88,7 +88,7 @@ window.share = (() => {
             s.height = imgWidth + "px";
             s.top = ~~((winHeight - imgWidth) / 2) + "px";
             s.left = ~~((winWidth - imgWidth) / 2) + "px";
-            s.backgroundColor = "#666666";
+            s.backgroundColor = "#d0d0d0"; //"#666666";
             s.border = `0px solid `;
 
             let iWidth = ~~(imgWidth * 3 / 5);
@@ -148,7 +148,7 @@ window.share = (() => {
             s.height = s.width;
             s.top = imgWidth - parseInt(s.width) * 1.5 + "px";
             s.left = imgWidth / 2 - parseInt(s.width) * 1.5 + "px";
-            s.backgroundColor = "#787878";
+            s.backgroundColor = "#e0e0e0"; //#787878";
             s.opacity = "0.8";
             setButtonClick(ICO_DOWNLOAD, () => {
                 try{
@@ -162,7 +162,7 @@ window.share = (() => {
             s.height = ICO_DOWNLOAD.style.height;
             s.top = ICO_DOWNLOAD.style.top;
             s.left = imgWidth / 2 + parseInt(s.width) * 0.5 + "px";
-            s.backgroundColor = "#787878";
+            s.backgroundColor = "#e0e0e0"; //"#787878";
             s.opacity = "0.8";
             setButtonClick(ICO_CLOSE, () => {
                 shareClose();

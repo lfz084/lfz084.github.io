@@ -353,8 +353,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
         this.color = "#333333"; //字体默认颜色
         this.selectColor = "black"; //按钮按下时字体颜色
         this.notChangeColor = false; // 不自动调整按钮字体颜色
-        this.backgroundColor = "#f0f0f0"; //按钮颜色999999
-        this.selectBackgroundColor = "#d0d0d0"; //666666
+        this.backgroundColor = "white";//"#f0f0f0"; //按钮颜色999999
+        this.selectBackgroundColor = "#e0e0e0";/ "#d0d0d0"; //666666
         /*if (this.type=="button") {
           let col = this.backgroundColor;
           this.backgroundColor = this.selectBackgroundColor;

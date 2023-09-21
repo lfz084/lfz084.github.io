@@ -84,7 +84,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.06";
             s.top = parseInt(top) + "px";
             s.width = parseInt(width) + "px";
             s.height = !!height ? parseInt(height) + "px" : parseInt(s.width) / 20 * (lineNum + (butNum === 0 ? 0.8 : 3)) * 1.3 + "px";
-            s.backgroundColor = "#666666";
+            s.backgroundColor = "#d0d0d0"; //"#666666";
             s.border = `0px solid ${butEnter.selectBackgroundColor}`;
             s.margin = "0px";
             s.padding = "0px";
@@ -108,8 +108,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.06";
                 msgTextarea.readOnly = true;
                 s.textAlign = textAlign || "center";
                 s.border = `0px`;
-                s.color = "#f0f0f0";
-                s.backgroundColor = "#666666";
+                s.color = "black"; //"#f0f0f0";
+                s.backgroundColor = "#d0d0d0"; //"#666666";
             }
             else {
                 msgTextarea.readOnly = false;

@@ -12,7 +12,7 @@
 
 @font-face {
     font-family: mHeiTi;
-    src: url('./font/PFSCHeavy1.ttf') format('truetype');
+    src: url('./font/SourceHanSansCN-Heavy.subset.ttf') format('truetype');
     font-weight: 900;
 }
 

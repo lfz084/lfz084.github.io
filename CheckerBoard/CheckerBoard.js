@@ -124,8 +124,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                 const oldDistance = distance;
                 distance = Math.hypot(x1 - x2, y1 - y2);
                 this.scale = Math.min(Math.max(MIN_ZOOM, this.scale * distance / oldDistance), MAX_ZOOM);
-                this.scaleBox.style.transformOrigin = `0px 0px`;
-                this.scaleBox.style.transform = `scale(${this.scale})`;
+                scaleBoard.call(this, this.scale);
+                //this.scaleBox.style.transformOrigin = `0px 0px`;
+                //this.scaleBox.style.transform = `scale(${this.scale})`;
                 this.viewBox.scrollLeft = p.x * this.scale / oldScale - centerX; // 中心点在 viewBox 保存不变
                 this.viewBox.scrollTop = p.y * this.scale / oldScale - centerY;
                 this.setViewBoxBorder(this.scale > 1);
@@ -163,8 +164,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
         animation(() => moves_x.length || moves_y.length || width_arr.length,
             () => {
                 if (width_arr.length) {
-                    this.scaleBox.style.transformOrigin = `0px 0px`;
-                    this.scaleBox.style.transform = `scale(${width_arr.shift()})`;
+                    scaleBoard.call(this, width_arr.shift());
+                    //this.scaleBox.style.transformOrigin = `0px 0px`;
+                    //this.scaleBox.style.transform = `scale(${width_arr.shift()})`;
                 }
                 moves_x.length && (this.viewBox.scrollLeft += moves_x.shift());
                 moves_y.length && (this.viewBox.scrollTop += moves_y.shift());
@@ -337,6 +339,17 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
     point.prototype.setxy = function(x, y) {
         this.x = x;
         this.y = y;
+    }
+    
+    //--------------------------- scaleBoard --------------------
+    //--为了兼容 safari 实现 viewBox 的滚动 -------------------------
+    //--必须改变 scaleBox 尺寸 ------------------------------------
+    
+    function scaleBoard(scale) { 
+        this.scaleBox.style.width = `${~~(scale*this.width)}px`;
+        this.scaleBox.style.height = `${~~(scale*this.height)}px`;
+        this.canvas.style.transformOrigin = `0px 0px`;
+        this.canvas.style.transform = `scale(${scale})`;
     }
 
     //------------------------ transform board ------------------
@@ -592,7 +605,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
             }
             for (let i = 0; i < 30; i++) { this.searchIdx[i] = -1; };
 
-            this.backgroundColor = "#f0f0f0"; //888888
+            this.backgroundColor = "white";//"#f0f0f0"; //888888
             this.wNumColor = "white";
             this.bNumColor = "#000000"; //333333
             this.wNumFontColor = "#000000"; //333333
@@ -1519,8 +1532,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
     Board.prototype.zoom = function(scale) {
         scale = Math.min(Math.max(MIN_ZOOM, scale), MAX_ZOOM);
         this.setViewBoxBorder(scale > 1);
-        this.scaleBox.style.transformOrigin = `0px 0px`;
-        this.scaleBox.style.transform = `scale(${scale})`;
+        scaleBoard.call(this, scale);
+        //this.scaleBox.style.transformOrigin = `0px 0px`;
+        //this.scaleBox.style.transform = `scale(${scale})`;
         this.scale = scale;
     }
 
@@ -1530,8 +1544,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
         scale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
         if (timeout == 0) {
             this.setViewBoxBorder(scale > 1);
-            this.scaleBox.style.transformOrigin = `0px 0px`;
-            this.scaleBox.style.transform = `scale(${scale})`;
+            scaleBoard.call(this, scale);
+            //this.scaleBox.style.transformOrigin = `0px 0px`;
+            //this.scaleBox.style.transform = `scale(${scale})`;
             this.scale = scale;
             this.center();
         }
