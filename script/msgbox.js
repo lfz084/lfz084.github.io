@@ -31,7 +31,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.06";
         let msgTextarea = document.createElement("textarea");
         windowDiv.appendChild(msgTextarea);
         msgTextarea.style.position = "relative";
-        msgTextarea.style.fontFamily = "mHeiTi, emjFont, Symbola";
+        msgTextarea.style.fontFamily = "mHeiTi, Roboto, emjFont, Symbola";
         msgTextarea.style.fontWeight = "900";
         
         /*

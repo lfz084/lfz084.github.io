@@ -150,7 +150,7 @@ window.control = (() => {
             this.div.style.top = top + "px";
             this.div.style.height = parseInt(height) + "px";
             this.div.style.width = parseInt(width) + "px";
-            this.div.style.fontFamily = "mHeiTi, emjFont, Symbola";
+            this.div.style.fontFamily = "mHeiTi, Roboto, emjFont, Symbola";
             this.div.style.fontSize = fontSize;
             this.div.style.textAlign = "center";
             this.div.style.lineHeight = height;

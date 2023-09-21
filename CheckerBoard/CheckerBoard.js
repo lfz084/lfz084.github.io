@@ -1045,7 +1045,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     y: y,
                     color: this.P[idx].color == this.wNumColor ? this.wNumFontColor : this.bNumFontColor,
                     weight: "900",
-                    family: "mHeiTi, emjFont, Symbola",
+                    family: "mHeiTi, Roboto, emjFont, Symbola",
                     size: fontSize
                 }
             }
@@ -1089,7 +1089,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     y: y,
                     color: this.P[idx].color,
                     weight: "900",
-                    family: "mHeiTi, emjFont, Symbola",
+                    family: "mHeiTi, Roboto, emjFont, Symbola",
                     size: fontSize
                 }
             }
@@ -1158,8 +1158,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     x: this.P[i + j].x,
                     y: this.P[i + j].y + m,
                     color: this.coordinateColor,
-                    weight: "bold",
-                    family: "mHeiTi, emjFont, Symbola",
+                    weight: "normal",
+                    family: "mHeiTi, Roboto, emjFont, Symbola",
                     size: ~~(this.gW * 0.5)
                 })
             }
@@ -1172,8 +1172,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     x: this.P[i * 15 + j].x + m,
                     y: this.P[i * 15 + j].y,
                     color: this.coordinateColor,
-                    weight: "bold",
-                    family: "mHeiTi, emjFont, Symbola",
+                    weight: "normal",
+                    family: "mHeiTi, Roboto, emjFont, Symbola",
                     size: ~~(this.gW * 0.5)
                 })
             }
@@ -1487,9 +1487,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
     Board.prototype.showCheckerBoard = function() {
         this.resetCBoardCoordinate();
         this.printEmptyCBoard();
-        setTimeout(() => { // refresh font
-            this.refreshCheckerBoard();
-        }, 1500);
     }
 
     Board.prototype.setCoordinate = function(coordinateType) {

@@ -225,6 +225,16 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
             document.body.innerHTML = `<div><h1>出错啦</h1><h3><p>${err.stack || err.message}</p></h3><h2><a onclick="window.reloadApp()">点击刷新</a></h2></div>`;
         }
     }
+    
+    async function loadFont(family, url, descriptors) {
+        const font = new FontFace(family, `url(${url})`, descriptors);
+        // wait for font to be loaded
+        await font.load();
+        // add font to document
+        document.fonts.add(font);
+        // enable font with CSS class
+        document.body.classList.add("fonts-loaded");
+    }
 
 
     document.body.onload = async () => {
@@ -234,24 +244,25 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
         const sources = [
             {
                 progress: "0%",
-                type: "cssAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["loaders"]],
-                [SOURCE_FILES["main"]]]
-        }, {
-                progress: "5%",
                 type: "fontAll",
                 isAsync: true,
-                sources: [[SOURCE_FILES["PFSCMedium1_woff"]],
-                [SOURCE_FILES["PFSCHeavy1_woff"]],
-                [SOURCE_FILES["PFSCMedium1_ttf"]],
-                [SOURCE_FILES["PFSCHeavy1_ttf"]],
-                [SOURCE_FILES["PFSCBold1_ttf"]],
+                sources: [[SOURCE_FILES["RobotoMedium_ttf"]],
+                [SOURCE_FILES["RobotoBold_ttf"]],
+                [SOURCE_FILES["RobotoHeavy_ttf"]],
+                [SOURCE_FILES["PFSCMedium_ttf"]],
+                [SOURCE_FILES["PFSCHeavy_ttf"]],
+                [SOURCE_FILES["PFSCBold_ttf"]],
                 [SOURCE_FILES["emjMedium_ttf"]],
                 [SOURCE_FILES["emjBold_ttf"]],
                 [SOURCE_FILES["emjHeavy_ttf"]],
                 [SOURCE_FILES["Symbola_ttf"]],
                 [SOURCE_FILES["Evaluator_wasm"]]]
+        }, {
+                progress: "10%",
+                type: "cssAll",
+                isAsync: true,
+                sources: [[SOURCE_FILES["loaders"]],
+                [SOURCE_FILES["main"]]]
         }, {
                 progress: "20%",
                 type: "scriptAll",
@@ -354,6 +365,11 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
             })
             .then(() => {
                 return loadSources(sources)
+            })
+            .then(async () => {
+                await loadFont("Roboto", SOURCE_FILES["RobotoMedium_ttf"], {weight: "normal"});
+                await loadFont("Roboto", SOURCE_FILES["RobotoBold_ttf"], {weight: "bold"});
+                await loadFont("Roboto", SOURCE_FILES["RobotoHeavy_ttf"], {weight: "900"});
             })
             .then(() => {
                 initNoSleep();

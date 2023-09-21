@@ -256,7 +256,7 @@
 	box-sizing: border-box;
 }
 .loader-ball-11:before {
-    font-family: mHeiTi, emjFont, Symbola;
+    font-family: mHeiTi, Roboto, emjFont, Symbola;
     font-size: 15px;
     font-weight: 600;
     line-height: 23px;
@@ -271,7 +271,7 @@
 	animation: loader-ball-11-spin2 1.3s linear infinite;
 }
 .loader-ball-11:after {
-    font-family: mHeiTi, emjFont, Symbola;
+    font-family: mHeiTi, Roboto, emjFont, Symbola;
     font-size: 15px;
     font-weight: 600;
     line-height: 23px;
