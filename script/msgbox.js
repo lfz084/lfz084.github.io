@@ -32,7 +32,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.06";
         windowDiv.appendChild(msgTextarea);
         msgTextarea.style.position = "relative";
         msgTextarea.style.fontFamily = "mHeiTi, Roboto, emjFont, Symbola";
-        msgTextarea.style.fontWeight = "900";
+        msgTextarea.style.fontWeight = "bold";
         
         /*
         msgTextarea.oninput = function(event){

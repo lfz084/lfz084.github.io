@@ -1,27 +1,27 @@
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/PingFang Regular.subset.ttf') format('truetype');
+    src: url('../style/font/NotoSansSC-Regular.subset.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/PingFang Medium.subset.ttf') format('truetype');
+    src: url('../style/font/NotoSansSC-Medium.subset.ttf') format('truetype');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/PingFang Bold.subset.ttf') format('truetype');
+    src: url('../style/font/NotoSansSC-Bold.subset.ttf') format('truetype');
     font-weight: 600;
     font-style: normal;
 }
 
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/PingFang Heavy.subset.ttf') format('truetype');
+    src: url('../style/font/NotoSansSC-Black.subset.ttf') format('truetype');
     font-weight: 900;
     font-style: normal;
 }

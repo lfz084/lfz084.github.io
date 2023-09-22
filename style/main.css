@@ -1,7 +1,84 @@
+/* mHeiTi  中文和部分特殊字符 */
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/NotoSansSC-Medium.subset.ttf') format('truetype');
+    font-weight: normal;
+}
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/NotoSansSC-Bold.subset.ttf') format('truetype');
+    font-weight: bold;
+}
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/NotoSansSC-Black.subset.ttf') format('truetype');
+    font-weight: 900;
+}
+
+
+
+/* Roboto  英文和数字 */
+@font-face {
+    font-family: Roboto;
+    src: url('./font/NotoSans-Medium.subset.ttf') format('truetype');
+    font-weight: normal;
+}
+@font-face {
+    font-family: Roboto;
+    src: url('./font/NotoSans-Bold.subset.ttf') format('truetype');
+    font-weight: bold;
+}
+@font-face {
+    font-family: Roboto;
+    src: url('./font/NotoSans-Bold.subset.ttf') format('truetype');
+    font-weight: 900;
+}
+
+
+/* 特殊字符 */
+@font-face {
+    font-family: emjFont;
+    src: url('./font/SourceHanSansCN-Medium.subset.ttf') format('truetype');
+    font-weight: normal;
+}
+@font-face {
+    font-family: emjFont;
+    src: url('./font/SourceHanSansCN-Bold.subset.ttf') format('truetype');
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: emjFont;
+    src: url('./font/SourceHanSansCN-Heavy.subset.ttf') format('truetype');
+    font-weight: 900;
+}
+
+
+/* 特殊字符 */
+@font-face {
+    font-family: Symbola;
+    src: url('./font/Symbola.subset.ttf') format('truetype');
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: Symbola;
+    src: url('./font/Symbola.subset.ttf') format('truetype');
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: Symbola;
+    src: url('./font/Symbola.subset.ttf') format('truetype');
+    font-weight: 900;
+}
+
+
+
 
 font {
     font-family: mHeiTi, Roboto, emjFont, Symbola;
-    font-weight: 900;
+    font-weight: bold;
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
 }
@@ -17,7 +94,7 @@ button {
 
 div {
     font-family: mHeiTi, Roboto, emjFont, Symbola;
-    /*font-weight: 900;*/
+    font-weight: bold;
     -webkit-user-select: none;
     /* Chrome/Safari/Opera */
 }

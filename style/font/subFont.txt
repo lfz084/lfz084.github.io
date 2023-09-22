@@ -1,4 +1,4 @@
-Noto_Sans_SC        6000+ gbk, emojisub.txt
+Noto_Sans_SC        6840 char gb2312
 ︾
 Noto_Sans           012345678,a~z,A~Z
 ︾

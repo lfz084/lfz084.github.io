@@ -43,6 +43,97 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
         TEST_CHECKER_BOARD && window.DEBUG && print(`[CheckerBoard.js]\n>>  ${ param}`);
     }
 
+    //------------------------ loadFont ------------------
+    
+    let fontStatus = "";
+    const fonts = [{
+            family: "mHeiTi",
+            url: "style/font/NotoSansSC-Medium.subset.ttf",
+            descriptors: { weight: "normal" }
+        }, {
+            family: "mHeiTi",
+            url: "style/font/NotoSansSC-Bold.subset.ttf",
+            descriptors: { weight: "bold" }
+        }, {
+            family: "mHeiTi",
+            url: "style/font/NotoSansSC-Black.subset.ttf",
+            descriptors: { weight: "900" }
+        }, {
+            family: "Roboto",
+            url: "style/font/NotoSans-Medium.subset.ttf",
+            descriptors: { weight: "normal" }
+        }, {
+            family: "Roboto",
+            url: "style/font/NotoSans-Bold.subset.ttf",
+            descriptors: { weight: "bold" }
+        }, {
+            family: "Roboto",
+            url: "style/font/NotoSans-Black.subset.ttf",
+            descriptors: { weight: "900" }
+        }, {
+            family: "emjFont",
+            url:  "style/font/SourceHanSansCN-Medium.subset.ttf",
+            descriptors: { weight: "normal" }
+        }, {
+            family: "emjFont",
+            url: "style/font/SourceHanSansCN-Bold.subset.ttf",
+            descriptors: { weight: "bold" }
+        }, {
+            family: "emjFont",
+            url: "style/font/SourceHanSansCN-Heavy.subset.ttf",
+            descriptors: { weight: "900" }
+    }];
+    
+    /*
+    async function loadFont({family, url, descriptors}) {
+        const font = new FontFace(family, `url(${url})`, descriptors);
+        // wait for font to be loaded
+        await font.load();
+        // add font to document
+        document.fonts.add(font);
+        // enable font with CSS class
+        document.body.classList.add("fonts-loaded");
+    }
+    
+    async function getDocumentFont(font) {
+        const fontFaces = [... await document.fonts.ready];
+        for(let i = fontFaces.length-1; i >= 0; i--) {
+            const fontFace = fontFaces[i];
+            if (font.family == fontFace.family && font.descriptors.weight == fontFace.weight) {
+                log(`family: ${fontFace.family}\n weight:${fontFace.weight}\n status: ${fontFace.status}`)
+                return fontFace;
+            }
+        }
+        return null;
+    }
+    
+    async function loadFonts() {
+        let count = 0;
+        while(count++ < 50 && fonts.length) {
+            const font = fonts.shift();
+            const fontFace = await getDocumentFont(font);
+            if (fontFace) {
+                log(`>>> family: ${fontFace.family}\n weight:${fontFace.weight}\n status: ${fontFace.status}`)
+            }
+            else {
+                log(`loadFont: \n family: ${font.family}\n weight:${font.weight}\n url: ${font.url}`)
+                await loadFont(font);
+            }
+        }
+    }
+    */
+    
+    async function loadFonts() {
+        while (fonts.length) {
+            const font = fonts.shift();
+            const fontCSS = `${font.descriptors.weight} 50px ${font.family}`;
+            const text = "1aA五○";
+            const fontFaces = await document.fonts.load(fontCSS,text);
+            const logFontFaces = fontFaces.map(fontFace => `${fontFace.weight} ${fontFace.family} ${fontFace.status}`).join("\n") || "没有找到字体";
+            log(`fonts.load: ${fontCSS} \n ${logFontFaces} `);
+        }
+    }
+    
 
     //------------------------ Animation ------------------
 
@@ -340,12 +431,12 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
         this.x = x;
         this.y = y;
     }
-    
+
     //--------------------------- scaleBoard --------------------
     //--为了兼容 safari 实现 viewBox 的滚动 -------------------------
     //--必须改变 scaleBox 尺寸 ------------------------------------
-    
-    function scaleBoard(scale) { 
+
+    function scaleBoard(scale) {
         this.scaleBox.style.width = `${~~(scale*this.width)}px`;
         this.scaleBox.style.height = `${~~(scale*this.height)}px`;
         this.canvas.style.transformOrigin = `0px 0px`;
@@ -605,7 +696,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
             }
             for (let i = 0; i < 30; i++) { this.searchIdx[i] = -1; };
 
-            this.backgroundColor = "white";//"#f0f0f0"; //888888
+            this.backgroundColor = "white"; //"#f0f0f0"; //888888
             this.wNumColor = "white";
             this.bNumColor = "#000000"; //333333
             this.wNumFontColor = "#000000"; //333333
@@ -1052,7 +1143,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
         }
         else {
             txt = this.P[idx].text || "";
-            radius = this.P[idx].type == TYPE_MARKFOUL ? w : txt.length > 1 ? w * 0.8 : w / 2;
+            radius = this.P[idx].type == TYPE_MARKFOUL ? w : txt.length > 1 ? w * 0.8 : w / 1.7;
             if (txt.length == 1) { // 两位数数数字不需要放大字体
                 let code = txt.charCodeAt(); // 再把一位数字排除
                 if (code < "0".charCodeAt() || code > "9".charCodeAt()) {
@@ -1158,7 +1249,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     x: this.P[i + j].x,
                     y: this.P[i + j].y + m,
                     color: this.coordinateColor,
-                    weight: "normal",
+                    weight: "bold",
                     family: "mHeiTi, Roboto, emjFont, Symbola",
                     size: ~~(this.gW * 0.5)
                 })
@@ -1172,7 +1263,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                     x: this.P[i * 15 + j].x + m,
                     y: this.P[i * 15 + j].y,
                     color: this.coordinateColor,
-                    weight: "normal",
+                    weight: "bold",
                     family: "mHeiTi, Roboto, emjFont, Symbola",
                     size: ~~(this.gW * 0.5)
                 })
@@ -1483,10 +1574,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
             }
         }
     }
-    
-    Board.prototype.showCheckerBoard = function() {
+
+    Board.prototype.showCheckerBoard = async function() {
         this.resetCBoardCoordinate();
         this.printEmptyCBoard();
+        await loadFonts();
+        this.printEmptyCBoard();
+        this.refreshBoardPoint("all");
+        log("showCheckerBoard: refreshCheckerBoard");
     }
 
     Board.prototype.setCoordinate = function(coordinateType) {
