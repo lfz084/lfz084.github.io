@@ -14,14 +14,14 @@
 
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/NotoSansSC-Bold.subset.ttf') format('truetype');
+    src: url('../style/font/NotoSansSC-SemiBold.subset.ttf') format('truetype');
     font-weight: 600;
     font-style: normal;
 }
 
 @font-face {
     font-family: mHeiTi;
-    src: url('../style/font/NotoSansSC-Black.subset.ttf') format('truetype');
+    src: url('../style/font/NotoSansSC-Bold.subset.ttf') format('truetype');
     font-weight: 900;
     font-style: normal;
 }

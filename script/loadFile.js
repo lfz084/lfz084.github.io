@@ -184,7 +184,7 @@
                 fontAll: loadFontAll,
                 scriptAll: loadScriptAll
             }
-            "loadAnimation" in window == false && await loadScript("script/loadAnimation.js");
+            "loadAnimation" in window == false && await loadScript("UI/loadAnimation.js");
             loadAnimation.open();
             loadAnimation.lock(true);
             let source;

@@ -47,7 +47,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
                     resolve()
                 }
             }
-            catch (err) {resolve()}
+            catch (err) { resolve() }
         })
     }
 
@@ -233,6 +233,12 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
         const sources = [
             {
                 progress: "0%",
+                type: "cssAll",
+                isAsync: true,
+                sources: [[SOURCE_FILES["loaders"]],
+                [SOURCE_FILES["main"]]]
+        }, {
+                progress: "5%",
                 type: "fontAll",
                 isAsync: true,
                 sources: [[SOURCE_FILES["enMedium_ttf"]],
@@ -246,12 +252,6 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
                 [SOURCE_FILES["emjHeavy_ttf"]],
                 [SOURCE_FILES["Symbola_ttf"]],
                 [SOURCE_FILES["Evaluator_wasm"]]]
-        }, {
-                progress: "10%",
-                type: "cssAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["loaders"]],
-                [SOURCE_FILES["main"]]]
         }, {
                 progress: "20%",
                 type: "scriptAll",

@@ -6,12 +6,12 @@
 }
 @font-face {
     font-family: mHeiTi;
-    src: url('./font/NotoSansSC-Bold.subset.ttf') format('truetype');
+    src: url('./font/NotoSansSC-SemiBold.subset.ttf') format('truetype');
     font-weight: bold;
 }
 @font-face {
     font-family: mHeiTi;
-    src: url('./font/NotoSansSC-Black.subset.ttf') format('truetype');
+    src: url('./font/NotoSansSC-Bold.subset.ttf') format('truetype');
     font-weight: 900;
 }
 
@@ -25,7 +25,7 @@
 }
 @font-face {
     font-family: Roboto;
-    src: url('./font/NotoSans-Bold.subset.ttf') format('truetype');
+    src: url('./font/NotoSans-SemiBold.subset.ttf') format('truetype');
     font-weight: bold;
 }
 @font-face {

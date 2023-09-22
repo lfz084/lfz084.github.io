@@ -44,96 +44,64 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
     }
 
     //------------------------ loadFont ------------------
-    
-    let fontStatus = "";
+
+    let fonts_status = "unloaded"; // unloaded >> loading >> loaded
     const fonts = [{
-            family: "mHeiTi",
-            url: "style/font/NotoSansSC-Medium.subset.ttf",
-            descriptors: { weight: "normal" }
+        family: "mHeiTi",
+        descriptors: { weight: "normal" }
         }, {
-            family: "mHeiTi",
-            url: "style/font/NotoSansSC-Bold.subset.ttf",
-            descriptors: { weight: "bold" }
+        family: "mHeiTi",
+        descriptors: { weight: "bold" }
         }, {
-            family: "mHeiTi",
-            url: "style/font/NotoSansSC-Black.subset.ttf",
-            descriptors: { weight: "900" }
+        family: "mHeiTi",
+        descriptors: { weight: "900" }
         }, {
-            family: "Roboto",
-            url: "style/font/NotoSans-Medium.subset.ttf",
-            descriptors: { weight: "normal" }
+        family: "Roboto",
+        descriptors: { weight: "normal" }
         }, {
-            family: "Roboto",
-            url: "style/font/NotoSans-Bold.subset.ttf",
-            descriptors: { weight: "bold" }
+        family: "Roboto",
+        descriptors: { weight: "bold" }
         }, {
-            family: "Roboto",
-            url: "style/font/NotoSans-Black.subset.ttf",
-            descriptors: { weight: "900" }
+        family: "Roboto",
+        descriptors: { weight: "900" }
         }, {
-            family: "emjFont",
-            url:  "style/font/SourceHanSansCN-Medium.subset.ttf",
-            descriptors: { weight: "normal" }
+        family: "emjFont",
+        descriptors: { weight: "normal" }
         }, {
-            family: "emjFont",
-            url: "style/font/SourceHanSansCN-Bold.subset.ttf",
-            descriptors: { weight: "bold" }
+        family: "emjFont",
+        descriptors: { weight: "bold" }
         }, {
-            family: "emjFont",
-            url: "style/font/SourceHanSansCN-Heavy.subset.ttf",
-            descriptors: { weight: "900" }
+        family: "emjFont",
+        descriptors: { weight: "900" }
     }];
-    
-    /*
-    async function loadFont({family, url, descriptors}) {
-        const font = new FontFace(family, `url(${url})`, descriptors);
-        // wait for font to be loaded
-        await font.load();
-        // add font to document
-        document.fonts.add(font);
-        // enable font with CSS class
-        document.body.classList.add("fonts-loaded");
+
+    async function wait(timeout) {
+        return new Promise(resolve => setTimeout(resolve, timeout))
     }
-    
-    async function getDocumentFont(font) {
-        const fontFaces = [... await document.fonts.ready];
-        for(let i = fontFaces.length-1; i >= 0; i--) {
-            const fontFace = fontFaces[i];
-            if (font.family == fontFace.family && font.descriptors.weight == fontFace.weight) {
-                log(`family: ${fontFace.family}\n weight:${fontFace.weight}\n status: ${fontFace.status}`)
-                return fontFace;
-            }
-        }
-        return null;
-    }
-    
+
     async function loadFonts() {
-        let count = 0;
-        while(count++ < 50 && fonts.length) {
-            const font = fonts.shift();
-            const fontFace = await getDocumentFont(font);
-            if (fontFace) {
-                log(`>>> family: ${fontFace.family}\n weight:${fontFace.weight}\n status: ${fontFace.status}`)
+        if (fonts_status == "unloaded") {
+            fonts_status = "loading";
+            let log_str = "loadFonts:\n";
+            while (fonts.length) {
+                const font = fonts.shift();
+                const fontCSS = `${font.descriptors.weight} 50px ${font.family}`;
+                const text = "1aA五○";
+                log_str += `css: ${fontCSS}\n`;
+                const fontFaces = await document.fonts.load(fontCSS, text);
+                const logFontFaces = fontFaces.map(fontFace => `${fontFace.weight} 50px ${fontFace.family} ${fontFace.status}`).join("\n") || "没有找到字体";
+                log_str += `fontFace: ${logFontFaces} \n`;
             }
-            else {
-                log(`loadFont: \n family: ${font.family}\n weight:${font.weight}\n url: ${font.url}`)
-                await loadFont(font);
+            log(log_str, "info");
+            fonts_status = "loaded";
+        }
+        else if (fonts_status == "loading") {
+            while (fonts_status == "loading") {
+                await wait(1000);
             }
         }
     }
-    */
-    
-    async function loadFonts() {
-        while (fonts.length) {
-            const font = fonts.shift();
-            const fontCSS = `${font.descriptors.weight} 50px ${font.family}`;
-            const text = "1aA五○";
-            const fontFaces = await document.fonts.load(fontCSS,text);
-            const logFontFaces = fontFaces.map(fontFace => `${fontFace.weight} ${fontFace.family} ${fontFace.status}`).join("\n") || "没有找到字体";
-            log(`fonts.load: ${fontCSS} \n ${logFontFaces} `);
-        }
-    }
-    
+
 
     //------------------------ Animation ------------------
 
