@@ -275,6 +275,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.06";
                 [SOURCE_FILES["tree"]],
                 [SOURCE_FILES["share"]],
                 [SOURCE_FILES["exWindow"]],
+                [SOURCE_FILES["editButtons"]],
                 [SOURCE_FILES["helpWindow"]]]
         }, {
                 progress: "30%",

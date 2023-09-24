@@ -402,13 +402,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
 
     //--------------------------- scaleBoard --------------------
     //--为了兼容 safari 实现 viewBox 的滚动 -------------------------
-    //--必须改变 scaleBox 尺寸 ------------------------------------
+    //--必须改变 fullBox 尺寸, 撑开 viewBox ------------------------------------
 
     function scaleBoard(scale) {
-        this.scaleBox.style.width = `${~~(scale*this.width)}px`;
-        this.scaleBox.style.height = `${~~(scale*this.height)}px`;
-        this.canvas.style.transformOrigin = `0px 0px`;
-        this.canvas.style.transform = `scale(${scale})`;
+        this.fullBox.style.width = `${~~(scale*this.width)}px`;
+        this.fullBox.style.height = `${~~(scale*this.height)}px`;
+        this.scaleBox.style.transformOrigin = `0px 0px`;
+        this.scaleBox.style.transform = `scale(${scale})`;
     }
 
     //------------------------ transform board ------------------
@@ -642,6 +642,16 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
 
             this.bodyScale = 1;
             this.scale = 1;
+            
+            this.fullBox = document.createElement("div");
+            this.fullBox.style.position = "absolute";
+            this.fullBox.style.width = this.width + "px";
+            this.fullBox.style.height = this.height + "px";
+            this.fullBox.style.left = "0px";
+            this.fullBox.style.top = "0px";
+            this.fullBox.setAttribute("id", "fullBox");
+            this.viewBox.appendChild(this.fullBox);
+            
             this.scaleBox = document.createElement("div");
             this.scaleBox.style.position = "absolute";
             this.scaleBox.style.width = this.width + "px";
@@ -688,6 +698,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
             this.canvas.style.height = this.canvas.style.width;
             this.canvas.style.left = "0px";
             this.canvas.style.top = "0px";
+            this.canvas.style.zIndex = 0;
             //this.canvas.style.transformOrigin = `0px 0px`;
             //this.canvas.style.transform = `scale(${this.scale})`;
             this.scaleBox.appendChild(this.canvas);

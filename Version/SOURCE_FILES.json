@@ -58,6 +58,7 @@
     "renjueditor": "renjueditor/renjuEditor.js",
     "bindevent": "script/bindEvent.js",
     "Button": "UI/Button.js",
+    "editButtons": "UI/editButtons.js",
     "IntervalPost": "script/IntervalPost.js",
     "loadAnimation": "UI/loadAnimation.js",
     "loadApp": "script/loadApp.js",
