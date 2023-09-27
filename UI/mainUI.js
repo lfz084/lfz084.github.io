@@ -209,14 +209,14 @@ window.mainUI = (function() {
                     buttons.push(setting);
                 }
                 else {
-                    buttons.push(new Button(document.body, setting.type, 0, 0, mainUI.buttonWidth, mainUI.buttonHeight));
+                    buttons.push(new Button(document.body, setting.type, 0, 0, buttonWidth, buttonHeight));
                     const button = buttons[buttons.length - 1];
                     setting.text && button.setText(setting.text);
                     setting.accept && (button.input.accept = setting.accept);
                     setting.touchend && button.setontouchend(setting.touchend);
                     setting.change && button.setonchange(setting.change);
                     setting.options && button.addOptions(setting.options);
-                    setting.type == "select" && mainUI.createMenu(button);
+                    setting.type == "select" && createMenu(button);
                 }
             }
             else buttons.push(undefined);
@@ -266,93 +266,6 @@ window.mainUI = (function() {
         return elem;
     }
 
-    //----------------------------- exWindow  ------------------------------- 
-
-    function createEXWindow() {
-        const parentNode = downDiv;
-        const BORDER_WIDTH = 5;
-        const FONT_SIZE = 38;
-        const EX_WINDOW_LEFT = gridPadding;
-        const EX_WINDOW_TOP = buttonHeight * 3;
-        const EX_WINDOW_WIDTH = cmdWidth;
-        const EX_WINDOW_HEIGHT = cmdWidth - buttonHeight * 3;
-
-        const exWindow = document.createElement("div");
-        const iframe = document.createElement("div");
-        iframe.setAttribute("id", "exWindow");
-        exWindow.appendChild(iframe);
-        const closeButton = document.createElement("img");
-        closeButton.src = "./pic/close.svg";
-        //closeButton.setAttribute("class", "button");
-        closeButton.oncontextmenu = (event) => event.preventDefault();
-        setButtonClick(closeButton, closeWindow);
-        exWindow.appendChild(closeButton);
-
-        function resetStyle() {
-
-            let s = exWindow.style;
-            s.position = "absolute";
-            s.left = `${EX_WINDOW_LEFT}px`;
-            s.top = `${EX_WINDOW_TOP}px`;
-            s.width = `${EX_WINDOW_WIDTH}px`;
-            s.height = `${EX_WINDOW_HEIGHT}px`;
-            s.zIndex = 9999;
-
-            const PADDING = 50;
-            s = iframe.style;
-            s.position = "absolute";
-            s.left = 0;
-            s.top = 0;
-            s.width = `${EX_WINDOW_WIDTH - PADDING * 2 - BORDER_WIDTH * 2}px`;
-            s.height = `${EX_WINDOW_HEIGHT - PADDING * 2 - BORDER_WIDTH * 2}px`;
-            s.fontSize = `${FONT_SIZE}px`;
-            s.borderStyle = "solid";
-            s.borderWidth = `${BORDER_WIDTH}px`;
-            s.borderColor = "black";
-            s.background = "white";
-            s.fontWeight = "normal";
-            s.padding = `${PADDING}px ${PADDING}px ${PADDING}px ${PADDING}px`;
-
-            const sz = FONT_SIZE * 2;
-            s = closeButton.style;
-            s.position = "absolute";
-            s.left = (cmdWidth - sz) / 2 + "px";
-            s.top = "0px";
-            s.width = sz + "px";
-            s.height = sz + "px";
-            s.opacity = "0.5";
-            s.backgroundColor = "#c0c0c0";
-        }
-
-        function openWindow() {
-            if (exWindow.parentNode) return;
-            resetStyle();
-            exWindow.setAttribute("class", "showEXWindow");
-            parentNode.appendChild(exWindow);
-        }
-
-        function closeWindow() {
-            iframe.innerHTML = "";
-            exWindow.setAttribute("class", "hideEXWindow");
-            if (exWindow.parentNode) setTimeout(() => exWindow.parentNode.removeChild(exWindow), 350);
-        }
-
-        function setHTML(iHtml) {
-            iframe.innerHTML = iHtml;
-        }
-
-        function getHTML() {
-            return iframe.innerHTML;
-        }
-
-        return {
-            set innerHTML(iHtml) { setHTML(iHtml) },
-            get innerHTML() { return getHTML() },
-            get open() { return openWindow },
-            get close() { return closeWindow }
-        }
-    }
-
     //----------------------------- cmdDiv  ------------------------------- 
 
     function createCmdDiv() {
@@ -400,7 +313,6 @@ window.mainUI = (function() {
     Object.defineProperty(exports, "createLogDiv", { value: createLogDiv });
     Object.defineProperty(exports, "createCmdDiv", { value: createCmdDiv });
     Object.defineProperty(exports, "createConTextMenu", { value: createConTextMenu });
-    Object.defineProperty(exports, "createEXWindow", { value: createEXWindow });
-
+    
     return exports;
 })()
