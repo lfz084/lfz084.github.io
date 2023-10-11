@@ -12,6 +12,20 @@ window.renjuEditor = (() => {
             setTimeout(resolve, time);
         })
     }
+    
+    function code2Idx(code) {
+    	const x = code.charCodeAt(0) - 97;
+    	const y = 15 - code.slice(1);
+    	return y * 15 + x;
+    }
+    
+    function gameToArr2D(game) {
+    	const arr2D = [];
+    	for (let i = 0; i < 15; i++) {
+    		arr2D[i] = game.slice(i * 15, (i + 1) * 15);
+    	}
+    	return arr2D;
+    }
 
     //---------------------- save file -----------------------
     
@@ -110,9 +124,9 @@ window.renjuEditor = (() => {
                 await wait(0);
                 cBoard.unpackArray(games[j]);
                 autoRotate(j) && codes.push(toKaiBaoCode());
-                log(`生成json...${j+1}/${games.length}`);
+                callback(`生成json...${j+1}/${games.length}`);
             }
-            log(`成功${codes.length}题`);
+            callback(`成功${codes.length}题`);
             return JSON.stringify(codes);
         } catch (e) { alert(e.stack) }
     }
@@ -120,6 +134,30 @@ window.renjuEditor = (() => {
     function downloadKaiBaoJSON(jsonText, filename = "新文件") {
         const blob = text2blob(jsonText);
         saveFile(blob, filename);
+    }
+    
+    async function json2Games(jsonText, callback = () => {}) {
+    	const games = [];
+    	const json = JSON.parse(jsonText);
+    	for (let i = 0; i < json.length; i++) {
+    		const game = new Array(226).fill(0);
+    		const gameJSON = json[i];
+    		game[225] = -1;
+    		for (let j = 0; j < gameJSON.length; j++) {
+    			const stone = gameJSON[j].toLowerCase().split(",");
+    			const idx = code2Idx(stone[0]);
+    			const color = stone[1] * 1;
+    			game[idx] = color;
+    		}
+    		games.push(game);
+    		callback(`${i + 1}/${json.length}`);
+    		await wait(0);
+    	}
+    	return games;
+    }
+    
+    async function loadKaiBaoJSON(file, callback = () => {}) {
+    	return json2Games(await file.text(), callback);
     }
     
     //----------------------- open Image ------------------------
@@ -163,7 +201,8 @@ window.renjuEditor = (() => {
         onloadPage = callback;
     }
     
-    async function openFile(file, filename) {
+    async function openFile(file, filename, callback = () => {}) {
+    	filename = filename.toLowerCase();
         if(/\.pdf$/i.test(filename)) {
             await myPDFJS.openPDF(file);
             mode = PDF;
@@ -172,11 +211,14 @@ window.renjuEditor = (() => {
             await myZip.openZIP(file);
             mode = ZIP;
         }
-        
+        else if (/\.json$/i.test(filename)) {
+        	return await loadKaiBaoJSON(file, callback);
+        }
         else {
             await openImage(file);
             mode = IMAGE;
         }
+        return [];
     }
     
     async function loadPage(numPage) {
@@ -205,8 +247,12 @@ window.renjuEditor = (() => {
     
     return {
         set onloadPage(callback) { setnloadPage(callback) },
+        get wait() { return wait },
         get toKaiBaoJSON() { return toKaiBaoJSON },
         get downloadKaiBaoJSON() { return downloadKaiBaoJSON },
+        get json2Games() { return json2Games },
+        get loadKaiBaoJSON() { return loadKaiBaoJSON },
+        get gameToArr2D() { return gameToArr2D },
         get openFile() { return openFile },
         get nextPage() { return nextPage },
         get prePage() { return prePage },

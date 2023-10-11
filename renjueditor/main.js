@@ -48,9 +48,13 @@
             change: async function() {
                 try {
                     await unlockArea();
-                    await renjuEditor.openFile(this.files[0], this.value.split("/").pop());
+                    const games = await renjuEditor.openFile(this.files[0], this.value.split("/").pop(), log);
                     filename = getFileName(this.value);
-                    setTimeout(() => this.value = "", 0)
+                    setTimeout(() => this.value = "", 0);
+                    for(let i = 0; i < games.length; i++) {
+                    	pushGame(renjuEditor.gameToArr2D(games[i], i < games.length - 1));
+                    	await renjuEditor.wait(0);
+                    }
                 } catch (e) { alert(e.stack) }
             }
         },
@@ -161,7 +165,7 @@
             text: "输出文件",
             touchend: async () => {
                 if (games.length == 0) return;
-                const json = await renjuEditor.toKaiBaoJSON(games);
+                const json = await renjuEditor.toKaiBaoJSON(games, log);
                 renjuEditor.downloadKaiBaoJSON(json, filename);
             }
         },
@@ -277,10 +281,11 @@
     }
 
     //------------------------ GAMES ------------------------ 
-
-    function pushGame(arr2D) {
+    
+    function pushGame(arr2D, unpack = true) {
         gameIndex++;
         games.splice(gameIndex, 0, arr2D);
+        if (!unpack) return;
         miniBoard.unpackArray(arr2D);
         log1(`第${gameIndex+1}题 / ${games.length}题`);
     }

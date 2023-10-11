@@ -1764,7 +1764,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
                 switch (targetType) {
                     case TYPE_NUMBER:
                         if (0 == (this.MSindex & 1)) this.wNb(225, "auto", showNum, undefined, undefined, 100);
-                        this.wNb(nameToIdx(a), "auto", showNum, undefined, undefined, 100);
+                        this.wNb(nameToIdx(a), "0", showNum, undefined, undefined, 100);
                         break;
                     default:
                         this.wNb(nameToIdx(a), "black", showNum, undefined, undefined, 100);

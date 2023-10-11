@@ -112,10 +112,10 @@ function xyObjToPage(point, htmlElement) { // obj 原点坐标 转 page 原点�
     return point;
 }
 
-function xyObj1ToObj2(point1, htmlElement1, htmlElement2) { // obj1 原点坐标 转 obj2 原点坐标（左上角）
-    xyObjToPage(point1, htmlElement1);
-    xyPageToObj(point1, htmlElement2);
-    return point1;
+function xyLeftToRight(pointLeft, htmlElementL, htmlElementR) { // obj1 原点坐标 转 obj2 原点坐标（左上角）
+    xyObjToPage(pointLeft, htmlElementL);
+    xyPageToObj(pointLeft, htmlElementR);
+    return pointLeft;
 }
 
 //--------------------- htmlElement bind click event ---------------------------------
