@@ -35,6 +35,15 @@ window.mainUI = (function() {
 	document.body.style.padding = "0";
 	document.body.style.margin = "0";
 
+	/**
+	 * mainUI.childs[] 保存cBoard 和 CmdDiv
+	 * @type {{variant: CheckerBoard || CmdDiv, type: string, varName: string}[]}
+	 * @variant CheckerBoard || CmdDiv 实例
+	 * @type "CheckerBoard" || "CmdDiv"
+	 * @varName 变量名
+	 */
+	const childs = [];
+
 	const bodyDiv = d.createElement("div");
 	d.body.appendChild(bodyDiv);
 	bodyDiv.style.position = "absolute";
@@ -225,20 +234,70 @@ window.mainUI = (function() {
 		return buttons;
 	}
 
+
 	function addButtons(buttons, cmdDiv, settingIndex = 0) {
 		const buttonSettings = settings[settingIndex].buttonSettings;
 		for (let i = 0; i < buttons.length; i++) {
 			if (buttons[i] && buttons[i].move) {
-				if (buttons[i].type == "div" || buttons[i].type == "canvas") buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttons[i].width, buttons[i].height, cmdDiv);
-				else buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttonSettings[i].width, buttonSettings[i].height, cmdDiv);
+				if ("Button" == buttons[i].constructor.name)
+					buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttonSettings[i].width, buttonSettings[i].height, cmdDiv.viewElem);
+				else
+					buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttons[i].width, buttons[i].height, cmdDiv.viewElem);
+				cmdDiv.addChild({
+					variant: buttons[i],
+					type: buttons[i].constructor.name,
+					varName: buttons[i].varName
+				})
 			}
 		}
 		markTop.style.top = `${settings[settingIndex].marktopSetting.top}px`;
 	}
 
+
+	//----------------------------- format viewElem param ----------------------------- 
+
+	function formatParam(param = {}) {
+		const style = param.style || {};
+		const attribute = param.attribute || {};
+		const event = param.event || {};
+
+		param.id && (attribute.id = param.id);
+		(param.click || param.onclick) && (event.onclick = (param.click || param.onclick));
+		(param.dblclick || param.ondblclick) && (event.ondblclick = (param.dblclick || param.ondblclick));
+		(param.contextmenu || param.oncontextmenu) && (event.oncontextmenu = (param.contextmenu || param.oncontextmenu));
+		(param.touchstart || param.ontouchstart) && (event.ontouchstart = (param.touchstart || param.ontouchstart));
+		(param.touchend || param.ontouchend) && (event.ontouchend = (param.touchend || param.ontouchend));
+		(param.touchcancel || param.ontouchcancel) && (event.ontouchcancel = (param.touchcancel || param.ontouchcancel));
+		(param.touchleave || param.ontouchleave) && (event.ontouchleave = (param.touchleave || param.ontouchleave));
+		(param.touchmove || param.ontouchmove) && (event.ontouchmove = (param.touchmove || param.ontouchmove));
+
+		param.style = style;
+		param.attribute = attribute;
+		param.event = event;
+
+		return param;
+	}
+
+	//----------------------------- createCmdDiv ----------------------------- 
+
+	function createCmdDiv(param = {}) {
+		param.left = (gridWidth - cmdWidth) / 2;
+		param.top = (gridWidth - cmdWidth) / 2;
+		param.width = cmdWidth;
+		param.height = cmdWidth;
+		const cmdDiv = newCmdDiv(param);
+		childs.push({
+			variant: cmdDiv,
+			type: cmdDiv.constructor.name,
+			varName: param.varName
+		});
+		debug && (cmdDiv.viewElem.style.backgroundColor = "white");
+		return cmdDiv;
+	}
+
 	//----------------------------- board Title ----------------------------- 
 
-	function createBoardTitle(param) {
+	function createBoardTitle(param = {}) {
 		return createLogDiv({
 			id: param.id || "boardTitle",
 			type: "div",
@@ -272,62 +331,76 @@ window.mainUI = (function() {
 
 	//----------------------------- logDiv  ------------------------------- 
 
-	function move(left = this.left, top = this.top, width = this.width, height = this.height, parentNode = this.parentNode) {
-		const elem = this.viewElem;
-		parentNode.appendChild(elem);
-		elem.style.position = "absolute";
-		elem.style.height = height + "px";
-		elem.style.width = width + "px";
-		elem.style.left = left + "px";
-		elem.style.top = top + "px";
+	function createLogDiv(param = {}) {
+		const label = newLabel(param);
+		return label;
 	}
 
-	function createLogDiv(param) {
-		const elem = document.createElement(param.type);
-		for (let key in param.style) {
-			elem.style[key] = param.style[key];
-		}
-		param.id && elem.setAttribute("id", param.id);
-		"function" === typeof param.click && setButtonClick(elem, param.click);
-		return {
-			varName: param.varName,
-			type: param.type,
-			viewElem: elem,
-			move: move,
-			left: param.left,
-			top: param.top,
-			width: param.width,
-			height: param.height
-		}
-		return elem;
+	//----------------------------- Childs  ------------------------------- 
+
+	function addChild(child) {
+		this.childs.push(child);
 	}
 
-	//----------------------------- cmdDiv  ------------------------------- 
+	function getChild(param = {}) {
+		for (let index in this.childs) {
+			const child = this.childs[index];
+			if ((!param.type || child.type == param.type) && (!param.varName || child.varName == param.varName)) return child.variant;
+			else if (typeof child.variant.getChild == "function") {
+				const rt = child.variant.getChild(param);
+				if (rt) return rt;
+			}
+		}
+		return null;
+	}
 
-	function createCmdDiv() {
-		const cmdDiv =  new CmdDiv((gridWidth - cmdWidth) / 2, (gridWidth - cmdWidth) / 2, cmdWidth, cmdWidth);
-		cmdDiv.show();
-		debug && (cmdDiv.style.backgroundColor = "white");
-		return cmdDiv.viewElem;
+	function getChilds(param = {}) {
+		const childs = [];
+		for (let index in this.childs) {
+			const child = this.childs[index];
+			if ((!param.type || child.type == param.type) && (!param.varName || child.varName == param.varName)) childs.push(child.variant);
+			else if (typeof child.variant.getChilds == "function") {
+				const rt = child.variant.getChilds(param);
+				if (rt.length) childs.push(...rt);
+			}
+		}
+		return childs;
 	}
 	
+	function getChildByName(name) {
+		return getChild({varName: name});
+	}
+	
+	function getChildsByName(name) {
+		return getChilds({varName: name});
+	}
+
 	//----------------------------- class ---------------------------------
 	//---------- viewElem ------------
-	
+
 	class viewElem {
 		constructor(left = 0, top = 0, width = 500, height = 500, parent = document.body, tagName = "div") {
 			this.parent = parent;
+			this.childs = [];
 			this.left = left;
 			this.top = top;
 			this.width = width;
 			this.height = height;
 			this.viewElem = document.createElement(tagName);
+			this.varName = void 0;
 		}
+
+		get type() { return this.constructor.name }
+		get addChild() { return addChild }
+		get getChild() { return getChild }
+		get getChilds() { return getChilds }
+		get getChildByName() { return getChildByName }
+		get getChildsByName() { return getChildsByName }
 	}
-	
+
 	viewElem.prototype.move = function(left = this.left, top = this.top, width = this.width, height = this.height, parent = this.parent, conver = false) {
 		if (conver && this.viewElem.parentNode) {
-			const p = xyLeftToRight({x: left, y: top}, this.viewElem.parentNode, parent);
+			const p = xyLeftToRight({ x: left, y: top }, this.viewElem.parentNode, parent);
 			left = p.x;
 			top = p.y;
 		}
@@ -344,33 +417,98 @@ window.mainUI = (function() {
 		s.height = `${this.height}px`;
 		(!this.viewElem.parentNode || this.viewElem.parentNode != this.parent) && this.parent.appendChild(this.viewElem);
 	}
-	
+
 	viewElem.prototype.show = function() {
 		!this.viewElem.parentNode && this.parent.appendChild(this.viewElem);
 	}
-	
+
 	viewElem.prototype.hide = function() {
 		this.viewElem.parentNode && this.viewElem.parentNode.removeChild(this.viewElem);
 	}
-	
-	viewElem.prototype.style = function(_style = {}) {
-		for (let key in _style) {
-			this.viewElem.style[key] = _style[key];
+
+	viewElem.prototype.style = function(style = {}) {
+		for (let key in style) {
+			this.viewElem.style[key] = style[key];
 		}
 	}
-	
-	//---------- CmdDiv ------------
-	
+
+	viewElem.prototype.attribute = function(attribute = {}) {
+		for (let key in attribute) {
+			this.viewElem.setAttribute(key, attribute[key]);
+		}
+	}
+
+	viewElem.prototype.event = function(event = {}) {
+		for (let key in event) {
+			key = key.toLowerCase();
+			if (key.indexOf("on") == -1) key = "on" + key;
+			if (window.bindEvent)
+				bindEvent.addEventListener(this.viewElem, key.slice(2), event[key]);
+			else
+				this.viewElem[key] = event[key];
+		}
+	}
+
+	function newClass(param = {}, _class = viewElem) {
+		const vElem = new _class(param.left, param.top, param.width, param.height);
+		param = formatParam(param);
+		param.varName && (vElem.varName = param.varName);
+		vElem.style(param.style);
+		vElem.attribute(param.attribute);
+		vElem.event(param.event);
+		vElem.show();
+		return vElem;
+	}
+
+	//---------------------- CmdDiv ------------------------
+
 	class CmdDiv extends viewElem {
 		constructor(left = 0, top = 0, width = 500, height = 500) {
 			super(left, top, width, height, downDiv);
 		}
 	}
-	
-	
+
+	function newCmdDiv(param = {}) {
+		const cmdDiv = newClass(param, CmdDiv);
+		return cmdDiv;
+	}
+
+	//---------------------- Label ------------------------
+
+	class Label extends viewElem {
+		constructor(left = 0, top = 0, width = 500, height = 500) {
+			super(left, top, width, height);
+		}
+	}
+
+	function newLabel(param = {}) {
+		const label = newClass(param, Label);
+		return label;
+	}
+
+	//---------------------- Comment ------------------------
+
+	class Comment extends viewElem {
+		constructor(left = 0, top = 0, width = 500, height = 500) {
+			super(left, top, width, height);
+		}
+	}
+
+	function newComment() {
+		const comment = newClass(param, Comment);
+		return comment;
+	}
+
 	//----------------------------- exports ------------------------------- 
 
-	const exports = {}
+	const exports = {
+		childs: childs,
+		get addChild() { return addChild },
+		get getChild() { return getChild },
+		get getChilds() { return getChilds },
+		get getChildByName() { return getChildByName },
+		get getChildsByName() { return getChildsByName }
+	}
 	Object.defineProperty(exports, "bodyWidth", { value: bodyWidth });
 	Object.defineProperty(exports, "bodyHeight", { value: bodyHeight });
 	Object.defineProperty(exports, "bodyScale", { value: bodyScale });

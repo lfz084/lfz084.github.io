@@ -215,7 +215,7 @@
         const cDiv = mainUI.createCmdDiv();
         buttons.push(...mainUI.createButtons(buttonSettings));
         mainUI.addButtons(buttons, cDiv, 0);
-        return cDiv;createButtons
+        return cDiv;
     }
 
     const cBoard = mainUI.createCBoard();

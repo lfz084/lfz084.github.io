@@ -196,10 +196,12 @@
 	dw > dh && buttonSettings.splice(0, 0, null, null, null, null);
 
 	function createCmdDiv() {
+		try{
 		const cDiv = mainUI.createCmdDiv();
 		const buttons = mainUI.createButtons(buttonSettings);
 		mainUI.addButtons(buttons, cDiv, 1);
 		return cDiv;
+		}catch(e){alert(e.stack)}
 	}
 
 	function createLogDiv() {
@@ -288,8 +290,8 @@
 
 	addEventListener("load", () => {
 		try {
-			miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv);
-			createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv);
+			miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
+			createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv.viewElem);
 			mainUI.viewport.resize();
 			addEvents();
 			setInterval(() => {

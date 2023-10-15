@@ -468,7 +468,7 @@
     addEventListener("load", () => {
         try {
             addEvents(cBoard);
-            miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv);
+            miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
             mainUI.viewport.resize();
             renjuEditor.onloadPage = onloadPage;
             log("打开(pdf,zip,jpg,png)");
