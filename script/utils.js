@@ -191,11 +191,11 @@ function setBlockUnload(enable) {
             // Chrome, Safari, Firefox 4+, Opera 12+ , IE 9+
             return '离开提示';
         }
-        console.log("blockUnload: enable", "info");
+        console.log("blockUnload: enable");
     }
     else {
         window.onbeforeunload = null;
-        console.log("blockUnload: disable", "info");
+        console.log("blockUnload: disable");
     }
 }
 

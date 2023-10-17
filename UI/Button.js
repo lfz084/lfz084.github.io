@@ -45,8 +45,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		return hr;
 	}
 
-	function get_li({ text, fontSize, textAlign, lineHeight, width, height, paddingLeft }) {
+	function get_li({ text, fontSize, textAlign, lineHeight, width, height, paddingLeft, option }) {
 		const li = document.createElement("li");
+		li.option = option;
 		li.innerHTML = text;
 		li.style.fontWeight = "bold";
 		li.style.fontFamily = "mHeiTi, Roboto, emjFont, Symbola";
@@ -114,7 +115,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 					lineHeight: fontSize * 2.5,
 					width: width - borderWidth * 2,
 					height: fontSize * 2.5,
-					paddingLeft: fontSize
+					paddingLeft: fontSize,
+					option: input[i]
 				});
 				lis.push(li);
 				menu.appendChild(li);
@@ -124,6 +126,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 					input.selectedIndex = i; // input.onchange();
 					if (muWindow.parentNode) {
 						this.hide(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT, this.button.change.bind(this.button));
+					}
+					const type = input[i].type || "_";
+					if (type.indexOf("radio") + 1) {
+						[...input].map(option => { if (option.type === type) option.checked = option == input[i] });
+					}
+					else if (type.indexOf("checked") + 1) {
+						input[i].checked = !input[i].checked;
 					}
 				}.bind(this);
 			}
@@ -163,7 +172,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.menuWidth = width;
 			this.fontSize = fontSize;
 			this.timerHideMenu = null;
+			this._onshow = () => {};
 		}
+
+		get onshow() { return this._onshow }
+		set onshow(fun) { "function" == typeof fun && (this._onshow = fun) }
 	}
 
 	Menu.prototype.show = function show(x, y) {
@@ -199,6 +212,17 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		this.menu.style.background = this.button.backgroundColor;
 		this.menu.style.autofocus = "true";
 		this.anima.setAttribute("class", "show");
+
+		try {
+			this.onshow.call(this, this);
+		} catch (e) { console.error(e.stack) }
+
+		this.lis.map(li => {
+			if (li.option) {
+				li.innerHTML = li.option.innerHTML + (li.option.checked ? "  ✔" : "");
+			}
+		})
+
 		document.body.appendChild(muWindow);
 
 		isMenuShow = true; // 设置两次
@@ -274,77 +298,95 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	// ---------------------------------------------- 
 
 	function touchstart() {
-		log(`default touchstart......`)
-		if (event) event.cancelBubble = true;
-		this.defaultontouchstart();
+		try {
+			log(`default touchstart......`)
+			if (event) event.cancelBubble = true;
+			this.defaultontouchstart();
+		} catch (e) { console.error(e.stack) }
 	}
 
 	function mousedown() {
-		log(`default mousedown......`)
-		if (event) {
-			event.cancelBubble = true;
-			event.preventDefault();
-			if (event.button == 0) this.defaultontouchstart();
-		}
+		try {
+			log(`default mousedown......`)
+			if (event) {
+				event.cancelBubble = true;
+				event.preventDefault();
+				if (event.button == 0) this.defaultontouchstart();
+			}
+		} catch (e) { console.error(e.stack) }
 	}
 
 	function touchcancel() {
-		log(`default touchcancel......`)
-		if (event) event.cancelBubble = true;
-		this.isEventMove = true;
-		this.defaultontouchend();
+		try {
+			log(`default touchcancel......`)
+			if (event) event.cancelBubble = true;
+			this.isEventMove = true;
+			this.defaultontouchend();
+		} catch (e) { console.error(e.stack) }
 	}
 
 	function touchleave() {
-		log(`default touchleave......`)
-		if (event) event.cancelBubble = true;
-		this.isEventMove = true;
-		this.defaultontouchend();
+		try {
+			log(`default touchleave......`)
+			if (event) event.cancelBubble = true;
+			this.isEventMove = true;
+			this.defaultontouchend();
+		} catch (e) { console.error(e.stack) }
 	}
 
 	function touchend() {
-		log(`default touchend......`)
-		if (event) event.cancelBubble = true;
-		this.defaultontouchend();
+		try {
+			log(`default touchend......`)
+			if (event) event.cancelBubble = true;
+			this.defaultontouchend();
+		} catch (e) { console.error(e.stack) }
 	}
 
 	function mouseup() {
-		log(`default mouseup......`)
-		if (event) {
-			event.cancelBubble = true;
-			event.preventDefault();
-		}
-		this.isEventMove = false;
-		if (this.type == "file") {
-			//this.isEventMove = true; //cancel defaultontouchend to click();
-			this.defaultontouchend(); // defaultontouchend() to onchange();
-		} // if "input file" cancel this click; 
-		else {
-			this.touchend();
-		}
+		try {
+			log(`default mouseup......`)
+			if (event) {
+				event.cancelBubble = true;
+				event.preventDefault();
+			}
+			this.isEventMove = false;
+			if (this.type == "file") {
+				//this.isEventMove = true; //cancel defaultontouchend to click();
+				this.defaultontouchend(); // defaultontouchend() to onchange();
+			} // if "input file" cancel this click; 
+			else {
+				this.touchend();
+			}
+		} catch (e) { console.error(e.stack) }
 	}
 
 	function click() {
-		log(`default click......`)
+		try {
+			log(`default click......`)
+		} catch (e) { console.error(e.stack) }
 	}
 
 	function change() {
-		log(`default change......`)
-		if (event) event.cancelBubble = true;
-		this.defaultonchange();
+		try {
+			log(`default change......`)
+			if (event) event.cancelBubble = true;
+			this.defaultonchange();
+		} catch (e) { console.error(e.stack) }
 	}
 
 	function touchmove() {
-		log(`default touchmove......`)
-		if (event) event.cancelBubble = true;
-		this.defaultontouchmove();
+		try {
+			log(`default touchmove......`)
+			if (event) event.cancelBubble = true;
+			this.defaultontouchmove();
+		} catch (e) { console.error(e.stack) }
 	}
 
 
 	//----------------------- button ------------------------------
 
 	// 定制按钮，button，file，Radio，select。
-	
+
 	class button {
 		constructor(parentNode, type, left, top, width, height) {
 
@@ -368,7 +410,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			if (type != "select" && type != "file") this.div.appendChild(this.input);
 			this.menu = null;
 
-			this.option = [];
 			this.type = type;
 			this.width = width == null ? "200px" : parseInt(width) + "px";
 			this.height = height == null ? "150px" : parseInt(height) + "px";
@@ -378,11 +419,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.selectColor = "black"; //按钮按下时字体颜色
 			this.notChangeColor = false; // 不自动调整按钮字体颜色
 			this.backgroundColor = "white"; //"#f0f0f0"; //按钮颜色999999
-			this.selectBackgroundColor = "#e0e0e0";// "#d0d0d0"; / / 666666
+			this.selectBackgroundColor = "#e0e0e0"; // "#d0d0d0"; / / 666666
 			//if (this.type=="button") {
-			  //let col = this.backgroundColor;
-			  //this.backgroundColor = this.selectBackgroundColor;
-			  //this.selectBackgroundColor = col;
+			//let col = this.backgroundColor;
+			//this.backgroundColor = this.selectBackgroundColor;
+			//this.selectBackgroundColor = col;
 			//}
 			this.margin = 0;
 			this.outline = "none"; //去掉外框
@@ -424,14 +465,17 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this[key].addEventListener("click", this.click, true);
 			this[key].addEventListener("touchmove", this.touchmove, true);
 			this.input.addEventListener("change", this.change, true);
-		
+
 		}
 
 		get group() { return this._group }
 		set group(groupName) {
+			if (!groupName) return;
+			log(`group: ${groupName}`)
 			this._group = groupName;
 			const group = getGroup(groups, groupName);
 			group.buttons.push(this);
+			this.setontouchend(group.callback);
 		}
 
 	}
@@ -439,20 +483,24 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	// 对 select 添加 option
-	button.prototype.addOption = function(value, text) {
+	button.prototype.addOption = function(value, text, type) {
 		//log(`add t=${this.text}`);
 		if (this.type != "select") return;
 		let op = document.createElement("option");
 		op.setAttribute("value", value);
 		op.innerHTML = text;
+		op.type = type;
 		this.input.appendChild(op);
 	};
 
 
-	// arr = [value, text,value, text...]
+	// arr = [index1, text1, ?type1, index2, text2, ?type2 ...]
 	button.prototype.addOptions = function(arr) {
 		for (let i = 0; i < arr.length; i += 2) {
-			this.addOption(arr[i], arr[i + 1])
+			const value = arr[i];
+			const text = arr[i + 1];
+			const type = "number" == typeof arr[i + 2] ? void 0 : (i++, arr[i + 1]);
+			this.addOption(value, text, type);
 		}
 	};
 
@@ -464,118 +512,117 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	button.prototype.defaultontouchstart = function() {
-
-		//log(`str t=${this.text}`);
-		if (this.tyle == "select" && event) event.preventDefault();
-		this.isEventMove = false;
-		//log(`isEventMove=${this.isEventMove}`)
-		//log(this)
-		this.button.style.opacity = 1;
-		this.button.style.fontSize = parseInt(this.fontSize) * 0.9 + "px";
-		if (this.backgroundColor != "black") {
-			this.button.style.color = "black";
-		}
-		else {
-			this.button.style.color = "#ccc";
-		}
-		this.button.style.backgroundColor = this.selectBackgroundColor;
-		return true;
+		try {
+			//log(`str t=${this.text}`);
+			if (this.tyle == "select" && event) event.preventDefault();
+			this.isEventMove = false;
+			//log(`isEventMove=${this.isEventMove}`)
+			//log(this)
+			this.button.style.opacity = 1;
+			this.button.style.fontSize = parseInt(this.fontSize) * 0.9 + "px";
+			if (this.backgroundColor != "black") {
+				this.button.style.color = "black";
+			}
+			else {
+				this.button.style.color = "#ccc";
+			}
+			this.button.style.backgroundColor = this.selectBackgroundColor;
+			return true;
+		} catch (e) { console.error(e.stack) }
 	};
 
 
 	button.prototype.defaultontouchmove = function() {
-
-		//log(`mov t=${this.text}`);
-		this.isEventMove = true; // 取消单击事件
-		return true;
+		try {
+			//log(`mov t=${this.text}`);
+			this.isEventMove = true; // 取消单击事件
+			return true;
+		} catch (e) { console.error(e.stack) }
 	};
 
 
 
 	// 默认事件，
 	button.prototype.defaultontouchend = function() {
+		try {
+			//log(`typeof event=${typeof event}, isEventMove=${this.isEventMove}`);
+			if (event) event.preventDefault();
+			//   "✔  ○●",radio,checked,前面加上特殊字符。
+			let s;
+			let timeout;
+			let cancel = false; // 判断是否取消单击
 
-		//log(`typeof event=${typeof event}, isEventMove=${this.isEventMove}`);
-		if (event) event.preventDefault();
-		//   "✔  ○●",radio,checked,前面加上特殊字符。
-		let s;
-		let timeout;
-		let cancel = false; // 判断是否取消单击
+			if (this.isEventMove) cancel = true; // 不触发单击事件
 
-		if (this.isEventMove) cancel = true; // 不触发单击事件
-
-		// radio, checkbox 修改 checked
-		if ((!cancel) && (this.type == "radio" || this.type == "checkbox")) {
-			this.checked = !this.checked;
-		}
-		//log(`checked = ${this.checked} ,this.isEventMove = ${this.isEventMove}`);
-		if (this.checked) {
-			// 选中的时，按钮外观
-			s = this.type == "radio" ? "☞" : this.type == "checkbox" ? "✔" : "";
-			s += this.text2 == "" ? this.text : this.text2;
-
-			if (this.type == "select") {
-				s = s + "&nbsp;" + "&nbsp" + "&nbsp;";
+			// radio, checkbox 修改 checked
+			if ((!cancel) && (this.type == "radio" || this.type == "checkbox")) {
+				this.checked = this.type == "radio" || !this.checked;
 			}
+			//log(`checked = ${this.checked} ,this.isEventMove = ${this.isEventMove}`);
+			if (this.checked) {
+				// 选中的时，按钮外观
+				s = this.type == "radio" ? "☞" : this.type == "checkbox" ? "✔" : "";
+				s += this.text2 == "" ? this.text : this.text2;
 
-			this.button.innerHTML = s;
-			this.button.style.fontSize = this.fontSize;
-			this.button.style.color = this.notChangeColor ? this.color : this.selectColor;
-			this.button.style.backgroundColor = this.selectBackgroundColor;
-		}
-		else {
-			// 未选中时的外观
-			if (this.type != "select" || this.type == "checkbox") {
-				timeout = 0;
+				if (this.type == "select") {
+					s = s + "&nbsp;" + "&nbsp" + "&nbsp;";
+				}
+
+				this.button.innerHTML = s;
+				this.button.style.fontSize = this.fontSize;
+				this.button.style.color = this.notChangeColor ? this.color : this.selectColor;
+				this.button.style.backgroundColor = this.selectBackgroundColor;
 			}
 			else {
-				timeout = 0;
-			}
-			s = this.type == "radio" ? "" : this.type == "checkbox" ? "" : "";
-			s += this.text;
+				// 未选中时的外观
+				if (this.type != "select" || this.type == "checkbox") {
+					timeout = 0;
+				}
+				else {
+					timeout = 0;
+				}
+				s = this.type == "radio" ? "" : this.type == "checkbox" ? "" : "";
+				s += this.text;
 
-			if (this.type == "select") {
-				s = s + "&nbsp;" + "&nbsp" + "&nbsp;";
-			}
-			this.button.innerHTML = s;
+				if (this.type == "select") {
+					s = s + "&nbsp;" + "&nbsp" + "&nbsp;";
+				}
+				this.button.innerHTML = s;
 
-			let but = this;
-			if (timeout) {
-				setTimeout(function() {
+				let but = this;
+				if (timeout) {
+					setTimeout(function() {
+						but.button.style.fontSize = but.fontSize;
+						but.button.style.color = but.color;
+						but.button.style.backgroundColor = but.backgroundColor;
+					}, timeout);
+				}
+				else {
 					but.button.style.fontSize = but.fontSize;
 					but.button.style.color = but.color;
 					but.button.style.backgroundColor = but.backgroundColor;
-				}, timeout);
+				}
 			}
-			else {
-				but.button.style.fontSize = but.fontSize;
-				but.button.style.color = but.color;
-				but.button.style.backgroundColor = but.backgroundColor;
-			}
-		}
 
-		//log(`cancel=${cancel}`);
-		if (this.type == "file" && !cancel) {
-			//log(`cancel=${"click"}`);
-			this.input.click();
-		}
-		else if (this.type == "select" && !cancel) {
-			//log(`click t=${this.text}`);
-			this.showMenu(undefined, this.autoMenuTop());
-		}
-		
-		if (["radio", "checkbox"].indexOf(this.type) + 1 && !cancel) {
-			const group = getGroup(groups, this.group);
-			const buttons = group.buttons;
-			const callback = group.callback;
-			for (let i = 0; i < buttons.length; i++) {
-				const button = buttons[i];
-				if ("radio" == (button.mode || button.type)) button.setChecked(button == this);
-				if (button == this) callback.call(this, button);
+			//log(`cancel=${cancel}`);
+			if (this.type == "file" && !cancel) {
+				//log(`cancel=${"click"}`);
+				this.input.click();
 			}
-		}
-		
-		return cancel ? false : true;
+			else if (this.type == "select" && !cancel) {
+				//log(`click t=${this.text}`);
+				this.showMenu(undefined, this.autoMenuTop());
+			}
+
+			if (this.group) {
+				const buttons = getGroup(groups, this.group).buttons;
+				buttons.map(button => {
+					if ("radio" == (button.mode || button.type)) button.setChecked(button == this)
+				})
+			}
+
+			return cancel ? false : true;
+		} catch (e) { console.error(e.stack) }
 	};
 
 
@@ -587,13 +634,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	button.prototype.defaultonchange = function() {
-
-		//log(`chg t=${this.text}`);
-		//log(`defaultonchange  ,i=${this.input.selectedIndex==-1 ? this.input[1].text : this.input.options[this.input.selectedIndex].text} `);
-		if (this.type != "select" || this.input.selectedIndex < 0) return true;
-		let txt = this.input.options[this.input.selectedIndex].text;
-		this.setText(txt);
-		return true;
+		try {
+			//log(`chg t=${this.text}`);
+			//log(`defaultonchange  ,i=${this.input.selectedIndex==-1 ? this.input[1].text : this.input.options[this.input.selectedIndex].text} `);
+			if (this.type != "select" || this.input.selectedIndex < 0) return true;
+			let txt = this.input.options[this.input.selectedIndex].text;
+			this.setText(txt);
+			return true;
+		} catch (e) { console.error(e.stack) }
 	};
 
 
@@ -682,9 +730,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		let fun = this.change;
 		let but = this;
 		this.change = function() {
-			log(`new setonchange......`)
-			if (event) event.cancelBubble = true;
-			if (but.defaultonchange()) callback.call(this, but)
+			try {
+				log(`new setonchange......`)
+				if (event) event.cancelBubble = true;
+				if (but.defaultonchange()) callback.call(this, but)
+			} catch (e) { console.error(e.stack) }
 		}
 		this.input.removeEventListener("change", fun, true);
 		this.input.addEventListener("change", this.change, true);
@@ -697,9 +747,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		let fun = this.touchstart;
 		let but = this;
 		this.touchstart = function() {
-			log(`new touchstart......`)
-			if (event) event.cancelBubble = true;
-			if (but.defaultontouchstart()) callback.call(this, but);
+			try {
+				log(`new touchstart......`)
+				if (event) event.cancelBubble = true;
+				if (but.defaultontouchstart()) callback.call(this, but);
+			} catch (e) { console.error(e.stack) }
 		}
 		const key = (this.type == "select" || this.type == "file") ? "div" : "input";
 		this[key].removeEventListener("touchstart", fun, true);
@@ -710,21 +762,21 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	// 給事件绑定函数
 	button.prototype.setontouchend = function(callback = () => {}) {
-		let fun = this.touchend;
-		let but = this;
-		this.touchend = function() {
-			log(`new touchend......`)
-			if (event) event.cancelBubble = true;
-			if (but.defaultontouchend()) callback.call(this, but);
-		}
 		const key = (this.type == "select" || this.type == "file") ? "div" : "input";
-		const groupKey = this.mode || this.type;
-		this[key].removeEventListener("touchend", fun, true);
-
-		if (["radio", "checkbox"].indexOf(groupKey) + 1)
-			getGroup(groups, groupKey).callback = callback;
-		else
-			this[key].addEventListener("touchend", this.touchend, true);
+		const buttons = this.group ? getGroup(groups, this.group).buttons : [this];
+		getGroup(groups, this.group).callback = callback;
+		buttons.map(button => {
+			const fun = button.touchend;
+			button.touchend = function() {
+				try {
+					log(`new touchend......`)
+					if (event) event.cancelBubble = true;
+					if (button.defaultontouchend()) callback.call(button, button);
+				} catch (e) { console.error(e.stack) }
+			}
+			button[key].removeEventListener("touchend", fun, true);
+			button[key].addEventListener("touchend", button.touchend, true);
+		})
 	};
 
 

@@ -182,19 +182,16 @@ window.control = (() => {
 		setBlockUnload(enable);
 	}
 
-	function setRadio(buttons = [], callback = () => {}) {
-		function check(but) {
-			for (let i = buttons.length - 1; i >= 0; i--)
-				buttons[i].setChecked(false);
-			but.setChecked(true);
-			callback.call(but);
+	function setRadio(buttons = [], callback = () => {}, group) {
+		for (let i = buttons.length - 1; i >= 0; i--) {
+			buttons[i].mode = "radio";
+			buttons[i].group = group;
+			i == 0 && buttons[i].setontouchend(callback);
 		}
-		for (let i = buttons.length - 1; i >= 0; i--)
-			buttons[i].setontouchend(check);
-		return check;
+		return callback;
 	}
 
-	function setChecked(buttons = [], callback = () => {}) {
+	function setCheckBox(buttons = [], callback = () => {}) {
 		function check(but) {
 			but.setChecked(!but.checked);
 			callback();
@@ -227,23 +224,15 @@ window.control = (() => {
 
 	function setMenuCheckBox(button, idx, idxs) {
 		if (idxs.indexOf(idx) > -1) {
-			button.menu.lis[idx].checked = !button.menu.lis[idx].checked;
-			if (button.menu.lis[idx].checked) {
-				button.menu.lis[idx].innerHTML = button.input[idx].text + "  ✔";
-			}
-			else {
-				button.menu.lis[idx].innerHTML = button.input[idx].text;
-			}
+			button.input[idx].checked = !button.input[idx].checked;
 		}
 	}
 
 	function setMenuRadio(button, idx, idxs) {
 		for (let i = (idxs && idxs.length || button.input.length) - 1; i >= 0; i--) {
-			button.menu.lis[i].checked = false;
-			button.menu.lis[i].innerHTML = button.input[i].text;
+			button.input[i].checked = false;
 		}
-		button.menu.lis[idx].checked = true;
-		button.menu.lis[idx].innerHTML = button.input[idx].text + "  ✔";
+		button.input[idx].checked = true;
 	}
 
 
@@ -406,8 +395,8 @@ window.control = (() => {
 		xyObjToPage(p, cBd.viewBox);
 		left = p.x + (parseInt(cBd.viewBox.style.width) - width) / 2;
 		cMenu = createMenu(left, top, width, height, fontSize, [
-                0, "设置",
-                1, "打开",
+                0, "设置","radio",
+                1, "打开","radio2",
                 2, `保存`,
                 3, `${EMOJI_SEARCH} 找点`,
                 4, `${EMOJI_QUESTION} 解题`,
@@ -1506,13 +1495,13 @@ window.control = (() => {
 			window.open("./help/renjuhelp/renjuhelp.html", "helpWindow");
 		});
 
-		blackwhiteRadioChecked = setRadio([cSelBlack, cSelWhite]);
+		blackwhiteRadioChecked = setRadio([cSelBlack, cSelWhite], undefined, "radio1");
 
 		markRadioChecked = setRadio([cLba, cLbb, cLbc, cLbd, cAutoadd, cAddblack, cAddwhite, cLABC], function() {
 			if (this != cLABC) {
 				cBd.drawLineEnd();
 			}
-		});
+		}, "radio2");
 
 		let topButtons = [
                 cShareWhite,
@@ -1860,7 +1849,7 @@ window.control = (() => {
 				lockImg();
 				cLockImg.setChecked(1);
 			}
-		});
+		}, "radio3");
 
 
 		for (let i = 0; i < 9; i++) { // set positions
