@@ -1,6 +1,14 @@
 window.bindEvent = (function() {
 	'use strict';
 
+	//---------------------- Event Area --------------------
+	
+	let eventArea;
+	
+	function isOutArea(x, y) {
+		return eventArea && isOut(x, y, eventArea);
+	}
+	
 	//---------------------- EventListener --------------------
 
 	//用来保存跟踪正在发送的触摸事件
@@ -37,6 +45,7 @@ window.bindEvent = (function() {
 	//处理触摸开始事件
 	function bodyTouchStart(evt) {
 		let touches = evt.changedTouches; // touchstart  事件里面 evt.changedTouches.length === 1
+		if (isOutArea(touches[0].pageX, touches[0].pageY)) return;
 		moveX = touches[0].pageX;
 		moveY = touches[0].pageY;
 		if (bodyStartTouches.length == 0) {
@@ -356,10 +365,11 @@ window.bindEvent = (function() {
 	 * @htmlElement 接收事件的对象
 	 * @scale htmlElement缩放比例
 	 */
-	function setBodyDiv(htmlElement, scale = 1) {
+	function setBodyDiv(htmlElement, scale = 1, area = htmlElement) {
 		bodyDiv && removeEvents();
 		bodyDiv = htmlElement;
 		bodyDivScale = scale;
+		eventArea = area;
 		addEvents();
 	}
 

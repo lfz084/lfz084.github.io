@@ -1632,7 +1632,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.06";
     Board.prototype.setViewBoxBorder = function(value) {
         const bw = ~~(this.width / 100);
         if (value) {
-            this.viewBox.style.border = `${bw}px solid #ccc`; // ridge groove
+            this.viewBox.style.border = `${bw}px solid ${this.moveWhiteColor}`; // ridge groove
             this.viewBox.style.left = `${this.left - bw}px`;
             this.viewBox.style.top = `${this.top - bw}px`;
         }

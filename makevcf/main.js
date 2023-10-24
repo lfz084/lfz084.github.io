@@ -55,7 +55,8 @@
 			touchend: async function() {
 				const arr = cBoard.getArray();
 				const numStones = arr.filter(v => v > 0).length;
-				makeVCF.resetMakeVCF(arr, numStones - (numStones >>> 1), numStones >>> 1);
+				makeVCF.resetMakeVCF(arr, numStones - (numStones >>> 1), numStones >>> 1, log);
+				makeVCF.continueMakeVCF(arr => cBoard.unpackArray(arr));
 			}
         },
 		{
@@ -67,16 +68,16 @@
         },
 		{
 			type: "button",
-			text: "暂停",
+			text: "清空棋盘",
 			touchend: async function() {
-				makeVCF.stop();
+				cBoard.cle();
 			}
         },
 		{
 			type: "button",
-			text: "清空棋盘",
+			text: "暂停",
 			touchend: async function() {
-				cBoard.cle();
+				makeVCF.stop();
 			}
         },
 		{
@@ -155,11 +156,11 @@
 					for (let idx = 0; idx < games.length; idx++) {
 						games[idx] = renjuEditor.gameToArr2D(games[idx]);
 						miniBoard.unpackArray(games[idx]);
-						log(`读取... ${idx+1} / ${games.length}`);
+						log1(`读取... ${idx+1} / ${games.length}`);
 						await makeVCF.wait(0);
 					}
 					if (games.length == 0) return;
-					const json = await renjuEditor.toKaiBaoJSON(games, log);
+					const json = await renjuEditor.toKaiBaoJSON(games, log1);
 					const gamesR = renjuEditor.json2Games(json);
 					renjuEditor.downloadKaiBaoJSON(json, "vcf");
 				} catch (e) { alert(e.stack) }
@@ -188,18 +189,20 @@
 
     ];
 
-	buttonSettings.splice(4, 0, createLogDiv1(), null, null, null);
+
+	buttonSettings.splice(0, 0, createLogDiv(), null, null, null);
+	buttonSettings.splice(4, 0, createLogDiv1(), null);
 	buttonSettings.splice(8, 0, null, null);
 	buttonSettings.splice(12, 0, null, null);
 	buttonSettings.splice(16, 0, null, null);
 	buttonSettings.splice(20, 0, null, null);
-	dw > dh && buttonSettings.splice(0, 0, null, null, null, null);
-
+	buttonSettings.splice(24, 0, null, null);
+	
 	function createCmdDiv() {
 		try{
 		const cDiv = mainUI.createCmdDiv();
 		const buttons = mainUI.createButtons(buttonSettings);
-		mainUI.addButtons(buttons, cDiv, 1);
+		mainUI.addButtons(buttons, cDiv, 0);
 		return cDiv;
 		}catch(e){alert(e.stack)}
 	}
@@ -208,7 +211,7 @@
 		return mainUI.createLogDiv({
 			id: "log",
 			type: "div",
-			width: mainUI.cmdWidth,
+			width: mainUI.buttonWidth * 4.99,
 			height: mainUI.buttonHeight,
 			style: {
 				fontSize: `${mainUI.buttonHeight / 1.8}px`,
@@ -225,11 +228,11 @@
 			id: "log1",
 			type: "div",
 			width: mainUI.buttonWidth * 2.33,
-			height: lineHeight / 1.8,
+			height: mainUI.buttonHeight,
 			style: {
 				fontSize: `${mainUI.buttonHeight / 2}px`,
 				textAlign: "center",
-				lineHeight: `${lineHeight / 2}px`,
+				lineHeight: `${mainUI.buttonHeight}px`,
 				backgroundColor: "white",
 			},
 			click: () => {
@@ -261,7 +264,7 @@
 				}
 			}
 		}
-		bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale);
+		bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale, mainUI.upDiv);
 		bindEvent.addEventListener(cBoard.viewBox, "click", (x, y) => {
 			//log("click")
 			let idx = cBoard.getIndex(x, y);
@@ -291,8 +294,9 @@
 	addEventListener("load", () => {
 		try {
 			miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
-			createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv.viewElem);
+			//createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv.viewElem);
 			mainUI.viewport.resize();
+			mainUI.loadTheme();
 			addEvents();
 			setInterval(() => {
 				const info = makeVCF.getStateInfo();

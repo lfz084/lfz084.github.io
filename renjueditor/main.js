@@ -47,6 +47,7 @@
             text: "打开文件",
             change: async function() {
                 try {
+                	mainUI.viewport.resize();
                     await unlockArea();
                     const games = await renjuEditor.openFile(this.files[0], this.value.split("/").pop(), log);
                     filename = getFileName(this.value);
@@ -131,16 +132,6 @@
         },
         {
             type: "button",
-            text: "上一题",
-            touchend: () => preGame()
-        },
-        {
-            type: "button",
-            text: "下一题",
-            touchend: () => nextGame()
-        },
-        {
-            type: "button",
             text: "↗90°",
             touchend: () => {
                 miniBoard.rotate90();
@@ -153,20 +144,6 @@
             touchend: () => {
                 miniBoard.rotateY180();
                 games[gameIndex] = miniBoard.getArray2D();
-            }
-        },
-        {
-            type: "button",
-            text: "删除这题",
-            touchend: () => removeGame(gameIndex)
-        },
-        {
-            type: "button",
-            text: "输出文件",
-            touchend: async () => {
-                if (games.length == 0) return;
-                const json = await renjuEditor.toKaiBaoJSON(games, log);
-                renjuEditor.downloadKaiBaoJSON(json, filename);
             }
         },
         {
@@ -186,44 +163,68 @@
             }
         },
         {
-            type: "button",
-            text: "↑",
-            touchend: () => {
-                miniBoard.translate(-1, 0);
-                games[gameIndex] = miniBoard.getArray2D();
-            }
+        	type: "button",
+        	text: "↑",
+        	touchend: () => {
+        		miniBoard.translate(-1, 0);
+        		games[gameIndex] = miniBoard.getArray2D();
+        	}
+        },
+        {
+        	type: "button",
+        	text: "↓",
+        	touchend: () => {
+        		miniBoard.translate(1, 0);
+        		games[gameIndex] = miniBoard.getArray2D();
+        	}
         },
         {
             type: "button",
-            text: "↓",
-            touchend: () => {
-                miniBoard.translate(1, 0);
-                games[gameIndex] = miniBoard.getArray2D();
+            text: "上一题",
+            touchend: () => preGame()
+        },
+        {
+            type: "button",
+            text: "下一题",
+            touchend: () => nextGame()
+        },
+        {
+            type: "button",
+            text: "删除这题",
+            touchend: () => removeGame(gameIndex)
+        },
+        {
+            type: "button",
+            text: "输出文件",
+            touchend: async () => {
+                if (games.length == 0) return;
+                const json = await renjuEditor.toKaiBaoJSON(games, log);
+                renjuEditor.downloadKaiBaoJSON(json, filename);
             }
         }
     ];
 
-    buttonSettings.splice(1, 0, createLogDiv(), null);
+    buttonSettings.splice(0, 0, createLogDiv(), null,null,null);
     buttonSettings.splice(4, 0, createLogDiv1(), null);
     buttonSettings.splice(8, 0, null, null);
     buttonSettings.splice(12, 0, null, null);
     buttonSettings.splice(16, 0, null, null);
     buttonSettings.splice(20, 0, null, null);
-    dw > dh && buttonSettings.splice(0, 0, null, null, null, null);
-
+    buttonSettings.splice(24, 0, null, null);
+    
     function createCmdDiv() {
         const cDiv = mainUI.createCmdDiv();
         buttons.push(...mainUI.createButtons(buttonSettings));
-        mainUI.addButtons(buttons, cDiv, 1);
+        mainUI.addButtons(buttons, cDiv, 0);
         return cDiv;
     }
 
     function createLogDiv() {
-        const fontSize = mainUI.buttonHeight / 1.8;
+        const fontSize = mainUI.buttonHeight / 2;
         return mainUI.createLogDiv({
             id: "log",
             type: "div",
-            width: mainUI.buttonWidth * 2.33,
+            width: mainUI.buttonWidth * 4.99,
             height: mainUI.buttonHeight,
             style: {
                 fontSize: `${fontSize}px`,
@@ -248,11 +249,11 @@
             id: "log1",
             type: "div",
             width: mainUI.buttonWidth * 2.33,
-            height: fontSize / 1.8,
+            height: mainUI.buttonHeight,
             style: {
                 fontSize: `${fontSize}px`,
                 textAlign: "center",
-                lineHeight: fontSize / 2 + "px",
+                lineHeight: mainUI.buttonHeight + "px",
                 backgroundColor: "white"
             },
             click: () => {
@@ -396,7 +397,7 @@
                 }
             }
         }
-        bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale);
+        bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale, mainUI.upDiv);
         bindEvent.addEventListener(cbd.viewBox, "click", (x, y, type) => {
             if (status == LOCK) {
                 const idx = cbd.getIndex(x, y);
@@ -470,6 +471,7 @@
             addEvents(cBoard);
             miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
             mainUI.viewport.resize();
+            mainUI.loadTheme();
             renjuEditor.onloadPage = onloadPage;
             log("打开(pdf,zip,jpg,png)");
             log1(`第${0}题 / ${0}题`);

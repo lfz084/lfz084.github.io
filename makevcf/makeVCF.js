@@ -244,12 +244,12 @@ window.makeVCF = (function() {
 		return Math.max(0, rt);
 	}
 
-	function resetMakeVCF(boardArr, bStoneCount, wStoneCount) {
+	function resetMakeVCF(boardArr, bStoneCount, wStoneCount, callback=()=>{}) {
 		if (state > STATE_WAITING) return;
 		gameCount = 0;
 		depth = 0;
 		path = boardArr2Path(boardArr);
-		if (path.length == 0) return;
+		if (path.length == 0) {callback("请在棋盘上摆好棋型"); return}
 		searchCode = new Array(bStoneCount + wStoneCount);
 		stones = [0, bStoneCount, wStoneCount];
 		stoneCount = bStoneCount + wStoneCount;
@@ -399,7 +399,7 @@ window.makeVCF = (function() {
 			else break;
 		}
 		shortVCF.length = 0;
-		return gameCode
+		return gameCode;
 	}
 
 	function filterGameCode(gameCode, shortVCF) {
@@ -473,7 +473,7 @@ window.makeVCF = (function() {
 							return;
 						}
 						shortVCF.length == 0 && shortVCF.push(...winMove);
-						vcfGames.pushGame({ arr: code2BoardArr(code), winMove: winMove, firstColor: nParam.color });
+						vcfGames.pushGame({ arr: code2BoardArr(code, path), winMove: winMove, firstColor: nParam.color });
 					})())
 					count++;
 				}
@@ -486,8 +486,7 @@ window.makeVCF = (function() {
 			if (state == STATE_STOPPING) { state = STATE_WAITING; return; }
 			state = STATE_WAITING;
 		}
-		//}
-		//catch (e) { alert(e.stack) }
+		//}catch (e) { alert(e.stack) }
 	}
 	
 	async function pushGames(info, callback = ()=>{}) {

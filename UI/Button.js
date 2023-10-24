@@ -104,10 +104,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 					if (event) event.cancelBubble = true;
 					this.scroll(parseInt(li.style.lineHeight) * 5);
 				}.bind(this);
+				menu.appendChild(get_hr());
 			}
 			for (let i = 0; i < input.length; i++) {
-				const hr = get_hr();
-				menu.appendChild(hr);
 				const li = get_li({
 					text: input[i].innerHTML,
 					fontSize: fontSize,
@@ -135,10 +134,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 						input[i].checked = !input[i].checked;
 					}
 				}.bind(this);
+				i < input.length - 1 && menu.appendChild(get_hr());
 			}
-			const hr = get_hr();
-			menu.appendChild(hr);
 			if (input.length && ((height - (fontSize + 3) * 1) < optionsHeight)) {
+				menu.appendChild(get_hr());
 				const li = get_li({
 					text: "︽",
 					fontSize: fontSize,
@@ -387,7 +386,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	// 定制按钮，button，file，Radio，select。
 
-	class button {
+	class Button {
 		constructor(parentNode, type, left, top, width, height) {
 
 			this.parentNode = parentNode; //保存父节点;
@@ -483,7 +482,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	// 对 select 添加 option
-	button.prototype.addOption = function(value, text, type) {
+	Button.prototype.addOption = function(value, text, type) {
 		//log(`add t=${this.text}`);
 		if (this.type != "select") return;
 		let op = document.createElement("option");
@@ -495,7 +494,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	// arr = [index1, text1, ?type1, index2, text2, ?type2 ...]
-	button.prototype.addOptions = function(arr) {
+	Button.prototype.addOptions = function(arr) {
 		for (let i = 0; i < arr.length; i += 2) {
 			const value = arr[i];
 			const text = arr[i + 1];
@@ -505,13 +504,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	};
 
 
-	button.prototype.createMenu = function(left, top, width, height, fontSize, closeAnimation, isCancelMenuClick = () => {}, scale = 1) {
+	Button.prototype.createMenu = function(left, top, width, height, fontSize, closeAnimation, isCancelMenuClick = () => {}, scale = 1) {
 		if (this.type != "select" || this.menu) return; //safari 长按棋盘会误触发click事件 isCancelMenuClick判断是否是误触发
 		this.menu = new Menu(this, left, top, width, height, fontSize, closeAnimation, isCancelMenuClick, scale);
 	};
 
 
-	button.prototype.defaultontouchstart = function() {
+	Button.prototype.defaultontouchstart = function() {
 		try {
 			//log(`str t=${this.text}`);
 			if (this.tyle == "select" && event) event.preventDefault();
@@ -532,7 +531,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	};
 
 
-	button.prototype.defaultontouchmove = function() {
+	Button.prototype.defaultontouchmove = function() {
 		try {
 			//log(`mov t=${this.text}`);
 			this.isEventMove = true; // 取消单击事件
@@ -543,7 +542,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	// 默认事件，
-	button.prototype.defaultontouchend = function() {
+	Button.prototype.defaultontouchend = function() {
 		try {
 			//log(`typeof event=${typeof event}, isEventMove=${this.isEventMove}`);
 			if (event) event.preventDefault();
@@ -626,14 +625,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	};
 
 
-	button.prototype.autoMenuTop = function() {
+	Button.prototype.autoMenuTop = function() {
 		let top = window.scrollY / this.menu.bodyScale + this.menu.fontSize * 2.5 * 2;
 		top = event && event.pageY ? event.pageY / this.menu.bodyScale - top : event && event.changedTouches[0] ? event.changedTouches[0].pageY / this.menu.bodyScale - top : undefined;
 		return top;
 	}
 
 
-	button.prototype.defaultonchange = function() {
+	Button.prototype.defaultonchange = function() {
 		try {
 			//log(`chg t=${this.text}`);
 			//log(`defaultonchange  ,i=${this.input.selectedIndex==-1 ? this.input[1].text : this.input.options[this.input.selectedIndex].text} `);
@@ -646,20 +645,20 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	//移出节点
-	button.prototype.hide = function() {
+	Button.prototype.hide = function() {
 		let f = this.div;
 		if (f.parentNode) f.parentNode.removeChild(f);
 	};
 
 
 
-	button.prototype.hideMenu = function(ms, callback = () => {}) {
+	Button.prototype.hideMenu = function(ms, callback = () => {}) {
 		this.menu.hide(ms, callback);
 	}
 
 
 	//  移动和设置大小
-	button.prototype.move = function(left, top, width, height, parentNode) {
+	Button.prototype.move = function(left, top, width, height, parentNode) {
 		parentNode && parentNode.appendChild(this.div)
 		let text = this.text;
 		this.left = left == null ? this.left : parseInt(left) + "px";
@@ -672,7 +671,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	//按钮背景色
-	button.prototype.setBackgroundColor = function(color) {
+	Button.prototype.setBackgroundColor = function(color) {
 		//log(`sbc t=${this.text}`);
 		this.backgroundColor = color;
 		this.button.style.backgroundColor = color;
@@ -681,14 +680,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	//  设置按钮形状
-	button.prototype.setBorderRadius = function(rs) {
+	Button.prototype.setBorderRadius = function(rs) {
 		//log(`sbr t=${this.text}`);
 		this.borderRadius = rs;
 		this.show();
 	};
 
 
-	button.prototype.setColor = function(color) {
+	Button.prototype.setColor = function(color) {
 		//log(`sclr t=${this.text}`);
 		this.color = color;
 		this.selectColor = color;
@@ -697,7 +696,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	//设置选定状态    
-	button.prototype.setChecked = function(checked) {
+	Button.prototype.setChecked = function(checked) {
 		//log(`sckd t=${this.text}`);
 		if (this.checked == (checked == true)) return;
 		this.checked = checked ? true : false;
@@ -707,7 +706,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	//字体
-	button.prototype.setFontSize = function(fontSize) {
+	Button.prototype.setFontSize = function(fontSize) {
 		this.fontSize = parseInt(fontSize) + "px";
 		if (this.checked) {
 			this.button.style.fontSize = parseInt(parseInt(this.fontSize) * 0.9) + "px";
@@ -719,14 +718,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 
-	button.prototype.setNotChangeColor = function(nc) {
+	Button.prototype.setNotChangeColor = function(nc) {
 		this.notChangeColor = !!nc;
 	};
 
 
 
 	// 給事件绑定函数
-	button.prototype.setonchange = function(callback = () => {}) {
+	Button.prototype.setonchange = function(callback = () => {}) {
 		let fun = this.change;
 		let but = this;
 		this.change = function() {
@@ -743,7 +742,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	// 給事件绑定函数
-	button.prototype.setontouchstart = function(callback = () => {}) {
+	Button.prototype.setontouchstart = function(callback = () => {}) {
 		let fun = this.touchstart;
 		let but = this;
 		this.touchstart = function() {
@@ -761,7 +760,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	// 給事件绑定函数
-	button.prototype.setontouchend = function(callback = () => {}) {
+	Button.prototype.setontouchend = function(callback = () => {}) {
 		const key = (this.type == "select" || this.type == "file") ? "div" : "input";
 		const buttons = this.group ? getGroup(groups, this.group).buttons : [this];
 		getGroup(groups, this.group).callback = callback;
@@ -781,7 +780,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	// 设置文本
-	button.prototype.setText = function(txt, txt2) {
+	Button.prototype.setText = function(txt, txt2) {
 		//log(`stxt t=${this.text}`);
 		let s;
 		this.text = txt == null ? "" : txt;
@@ -834,7 +833,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	//显示，刷新
-	button.prototype.show = function(left, top, width, height) {
+	Button.prototype.show = function(left, top, width, height) {
 
 		if (!this.div.parentNode) this.parentNode.appendChild(this.div);
 
@@ -902,12 +901,12 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 
-	button.prototype.showMenu = function(x, y) {
+	Button.prototype.showMenu = function(x, y) {
 		log(`${this}.showMenu`)
 		this.menu.show(x, y);
 	};
 
 
 	exports.ANIMATION_TIMEOUT = ANIMATION_TIMEOUT;
-	exports.Button = button;
+	exports.Button = Button;
 })))

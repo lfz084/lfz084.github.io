@@ -57,6 +57,7 @@
             text: "打开文件",
             change: async function() {
                 try {
+                	mainUI.viewport.resize();
                     const file = this.files[0];
                     const path = this.value;
                     this.value = "";
@@ -174,41 +175,24 @@
     }
 
     function createCommentDiv() {
+        const fontSize = mainUI.cmdWidth / 28;
         return mainUI.createLogDiv({
             id: "comment",
             type: "div",
-            width: 8,
-            height: 8
+            width: mainUI.buttonWidth * 2.33,
+            height: mainUI.buttonHeight * 8.5,
+            style: {
+            	posstion: "absolute",
+        		fontSize: `${fontSize}px`,
+            	wordBreak: "break-all",
+            	overflowY: "auto",
+            	borderStyle: "solid",
+            	borderWidth: `${fontSize / 20}px`,
+            	borderColor: "black",
+            	background: "white",
+            	padding: `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`
+            }
         })
-    }
-
-    function resetCommentStyle() {
-        try {
-            const commentDiv = $("comment");
-            const left = 0;
-            const width = mainUI.buttonWidth * 2.33;
-            const height = mainUI.buttonHeight * 8.5;
-            const fontSize = mainUI.cmdWidth / 28;
-
-            let s = commentDiv.style;
-            s.posstion = "absolute";
-            //s.left = left + "px";
-            s.width = width - fontSize + "px";
-            s.height = height - fontSize + "px";
-
-            s.fontSize = fontSize + "px";
-            s.wordBreak = "break-all";
-            s.overflowY = "auto";
-
-            s.borderStyle = "solid";
-            s.borderWidth = `${fontSize / 20}px`;
-            s.borderColor = "black";
-            s.background = "white";
-            s.padding = `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`;
-
-
-            s.zIndex = 9999;
-        } catch (e) { alert(e.stack) }
     }
 
     function createCmdDiv() {
@@ -440,7 +424,7 @@
                     cBoard.wLb(record.idx, label, "black");
                 })
                 game.rule == Rule.RENJU && game.sideToMove == 0 && info.posstion.map((v,i) => {
-                    if (v == 0 && isFoul(i, info.posstion)) {
+                    if (v == 0 && ("isFoul" in self) && isFoul(i, info.posstion)) {
                         cBoard.wLb(i, EMOJI_FOUL, "red");
                     }
                 })
@@ -498,7 +482,7 @@
     game.cBoard.stonechange = function() { game.showBranchNodes() };
 
     function addEvents() {
-        bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale);
+        bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale, mainUI.upDiv);
         bindEvent.addEventListener(game.cBoard.viewBox, "click", (x, y, type) => {
             const idx = game.cBoard.getIndex(x, y);
             if (game.cBoard.P[idx].type == TYPE_NUMBER) {
@@ -529,7 +513,7 @@
         try {
             addEvents();
             mainUI.viewport.resize();
-            resetCommentStyle();
+            mainUI.loadTheme();
             log("你可以打开Rapfi保存的db棋谱")
         } catch (e) { alert(e.stack) }
     })

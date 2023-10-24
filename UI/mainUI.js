@@ -36,10 +36,10 @@ window.mainUI = (function() {
 	document.body.style.margin = "0";
 
 	/**
-	 * mainUI.childs[] 保存cBoard 和 CmdDiv
-	 * @type {{variant: CheckerBoard || CmdDiv, type: string, varName: string}[]}
-	 * @variant CheckerBoard || CmdDiv 实例
-	 * @type "CheckerBoard" || "CmdDiv"
+	 * mainUI.childs[] 保存Board 和 CmdDiv
+	 * @type {{variant: Board || CmdDiv, type: string, varName: string}[]}
+	 * @variant Board || CmdDiv 实例
+	 * @type "Board" || "CmdDiv"
 	 * @varName 变量名
 	 */
 	const childs = [];
@@ -164,23 +164,33 @@ window.mainUI = (function() {
 
 	//----------------------- CheckerBoard  -------------------------------------------------
 
-	function createCBoard() {
+	function createCBoard(param = {}) {
 		const cbd = new CheckerBoard(upDiv, (gridWidth - cmdWidth) / 2, (gridWidth - cmdWidth) / 2, cmdWidth, cmdWidth);
 		cbd.backgroundColor = "white";
 		cbd.showCheckerBoard();
 		cbd.bodyScale = bodyScale;
+		childs.push({
+			variant: cbd,
+			type: cbd.constructor.name,
+			varName: param.varName
+		});
 		return cbd;
 	}
 
-	function createMiniBoard() {
+	function createMiniBoard(param = {}) {
 		const width = buttonHeight * 7;
-		const left = (cmdWidth / 2 - width) / 1.5;
+		const left = (cmdWidth / 2 - width);
 		const top = dw > dh ? buttonHeight * (1.2 + 3) : buttonHeight * 1.5;
 		const cbd = new CheckerBoard(upDiv, left, top, width, width);
 		cbd.backgroundColor = "white";
 		cbd.showCheckerBoard();
 		cbd.viewBox.style.zIndex = -1;
 		cbd.bodyScale = bodyScale;
+		childs.push({
+			variant: cbd,
+			type: cbd.constructor.name,
+			varName: param.varName
+		});
 		return cbd;
 	}
 
@@ -295,40 +305,6 @@ window.mainUI = (function() {
 		return cmdDiv;
 	}
 
-	//----------------------------- board Title ----------------------------- 
-
-	function createBoardTitle(param = {}) {
-		return createLogDiv({
-			id: param.id || "boardTitle",
-			type: "div",
-			left: 0,
-			top: (dw > dh ? 1 : -1) * buttonHeight * 1.1,
-			width: cmdWidth,
-			height: buttonHeight,
-			style: {
-				fontSize: `${buttonHeight / 1.8}px`,
-				textAlign: "center",
-				lineHeight: `${buttonHeight}px`
-			}
-		})
-	}
-
-	function createMiniBoardTitle() {
-		const lineHeight = buttonHeight;
-		return createLogDiv({
-			id: param.id || "miniBoardTitle",
-			type: "div",
-			width: buttonWidth * 2.33,
-			height: lineHeight / 1.8,
-			style: {
-				fontSize: `${buttonHeight / 2}px`,
-				textAlign: "center",
-				lineHeight: `${lineHeight / 2}px`,
-				backgroundColor: "white",
-			}
-		})
-	}
-
 	//----------------------------- logDiv  ------------------------------- 
 
 	function createLogDiv(param = {}) {
@@ -359,20 +335,20 @@ window.mainUI = (function() {
 		for (let index in this.childs) {
 			const child = this.childs[index];
 			if ((!param.type || child.type == param.type) && (!param.varName || child.varName == param.varName)) childs.push(child.variant);
-			else if (typeof child.variant.getChilds == "function") {
+			if (typeof child.variant.getChilds == "function") {
 				const rt = child.variant.getChilds(param);
 				if (rt.length) childs.push(...rt);
 			}
 		}
 		return childs;
 	}
-	
+
 	function getChildByName(name) {
-		return getChild({varName: name});
+		return getChild({ varName: name });
 	}
-	
+
 	function getChildsByName(name) {
-		return getChilds({varName: name});
+		return getChilds({ varName: name });
 	}
 
 	//----------------------------- class ---------------------------------
@@ -485,6 +461,46 @@ window.mainUI = (function() {
 		const label = newClass(param, Label);
 		return label;
 	}
+	
+	//---------------------- Timer ------------------------
+	
+	class Timer extends viewElem {
+		constructor(left = 0, top = 0, width = 500, height = 500) {
+			super(left, top, width, height);
+			this.startTime = new Date().getTime();
+			this.timer = null;
+		}
+	}
+	
+	Timer.prototype.reset = function() {
+		this.startTime = new Date().getTime();
+	}
+	
+	Timer.prototype.start = function() {
+		this.stop();
+		this.timer = setInterval(() => {
+			let t = new Date().getTime();
+			t -= this.startTime;
+			let h = ~~(t / 3600000);
+			h = h < 10 ? "0" + h : h;
+			let m = ~~((t % 3600000) / 60000);
+			m = m < 10 ? "0" + m : m;
+			let s = ~~((t % 60000) / 1000);
+			s = s < 10 ? "0" + s : s;
+			this.viewElem.innerHTML = `${h}:${m}:${s}`;
+		}, 1000);
+	}
+	
+	Timer.prototype.stop = function() {
+		clearInterval(this.timer);
+	}
+	
+	function newTimer(param = {}) {
+		param.width = param.width || buttonWidth;
+		param.height = param.height || buttonHeight;
+		const timer = newClass(param, Timer);
+		return timer;
+	}
 
 	//---------------------- Comment ------------------------
 
@@ -494,9 +510,142 @@ window.mainUI = (function() {
 		}
 	}
 
-	function newComment() {
+	function newComment(param = {}) {
 		const comment = newClass(param, Comment);
 		return comment;
+	}
+
+	//---------------------- themes ------------------------
+
+	const themes = {"light":"light", "grey":"grey", "dark":"dark"};
+	const defaultTheme = "light";
+	const THEMES = {
+		"body": {
+			"light": {
+				"color": "#333333",
+				"backgroundColor": "white"
+			},
+			"grey": {
+				"color": "#333333",
+				"backgroundColor": "white"
+			},
+			"dark": {
+				"color": "#d0d0d0",
+				"backgroundColor": "#333333"
+			}
+		},
+		"Button": {
+			"light": {
+				"color": "#333333",
+				"selectColor": "black",
+				"backgroundColor": "white",
+				"selectBackgroundColor": "#e0e0e0"
+			},
+			"grey": {
+				"color": "#333333",
+				"selectColor": "black",
+				"backgroundColor": "#f0f0f0",
+				"selectBackgroundColor": "#d0d0d0"
+			},
+			"dark": {
+				"color": "#d0d0d0",
+				"selectColor": "#f0f0f0",
+				"backgroundColor": "#333333",
+				"selectBackgroundColor": "black"
+			}
+		},
+		"Board": {
+			"light": {
+				"backgroundColor": "white",
+				"wNumColor": "white",
+				"bNumColor": "#000000",
+				"wNumFontColor": "#000000",
+				"bNumFontColor": "#ffffff",
+				"LbBackgroundColor": "white",
+				"coordinateColor": "#000000",
+				"lineColor": "#000000",
+				"wLastNumColor": "#ff0000",
+				"bLastNumColor": "#ffaaaa",
+				"moveWhiteColor": "#bbbbbb",
+				"moveBlackColor": "#bbbbbb",
+				"moveWhiteFontColor": "#ffffff",
+				"moveBlackFontColor": "#000000",
+				"moveLastFontColor": "red"
+			},
+			"grey": {
+				"backgroundColor": "#f0f0f0",
+				"wNumColor": "white",
+				"bNumColor": "#000000",
+				"wNumFontColor": "#000000",
+				"bNumFontColor": "#ffffff",
+				"LbBackgroundColor": "#f0f0f0",
+				"coordinateColor": "#000000",
+				"lineColor": "#000000",
+				"wLastNumColor": "#ff0000",
+				"bLastNumColor": "#ffaaaa",
+				"moveWhiteColor": "#bbbbbb",
+				"moveBlackColor": "#bbbbbb",
+				"moveWhiteFontColor": "#ffffff",
+				"moveBlackFontColor": "#000000",
+				"moveLastFontColor": "red"
+			},
+			"dark": {
+				"backgroundColor": "#777777",
+				"wNumColor": "#aaaaaa",
+				"bNumColor": "#000000",
+				"wNumFontColor": "#000000",
+				"bNumFontColor": "#aaaaaa",
+				"LbBackgroundColor": "#777777",
+				"coordinateColor": "#000000",
+				"lineColor": "#000000",
+				"wLastNumColor": "#ff0000",
+				"bLastNumColor": "#ffaaaa",
+				"moveWhiteColor": "#999999",
+				"moveBlackColor": "#999999",
+				"moveWhiteFontColor": "#ffffff",
+				"moveBlackFontColor": "#000000",
+				"moveLastFontColor": "red"
+			}
+		}
+	};
+
+	function _theme(themeKey) {
+		themeKey = themes[themeKey] || defaultTheme;
+		console.info(`_theme: ${themeKey}`);
+		for (let key in THEMES["body"][themeKey]) {
+			document.body.style[key] = THEMES["body"][themeKey][key];
+		}
+		const childs = this.getChilds();
+		for (let index in childs) {
+			const child = childs[index];
+			const className = child.constructor.name;
+			switch (className) {
+				case "CmdDiv":
+				case "Label":
+				case "Timer":
+				case "Comment":
+					for (let key in THEMES["body"][themeKey]) {
+						child.viewElem.style[key] = THEMES["body"][themeKey][key];
+					}
+					break;
+				case "Board":
+				case "Button":
+					for (let key in THEMES[className][themeKey]) {
+						child[key] = THEMES[className][themeKey][key];
+					}
+					(child.refreshCheckerBoard && child.refreshCheckerBoard(), child.show && child.show())
+			}
+		}
+	}
+	
+	function setTheme(themeKey) {
+		localStorage.setItem("theme", themeKey);
+		_theme.call(this, themeKey);
+	}
+	
+	function loadTheme() {
+		const themeKey = localStorage.getItem("theme");
+		_theme.call(this, themeKey);
 	}
 
 	//----------------------------- exports ------------------------------- 
@@ -539,6 +688,13 @@ window.mainUI = (function() {
 	Object.defineProperty(exports, "createLogDiv", { value: createLogDiv });
 	Object.defineProperty(exports, "createCmdDiv", { value: createCmdDiv });
 	Object.defineProperty(exports, "createConTextMenu", { value: createConTextMenu });
+	Object.defineProperty(exports, "setTheme", { value: setTheme });
+	Object.defineProperty(exports, "loadTheme", { value: loadTheme });
+	
+	Object.defineProperty(exports, "newCmdDiv", { value: newCmdDiv });
+	Object.defineProperty(exports, "newLabel", { value: newLabel });
+	Object.defineProperty(exports, "newTimer", { value: newTimer });
+	Object.defineProperty(exports, "newComment", { value: newComment });
 
 	return exports;
 })()
