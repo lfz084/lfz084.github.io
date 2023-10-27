@@ -184,7 +184,7 @@ window.mainUI = (function() {
 		const cbd = new CheckerBoard(upDiv, left, top, width, width);
 		cbd.backgroundColor = "white";
 		cbd.showCheckerBoard();
-		cbd.viewBox.style.zIndex = -1;
+		//cbd.viewBox.style.zIndex = -1;
 		cbd.bodyScale = bodyScale;
 		childs.push({
 			variant: cbd,
@@ -204,17 +204,32 @@ window.mainUI = (function() {
 		return (bodyHeight - ((button.menu && button.menu.menuHeight) || autoMenuHeight(button))) / 2;
 	}
 
-	function createMenu(button) {
-		button.createMenu(menuLeft + (dw > dh ? gridWidth : 0), autoMenuTop(button), menuWidth, autoMenuHeight(button), menuFontSize, true, undefined, bodyScale);
+	function _createMenu(button) {
+		let menuBut;
+		if (button.constructor.name === "Button") {
+			menuBut = button;
+		}
+		else {
+			menuBut = new Button(upDiv, "select", 0, 0, buttonWidth, buttonHeight);
+			menuBut.index = -1;
+			menuBut.addOptions(button.options);
+			menuBut.setonshow(button.onshow);
+			menuBut.setonchange(button.onchange || button.change);
+		}
+		return menuBut;
 	}
+	
+	function createMenu(button) {
+		const menuBut = _createMenu(button);
+		menuBut.createMenu(menuLeft + (dw > dh ? gridWidth : 0), autoMenuTop(menuBut), menuWidth, autoMenuHeight(menuBut), menuFontSize, true, undefined, bodyScale);
+		return menuBut;
+	}
+	
 
-	function createConTextMenu(parentNode, options = [], onchange = () => {}) {
-		const button = new Button(parentNode, "select", 0, 0, buttonWidth, buttonHeight);
-		button.index = -1;
-		button.addOptions(options);
-		button.setonchange(onchange);
-		button.createMenu(menuLeft, autoMenuTop(button), menuWidth, autoMenuHeight(button), menuFontSize, true, iphoneCancelClick.isCancel, bodyScale);
-		return button.menu;
+	function createContextMenu(button) {
+		const menuBut = _createMenu(button);
+		menuBut.createMenu(menuLeft, autoMenuTop(menuBut), menuWidth, autoMenuHeight(menuBut), menuFontSize, true, iphoneCancelClick.isCancel, bodyScale);
+		return menuBut;
 	}
 
 	//----------------------- button  -----------------------------------------------------------
@@ -223,10 +238,7 @@ window.mainUI = (function() {
 		const buttons = [];
 		settings.map(setting => {
 			if (setting) {
-				if (setting.viewElem) {
-					buttons.push(setting);
-				}
-				else {
+				if(setting.constructor.name === "Object" && setting.type) {
 					const button = new Button(document.body, setting.type, 0, 0, buttonWidth, buttonHeight);
 					setting.text && button.setText(setting.text);
 					setting.accept && (button.input.accept = setting.accept);
@@ -236,7 +248,11 @@ window.mainUI = (function() {
 					setting.type == "select" && createMenu(button);
 					button.varName = setting.varName;
 					button.group = setting.group;
+					button.mode = setting.mode;
 					buttons.push(button);
+				}
+				else {
+					buttons.push(setting);
 				}
 			}
 			else buttons.push(undefined);
@@ -253,6 +269,7 @@ window.mainUI = (function() {
 					buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttonSettings[i].width, buttonSettings[i].height, cmdDiv.viewElem);
 				else
 					buttons[i].move(buttonSettings[i].left, buttonSettings[i].top, buttons[i].width, buttons[i].height, cmdDiv.viewElem);
+				
 				cmdDiv.addChild({
 					variant: buttons[i],
 					type: buttons[i].constructor.name,
@@ -432,6 +449,7 @@ window.mainUI = (function() {
 		vElem.style(param.style);
 		vElem.attribute(param.attribute);
 		vElem.event(param.event);
+		vElem.move();
 		vElem.show();
 		return vElem;
 	}
@@ -469,6 +487,10 @@ window.mainUI = (function() {
 			super(left, top, width, height);
 			this.startTime = new Date().getTime();
 			this.timer = null;
+			this.viewElem.style.fontSize = parseInt(this.height) / 1.8 + "px";
+			this.viewElem.style.textAlign = "center";
+			this.viewElem.style.lineHeight = parseInt(this.height) + "px";
+			this.viewElem.innerHTML = `00:00:00`;
 		}
 	}
 	
@@ -687,7 +709,7 @@ window.mainUI = (function() {
 	Object.defineProperty(exports, "createMiniBoard", { value: createMiniBoard });
 	Object.defineProperty(exports, "createLogDiv", { value: createLogDiv });
 	Object.defineProperty(exports, "createCmdDiv", { value: createCmdDiv });
-	Object.defineProperty(exports, "createConTextMenu", { value: createConTextMenu });
+	Object.defineProperty(exports, "createContextMenu", { value: createContextMenu });
 	Object.defineProperty(exports, "setTheme", { value: setTheme });
 	Object.defineProperty(exports, "loadTheme", { value: loadTheme });
 	

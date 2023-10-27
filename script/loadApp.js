@@ -256,12 +256,16 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
                 progress: "20%",
                 type: "scriptAll",
                 isAsync: false,
-                sources: [[SOURCE_FILES["Viewport"], () => window.viewport1 = new View(cWidth / 0.95)],
+                sources: [[SOURCE_FILES["Viewport"]],
                 [SOURCE_FILES["vconsole"], async () => {
                         testBrowser();
                         await openVConsole();
                     }],
                 [SOURCE_FILES["utils"]],
+                [SOURCE_FILES["bindevent"]],
+                [SOURCE_FILES["mainUI"],() => {
+                	window.viewport1 = mainUI.viewport;
+                }],
                 [SOURCE_FILES["emoji"]], // first load emoji
                 [SOURCE_FILES["EvaluatorWebassembly"]],
                 [SOURCE_FILES["EvaluatorJScript"]],
@@ -288,8 +292,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
                 progress: "35%",
                 type: "scriptAll",
                 isAsync: true,
-                sources: [[SOURCE_FILES["control"]],
-                [SOURCE_FILES["msgbox"]],
+                sources: [[SOURCE_FILES["msgbox"]],
                 [SOURCE_FILES["appData"]],
                 [SOURCE_FILES["engine"]],
                 [SOURCE_FILES["NoSleep"]],
@@ -299,7 +302,8 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
                 type: "scriptAll",
                 isAsync: true,
                 sources: [[SOURCE_FILES["PFSCMedium_js"]],
-                [SOURCE_FILES["PFSCHeavy_js"]]]
+                [SOURCE_FILES["PFSCHeavy_js"]],
+                [SOURCE_FILES["control"]]]
         }, {
                 progress: "63%",
                 type: "scriptAll",
@@ -359,7 +363,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
             .then(() => {
                 initNoSleep();
                 removeMlog();
-                const UI = createUI();
+                //const UI = createUI();
                 window.viewport1.resize();
                 window.DEBUG = true;
                 window.jsPDF = window.jspdf.jsPDF;

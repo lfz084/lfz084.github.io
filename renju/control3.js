@@ -137,7 +137,45 @@ window.control = (() => {
 	})();
 
 
-	
+	const lbTime = new function() {
+		this.div = document.createElement("div");
+		this.startTime = 0;
+		this.timer = null;
+
+		this.move = function(left, top, width, height, fontSize) {
+			renjuCmddiv.appendChild(this.div);
+			this.startTime = new Date().getTime();
+			this.div.style.position = "absolute";
+			this.div.style.left = left + "px";
+			this.div.style.top = top + "px";
+			this.div.style.height = parseInt(height) + "px";
+			this.div.style.width = parseInt(width) + "px";
+			this.div.style.fontFamily = "mHeiTi, Roboto, emjFont, Symbola";
+			this.div.style.fontSize = fontSize;
+			this.div.style.textAlign = "center";
+			this.div.style.lineHeight = height;
+			this.div.style.color = "#cccccc";
+
+			this.div.innerHTML = "00:00:00"
+			let lbDiv = this.div;
+			let sTime = this.startTime;
+			this.timer = setInterval(function() {
+				let t = new Date().getTime();
+				t -= sTime;
+				let h = ~~(t / 3600000);
+				h = h < 10 ? "0" + h : h;
+				let m = ~~((t % 3600000) / 60000);
+				m = m < 10 ? "0" + m : m;
+				let s = ~~((t % 60000) / 1000);
+				s = s < 10 ? "0" + s : s;
+				lbDiv.innerHTML = `${h}:${m}:${s}`;
+			}, 1000);
+		}
+		this.close = function() {
+			if (this.div.parentNode) this.div.parentNode.removeChild(this.div);
+			clearInterval(this.timer);
+		}
+	}
 
 	function _setBlockUnload() {
 		const enable = isBusy(false) || [MODE_RENLIB, MODE_READLIB, MODE_EDITLIB].indexOf(playMode) + 1

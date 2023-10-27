@@ -349,7 +349,7 @@ window.bindEvent = (function() {
 					}
 					for(let j = 0; j < evtObj.callbackList.length; j++) {
 						const callback = evtObj.callbackList[j];
-						setTimeout(callback, 0, x, y, ...args)
+						try{callback(x, y, ...args)}catch(e){};
 						result = true;
 					}
 				}

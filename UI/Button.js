@@ -554,7 +554,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			if (this.isEventMove) cancel = true; // 不触发单击事件
 
 			// radio, checkbox 修改 checked
-			if ((!cancel) && (this.type == "radio" || this.type == "checkbox")) {
+			if ((!cancel) && ((this.mode || this.type) == "radio" || (this.mode || this.type) == "checkbox")) {
 				this.checked = this.type == "radio" || !this.checked;
 			}
 			//log(`checked = ${this.checked} ,this.isEventMove = ${this.isEventMove}`);
@@ -613,10 +613,12 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 				this.showMenu(undefined, this.autoMenuTop());
 			}
 
-			if (this.group) {
+			if (this.group && !cancel) {
 				const buttons = getGroup(groups, this.group).buttons;
-				buttons.map(button => {
-					if ("radio" == (button.mode || button.type)) button.setChecked(button == this)
+				buttons.map((button,i) => {
+					if ("radio" == (button.mode || button.type)) {
+						button.setChecked(button == this)
+					}
 				})
 			}
 
@@ -721,7 +723,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	Button.prototype.setNotChangeColor = function(nc) {
 		this.notChangeColor = !!nc;
 	};
-
+	
+	
+	Button.prototype.setonshow = function(callback = () => {}) {
+		this.menu && (this.menu.onshow = callback);
+	};
 
 
 	// 給事件绑定函数
@@ -898,7 +904,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		this.setText(this.text, this.text2); // 正确显示按钮文本
 		if (this.type == "select") this.defaultonchange();
 	};
-
 
 
 	Button.prototype.showMenu = function(x, y) {
