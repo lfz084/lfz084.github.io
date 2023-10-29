@@ -213,7 +213,7 @@ window.mainUI = (function() {
 			menuBut = new Button(upDiv, "select", 0, 0, buttonWidth, buttonHeight);
 			menuBut.index = -1;
 			menuBut.addOptions(button.options);
-			menuBut.setonshow(button.onshow);
+			menuBut.setonshowmenu(button.onshowmenu);
 			menuBut.setonchange(button.onchange || button.change);
 		}
 		return menuBut;
@@ -240,15 +240,16 @@ window.mainUI = (function() {
 			if (setting) {
 				if(setting.constructor.name === "Object" && setting.type) {
 					const button = new Button(document.body, setting.type, 0, 0, buttonWidth, buttonHeight);
+					button.varName = setting.varName;
+					button.group = setting.group;
+					button.mode = setting.mode;
 					setting.text && button.setText(setting.text);
 					setting.accept && (button.input.accept = setting.accept);
 					setting.touchend && button.setontouchend(setting.touchend);
 					setting.change && button.setonchange(setting.change);
+					setting.onshowmenu && button.setonshowmenu(setting.onshowmenu);
 					setting.options && button.addOptions(setting.options);
 					setting.type == "select" && createMenu(button);
-					button.varName = setting.varName;
-					button.group = setting.group;
-					button.mode = setting.mode;
 					buttons.push(button);
 				}
 				else {

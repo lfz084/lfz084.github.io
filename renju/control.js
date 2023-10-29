@@ -46,18 +46,26 @@ window.control = (() => {
 			{ "colName": "暗绿标记", "color": "#556B2F" },
         ];
 		let continueLabel = ["标记1", "标记2", "标记3", "标记4", "标记5"],
-			parentNode,
 			renjuCmdSettings = { positions: [], defaultButtons: [], ButtonsIdx: [], idx: 0 },
 			imgCmdSettings = { positions: [], defaultButtons: [], ButtonsIdx: [], idx: 0 },
 			onLoadCmdSettings = function() {},
 			scaleCBoard = function() {},
 			setShowNum = function() {},
 			getShowNum = function() {},
-			editButtons = function() {},
+			editButtons = function() {};
 
-			blackwhiteRadioChecked = function() {},
-			markRadioChecked = function() {},
-			autoblackwhiteRadioChecked = function() {};
+			function markRadioChecked() {
+				if (this != cLABC) {
+					cBoard.drawLineEnd();
+				}
+			}
+			
+			function autoblackwhiteRadioChecked() {
+				if (!cLockImg.checked) {
+					lockImg();
+					cLockImg.setChecked(1);
+				}
+			}
 
 
 
@@ -87,7 +95,7 @@ window.control = (() => {
 
 		const busyButtonSettings = [
 		null, null, null, null,
-		null, mainUI.newTimer({ varName: "lbTime" }),
+		null, mainUI.newTimer({ varName: "lbTimer" }),
 			{
 				varName: "cCancelFind",
 				type: "button",
@@ -95,7 +103,7 @@ window.control = (() => {
 				touchend: function(but) {
 					cCancelFind.setText(`停止中...`);
 					engine.cancel();
-					RenjuLib.isLoading() && RenjuLib.cancal();
+					RenjuLib.cancal();
 				}
 		}];
 		mainUI.addButtons(mainUI.createButtons(busyButtonSettings), busyCmdDiv, 0);
@@ -302,10 +310,9 @@ window.control = (() => {
 							fileInput.accept = "application/lib";
 							fileInput.onchange = openLib;
 							fileInput.click()
-						},
-						3: () => { setMemoryMenu.showMenu() },
+						}
 					}
-					execFunction(FUN[but.input.value]);
+					FUN[but.input.value]();
 					but.input.value = 0;
 				}
 	        },
@@ -328,7 +335,7 @@ window.control = (() => {
 						5: () => { cBoard.saveAsSVG("html") },
 						6: () => { cBoard.saveAsPDF() },
 					}
-					execFunction(FUN[but.input.value]);
+					FUN[but.input.value]();
 					but.input.value = 0;
 				}
 	        },
@@ -427,7 +434,8 @@ window.control = (() => {
 				type: "radio",
 				text: ` ${EMOJI_FORK} `,
 				group: "stone_mark",
-				mode: "radio"
+				mode: "radio",
+				touchend: markRadioChecked
 	        },
 			{
 				varName: "cLbColor",
@@ -460,7 +468,7 @@ window.control = (() => {
 						3: () => { setPlayMode(MODE_READLIB) },
 						4: () => { setPlayMode(MODE_EDITLIB) },
 					}
-					execFunction(FUN[but.input.value]);
+					FUN[but.input.value]();
 				}
 			},
 			{
@@ -842,7 +850,10 @@ window.control = (() => {
 				varName: "cSLTY",
 				type: "select",
 				text: "15 行",
-				options: [15, "15 行", 14, "14 行", 13, "13 行", 12, "12 行", 11, "11 行", 10, "10 行", 9, "9 行", 8, "8 行", 7, "7 行", 6, "6 行"],
+				options: [15, "15 行", "radio", 14, "14 行", "radio", 13, "13 行", "radio", 12, "12 行", "radio", 11, "11 行", "radio", 10, "10 行", "radio", 9, "9 行", "radio", 8, "8 行", "radio", 7, "7 行", "radio", 6, "6 行", "radio"],
+				onshowmenu: function(but) {
+					[...this.input].map(op => op.checked = op.value == cBoard.SLTY);
+				},
 				change: function(but) {
 					cBoard.SLTY = but.input.value;
 					cBoard.resetP();
@@ -860,7 +871,10 @@ window.control = (() => {
 				varName: "cSLTX",
 				type: "select",
 				text: "15 列",
-				options: [15, "15 列", 14, "14 列", 13, "13 列", 12, "12 列", 11, "11 列", 10, "10 列", 9, "9 列", 8, "8 列", 7, "7 列", 6, "6 列"],
+				options: [15, "15 列", "radio", 14, "14 列", "radio", 13, "13 列", "radio", 12, "12 列", "radio", 11, "11 列", "radio", 10, "10 列", "radio", 9, "9 列", "radio", 8, "8 列", "radio", 7, "7 列", "radio", 6, "6 列", "radio"],
+				onshowmenu: function(but) {
+					[...this.input].map(op => op.checked = op.value == cBoard.SLTX);
+				},
 				touchend: function(but) {
 					but.setText(but.input.value + " 列");
 					cBoard.SLTX = but.input.value;
@@ -955,26 +969,8 @@ window.control = (() => {
 			setBlockUnload(enable);
 		}
 
-		function setRadio(buttons = [], callback = () => {}, group) {
-			for (let i = buttons.length - 1; i >= 0; i--) {
-				buttons[i].mode = "radio";
-				buttons[i].group = group;
-				i == 0 && buttons[i].setontouchend(callback);
-			}
-			return callback;
-		}
-
-		function setCheckBox(buttons = [], callback = () => {}) {
-			function check(but) {
-				but.setChecked(!but.checked);
-				callback();
-			}
-			for (let i = buttons.length - 1; i >= 0; i--)
-				buttons[i].setontouchend(check);
-			return check;
-		}
-
 		function newGame() {
+			try{
 			scaleCBoard(false);
 			cBoard.canvas.width = cBoard.canvas.height = cBoard.width;
 			cBoard.canvas.style.width = cBoard.canvas.style.height = cBoard.width + "px";
@@ -986,26 +982,14 @@ window.control = (() => {
 			cBoard.hideCutDiv();
 			cBoard.drawLineEnd();
 			setPlayMode(MODE_RENJU);
-			blackwhiteRadioChecked(cSelBlack);
-			markRadioChecked(cAutoadd);
-			parentNode.style.top = parentNode.offsetTop - "px";
-			parentNode.appendChild(renjuCmdDiv);
-			imgCmdDiv.parentNode && imgCmdDiv.parentNode.removeChild(imgCmdDiv);
+			cSelBlack.touchend();
+			cAutoadd.touchend();
+			renjuCmdDiv.show();
+			imgCmdDiv.hide();
+			busyCmdDiv.hide();
 			viewport1.resize();
 			RenjuLib.closeLib();
-		}
-
-		function setMenuCheckBox(button, idx, idxs) {
-			if (idxs.indexOf(idx) > -1) {
-				button.input[idx].checked = !button.input[idx].checked;
-			}
-		}
-
-		function setMenuRadio(button, idx, idxs) {
-			for (let i = (idxs && idxs.length || button.input.length) - 1; i >= 0; i--) {
-				button.input[i].checked = false;
-			}
-			button.input[idx].checked = true;
+			}catch(e){console.error(e.stack)}
 		}
 
 
@@ -1107,11 +1091,10 @@ window.control = (() => {
 				cBoard.cutImg.style.height = ~~(cBoard.canvas.height) + "px";
 				cBoard.cutImg.src = "./icon.png";
 				cBoard.parentNode.appendChild(cBoard.cutImg);
-				let pNode = renjuCmdDiv.parentNode;
-				pNode.removeChild(renjuCmdDiv);
+				renjuCmdDiv.hide();
 				cBoard.cutImg.ontouchend = cBoard.cutImg.onclick = function() {
 					cBoard.parentNode.removeChild(cBoard.cutImg);
-					pNode.appendChild(renjuCmdDiv);
+					renjuCmdDiv.show();
 				}
 				return;
 			}
@@ -1154,14 +1137,14 @@ window.control = (() => {
 			}
 		}
 
-		function createMenu(left, top, width, height, fontSize, options = [], onchange = () => {}) {
-			return mainUI.createMenu({ options, onchange });
+		function createMenu(left, top, width, height, fontSize, options = [], onchange = () => {}, onshowmenu = () => {}) {
+			return mainUI.createMenu({ options, onchange, onshowmenu });
 		}
 
 		function createContextMenu(left, top, width, height = cWidth * 0.8, fontSize) {
 			return mainUI.createContextMenu({
-				options: [0, "设置", "radio",
-                1, "打开", "radio2",
+				options: [0, "设置",
+                1, "打开",
                 2, `保存`,
                 3, `${EMOJI_SEARCH} 找点`,
                 4, `${EMOJI_QUESTION} 解题`,
@@ -1181,8 +1164,8 @@ window.control = (() => {
 				onchange: function(but) {
 					if (isBusy()) return;
 					let idx = but.idx,
-						x = but.menu.menuLeft,
-						y = but.menu.menuTop;
+						x = but.menu.showX,
+						y = but.menu.showY;
 					const FUN = {
 						0: () => { cShownum.showMenu(x, y) },
 						1: () => { cLoadImg.showMenu(x, y) },
@@ -1199,16 +1182,8 @@ window.control = (() => {
 						9: () => { cShare.touchend() },
 						10: () => { cNextone.touchend() },
 						11: () => { cResetnum.touchend() },
-						12: () => {
-							cBoard.showNum();
-							setShowNum(true);
-							cBoard.isShowNum = getShowNum();
-						},
-						13: () => {
-							cBoard.hideNum();
-							setShowNum(false);
-							cBoard.isShowNum = getShowNum();
-						},
+						12: () => { setShowNum(true) },
+						13: () => { setShowNum(false) },
 						14: () => { cInputcode.touchend() },
 						15: () => { cOutputcode.touchend() },
 						16: () => { typeof window.reloadApp == "function" ? window.reloadApp() : window.location.reload() },
@@ -1297,8 +1272,8 @@ window.control = (() => {
 			scaleCBoard(false);
 			cBoard.drawLineEnd();
 			cBoard.resetCutDiv();
-			parentNode.removeChild(renjuCmdDiv);
-			parentNode.appendChild(imgCmdDiv);
+			renjuCmdDiv.hide()
+			imgCmdDiv.show();
 			await cBoard.loadImgFile(fileInput.files[0]);
 			fileInput.value = "";
 			cBoard.putImg(cBoard.bakImg, cBoard.canvas, cBoard.width / 13);
@@ -1318,12 +1293,15 @@ window.control = (() => {
 			miniBoard.cle();
 		}
 
-		function openLib() {
+		async function openLib() {
+			if (isBusy()) return;
+			setBusy(true);
 			newGame();
 			cBoard.drawLineEnd();
 			let file = fileInput.files[0];
 			fileInput.value = "";
-			RenjuLib.openLib(file)
+			if (await RenjuLib.openLib(file)) setPlayMode(MODE_RENLIB);
+			setBusy(false);
 		}
 
 		function newContinueLabel(msgStr) {
@@ -1354,26 +1332,17 @@ window.control = (() => {
 		}
 
 
-		const setMemoryMenu = createMenu(menuLeft, undefined, menuWidth, cWidth * 0.8, menuFontSize,
-	            [4, "4倍内存",
-	            5, "5倍内存",
-	            6, "6倍内存",
-	            7, "7倍内存",
-	            8, "8倍内存"],
-			function(but) {
-				RenjuLib.setBufferScale(but.input.value * 1);
-			});
-
-
-
 		const gameRulesMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
 	                [0, "无禁规则",
 	                1, "禁手规则"],
 			function(but) {
 				if (isBusy()) return;
 				const rules = [GOMOKU_RULES, RENJU_RULES];
-				engine.setGameRules(rules[but.input.value * 1]);
-				setMenuRadio(gameRulesMenu, gameRulesMenu.input.selectedIndex);
+				engine.gameRules = rules[but.input.value * 1];
+			},
+			function(but) {
+				const rules = [GOMOKU_RULES, RENJU_RULES];
+				[...but.input].map(op => op.checked = op.value == rules.indexOf(engine.gameRules));
 			});
 		const coordinateMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
 	                [0, "棋盘坐标:无坐标",
@@ -1385,6 +1354,9 @@ window.control = (() => {
 			function(but) {
 				if (isBusy()) return;
 				cBoard.setCoordinate(but.input.value * 1);
+			},
+			function(but) {
+				[...but.input].map((op, i) => op.checked = i === cBoard.coordinateType);
 			});
 		const cBoardSizeMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
 	                [15, "15路棋盘",
@@ -1399,11 +1371,13 @@ window.control = (() => {
 	                6, "6路棋盘", ],
 			function(but) {
 				if (isBusy()) return;
-				//newGame();
 				cBoard.setSize(but.input.value * 1);
 				scaleCBoard(false);
 				RenjuLib.setCenterPos({ x: cBoard.size / 2 + 0.5, y: cBoard.size / 2 + 0.5 });
 				RenjuLib.getAutoMove();
+			},
+			function(but) {
+				[...but.input].map(op => op.checked = op.value == cBoard.size);
 			});
 		const setCBoardLineStyleMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
 	                [0, "正常",
@@ -1411,7 +1385,10 @@ window.control = (() => {
 	                2, "特粗"],
 			function(but) {
 				if (isBusy()) return;
-				cBoard.setLineStyle(but.input.value * 1);
+				setLineStyle(but.input.value * 1);
+			},
+			function(but) {
+				[...but.input].map((op, i) => op.checked = i === getLineStyle());
 			});
 		const loadRenjuSettingsMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
 	                [0, "默认",
@@ -1435,7 +1412,7 @@ window.control = (() => {
 			function(but) {
 				if (isBusy()) return;
 				renjuCmdSettings.idx = but.input.value * 1;
-				editButtons(xyObjToPage({ x: renjuCmdDiv.offsetLeft, y: renjuCmdDiv.offsetTop }, renjuCmdDiv.parentNode), "renjuCmdSettings", renjuCmdSettings);
+				editButtons(xyObjToPage({ x: renjuCmdDiv.viewElem.offsetLeft, y: renjuCmdDiv.viewElem.offsetTop }, renjuCmdDiv.viewElem.parentNode), "renjuCmdSettings", renjuCmdSettings);
 			});
 
 		const cShownum = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
@@ -1456,30 +1433,27 @@ window.control = (() => {
 				but.setText("设置");
 				if (isBusy()) return;
 				const FUN = {
-					0: () => {
-						if (but.menu.lis[0].checked) {
-							cBoard.showNum();
-						}
-						else {
-							cBoard.hideNum();
-						}
-						cBoard.isShowNum = but.menu.lis[0].checked;
-					},
-					1: () => { cBoard.isShowFoul = but.menu.lis[1].checked },
-					2: () => { cBoard.isShowAutoLine = but.menu.lis[2].checked },
-					3: () => { scaleCBoard(but.menu.lis[3].checked, 1) },
-					4: () => { cBoard.isTransBranch = but.menu.lis[4].checked },
-					5: () => { gameRulesMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
-					6: () => { cBoardSizeMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
-					7: () => { coordinateMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
-					9: () => { setCBoardLineStyleMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
-					10: () => { saveRenjuSettingsMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
-					11: () => { loadRenjuSettingsMenu.showMenu(but.menu.menuLeft, but.menu.menuTop) },
+					0: () => { setShowNum(!getShowNum()) },
+					1: () => { cBoard.isShowFoul = !cBoard.isShowFoul },
+					2: () => { cBoard.isShowAutoLine = !cBoard.isShowAutoLine },
+					3: () => { scaleCBoard(cBoard.scale == 1, true) },
+					//4: () => { cBoard.isTransBranch = !cBoard.isTransBranch },
+					5: () => { gameRulesMenu.showMenu(but.menu.showX, but.menu.showY) },
+					6: () => { cBoardSizeMenu.showMenu(but.menu.showX, but.menu.showY) },
+					7: () => { coordinateMenu.showMenu(but.menu.showX, but.menu.showY) },
+					9: () => { setCBoardLineStyleMenu.showMenu(but.menu.showX, but.menu.showY) },
+					10: () => { saveRenjuSettingsMenu.showMenu(but.menu.showX, but.menu.showY) },
+					11: () => { loadRenjuSettingsMenu.showMenu(but.menu.showX, but.menu.showY) },
 					12: () => { location.href = "reset.html" },
 				}
-				setMenuCheckBox(but, but.input.selectedIndex, [0, 1, 2, 3]);
-				execFunction(FUN[but.input.value]);
-				cBoard.stonechange();
+				FUN[but.input.value]();
+			},
+			function(but) {
+				but.input[0].checked = cBoard.isShowNum;
+				but.input[1].checked = cBoard.isShowFoul;
+				but.input[2].checked = cBoard.isShowAutoLine;
+				but.input[3].checked = cBoard.scale > 1;
+				//but.input[4].checked = cBoard.isTransBranch;
 			}
 		);
 
@@ -1546,12 +1520,12 @@ window.control = (() => {
 		const cCleMiniBoard = mainUI.getChild({ varName: "cCleMiniBoard" });
 		const cZoomIn = mainUI.getChild({ varName: "cZoomIn" });
 		const cZoomOut = mainUI.getChild({ varName: "cZoomOut" });
+		const lbTimer = mainUI.getChild({ varName: "lbTimer" });
 
-		const hm = cLABC.hideMenu;
-		cLABC.hideMenu = function(ms, callback) {
-			hm.call(this, ms, callback);
-			if (cLABC.input.value > 1) cBoard.drawLineEnd();
-		};
+		
+		
+		cAutoadd.touchend();
+		cSelWhite.touchend();
 
 		for (let i = cLbColor.menu.lis.length - 1; i >= 0; i--) {
 			cLbColor.menu.lis[i].style.color = lbColor[i].color;
@@ -1570,30 +1544,15 @@ window.control = (() => {
 		}
 
 		setCheckerBoardEvent()
-
-
-
-
-
-
-
-
-
-
-
-		cBoard.viewchange = function() {
-			if (this.scale == 1) {
-				cShownum.menu.lis[3].checked = false;
-				cShownum.menu.lis[3].innerHTML = cShownum.input[3].text;
-			}
-			else {
-				cShownum.menu.lis[3].checked = true;
-				cShownum.menu.lis[3].innerHTML = cShownum.input[3].text + "  ✔";
-			}
+		
+		const hm = cLABC.hideMenu;
+		cLABC.hideMenu = function(ms, callback) {
+			hm.call(this, ms, callback);
+			if (cLABC.input.value > 1) cBoard.drawLineEnd();
 		};
+	
 		cBoard.sizechange = function() {
 			cBoardSizeMenu.input.selectedIndex = 15 - this.size;
-			setMenuRadio(cBoardSizeMenu, cBoardSizeMenu.input.selectedIndex);
 			viewport1.scrollTop();
 			cBoardSize = this.size;
 			if (this.tree && this.tree.constructor.name == "Tree") {
@@ -1603,7 +1562,6 @@ window.control = (() => {
 		};
 		cBoard.boardchange = function() {
 			coordinateMenu.input.selectedIndex = this.coordinateType;
-			setMenuRadio(coordinateMenu, coordinateMenu.input.selectedIndex);
 			viewport1.scrollTop();
 		};
 		cBoard.stonechange = function() {
@@ -1680,7 +1638,6 @@ window.control = (() => {
 
 		};
 		onLoadCmdSettings = function() {
-			setMenuRadio(loadRenjuSettingsMenu, renjuCmdSettings.idx);
 			viewport1.scrollTop();
 		};
 		scaleCBoard = function(isScale, isAnima) {
@@ -1689,56 +1646,55 @@ window.control = (() => {
 		};
 
 		setShowNum = function(shownum) {
-			cShownum.menu.lis[0].checked = !!shownum;
-			if (cShownum.menu.lis[0].checked) {
-				cShownum.menu.lis[0].innerHTML = cShownum.input[0].text + "  ✔";
-			}
-			else {
-				cShownum.menu.lis[0].innerHTML = cShownum.input[0].text;
-			}
+			(cBoard.isShowNum = !!shownum) ? cBoard.showNum() : cBoard.hideNum();
+			return cBoard.isShowNum;
 		};
 		getShowNum = function() {
-			return cShownum.menu.lis[0].checked;
+			return cBoard.isShowNum;
 		};
+		
+		function setLineStyle(index) {
+			const WEIGHT = ["normal", "bold", "heavy"];
+        	WEIGHT[index] && (cBoard.setLineStyle(WEIGHT[index]));
+		}
+		
+		function getLineStyle() {
+			const WEIGHT = ["normal", "bold", "heavy"];
+        	const index = WEIGHT.indexOf(cBoard.lineStyle);
+        	return Math.max(0, index);
+		}
 
 
 
 
 
-		blackwhiteRadioChecked = setRadio([cSelBlack, cSelWhite], undefined, "radio1");
-
-		markRadioChecked = setRadio([cLba, cLbb, cLbc, cLbd, cAutoadd, cAddblack, cAddwhite, cLABC], function() {
-			if (this != cLABC) {
-				cBoard.drawLineEnd();
-			}
-		}, "radio2");
 
 
 
 
 
+
+		/*
 		let p = { x: 0, y: 0 };
-		xyObjToPage(p, renjuCmdDiv);
+		xyObjToPage(p, renjuCmdDiv.viewElem);
 
-		const FONT_SIZE = sw / 28;
-		const EX_WINDOW_LEFT = parseInt(renjuCmdSettings.positions[8].left) + p.x;
-		const EX_WINDOW_TOP = parseInt(renjuCmdSettings.positions[8].top) + p.y;
-		const EX_WINDOW_WIDTH = w * 5;
-		const EX_WINDOW_HEIGHT = h * 1.5 * 7 + h;
+		const FONT_SIZE = mainUI.cmdWidth / 28;
+		const EX_WINDOW_LEFT = mainUI.upDivLeft + p.x;
+		const EX_WINDOW_TOP = mainUI.upDivTop + p.y;
+		const EX_WINDOW_WIDTH = mainUI.cmdWidth;
+		const EX_WINDOW_HEIGHT = mainUI.cmdWidth * 2;
 		try {
 			window.exWindow.setStyle(EX_WINDOW_LEFT, EX_WINDOW_TOP, EX_WINDOW_WIDTH, EX_WINDOW_HEIGHT, FONT_SIZE);
 		} catch (e) { alert(e.stack) }
+		*/
 
 		editButtons = createEditButtons(cBoard);
 
 		setTimeout(function() {
 			RenjuLib.reset({
-				isBusy: isBusy,
-				setBusy: setBusy,
 				newGame: newGame,
 				cBoard: cBoard,
-				getShowNum: getShowNum,
-				setPlayMode: () => setPlayMode(MODE_RENLIB)
+				getShowNum: getShowNum
 			});
 
 		}, 1000 * 1);
@@ -1751,12 +1707,7 @@ window.control = (() => {
 
 
 
-		autoblackwhiteRadioChecked = setRadio([cAddblack2, cAddwhite2], function() {
-			if (!cLockImg.checked) {
-				lockImg();
-				cLockImg.setChecked(1);
-			}
-		}, "radio3");
+		
 
 
 
@@ -1783,8 +1734,7 @@ window.control = (() => {
 							putCheckerBoard(cBoard.getIndex(x, y));
 						}
 						else {
-							if (!timerContinueSetCutDiv)
-								timerContinueSetCutDiv = setTimeout(continueSetCutDivStart, 10);
+							setTimeout(() => continueSetCutDivStart(x, y), 10);
 						}
 					}
 				} catch (e) { console.error(e.stack) }
@@ -1801,7 +1751,7 @@ window.control = (() => {
 					else if (!cLockImg.checked) {
 						if (cBoard.isOut(x, y, cBoard.viewBox)) return;
 						let p = { x: x, y: y };
-						cBoard.setxy(p, event.type == "click" ? 2 : 1);
+						cBoard.setxy(p, 2);
 						cBoard.setCutDiv(p.x, p.y, true);
 						cBoard.resetP();
 						cBoard.printBorder();
@@ -1823,18 +1773,15 @@ window.control = (() => {
 			function canvasDblClick(x, y) {
 				try {
 					if (playMode != MODE_LOADIMG) {
-						if (event.type == "dblclick")
-							renjuDblClick(event.pageX, event.pageY);
-						else
-							renjuDblClick(x, y);
+						renjuDblClick(x, y);
 					}
 				} catch (e) { console.error(e.stack) }
 			}
 
-			function continueSetCutDivStart() {
+			function continueSetCutDivStart(x, y) {
 				try {
 					if (playMode != MODE_LOADIMG || cLockImg.checked) return;
-					cBoard.selectArea(continueSetCutDivX, continueSetCutDivY);
+					cBoard.selectArea(x, y);
 				} catch (e) { console.error(e.stack) }
 			}
 		}
@@ -2212,7 +2159,7 @@ window.control = (() => {
 				}
 				else {
 					iphoneCancelClick.enable();
-					scaleCBoard(cBoard.scale == 1, 1);
+					scaleCBoard(cBoard.scale == 1, true);
 				}
 			}
 		}
@@ -2251,16 +2198,16 @@ window.control = (() => {
 		function setBusy(value, timeout = 0) {
 			if (value) {
 				renjuCmdDiv.hide();
-				imgCmdDiv.show();
-				lbTime.reset();
-				lbTime.start();
+				busyCmdDiv.show();
+				lbTimer.reset();
+				lbTimer.start();
 			}
 			else {
 				setTimeout(() => {
-					imgCmdDiv.hide();
+					busyCmdDiv.hide();
 					renjuCmdDiv.show();
 				}, timeout);
-				lbTime.stop();
+				lbTimer.stop();
 			}
 			_setBlockUnload();
 		}
@@ -2344,45 +2291,26 @@ window.control = (() => {
 			}
 			_setBlockUnload();
 		}
+		
+		const game = {
+			get MODE_RENJU() { return MODE_RENJU },
+			get MODE_RENJU_FREE() { return MODE_RENJU_FREE },
+			get MODE_LOADIMG() { return MODE_LOADIMG },
+			get MODE_LINE_EDIT() { return MODE_LINE_EDIT },
+			get MODE_ARROW_EDIT() { return MODE_ARROW_EDIT },
+			get MODE_READ_TREE() { return MODE_READ_TREE },
+			get MODE_READ_THREEPOINT() { return MODE_READ_THREEPOINT },
+			get MODE_RENLIB() { return MODE_RENLIB },
+			get MODE_READ_FOULPOINT() { return MODE_READ_FOULPOINT },
+			get MODE_READLIB() { return MODE_READLIB },
+			get MODE_EDITLIB() { return MODE_EDITLIB },
+			
+			get getPlayMode() { return getPlayMode },
+			get setPlayMode() { return setPlayMode },
+			get loadCmdSettings() { return loadCmdSettings },
+		}
 
-
-		return {
-			MODE_RENJU: MODE_RENJU,
-			MODE_RENJU_FREE: MODE_RENJU_FREE,
-			MODE_LOADIMG: MODE_LOADIMG,
-			MODE_LINE_EDIT: MODE_LINE_EDIT,
-			MODE_ARROW_EDIT: MODE_ARROW_EDIT,
-			MODE_READ_TREE: MODE_READ_TREE,
-			MODE_READ_THREEPOINT: MODE_READ_THREEPOINT,
-			MODE_RENLIB: MODE_RENLIB,
-			MODE_READ_FOULPOINT: MODE_READ_FOULPOINT,
-			MODE_READLIB: MODE_READLIB,
-			MODE_EDITLIB: MODE_EDITLIB,
-
-			getPlayMode: getPlayMode,
-			setPlayMode: setPlayMode,
-			putCheckerBoard: putCheckerBoard,
-			renjuKeepTouch: renjuKeepTouch,
-			renjuDblClick: renjuDblClick,
-			renjuClick: renjuClick,
-			getRenjuSelColor: getRenjuSelColor,
-			getRenjuLbColor: getRenjuLbColor,
-			loadCmdSettings: loadCmdSettings,
-			cLockImgChecked: () => { return cLockImg.checked; },
-			cAddwhite2Checked: () => { return cAddwhite2.checked; },
-			reset: (_cBoard, _engine, _msg, _closeMsg, _appData, documentWidth, documentHeight, param, bodyDiv) => {
-				cBoard = _cBoard;
-				engine = _engine;
-				msg = _msg;
-				closeMsg = _closeMsg;
-				appData = _appData;
-				dw = documentWidth;
-				dh = documentHeight;
-				parentNode = param[0];
-				createRenjuCmdDiv(param[0], param[1], param[2], param[3], param[4]);
-				createImgCmdDiv(param[0], param[1], param[2], param[3], param[4]);
-				setCheckerBoardEvent(bodyDiv);
-			},
-		};
+		return game;
+		
 	} catch (e) { alert(e.stack) }
 })();

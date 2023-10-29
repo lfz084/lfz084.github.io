@@ -1589,9 +1589,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
     }
 
 
-    Board.prototype.setLineStyle = function(keyNum) {
+    Board.prototype.setLineStyle = function(_style) {
         const WEIGHT = ["normal", "bold", "heavy"];
-        WEIGHT[keyNum] && (this.lineStyle = WEIGHT[keyNum]);
+        WEIGHT.indexOf(_style) && (this.lineStyle = _style);
         this.refreshCheckerBoard();
     }
 

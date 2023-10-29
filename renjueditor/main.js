@@ -398,7 +398,7 @@
             }
         }
         bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale, mainUI.upDiv);
-        bindEvent.addEventListener(cbd.viewBox, "click", (x, y, type) => {
+        bindEvent.addEventListener(cbd.viewBox, "click", (x, y) => {
             if (status == LOCK) {
                 const idx = cbd.getIndex(x, y);
                 if (idx < 0) return;
@@ -412,7 +412,7 @@
             }
             else if (status == UNLOCK) {
                 const p = { x: x, y: y };
-                cbd.setxy(p, type == "click" ? 2 : 1);
+                cbd.setxy(p, 2);
                 cbd.setCutDiv(p.x, p.y, true);
                 cbd.resetP();
                 cbd.printBorder();

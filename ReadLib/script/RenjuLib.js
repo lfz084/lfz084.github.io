@@ -15,14 +15,9 @@ window.RenjuLib = (() => {
         wk,
         timer,
         sTime,
-        pathStrack = [],
-        tree,
-        isBusy,
-        setBusy,
         newGame,
         cBoard,
         getShowNum,
-        setPlayMode,
         isLoading = false,
         colour = false,
         buffer_scale = 5,
@@ -128,7 +123,6 @@ window.RenjuLib = (() => {
     }
 
     function load(file) {
-        setBusy(true);
         wk && removeWorker();
         enable = false;
         wk = createWorker();
@@ -159,7 +153,6 @@ window.RenjuLib = (() => {
     }
 
     function finish() {
-        setBusy();
         loadAnimation.close();
         clearInterval(timer);
         timer = null;
@@ -240,27 +233,24 @@ window.RenjuLib = (() => {
 
     return {
         reset: function(param) {
-            isBusy = param.isBusy;
-            setBusy = param.setBusy;
             newGame = param.newGame;
             cBoard = param.cBoard;
             getShowNum = param.getShowNum;
-            setPlayMode = param.setPlayMode
         },
         isEmpty: function() {
             return !enable;
         },
         openLib: function(file) {
-            if (isBusy()) return Promise.reject();
             load(file);
             return waitFinish()
-                .then(() => enable ? Promise.resolve(setPlayMode()) : Promise.reject())
+                .then(() => enable)
         },
         closeLib: function() {
             wk && removeWorker();
             enable = false;
         },
         cancal: function() {
+        	if (!isLoading) return;
             finish();
             wk && removeWorker();
             enable = false;
@@ -282,9 +272,6 @@ window.RenjuLib = (() => {
                         .then(() => wk.promiseMessage({ cmd: "showBranchs", parameter: param }))
                 }
             }
-        },
-        isLoading: function() {
-            return isLoading;
         },
         colour: function() {
             colour = !colour;

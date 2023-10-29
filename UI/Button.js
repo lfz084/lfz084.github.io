@@ -171,11 +171,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.menuWidth = width;
 			this.fontSize = fontSize;
 			this.timerHideMenu = null;
-			this._onshow = () => {};
+			this.showX = 0;
+			this.showY = 0;
 		}
-
-		get onshow() { return this._onshow }
-		set onshow(fun) { "function" == typeof fun && (this._onshow = fun) }
+		
 	}
 
 	Menu.prototype.show = function show(x, y) {
@@ -189,7 +188,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		muWindow.style.height = dh * 2 / this.bodyScale + "px";
 		muWindow.style.top = "0px";
 		muWindow.style.left = "0px";
-
+		
 		this.anima.style.position = "absolute";
 		this.anima.style.width = muWindow.style.width;
 		this.anima.style.height = muWindow.style.height;
@@ -199,6 +198,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		x = x < this.fontSize * 2.5 ? this.fontSize * 2.5 : (x + this.menuWidth) > (dw / this.bodyScale - this.fontSize * 2.5) ? dw / this.bodyScale - this.menuWidth - this.fontSize * 2.5 : x;
 		y = y || this.menuTop;
 		y = y < this.fontSize * 2.5 ? this.fontSize * 2.5 : (y + this.menuHeight) > (dh / this.bodyScale - this.fontSize * 2.5) ? dh / this.bodyScale - this.menuHeight - this.fontSize * 2.5 : y;
+		this.showX = x;
+		this.showY = y;
 		const borderWidth = parseInt(this.fontSize) / 3;
 		this.menu.style.position = "absolute";
 		this.menu.style.left = `${x}px`;
@@ -211,10 +212,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		this.menu.style.background = this.button.backgroundColor;
 		this.menu.style.autofocus = "true";
 		this.anima.setAttribute("class", "show");
-
-		try {
-			this.onshow.call(this, this);
-		} catch (e) { console.error(e.stack) }
 
 		this.lis.map(li => {
 			if (li.option) {
@@ -408,6 +405,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 			if (type != "select" && type != "file") this.div.appendChild(this.input);
 			this.menu = null;
+			this.onshowmenu = () => {};
 
 			this.type = type;
 			this.width = width == null ? "200px" : parseInt(width) + "px";
@@ -469,12 +467,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 		get group() { return this._group }
 		set group(groupName) {
+			try{
 			if (!groupName) return;
 			log(`group: ${groupName}`)
 			this._group = groupName;
 			const group = getGroup(groups, groupName);
 			group.buttons.push(this);
-			this.setontouchend(group.callback);
+			}catch(e){alert(e.stack)}
 		}
 
 	}
@@ -502,7 +501,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.addOption(value, text, type);
 		}
 	};
-
+	
 
 	Button.prototype.createMenu = function(left, top, width, height, fontSize, closeAnimation, isCancelMenuClick = () => {}, scale = 1) {
 		if (this.type != "select" || this.menu) return; //safari 长按棋盘会误触发click事件 isCancelMenuClick判断是否是误触发
@@ -725,8 +724,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	};
 	
 	
-	Button.prototype.setonshow = function(callback = () => {}) {
-		this.menu && (this.menu.onshow = callback);
+	Button.prototype.setonshowmenu = function(callback = () => {}) {
+		this.type == "select" && (this.onshowmenu = callback);
 	};
 
 
@@ -767,12 +766,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	// 給事件绑定函数
 	Button.prototype.setontouchend = function(callback = () => {}) {
+		const group = getGroup(groups, this.group);
 		const key = (this.type == "select" || this.type == "file") ? "div" : "input";
-		const buttons = this.group ? getGroup(groups, this.group).buttons : [this];
-		getGroup(groups, this.group).callback = callback;
+		const buttons = this.group ? group.buttons : [this];
+		this.group && (group.callback = callback);
 		buttons.map(button => {
 			const fun = button.touchend;
-			button.touchend = function() {
+			button.touchend = () => {
 				try {
 					log(`new touchend......`)
 					if (event) event.cancelBubble = true;
@@ -908,6 +908,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	Button.prototype.showMenu = function(x, y) {
 		log(`${this}.showMenu`)
+		try {this.onshowmenu.call(this, this)} catch (e) { console.error(e.stack) }
 		this.menu.show(x, y);
 	};
 

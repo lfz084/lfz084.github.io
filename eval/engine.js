@@ -587,6 +587,7 @@ window.engine = (function() {
             function _setGameRules(rules) {
                 setGameRules(rules);
                 reset();
+                return gameRules;
             }
 
             //return Promise resolve: isFinally
@@ -2160,7 +2161,6 @@ window.engine = (function() {
         // const //
         MAX_THREAD_NUM: MAX_THREAD_NUM,
         // function //
-        setGameRules: _setGameRules,
         waitFreeThread: waitFreeThread,
         stopWaitThreadList: stopWaitThreadList,
         loopWaitThreadList: loopWaitThreadList,
@@ -2182,6 +2182,8 @@ window.engine = (function() {
         createTreeNumberWin: async (param) => exe(param, createTreeNumberWin),
         createTreeBlockCatchFoul: async (param) => exe(param, createTreeBlockCatchFoul),
         createTreeSimpleWin: async (param) => exe(param, createTreeSimpleWin),
+        get gameRules() { return gameRules },
+        set gameRules(rules) { return _setGameRules(rules) },
         // test function //
         excludeBlockVCF: excludeBlockVCF,
         getBlockPoints: getBlockPoints,
