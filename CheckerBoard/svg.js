@@ -92,10 +92,15 @@
     }
     
     CheckerBoard.prototype.saveAsSVG = function(type) {
+        const oldTheme = this.theme;
+        this.loadTheme(this.defaultTheme);
+        
         let filename = this.autoFileName();
         filename += type == "html" ? ".html" : ".svg";
         let mimetype = type == "html" ? "text/html" : "image/svg+xml";
         let blob = new Blob([this.getSVG()], { type: mimetype });
         this.saveFile(blob, filename);
+        
+        this.loadTheme(oldTheme);
     }
 })))

@@ -335,11 +335,15 @@ window.mainUI = (function() {
 	function addChild(child) {
 		this.childs.push(child);
 	}
+	
+	function filterChild(param, child) {
+		return (!param.type || child.type == param.type) && (!param.varName || child.varName == param.varName);
+	}
 
 	function getChild(param = {}) {
 		for (let index in this.childs) {
 			const child = this.childs[index];
-			if ((!param.type || child.type == param.type) && (!param.varName || child.varName == param.varName)) return child.variant;
+			if (filterChild(param, child)) return child.variant;
 			else if (typeof child.variant.getChild == "function") {
 				const rt = child.variant.getChild(param);
 				if (rt) return rt;
@@ -352,7 +356,7 @@ window.mainUI = (function() {
 		const childs = [];
 		for (let index in this.childs) {
 			const child = this.childs[index];
-			if ((!param.type || child.type == param.type) && (!param.varName || child.varName == param.varName)) childs.push(child.variant);
+			if (filterChild(param, child)) childs.push(child.variant);
 			if (typeof child.variant.getChilds == "function") {
 				const rt = child.variant.getChilds(param);
 				if (rt.length) childs.push(...rt);
@@ -360,13 +364,26 @@ window.mainUI = (function() {
 		}
 		return childs;
 	}
+	
+	function getChildsForVarname(param = {}) {
+		const childs = {};
+		for (let index in this.childs) {
+			const child = this.childs[index];
+			if (child.varName && filterChild(param, child)) childs[child.varName] = child.variant;
+			if (typeof child.variant.getChildsForVarname == "function") {
+				const rt = child.variant.getChildsForVarname(param);
+				Object.assign(childs, rt);
+			}
+		}
+		return childs;
+	}
 
 	function getChildByName(name) {
-		return getChild({ varName: name });
+		return this.getChild({ varName: name });
 	}
 
 	function getChildsByName(name) {
-		return getChilds({ varName: name });
+		return this.getChilds({ varName: name });
 	}
 
 	//----------------------------- class ---------------------------------
@@ -388,6 +405,7 @@ window.mainUI = (function() {
 		get addChild() { return addChild }
 		get getChild() { return getChild }
 		get getChilds() { return getChilds }
+		get getChildsForVarname() { return getChildsForVarname }
 		get getChildByName() { return getChildByName }
 		get getChildsByName() { return getChildsByName }
 	}
@@ -418,6 +436,10 @@ window.mainUI = (function() {
 
 	viewElem.prototype.hide = function() {
 		this.viewElem.parentNode && this.viewElem.parentNode.removeChild(this.viewElem);
+	}
+	
+	viewElem.prototype.loadTheme = function(theme) {
+		this.style(theme);
 	}
 
 	viewElem.prototype.style = function(style = {}) {
@@ -473,6 +495,11 @@ window.mainUI = (function() {
 	class Label extends viewElem {
 		constructor(left = 0, top = 0, width = 500, height = 500) {
 			super(left, top, width, height);
+			Object.assign(this.viewElem.style, {
+				whiteSpace: "nowrap",
+				overflow: "hidden",
+				textOverflow: "ellipsis"
+			})
 		}
 	}
 
@@ -550,7 +577,7 @@ window.mainUI = (function() {
 			},
 			"grey": {
 				"color": "#333333",
-				"backgroundColor": "white"
+				"backgroundColor": "#fffffd"
 			},
 			"dark": {
 				"color": "#d0d0d0",
@@ -629,15 +656,60 @@ window.mainUI = (function() {
 				"moveBlackFontColor": "#000000",
 				"moveLastFontColor": "red"
 			}
+		},
+		"exWindow": {
+			"light": {
+				"color": "black",
+				"borderColor": "black",
+				"backgroundColor": "white"
+			},
+			"grey": {
+				"color": "black",
+				"borderColor": "black",
+				"backgroundColor": "#fffffd"
+			},
+			"dark": {
+				"color": "#d0d0d0",
+				"borderColor": "black",
+				"backgroundColor": "#333333"
+			}
+		},
+		"msgWindow": {
+			"light": {
+				"color": "black",
+				"backgroundColor": "#dddddd",
+				"textareaBackgroundColor": "white"
+			},
+			"grey": {
+				"color": "black",
+				"backgroundColor": "#999999",
+				"textareaBackgroundColor": "#fffffd"
+			},
+			"dark": {
+				"color": "#d0d050",
+				"backgroundColor": "#555555",
+				"textareaBackgroundColor": "#666666"
+			}
+		},
+		"share": {
+			"light": {
+				"color": "black",
+				"backgroundColor": "#eeeeee"
+			},
+			"grey": {
+				"color": "black",
+				"backgroundColor": "#aaaaaa"
+			},
+			"dark": {
+				"color": "#d0d0d0",
+				"backgroundColor": "#666666"
+			}
 		}
 	};
 
 	function _theme(themeKey) {
-		themeKey = themes[themeKey] || defaultTheme;
-		console.info(`_theme: ${themeKey}`);
-		for (let key in THEMES["body"][themeKey]) {
-			document.body.style[key] = THEMES["body"][themeKey][key];
-		}
+		Object.assign(document.body.style, THEMES["body"][themeKey]);
+		
 		const childs = this.getChilds();
 		for (let index in childs) {
 			const child = childs[index];
@@ -647,28 +719,35 @@ window.mainUI = (function() {
 				case "Label":
 				case "Timer":
 				case "Comment":
-					for (let key in THEMES["body"][themeKey]) {
-						child.viewElem.style[key] = THEMES["body"][themeKey][key];
-					}
+					child.loadTheme(THEMES["body"][themeKey])
 					break;
 				case "Board":
 				case "Button":
-					for (let key in THEMES[className][themeKey]) {
-						child[key] = THEMES[className][themeKey][key];
-					}
-					(child.refreshCheckerBoard && child.refreshCheckerBoard(), child.show && child.show())
+					typeof child.loadTheme === "function" && child.loadTheme(THEMES[className][themeKey])
 			}
 		}
+		
+		self["exWindow"] && exWindow.loadTheme(THEMES["exWindow"][themeKey]);
+		self["msgWindow"] && msgWindow.loadTheme({
+			"msgWindow": THEMES["msgWindow"][themeKey],
+			"Button": THEMES["Button"][themeKey]
+		});
+		self["share"] && share.loadTheme(THEMES["share"][themeKey]);
 	}
 	
-	function setTheme(themeKey) {
+	function setTheme(themeKey = defaultTheme) {
+		themeKey = themes[themeKey] || defaultTheme;
 		localStorage.setItem("theme", themeKey);
 		_theme.call(this, themeKey);
 	}
 	
 	function loadTheme() {
 		const themeKey = localStorage.getItem("theme");
-		_theme.call(this, themeKey);
+		setTheme.call(this, themeKey);
+	}
+	
+	function getThemeName() {
+		return localStorage.getItem("theme");
 	}
 
 	//----------------------------- exports ------------------------------- 
@@ -678,6 +757,7 @@ window.mainUI = (function() {
 		get addChild() { return addChild },
 		get getChild() { return getChild },
 		get getChilds() { return getChilds },
+		get getChildsForVarname() { return getChildsForVarname },
 		get getChildByName() { return getChildByName },
 		get getChildsByName() { return getChildsByName }
 	}
@@ -713,6 +793,7 @@ window.mainUI = (function() {
 	Object.defineProperty(exports, "createContextMenu", { value: createContextMenu });
 	Object.defineProperty(exports, "setTheme", { value: setTheme });
 	Object.defineProperty(exports, "loadTheme", { value: loadTheme });
+	Object.defineProperty(exports, "getThemeName", { value: getThemeName });
 	
 	Object.defineProperty(exports, "newCmdDiv", { value: newCmdDiv });
 	Object.defineProperty(exports, "newLabel", { value: newLabel });

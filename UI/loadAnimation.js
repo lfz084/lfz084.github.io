@@ -79,7 +79,10 @@ window.loadAnimation = (function() { //控制加载动画
         lock: (value = false) => { lock = value }, //锁定后，不开打开或关闭
         text: (text = "") => { //动画标题，可以用来显示进度百分百
             LABEL.innerHTML = text;
-            if (text) LABEL.style.background = "white";
+            if (text) {
+            	LABEL.style.color = document.body.style.color;
+            	LABEL.style.background = document.body.style.background;
+            }
         },
     };
 })();

@@ -204,7 +204,6 @@ hr {
 }
 
 #viewBox {
-    background: #ccc;
     overflow-x: scroll;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;

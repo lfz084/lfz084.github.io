@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2110.07";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.00";
 window.control = (() => {
 	try {
 		"use strict";
@@ -11,6 +11,10 @@ window.control = (() => {
 
 		//--------------------------------------------------------------
 
+		const d = document;
+		const dw = d.documentElement.clientWidth;
+		const dh = d.documentElement.clientHeight;
+
 		const MODE_RENJU = 0;
 		const MODE_LOADIMG = 1;
 		const MODE_LINE_EDIT = 2;
@@ -22,19 +26,7 @@ window.control = (() => {
 		const MODE_READLIB = 8;
 		const MODE_EDITLIB = 9;
 		const MODE_RENJU_FREE = 10;
-
-		const d = document;
-		const dw = d.documentElement.clientWidth;
-		const dh = d.documentElement.clientHeight;
-
-		const menuLeft = mainUI.menuLeft;
-		const menuWidth = mainUI.menuWidth;
-		const menuFontSize = mainUI.menuFontSize;
-		const cWidth = mainUI.cmdWidth;
-
-
-		let playMode = MODE_RENJU;
-		//let oldPlayMode = playMode;
+		
 		const lbColor = [
 			{ "colName": "黑色标记", "color": "black" },
 			{ "colName": "红色标记", "color": "red" },
@@ -45,36 +37,18 @@ window.control = (() => {
 			{ "colName": "暗灰标记", "color": "#483D8B" },
 			{ "colName": "暗绿标记", "color": "#556B2F" },
         ];
-		let continueLabel = ["标记1", "标记2", "标记3", "标记4", "标记5"],
-			renjuCmdSettings = { positions: [], defaultButtons: [], ButtonsIdx: [], idx: 0 },
-			imgCmdSettings = { positions: [], defaultButtons: [], ButtonsIdx: [], idx: 0 },
-			onLoadCmdSettings = function() {},
-			scaleCBoard = function() {},
-			setShowNum = function() {},
-			getShowNum = function() {},
-			editButtons = function() {};
+        let userdefinedLabel = EMOJI_STAR;
+		let userdefinedLabels = loadUserdefinedLabels() || [..."⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿❶❷❸❹❺❻❼❽❾❿⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴⓵⓶⓷⓸⓹⓺⓻⓼⓽⓾ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ㊀㊁㊂㊃㊄㊅㊆㊇㊈㊉㊤㊥㊦㊧㊨⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽⑾⑿⒀⒁⒂⒃⒄⒅⒆⒇⒜⒝⒞⒟⒠⒡⒢⒣⒤⒥⒦⒧⒨⒩⒪⒫⒬⒭⒮⒯⒰⒱⒲⒳⒴⒵㈠㈡㈢㈣㈤㈥㈦㈧㈨㈩㈪㈫㈬㈭㈮㈯㈰ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫⅬⅭⅮⅯⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹⅺⅻⅼⅽⅾⅿ"];
+		const menuLeft = mainUI.menuLeft;
+		const menuWidth = mainUI.menuWidth;
+		const menuFontSize = mainUI.menuFontSize;
+		const cWidth = mainUI.cmdWidth;
 
-			function markRadioChecked() {
-				if (this != cLABC) {
-					cBoard.drawLineEnd();
-				}
-			}
+
+		let playMode = MODE_RENJU;
+		//let oldPlayMode = playMode;
 			
-			function autoblackwhiteRadioChecked() {
-				if (!cLockImg.checked) {
-					lockImg();
-					cLockImg.setChecked(1);
-				}
-			}
-
-
-
-
-
-
-
-
-
+			
 		const CALCULATE = true;
 		const NO_CALCULATE_MENU = [0, "4月23日，五子茶馆解题大赛", 1, "比赛结束前，暂时关闭计算功能"];
 
@@ -85,13 +59,11 @@ window.control = (() => {
 		const busyCmdDiv = mainUI.createCmdDiv();
 		const renjuCmdDiv = mainUI.createCmdDiv();
 		const imgCmdDiv = mainUI.createCmdDiv();
+		
+		const alwaysHideCmdDiv = mainUI.createCmdDiv();
+		alwaysHideCmdDiv.hide();
 
-		busyCmdDiv.hide();
-		//renjuCmdDiv.hide();
-		imgCmdDiv.hide();
-
-
-		//---------------------- renjuCmdDiv ----------------------
+		//---------------------- busyCmdDiv buttons ----------------------
 
 		const busyButtonSettings = [
 		null, null, null, null,
@@ -108,6 +80,8 @@ window.control = (() => {
 		}];
 		mainUI.addButtons(mainUI.createButtons(busyButtonSettings), busyCmdDiv, 0);
 
+		//---------------------- renjuCmdDiv buttons ----------------------
+		
 		const renjuButtonSettings = [
 			{
 				varName: "cShareWhite",
@@ -115,7 +89,7 @@ window.control = (() => {
 				text: "分享图片",
 				touchend: function() {
 					if (isBusy()) return;
-					share(cBoard);
+					window.share(cBoard);
 				}
 			},
 			{
@@ -124,24 +98,7 @@ window.control = (() => {
 				text: "分享棋局",
 				touchend: function() {
 					if (isBusy()) return;
-					let hash = `${cBoard.getCodeURL()}`,
-						url = window.location.href.split(/[?#]/)[0] + `#${hash}`;
-					window.location.hash = hash;
-					//log(`share URL: ${url}`);
-					if (navigator.canShare) {
-						navigator.share({
-							title: "摆棋小工具",
-							text: "摆棋小工具，棋局分享",
-							url: url
-						})
-					}
-					else {
-						msg({
-							title: url,
-							type: "input",
-							butNum: 1
-						})
-					}
+					shareURL();
 				}
 			},
 			{
@@ -296,7 +253,10 @@ window.control = (() => {
 				varName: "cLoadImg",
 				type: "select",
 				text: "打开",
-				options: [1, "打开 图片", 2, "打开 lib 棋谱"],
+				options: [
+					1, "打开 图片",
+					2, "打开 lib 棋谱"
+				],
 				change: function(but) {
 					but.setText(`打开`);
 					if (isBusy()) return;
@@ -320,11 +280,13 @@ window.control = (() => {
 				varName: "cCutImage",
 				type: "select",
 				text: "保存",
-				options: [2, "JPEG/ (*.jpg) ____ 压缩图片",
- 					3, "PNG / (*.png) ____ 清晰图片",
- 					4, "SVG / (*.svg) ____ 无损图片",
- 					5, "HTML/(*.html) ___ 无损文档",
- 					6, "PDF / (*.pdf) _____ 无损文档"],
+				options: [
+					2, "JPEG / (*.jpg ) _____ 压缩",
+ 					3, "PNG / (*.png ) ____ 清晰",
+ 					4, "SVG / (*.svg ) _____ 无损",
+ 					5, "HTML/ (*.html) ___ 无损",
+ 					6, "PDF / (*.pdf ) _____ 无损"
+ 				],
 				change: function(but) {
 					but.setText(`保存`);
 					if (isBusy()) return;
@@ -366,8 +328,7 @@ window.control = (() => {
 				text: `下手为${EMOJI_ROUND_ONE}`,
 				touchend: function() {
 					if (isBusy()) return;
-					cBoard.setResetNum(cBoard.MSindex + 1);
-					cBoard.isShowNum = getShowNum();
+					setResetNum(cBoard.MSindex + 1);
 				}
 	        },
 			{
@@ -389,25 +350,25 @@ window.control = (() => {
 				type: "select",
 				group: "stone_mark",
 				mode: "radio",
-				options: [0, "←  箭头",
-	 				1, "__ 线条",
+				options: [
+					0, "←  箭头",
+	 				1, "― 线条",
 	 				2, "ABC...",
 	 				3, "abc...",
 	 				4, "123...",
-	 				5, "自定义...",
-	 				6, `${EMOJI_STAR} 标记`,
-	 				7, `${EMOJI_FOUL} 标记`, ],
-				change: function() {
-					if (cLABC.input.value > 1) cBoard.drawLineEnd();
-					if (cLABC.input.value == 5) {
-						let lbStr = "";
-						for (let i = 0; i < continueLabel.length; i++) {
-							lbStr += (continueLabel[i] + ",");
-						}
-						inputText(`${lbStr}......\n\n\n,-------------\n类似(ABC...),(abc...),(123...)\n可在上面编辑 连续输入的 标记。每个标记 用英文 [,] 逗号隔开，每个标记最多3个字符`)
-							.then(inputStr => {
-								newContinueLabel(inputStr);
-							})
+	 				5, `更多标记: ${userdefinedLabels.join("")}`,
+	 				6, `自定义: ${userdefinedLabel}`,
+	 				7, `${EMOJI_FOUL} 标记`
+	 			],
+				change: async function(but) {
+					if (but.input.value > 1) cBoard.drawLineEnd();
+					if (but.input.value == 5) {
+						but.input.selectedOptions[0].text = but.input.selectedOptions[0].li.innerHTML = `更多标记: ${(await userDefinedLabels()).join("")}`;
+						but.setText(userdefinedLabels.join(""));
+					}
+					if (but.input.value == 6) {
+						but.input.selectedOptions[0].text = but.input.selectedOptions[0].li.innerHTML = `自定义: ${await userDefinedLabel()}`;
+						but.setText(userdefinedLabel);
 					}
 				}
 	        },
@@ -417,9 +378,7 @@ window.control = (() => {
 				text: "重置手数",
 				touchend: function() {
 					if (isBusy()) return;
-					cBoard.setResetNum(0);
-					setShowNum(true);
-					cBoard.isShowNum = getShowNum();
+					setResetNum(0);
 				}
 	        },
 			{
@@ -435,7 +394,11 @@ window.control = (() => {
 				text: ` ${EMOJI_FORK} `,
 				group: "stone_mark",
 				mode: "radio",
-				touchend: markRadioChecked
+				touchend: function() {
+					if (this != cLABC) {
+						cBoard.drawLineEnd();
+					}
+				}
 	        },
 			{
 				varName: "cLbColor",
@@ -444,31 +407,28 @@ window.control = (() => {
 				options: lbColor.map((v, i) => [i, v.colName]).reduce((a, c) => a.concat(...c), []),
 				change: function(but) {
 					but.setText(`${EMOJI_PEN} 颜色`);
-					but.setColor(lbColor[but.input.value].color);
-					cLba.setColor(lbColor[but.input.value].color);
-					cLbb.setColor(lbColor[but.input.value].color);
-					cLbc.setColor(lbColor[but.input.value].color);
-					cLbd.setColor(lbColor[but.input.value].color);
-					cLABC.setColor(lbColor[but.input.value].color);
+					[but, cLba, cLbb, cLbc, cLbd, cLABC].map(button => button.setColor(lbColor[but.input.value].color));
 				}
 	        },
 			{
 				varName: "cMode",
 				type: "select",
 				text: "摆棋",
-				options: [1, "经典摆棋模式",
+				options: [
+					1, "经典摆棋模式",
 					2, "无序摆棋模式",
 					3, "棋谱只读模式",
-					4, "棋谱编辑模式"],
+					4, "棋谱编辑模式"
+				],
 				change: function(but) {
 					if (isBusy()) return;
-					const FUN = {
-						1: () => { setPlayMode(MODE_RENJU) },
-						2: () => { setPlayMode(MODE_RENJU_FREE) },
-						3: () => { setPlayMode(MODE_READLIB) },
-						4: () => { setPlayMode(MODE_EDITLIB) },
-					}
-					FUN[but.input.value]();
+					const modes = {
+						1: MODE_RENJU,
+						2: MODE_RENJU_FREE, 
+						3: MODE_READLIB, 
+						4: MODE_EDITLIB
+					};
+					setPlayMode(modes[but.input.value]);
 				}
 			},
 			{
@@ -492,20 +452,20 @@ window.control = (() => {
 				options: (
 					!CALCULATE &&
 					NO_CALCULATE_MENU
-				) || (
-				[1, "VCT选点",
-				2, "做V点",
-				3, "做43杀(白单冲4杀)",
-				4, "活三级别",
-				5, "活三",
-				//6, `${EMOJI_FOUL} 三三`,
-		  		//7, `${EMOJI_FOUL} 四四`,
-				//8, `${EMOJI_FOUL} 长连`,
-				9, "眠三",
-				10, "活四",
-				11, "冲四",
-				12, "五连"]
-				),
+				) || ([
+					1, "VCT选点",
+					2, "做V点",
+					3, "做43杀(白单冲4杀)",
+					4, "活三级别",
+					5, "活三",
+					//6, `${EMOJI_FOUL} 三三`,
+		  			//7, `${EMOJI_FOUL} 四四`,
+					//8, `${EMOJI_FOUL} 长连`,
+					9, "眠三",
+					10, "活四",
+					11, "冲四",
+					12, "五连"
+				]),
 				change: function(but) {
 					but.setText("找点");
 					if (isBusy()) return;
@@ -604,24 +564,22 @@ window.control = (() => {
 				options: (
 					!CALCULATE &&
 					NO_CALCULATE_MENU
-				) || (
-				[1, "找 VCF",
-						 2, "找全VCF",
-						 3, "找 双杀",
-						 4, "三手胜",
-						 5, "大道五目",
-						 6, "五手五连",
-						 7, "禁手判断",
-						 8, "防冲四抓禁",
-						 //9, "找  VCF防点",
-						 10, "找 VCF 防点(深度+1)",
-						 11, "找 VCF 防点(深度+∞)",
-						 //12, "坂田三手胜(测试)",
-						 //13, "VCT(测试）",
-						 //12, "test two"
-						 ]
-				),
-				chenge: function(but) {
+				) || ([
+					1, "找 VCF",
+					2, "找全VCF",
+					3, "找 双杀",
+					4, "三手胜",
+					5, "大道五目",
+					6, "五手五连",
+					7, "禁手判断",
+					8, "防冲四抓禁",
+					//9, "找  VCF防点",
+					10, "找 VCF 防点(深度+1)",
+					11, "找 VCF 防点(深度+∞)",
+					//12, "坂田三手胜(测试)",
+					//13, "VCT(测试）"
+				]),
+				change: function(but) {
 					but.setText("解题");
 					if (isBusy()) return;
 					if (but.input.value < 1 || !CALCULATE) {
@@ -759,6 +717,8 @@ window.control = (() => {
 		dw > dh && renjuButtonSettings.push(...renjuButtonSettings.splice(0, 4));
 		mainUI.addButtons(mainUI.createButtons(renjuButtonSettings), renjuCmdDiv, 0);
 
+		//---------------------- imgCmdDiv buttons ----------------------
+
 		const imgButtonSettings = [
 			{
 				varName: "cZoomIn",
@@ -783,12 +743,7 @@ window.control = (() => {
 				type: "checkbox",
 				text: "选定棋盘",
 				touchend: function() {
-					if (cLockImg.checked) {
-						lockImg();
-					}
-					else {
-						unLockImg();
-					}
+					cLockImg.checked ? lockImg() : unLockImg();
 				}
 			},
 			{
@@ -876,7 +831,6 @@ window.control = (() => {
 					[...this.input].map(op => op.checked = op.value == cBoard.SLTX);
 				},
 				touchend: function(but) {
-					but.setText(but.input.value + " 列");
 					cBoard.SLTX = but.input.value;
 					cBoard.resetP();
 					if (!cLockImg.checked) {
@@ -963,7 +917,251 @@ window.control = (() => {
 
 		mainUI.addButtons(mainUI.createButtons(imgButtonSettings), imgCmdDiv, 0);
 
+		//---------------------- createMenu ----------------------
 
+		const gameRulesMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+	                [0, "无禁规则",
+	                1, "禁手规则"],
+			function(but) {
+				if (isBusy()) return;
+				const rules = [GOMOKU_RULES, RENJU_RULES];
+				engine.gameRules = rules[but.input.value * 1];
+			},
+			function(but) {
+				const rules = [GOMOKU_RULES, RENJU_RULES];
+				[...but.input].map(op => op.checked = op.value == rules.indexOf(engine.gameRules));
+			});
+		const coordinateMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+	                [0, "棋盘坐标:无坐标",
+	                1, "棋盘坐标:上下左右",
+	                2, "棋盘坐标:上左",
+	                3, "棋盘坐标:上右",
+	                4, "棋盘坐标:下右",
+	                5, "棋盘坐标:下左"],
+			function(but) {
+				if (isBusy()) return;
+				cBoard.setCoordinate(but.input.value * 1);
+			},
+			function(but) {
+				[...but.input].map((op, i) => op.checked = i === cBoard.coordinateType);
+			});
+		const cBoardSizeMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+	                [15, "15路棋盘",
+	                14, "14路棋盘",
+	                13, "13路棋盘",
+	                12, "12路棋盘",
+	                11, "11路棋盘",
+	                10, "10路棋盘",
+	                9, "9路棋盘",
+	                8, "8路棋盘",
+	                7, "7路棋盘",
+	                6, "6路棋盘", ],
+			function(but) {
+				if (isBusy()) return;
+				cBoard.setSize(but.input.value * 1);
+				scaleCBoard(false);
+				RenjuLib.setCenterPos({ x: cBoard.size / 2 + 0.5, y: cBoard.size / 2 + 0.5 });
+				RenjuLib.getAutoMove();
+			},
+			function(but) {
+				[...but.input].map(op => op.checked = op.value == cBoard.size);
+			});
+		const setCBoardLineStyleMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+	                [0, "正常",
+	                1, "加粗",
+	                2, "特粗"],
+			function(but) {
+				if (isBusy()) return;
+				setLineStyle(but.input.value * 1);
+			},
+			function(but) {
+				[...but.input].map((op, i) => op.checked = i === getLineStyle());
+			});
+		const loadRenjuSettingsMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+	                [0, "默认",
+	                1, "设置1",
+	                2, "设置2",
+	                3, "设置3",
+	                4, "设置4",
+	                5, "设置5"],
+			function(but) {
+				if (isBusy()) return;
+				renjuCmdSettings.idx = but.input.value * 1;
+				saveCmdSettings("renjuCmdSettings", renjuCmdSettings);
+				loadCmdSettings("renjuCmdSettings", renjuCmdSettings);
+			});
+		const saveRenjuSettingsMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+	                [1, "设置1",
+	                2, "设置2",
+	                3, "设置3",
+	                4, "设置4",
+	                5, "设置5"],
+			function(but) {
+				if (isBusy()) return;
+				renjuCmdSettings.idx = but.input.value * 1;
+				editButtons(xyObjToPage({ x: renjuCmdDiv.viewElem.offsetLeft, y: renjuCmdDiv.viewElem.offsetTop }, renjuCmdDiv.viewElem.parentNode), "renjuCmdSettings", renjuCmdSettings);
+			});
+			
+		const _themeNames = ["light","grey","dark"];
+		const themeMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+	    			[0, "白色",
+	    			1, "灰色",
+	    			2, "黑色"],
+	    		function() {
+	    			if (isBusy()) return;
+	    			mainUI.setTheme(_themeNames[this.input.value*1]);
+	    		},
+	    		function() {
+	    			const index = _themeNames.indexOf(mainUI.getThemeName());
+	    			[...this.input].map(op => op.checked = op.value == index);
+	    		});	
+
+		const cShownum = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+					[0, "显示手数",
+					 1, "显示禁手",
+					 2, "显示路线",
+					 3, "放大棋盘",
+					 //4, "彩色对称打点",
+					 5, "游戏规则",
+					 6, "棋盘大小",
+					 7, "棋盘坐标",
+					 8, "主题颜色",
+					 9, "线条宽度",
+					 //10, "设置按键位置",
+					 //11, "加载按键设置",
+					 12, "重置数据"],
+			function(but) {
+				but.setText("设置");
+				if (isBusy()) return;
+				const FUN = {
+					0: () => { setShowNum(!getShowNum()) },
+					1: () => { cBoard.isShowFoul = !cBoard.isShowFoul },
+					2: () => { cBoard.isShowAutoLine = !cBoard.isShowAutoLine },
+					3: () => { scaleCBoard(cBoard.scale == 1, true) },
+					//4: () => { cBoard.isTransBranch = !cBoard.isTransBranch },
+					5: () => { gameRulesMenu.showMenu(but.menu.showX, but.menu.showY) },
+					6: () => { cBoardSizeMenu.showMenu(but.menu.showX, but.menu.showY) },
+					7: () => { coordinateMenu.showMenu(but.menu.showX, but.menu.showY) },
+					8: () => { themeMenu.showMenu(but.menu.showX, but.menu.showY) },
+					9: () => { setCBoardLineStyleMenu.showMenu(but.menu.showX, but.menu.showY) },
+					10: () => { saveRenjuSettingsMenu.showMenu(but.menu.showX, but.menu.showY) },
+					11: () => { loadRenjuSettingsMenu.showMenu(but.menu.showX, but.menu.showY) },
+					12: () => { location.href = "reset.html" },
+				}
+				FUN[but.input.value]();
+			},
+			function(but) {
+				but.input[0].checked = cBoard.isShowNum;
+				but.input[1].checked = cBoard.isShowFoul;
+				but.input[2].checked = cBoard.isShowAutoLine;
+				but.input[3].checked = cBoard.scale > 1;
+				//but.input[4].checked = cBoard.isTransBranch;
+			}
+		);
+
+		const cMenu = createContextMenu();
+
+		const fileInput = document.createElement("input");
+		fileInput.setAttribute("type", "file");
+		fileInput.style.display = "none";
+		renjuCmdDiv.viewElem.appendChild(fileInput);
+		
+		const {
+			cLockImg,
+			cPutBoard,
+			cAutoPut,
+			cCleAll,
+			cNewGame,
+			cLocknum,
+			cAutoadd,
+			cAddblack,
+			cAddwhite,
+			cAddblack2,
+			cAddwhite2,
+			cLba,
+			cLbb,
+			cLbc,
+			cLbd,
+			cLbColor,
+			cResetnum,
+			cNextone,
+			cInputcode,
+			cOutputcode,
+			cStart,
+			cEnd,
+			cPrevious,
+			cNext,
+			cFlipX,
+			cFlipY,
+			cCW,
+			cLABC,
+			cMoveL,
+			cMoveR,
+			cMoveT,
+			cMoveB,
+			cCutImage,
+			cSelBlack,
+			cSelWhite,
+			cMode,
+			cFindPoint,
+			cFindVCF,
+			cCancelFind,
+			cLoadImg,
+			cSLTX,
+			cSLTY,
+			cShare,
+			cShareWhite,
+			cCleLb,
+			cHelp,
+			cLeft,
+			cRight,
+			cUp,
+			cDown,
+			cRotate90,
+			cTotate180,
+			cPutMiniBoard,
+			cCleMiniBoard,
+			cZoomIn,
+			cZoomOut,
+			lbTimer
+		} = mainUI.getChildsForVarname();
+
+		
+		
+		cAutoadd.touchend();
+		cSelBlack.touchend();
+		busyCmdDiv.hide();
+		imgCmdDiv.hide();
+		
+		[...cLbColor.input].map((op, i) => {
+			const li = op.li;
+			li.style.color = lbColor[i].color;
+			const div = document.createElement("div");
+			cLbColor.menu.menu.appendChild(div);
+			div.onclick = li.onclick;
+			Object.assign(div.style, {
+				position: "absolute",
+				width: `${(cLbColor.menu.menuWidth)/2}px`,
+				height: `${li.style.lineHeight}`,
+				left: `${parseInt(li.style.fontSize)*7}px`,
+				top:`${(parseInt(cLbColor.menu.fontSize) * 2.5 + 3)*(cLbColor.menu.lis["down"] ? i +1 : i)+i}px`,
+				backgroundColor: lbColor[i].color
+			})
+		})
+		
+		mainUI.loadTheme();
+
+		setCheckerBoardEvent()
+		
+		const hm = cLABC.hideMenu;
+		cLABC.hideMenu = function(ms, callback) {
+			hm.call(this, ms, callback);
+			if (cLABC.input.value > 1) cBoard.drawLineEnd();
+		};
+		
+		
+		//_______
+		
 		function _setBlockUnload() {
 			const enable = isBusy(false) || [MODE_RENLIB, MODE_READLIB, MODE_EDITLIB].indexOf(playMode) + 1
 			setBlockUnload(enable);
@@ -992,17 +1190,14 @@ window.control = (() => {
 			}catch(e){console.error(e.stack)}
 		}
 
-
-		let putCheckerBoard = putBoard;
-
-		function putBoard(idx, board = cBoard) {
-			if (idx < 0) return;
+		function putBoard(centerIdx, board = cBoard) {
+			if (centerIdx < 0) return;
 			let arr = board.getArray2D();
 			newGame();
-			cBoard.unpackArray(!idx ? arr : changeCoordinate(arr, idx));
+			cBoard.unpackArray(!centerIdx ? arr : changeCenterPoint(arr, centerIdx));
 		}
 
-		function changeCoordinate(arr, idx = 112) {
+		function changeCenterPoint(arr, idx = 112) {
 			const nArr = getArr2D([]);
 			const x = idx % 15;
 			const y = ~~(idx / 15);
@@ -1138,29 +1333,32 @@ window.control = (() => {
 		}
 
 		function createMenu(left, top, width, height, fontSize, options = [], onchange = () => {}, onshowmenu = () => {}) {
-			return mainUI.createMenu({ options, onchange, onshowmenu });
+			const menu = mainUI.createMenu({ options, onchange, onshowmenu });
+			mainUI.addButtons([menu], alwaysHideCmdDiv);
+			return menu;
 		}
 
 		function createContextMenu(left, top, width, height = cWidth * 0.8, fontSize) {
-			return mainUI.createContextMenu({
-				options: [0, "设置",
-                1, "打开",
-                2, `保存`,
-                3, `${EMOJI_SEARCH} 找点`,
-                4, `${EMOJI_QUESTION} 解题`,
-                5, "新棋局",
-                6, "添加标记",
-                7, "清空标记",
-                8, "分享图片",
-                9, "分享原图",
-                10, `下手为${EMOJI_ROUND_ONE}`,
-                11, "重置手数",
-                12, "显示手数",
-                13, "隐藏手数",
-                14, "输入代码",
-                15, "输出代码",
-                16, `🔄 刷新页面`
-            ],
+			const menu = mainUI.createContextMenu({
+				options: [
+					0, "设置",
+					1, "打开",
+					2, `保存`,
+					3, `${EMOJI_SEARCH} 找点`,
+					4, `${EMOJI_QUESTION} 解题`,
+                	5, "新棋局",
+                	6, "添加标记",
+                	7, "清空标记",
+                	8, "分享图片",
+                	9, "分享原图",
+                	10, `下手为${EMOJI_ROUND_ONE}`,
+                	11, "重置手数",
+                	12, "显示手数",
+                	13, "隐藏手数",
+                	14, "输入代码",
+                	15, "输出代码",
+                	16, `🔄 刷新页面`
+            	],
 				onchange: function(but) {
 					if (isBusy()) return;
 					let idx = but.idx,
@@ -1191,6 +1389,8 @@ window.control = (() => {
 					FUN[but.input.value]();
 				}
 			});
+			mainUI.addButtons([menu], alwaysHideCmdDiv);
+			return menu;
 		}
 
 
@@ -1207,6 +1407,15 @@ window.control = (() => {
 				cBoard.mergeTree(tree);
 			}
 		}
+		
+		
+		
+		const renjuCmdSettings = { positions: [], defaultButtons: [], ButtonsIdx: [], idx: 0 };
+		const imgCmdSettings = { positions: [], defaultButtons: [], ButtonsIdx: [], idx: 0 };
+		const onLoadCmdSettings = function() { viewport1.scrollTop() };
+		
+		let editButtons = function() {};
+
 
 		function moveButtons(settings) {
 			let buts = settings.defaultButtons,
@@ -1240,31 +1449,63 @@ window.control = (() => {
 			appData.setObject(key, obj);
 		}
 
-		async function inputText(initStr = "") {
-			let w = cBoard.width * 0.8;
-			let h = w;
-			let l = (dw - w) / 2;
-			let t = (dh - dw) / 4;
-			t = t < 0 ? 1 : t;
+		async function inputText(initStr = "", lineNum, enterTXT, cancelTXT) {
 			return (await msg({
 				text: initStr,
 				type: "input",
-				left: l,
-				top: t,
-				width: w,
-				height: h,
-				enterTXT: "输入代码",
-				lineNum: 10
-			})).inputStr
+				lineNum,
+				enterTXT,
+				cancelTXT
+			})).inputStr;
+		}
+		
+		function inputLabel(idx, boardText = "") {
+			// 设置弹窗，让用户手动输入标记
+			return msg({
+					text: boardText,
+					type: "input",
+					enterTXT: "输入标记",
+					butNum: 2,
+					lineNum: 1,
+					enterFunction: msgStr => {
+						if (checkCommand(msgStr)) return;
+						let str = msgStr.substr(0, 3),
+							color = getRenjuLbColor();
+						boardText = str;
+						cBoard.cleLb(idx); // 清除原来标记，打印用户选定的标记
+						if (str) cBoard.wLb(idx, str, color);
+					}
+				})
+				.then(({ inputStr }) => {
+					return Promise.resolve(inputStr);
+				})
 		}
 
 		async function inputCode(initStr = "") {
-			inputText(initStr)
-				.then(inputStr => {
-					let type = (playMode == MODE_READLIB || playMode == MODE_EDITLIB) ? TYPE_NUMBER : undefined;
-					!checkCommand(inputStr) &&
-						cBoard.unpackCode(getShowNum(), inputStr, type);
+			const inputStr = await inputText(initStr, 10, "输入代码");
+			const type = (playMode == MODE_READLIB || playMode == MODE_EDITLIB) ? TYPE_NUMBER : undefined;
+			checkCommand(inputStr) || cBoard.unpackCode(getShowNum(), inputStr, type);
+		}
+		
+		function shareURL() {
+			const hash = `${cBoard.getCodeURL()}`;
+			const url = window.location.href.split(/[?#]/)[0] + `#${hash}`;
+			window.location.hash = hash;
+			//log(`share URL: ${url}`);
+			if (navigator.canShare) {
+				navigator.share({
+					title: "摆棋小工具",
+					text: "摆棋小工具，棋局分享",
+					url: url
 				})
+			}
+			else {
+				msg({
+					title: url,
+					type: "input",
+					butNum: 1
+				})
+			}
 		}
 
 		async function openImg() {
@@ -1304,23 +1545,6 @@ window.control = (() => {
 			setBusy(false);
 		}
 
-		function newContinueLabel(msgStr) {
-			let labels = [];
-			let st = 0;
-			let s;
-			let end = msgStr.indexOf(",", st);
-			while (end > st) {
-				s = msgStr.slice(st, end);
-				if (s.length > 0 && s.length < 4) {
-					labels.push(s);
-				}
-				st = end + 1;
-				end = msgStr.indexOf(",", st);
-			}
-			if (labels.length) continueLabel = labels;
-		};
-
-
 		async function unLockImg() {
 			await cBoard.unlockArea();
 			viewport1.userScalable();
@@ -1330,226 +1554,6 @@ window.control = (() => {
 			await cBoard.lockArea();
 			viewport1.resize();
 		}
-
-
-		const gameRulesMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [0, "无禁规则",
-	                1, "禁手规则"],
-			function(but) {
-				if (isBusy()) return;
-				const rules = [GOMOKU_RULES, RENJU_RULES];
-				engine.gameRules = rules[but.input.value * 1];
-			},
-			function(but) {
-				const rules = [GOMOKU_RULES, RENJU_RULES];
-				[...but.input].map(op => op.checked = op.value == rules.indexOf(engine.gameRules));
-			});
-		const coordinateMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [0, "棋盘坐标:无坐标",
-	                1, "棋盘坐标:上下左右",
-	                2, "棋盘坐标:上左",
-	                3, "棋盘坐标:上右",
-	                4, "棋盘坐标:下右",
-	                5, "棋盘坐标:下左"],
-			function(but) {
-				if (isBusy()) return;
-				cBoard.setCoordinate(but.input.value * 1);
-			},
-			function(but) {
-				[...but.input].map((op, i) => op.checked = i === cBoard.coordinateType);
-			});
-		const cBoardSizeMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [15, "15路棋盘",
-	                14, "14路棋盘",
-	                13, "13路棋盘",
-	                12, "12路棋盘",
-	                11, "11路棋盘",
-	                10, "10路棋盘",
-	                9, "9路棋盘",
-	                8, "8路棋盘",
-	                7, "7路棋盘",
-	                6, "6路棋盘", ],
-			function(but) {
-				if (isBusy()) return;
-				cBoard.setSize(but.input.value * 1);
-				scaleCBoard(false);
-				RenjuLib.setCenterPos({ x: cBoard.size / 2 + 0.5, y: cBoard.size / 2 + 0.5 });
-				RenjuLib.getAutoMove();
-			},
-			function(but) {
-				[...but.input].map(op => op.checked = op.value == cBoard.size);
-			});
-		const setCBoardLineStyleMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [0, "正常",
-	                1, "加粗",
-	                2, "特粗"],
-			function(but) {
-				if (isBusy()) return;
-				setLineStyle(but.input.value * 1);
-			},
-			function(but) {
-				[...but.input].map((op, i) => op.checked = i === getLineStyle());
-			});
-		const loadRenjuSettingsMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [0, "默认",
-	                1, "设置1",
-	                2, "设置2",
-	                3, "设置3",
-	                4, "设置4",
-	                5, "设置5"],
-			function(but) {
-				if (isBusy()) return;
-				renjuCmdSettings.idx = but.input.value * 1;
-				saveCmdSettings("renjuCmdSettings", renjuCmdSettings);
-				loadCmdSettings("renjuCmdSettings", renjuCmdSettings);
-			});
-		const saveRenjuSettingsMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [1, "设置1",
-	                2, "设置2",
-	                3, "设置3",
-	                4, "设置4",
-	                5, "设置5"],
-			function(but) {
-				if (isBusy()) return;
-				renjuCmdSettings.idx = but.input.value * 1;
-				editButtons(xyObjToPage({ x: renjuCmdDiv.viewElem.offsetLeft, y: renjuCmdDiv.viewElem.offsetTop }, renjuCmdDiv.viewElem.parentNode), "renjuCmdSettings", renjuCmdSettings);
-			});
-
-		const cShownum = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-				[0, "显示手数",
-					 1, "显示禁手",
-					 2, "显示路线",
-					 3, "放大棋盘",
-					 //4, "彩色对称打点",
-					 5, "设置规则",
-					 6, "设置棋盘大小",
-					 7, "设置棋盘坐标",
-					 8, "设置颜色风格",
-					 9, "设置线条风格",
-					 10, "设置按键位置",
-					 11, "加载按键设置",
-					 12, "重置数据"],
-			function(but) {
-				but.setText("设置");
-				if (isBusy()) return;
-				const FUN = {
-					0: () => { setShowNum(!getShowNum()) },
-					1: () => { cBoard.isShowFoul = !cBoard.isShowFoul },
-					2: () => { cBoard.isShowAutoLine = !cBoard.isShowAutoLine },
-					3: () => { scaleCBoard(cBoard.scale == 1, true) },
-					//4: () => { cBoard.isTransBranch = !cBoard.isTransBranch },
-					5: () => { gameRulesMenu.showMenu(but.menu.showX, but.menu.showY) },
-					6: () => { cBoardSizeMenu.showMenu(but.menu.showX, but.menu.showY) },
-					7: () => { coordinateMenu.showMenu(but.menu.showX, but.menu.showY) },
-					9: () => { setCBoardLineStyleMenu.showMenu(but.menu.showX, but.menu.showY) },
-					10: () => { saveRenjuSettingsMenu.showMenu(but.menu.showX, but.menu.showY) },
-					11: () => { loadRenjuSettingsMenu.showMenu(but.menu.showX, but.menu.showY) },
-					12: () => { location.href = "reset.html" },
-				}
-				FUN[but.input.value]();
-			},
-			function(but) {
-				but.input[0].checked = cBoard.isShowNum;
-				but.input[1].checked = cBoard.isShowFoul;
-				but.input[2].checked = cBoard.isShowAutoLine;
-				but.input[3].checked = cBoard.scale > 1;
-				//but.input[4].checked = cBoard.isTransBranch;
-			}
-		);
-
-		const cMenu = createContextMenu();
-
-		const fileInput = document.createElement("input");
-		fileInput.setAttribute("type", "file");
-		fileInput.style.display = "none";
-		renjuCmdDiv.viewElem.appendChild(fileInput);
-
-		const cLockImg = mainUI.getChild({ varName: "cLockImg" });
-		const cPutBoard = mainUI.getChild({ varName: "cPutBoard" });
-		const cAutoPut = mainUI.getChild({ varName: "cAutoPut" });
-		const cCleAll = mainUI.getChild({ varName: "cCleAll" });
-		const cNewGame = mainUI.getChild({ varName: "cNewGame" });
-		const cLocknum = mainUI.getChild({ varName: "cLocknum" });
-		const cAutoadd = mainUI.getChild({ varName: "cAutoadd" });
-		const cAddblack = mainUI.getChild({ varName: "cAddblack" });
-		const cAddwhite = mainUI.getChild({ varName: "cAddblack2" });
-		const cAddblack2 = mainUI.getChild({ varName: "cAddblack2" });
-		const cAddwhite2 = mainUI.getChild({ varName: "cAddwhite2" });
-		const cLba = mainUI.getChild({ varName: "cLba" });
-		const cLbb = mainUI.getChild({ varName: "cLbb" });
-		const cLbc = mainUI.getChild({ varName: "cLbc" });
-		const cLbd = mainUI.getChild({ varName: "cLbd" });
-		const cLbColor = mainUI.getChild({ varName: "cLbColor" });
-		const cResetnum = mainUI.getChild({ varName: "cResetnum" });
-		const cNextone = mainUI.getChild({ varName: "cNextone" });
-		const cInputcode = mainUI.getChild({ varName: "cInputcode" });
-		const cOutputcode = mainUI.getChild({ varName: "cOutputcode" });
-		const cStart = mainUI.getChild({ varName: "cStart" });
-		const cEnd = mainUI.getChild({ varName: "cEnd" });
-		const cPrevious = mainUI.getChild({ varName: "cPrevious" });
-		const cNext = mainUI.getChild({ varName: "cNext" });
-		const cFlipX = mainUI.getChild({ varName: "cFlipX" });
-		const cFlipY = mainUI.getChild({ varName: "cFlipY" });
-		const cCW = mainUI.getChild({ varName: "cCW" });
-		const cLABC = mainUI.getChild({ varName: "cLABC" });
-		const cMoveL = mainUI.getChild({ varName: "cMoveL" });
-		const cMoveR = mainUI.getChild({ varName: "cMoveR" });
-		const cMoveT = mainUI.getChild({ varName: "cMoveT" });
-		const cMoveB = mainUI.getChild({ varName: "cMoveB" });
-		const cCutImage = mainUI.getChild({ varName: "cCutImage" });
-		const cSelBlack = mainUI.getChild({ varName: "cSelBlack" });
-		const cSelWhite = mainUI.getChild({ varName: "cSelWhite" });
-		const cMode = mainUI.getChild({ varName: "cMode" });
-		const cFindPoint = mainUI.getChild({ varName: "cFindPoint" });
-		const cFindVCF = mainUI.getChild({ varName: "cFindVCF" });
-		const cCancelFind = mainUI.getChild({ varName: "cCancelFind" });
-		const cLoadImg = mainUI.getChild({ varName: "cLoadImg" });
-		const cSLTX = mainUI.getChild({ varName: "cSLTX" });
-		const cSLTY = mainUI.getChild({ varName: "cSLTY" });
-		const cShare = mainUI.getChild({ varName: "cShare" });
-		const cShareWhite = mainUI.getChild({ varName: "cShareWhite" });
-		const cCleLb = mainUI.getChild({ varName: "cCleLb" });
-		const cHelp = mainUI.getChild({ varName: "cHelp" });
-		const cLeft = mainUI.getChild({ varName: "cLeft" });
-		const cRight = mainUI.getChild({ varName: "cRight" });
-		const cUp = mainUI.getChild({ varName: "cUp" });
-		const cDown = mainUI.getChild({ varName: "cDown" });
-		const cRotate90 = mainUI.getChild({ varName: "cRotate90" });
-		const cTotate180 = mainUI.getChild({ varName: "cTotate180" });
-		const cPutMiniBoard = mainUI.getChild({ varName: "cPutMiniBoard" });
-		const cCleMiniBoard = mainUI.getChild({ varName: "cCleMiniBoard" });
-		const cZoomIn = mainUI.getChild({ varName: "cZoomIn" });
-		const cZoomOut = mainUI.getChild({ varName: "cZoomOut" });
-		const lbTimer = mainUI.getChild({ varName: "lbTimer" });
-
-		
-		
-		cAutoadd.touchend();
-		cSelWhite.touchend();
-
-		for (let i = cLbColor.menu.lis.length - 1; i >= 0; i--) {
-			cLbColor.menu.lis[i].style.color = lbColor[i].color;
-			let div = document.createElement("div");
-			cLbColor.menu.menu.appendChild(div);
-			div.onclick = cLbColor.menu.lis[i].onclick;
-			let s = div.style;
-			s.position = "absolute";
-			s.width = `${(cLbColor.menu.menuWidth)/2}px`;
-			s.height = `${cLbColor.menu.lis[i].style.lineHeight}`;
-			s.left = `${parseInt(cLbColor.menu.lis[i].style.fontSize)*7}px`;
-			s.top = `${(parseInt(cLbColor.menu.fontSize) * 2.5 + 3)*(cLbColor.menu.lis["down"] ? i +1 : i)+i}px`;
-			//log(`s.height= ${s.height}, s.width=${s.width}, left=${s.left}, top=${s.top}`)
-			//log(cLbColor.menu.lis["down"])
-			s.backgroundColor = lbColor[i].color;
-		}
-
-		setCheckerBoardEvent()
-		
-		const hm = cLABC.hideMenu;
-		cLABC.hideMenu = function(ms, callback) {
-			hm.call(this, ms, callback);
-			if (cLABC.input.value > 1) cBoard.drawLineEnd();
-		};
 	
 		cBoard.sizechange = function() {
 			cBoardSizeMenu.input.selectedIndex = 15 - this.size;
@@ -1637,21 +1641,35 @@ window.control = (() => {
 			}
 
 		};
-		onLoadCmdSettings = function() {
-			viewport1.scrollTop();
-		};
-		scaleCBoard = function(isScale, isAnima) {
+	
+		
+		function autoblackwhiteRadioChecked() {
+			if (!cLockImg.checked) {
+				lockImg();
+				cLockImg.setChecked(1);
+			}
+		}
+		
+		function scaleCBoard(isScale, isAnima) {
 			if (isScale) cBoard.setScale(1.5, isAnima);
 			else cBoard.setScale(1, isAnima);
-		};
+		}
+		
+		function setResetNum(num) {
+			cBoard.setResetNum(num);
+			setShowNum(true);
+			return num;
+		}
 
-		setShowNum = function(shownum) {
+		function setShowNum(shownum) {
 			(cBoard.isShowNum = !!shownum) ? cBoard.showNum() : cBoard.hideNum();
+			cBoard.stonechange();
 			return cBoard.isShowNum;
-		};
-		getShowNum = function() {
+		}
+		
+		function getShowNum() {
 			return cBoard.isShowNum;
-		};
+		}
 		
 		function setLineStyle(index) {
 			const WEIGHT = ["normal", "bold", "heavy"];
@@ -1663,52 +1681,51 @@ window.control = (() => {
         	const index = WEIGHT.indexOf(cBoard.lineStyle);
         	return Math.max(0, index);
 		}
-
-
-
-
-
-
-
-
-
-
-
-		/*
+		
+		
 		let p = { x: 0, y: 0 };
 		xyObjToPage(p, renjuCmdDiv.viewElem);
 
 		const FONT_SIZE = mainUI.cmdWidth / 28;
-		const EX_WINDOW_LEFT = mainUI.upDivLeft + p.x;
-		const EX_WINDOW_TOP = mainUI.upDivTop + p.y;
-		const EX_WINDOW_WIDTH = mainUI.cmdWidth;
-		const EX_WINDOW_HEIGHT = mainUI.cmdWidth * 2;
+		const EX_WINDOW_LEFT = parseInt(cMoveL.left) + p.x;
+		const EX_WINDOW_TOP = parseInt(cMoveL.top) + p.y;
+		const EX_WINDOW_WIDTH = mainUI.cmdWidth - mainUI.cmdPadding * 2;
+		const EX_WINDOW_HEIGHT = mainUI.cmdWidth - parseInt(cMoveL.top);
 		try {
-			window.exWindow.setStyle(EX_WINDOW_LEFT, EX_WINDOW_TOP, EX_WINDOW_WIDTH, EX_WINDOW_HEIGHT, FONT_SIZE);
+			window.exWindow.setStyle(EX_WINDOW_LEFT, EX_WINDOW_TOP, EX_WINDOW_WIDTH, EX_WINDOW_HEIGHT, FONT_SIZE, mainUI.bodyDiv);
 		} catch (e) { alert(e.stack) }
-		*/
-
-		editButtons = createEditButtons(cBoard);
-
-		setTimeout(function() {
-			RenjuLib.reset({
-				newGame: newGame,
-				cBoard: cBoard,
-				getShowNum: getShowNum
-			});
-
-		}, 1000 * 1);
-
-
-
-
-
-
-
-
-
 		
 
+		RenjuLib.reset({
+			newGame: newGame,
+			cBoard: cBoard,
+			getShowNum: getShowNum
+		});
+		
+		loadRenjuData();
+		
+		function loadRenjuData() {
+			let { firstColor, resetNum, moves, whiteMoves, blackMoves, cBoardSize, coordinateType, renjuCmdSettings } = appData.loadData();
+			if (window.codeURL) {
+				let obj = cBoard.parserCodeURL(window.codeURL);
+				resetNum = obj.resetNum;
+				cBoardSize = obj.cBoardSize;
+				moves = obj.moves;
+				whiteMoves = obj.whiteMoves;
+				blackMoves = obj.blackMoves;
+			}
+			//alert(`${window.codeURL}\n${moves}\n${blackMoves}\n${whiteMoves}\n${cBoardSize}`)
+			appData.renjuLoad({
+				firstColor: firstColor,
+				resetNum: resetNum,
+				moves: moves,
+				whiteMoves: whiteMoves,
+				blackMoves: blackMoves,
+				cBoardSize: cBoardSize,
+				coordinateType: coordinateType,
+				renjuCmdSettings: renjuCmdSettings
+			});
+		}
 
 
 
@@ -1721,8 +1738,6 @@ window.control = (() => {
 			bindEvent.addEventListener(cBoard.viewBox, "dbltouchstart", continueSetCutDivStart);
 			bindEvent.addEventListener(cBoard.viewBox, "contextmenu", canvasKeepTouch);
 
-
-
 			function canvasKeepTouch(x, y) {
 				try {
 					iphoneCancelClick.enable();
@@ -1731,7 +1746,7 @@ window.control = (() => {
 					}
 					else {
 						if (cLockImg.checked) {
-							putCheckerBoard(cBoard.getIndex(x, y));
+							putBoard(cBoard.getIndex(x, y));
 						}
 						else {
 							setTimeout(() => continueSetCutDivStart(x, y), 10);
@@ -1788,11 +1803,6 @@ window.control = (() => {
 
 
 
-		//------------------------ helpWindow ------------------------- 
-
-
-
-
 
 		function mapLb(callback) {
 			cBoard.map(p => {
@@ -1831,16 +1841,44 @@ window.control = (() => {
 		function getContinuLb() {
 			let lbIdx = 0;
 			mapLb(p => {
-				let i = continueLabel.lastIndexOf(p.text);
+				let i = userdefinedLabels.lastIndexOf(p.text);
 				if (i >= lbIdx) {
-					lbIdx = i < continueLabel.length - 1 ? i + 1 : i;
+					lbIdx = i < userdefinedLabels.length - 1 ? i + 1 : i;
 				}
 			})
-			return continueLabel[lbIdx];
+			return userdefinedLabels[lbIdx];
+		}
+		
+		function newDefinedLabels(msgStr) {
+			let labels = msgStr.split(`\n`).pop().split(`,`);
+			if (labels.length) userdefinedLabels = labels;
+			saveUserdefinedLabels();
+		}
+		
+		async function userDefinedLabel() {
+			const inputStr = await inputText(userdefinedLabel, 1, "保存标记");
+			inputStr && (userdefinedLabel = inputStr);
+			return userdefinedLabel;
+		}
+		
+		async function userDefinedLabels(){
+			 const inputStr = await inputText(`可在下面编辑连续输入的标记。每个标记用英文 [,] 逗号隔开\n--------------------------分割线-----------------------\n\n${userdefinedLabels}`, 10, "保存标记");
+			 inputStr && newDefinedLabels(inputStr);
+			 return userdefinedLabels;
+		}
+		
+		function loadUserdefinedLabels() {
+			const str = localStorage.getItem("renjuUserdefinedLabels");
+			return str && JSON.parse(str) || null;
+		}
+		
+		function saveUserdefinedLabels() {
+			const str = JSON.stringify(userdefinedLabels);
+			localStorage.setItem("renjuUserdefinedLabels", str);
 		}
 
+
 		//返回参数确认 添加棋子 还是标签
-		//info = {type, boardText, isShowNum};
 		function createCommandInfo() {
 			let isShow = getShowNum() ? true : false,
 				color = getRenjuLbColor();
@@ -1875,7 +1913,7 @@ window.control = (() => {
 						case 5:
 							return { type: TYPE_MARK, color: color, boardText: getContinuLb() };
 						case 6:
-							return { type: TYPE_MARK, color: color, boardText: EMOJI_STAR };
+							return { type: TYPE_MARK, color: color, boardText: userdefinedLabel };
 						case 7:
 							return { type: TYPE_MARK, color: color, boardText: EMOJI_FOUL };
 					}
@@ -2164,30 +2202,6 @@ window.control = (() => {
 			}
 		}
 
-		function inputLabel(idx, boardText = "") {
-			let w = cBoard.width * 0.8;
-			let h;
-			let l = (dw - w) / 2;
-			let t = dh / 7;
-			// 设置弹窗，让用户手动输入标记
-			return msg({
-					text: boardText,
-					type: "input",
-					enterTXT: "输入标记",
-					butNum: 2,
-					enterFunction: msgStr => {
-						if (checkCommand(msgStr)) return;
-						let str = msgStr.substr(0, 3),
-							color = getRenjuLbColor();
-						boardText = str;
-						cBoard.cleLb(idx); // 清除原来标记，打印用户选定的标记
-						if (str) cBoard.wLb(idx, str, color);
-					}
-				})
-				.then(({ inputStr }) => {
-					return Promise.resolve(inputStr);
-				})
-		}
 
 		function isBusy(loading = true) {
 			let busy = busyCmdDiv.viewElem.parentNode;
@@ -2275,6 +2289,7 @@ window.control = (() => {
 					break;
 				case MODE_RENJU_FREE:
 					cMode.setText("无序");
+					cAddblack.touchend();
 					break;
 				case MODE_READLIB:
 					cMode.setText("只读");

@@ -1,5 +1,5 @@
 
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.07";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.00";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -10,23 +10,31 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.07";
     const dh = d.documentElement.clientHeight;
 
     let isMsgShow = false; // =true 屏蔽 bodytouch 事件;
-    let msgWindow = (() => {
+    exports.msgWindow = (() => {
         const TYPE_MSG = 1;
         const TYPE_INPUT = 2;
         
-        const scale = Math.min(dw,dh )/ 980;
+        const gridWidth = 980;
+        const winWidth = gridWidth * (dw > dh ? 2 : 1);
+        const winHeight = winWidth * dh / dw;
+    	const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : winWidth);
+        const defaultWidth = gridWidth * 0.76;
         
         let closeTimer = null;
+        let color = "black";
+        let backgroundColor = "#d0d0d0";
+        let textareaBackgroundColor = "white";
 
         // 创建一个屏蔽层
         let MsgBoxobj = document.createElement("div");
+        MsgBoxobj.style.transformOrigin = `0px 0px`;
+        MsgBoxobj.style.transform = `scale(${scale})`;
 
         // msg 窗口
         let windowDiv = document.createElement("div");
         MsgBoxobj.appendChild(windowDiv);
         windowDiv.style.position = "relative";
-        windowDiv.style.transform = `scale(${scale})`;
-        
+		
         // 文本框
         let msgTextarea = document.createElement("textarea");
         windowDiv.appendChild(msgTextarea);
@@ -57,45 +65,40 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.07";
                 closeTimer = null;
             }
 
-            left = left || (dw - cWidth * 0.8) / 2;
-            top = top || dh / 11;
-            width = width || cWidth * 0.8;
             butNum = butNum == null ? type == "input" ? 2 : 1 : butNum;
 
             let s = MsgBoxobj.style;
             s.position = "fixed";
             s.zIndex = 9999;
-            s.width = document.documentElement.clientWidth + "px";
-            s.height = document.documentElement.clientHeight * 2 + "px";
+            s.width = winWidth + "px";
+            s.height = winHeight * 2+ "px";
             s.top = "0px";
             s.left = "0px";
             MsgBoxobj.ontouchend = MsgBoxobj.onclick = butNum == 0 ? () => { closeMsg(1) } : null;
 
             if (lineNum == "auto") {
-                lineNum = parseInt(height * 0.8 / parseInt(s.width) / 0.05 / 1.25);
+                lineNum = (!height && 1 ) || parseInt(height * 0.8 / parseInt(s.width) / 0.05 / 1.25);
             }
             else if (!lineNum) {
                 lineNum = parseInt(String(text).length / 20) + 1;
                 lineNum = lineNum > 10 ? 10 : lineNum;
             }
 
+            width = width || defaultWidth;
+            height = height || width / 20 * (lineNum + (butNum === 0 ? 0.8 : 3)) * 1.3;
+            
             s = windowDiv.style;
-            s.left = parseInt(left) + "px";
-            s.top = parseInt(top) + "px";
-            s.width = parseInt(width) + "px";
-            s.height = !!height ? parseInt(height) + "px" : parseInt(s.width) / 20 * (lineNum + (butNum === 0 ? 0.8 : 3)) * 1.3 + "px";
-            s.backgroundColor = "#d0d0d0"; //"#666666";
+            s.width = width + "px";
+            s.height = height + "px";
+            s.left = (winWidth - parseInt(s.width)) / 2 + "px";
+            s.top = (winHeight - parseInt(s.height)) / 2 + "px";
+            s.backgroundColor = backgroundColor; //"#d0d0d0"; //"#666666";
             s.border = `0px solid ${butEnter.selectBackgroundColor}`;
             s.margin = "0px";
             s.padding = "0px";
             windowDiv.ontouchend = windowDiv.onclick = butNum == 0 ? () => { closeMsg(1) } : null;
 
-            if (true || butNum != 0) {
-                s.left = (document.documentElement.clientWidth - width) / 2 + "px";
-                s.top = (document.documentElement.clientHeight - parseInt(s.height)) / 2 + "px";
-            }
-
-
+			
             s = msgTextarea.style;
             s.left = `10px`;
             s.top = `10px`;
@@ -108,16 +111,16 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.07";
                 msgTextarea.readOnly = true;
                 s.textAlign = textAlign || "center";
                 s.border = `0px`;
-                s.color = "black"; //"#f0f0f0";
-                s.backgroundColor = "#d0d0d0"; //"#666666";
+                s.color = color; //"black"; //"#f0f0f0";
+                s.backgroundColor = backgroundColor; //"#d0d0d0"; //"#666666";
             }
             else {
                 msgTextarea.readOnly = false;
                 s.textAlign = "left";
                 s.border = `${parseInt(s.fontSize)/20}px solid black`;
                 s.left = parseInt(s.left) - parseInt(s.fontSize) / 20 + "px";
-                s.color = "black";
-                s.backgroundColor = "white";
+                s.color = color; //"black";
+                s.backgroundColor = textareaBackgroundColor; //"white";
             }
             msgTextarea.value = text || "";
 
@@ -134,9 +137,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.07";
                     if (callEnter) callEnter(String(msgTextarea.value));
                 });
             }
+            
 
             if (butNum == 2 || butNum == null) {
-
                 butCancel.show(w * 2.32, t, w, h);
                 butCancel.div.style.border = `1px solid black`;
                 butCancel.setText(cancelTXT ? cancelTXT : "取消");
@@ -144,19 +147,18 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.07";
                     closeMsg(1);
                     if (callCancel) callCancel(String(msgTextarea.value));
                 });
-
+				setOpacity("0.38");
             }
             else if (butNum == 1) {
-
                 butCancel.hide();
-
+                setOpacity("0.38")
             }
             else {
                 butCancel.hide();
                 butEnter.hide();
             }
 
-            MsgBoxobj.setAttribute("class", butNum ? "show" : "showlabel");
+            windowDiv.setAttribute("class", butNum ? "show" : "showlabel");
             setTimeout(() => { document.body.appendChild(MsgBoxobj) }, 1);
 
         }
@@ -170,30 +172,49 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2110.07";
             timeout = parseInt(timeout) > 0 ? parseInt(timeout) : 300;
             closeTimer = setTimeout(function() {
                 closeTimer = null;
-                const CLASS_NAME = MsgBoxobj.getAttribute("class");
+                const CLASS_NAME = windowDiv.getAttribute("class");
                 const NEW_CLASS_NAME = CLASS_NAME == "show" ? "hide" : "hidelabel";
-                if (CLASS_NAME) MsgBoxobj.setAttribute("class", NEW_CLASS_NAME);
+                if (CLASS_NAME) windowDiv.setAttribute("class", NEW_CLASS_NAME);
                 closeTimer = setTimeout(() => {
                     closeTimer = null;
                     isMsgShow = false;
                     if (MsgBoxobj.parentNode) MsgBoxobj.parentNode.removeChild(MsgBoxobj);
                     msgTextarea.value = "";
-                    MsgBoxobj.setAttribute("class", "");
+                    windowDiv.setAttribute("class", "");
                     MsgBoxobj.ontouchend = MsgBoxobj.click = function() {};
                 }, ANIMATION_TIMEOUT);
             }, timeout);
+            setOpacity("1");
         }
         
         function msgScale(scl) {
-            //windowDiv.style.transformOrigin = `0px 0px`;
-            windowDiv.style.transform = `scale(${scl})`;
+            MsgBoxobj.style.transform = `scale(${scl})`;
         }
-
+        
+        function loadTheme(themes = {}) {
+        	const msgWindowTheme = themes["msgWindow"] || {};
+        	color = msgWindowTheme.color || color;
+        	backgroundColor = msgWindowTheme.backgroundColor || backgroundColor;
+        	textareaBackgroundColor = msgWindowTheme.textareaBackgroundColor || textareaBackgroundColor;
+        	windowDiv.style.backgroundColor = backgroundColor;
+    		msgTextarea.style.color = color;
+    		msgTextarea.style.backgroundColor = msgTextarea.readOnly ? backgroundColor : textareaBackgroundColor;
+    		
+    		const butTheme = themes["Button"] || {};
+    		butEnter.loadTheme(butTheme);
+    		butCancel.loadTheme(butTheme);
+        }
+        
+        function setOpacity(opacity) { // mainUI.bodyDiv 设置无效，改为设置 mainUI.upDiv + mainUI.downDiv
+        	const elems = self["mainUI"] ? [mainUI.upDiv, mainUI.downDiv] : [];
+        	elems.map(div => div.style.opacity = opacity);
+        }
 
         return {
             "msg": msg,
             "closeMsg": closeMsg,
-            "msgScale": msgScale
+            "msgScale": msgScale,
+            "loadTheme": loadTheme
         }
     })();
     

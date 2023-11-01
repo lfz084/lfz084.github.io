@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.00";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -36,6 +36,24 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
         8: [48, 49, 63, 64],
         7: [48],
         6: []
+    }
+    
+    const defaultTheme = {
+    	"backgroundColor": "white",
+    	"wNumColor": "white",
+    	"bNumColor": "#000000",
+    	"wNumFontColor": "#000000",
+    	"bNumFontColor": "#ffffff",
+    	"LbBackgroundColor": "white",
+    	"coordinateColor": "#000000",
+    	"lineColor": "#000000",
+    	"wLastNumColor": "#ff0000",
+    	"bLastNumColor": "#ffaaaa",
+    	"moveWhiteColor": "#bbbbbb",
+    	"moveBlackColor": "#bbbbbb",
+    	"moveWhiteFontColor": "#ffffff",
+    	"moveBlackFontColor": "#000000",
+    	"moveLastFontColor": "red"
     }
 
     function log(param, type = "log") {
@@ -584,6 +602,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
 
     //定义一个棋盘
     class Board {
+    	get defaultTheme() { return defaultTheme }
         get onMove() { return this._onMove }
         set onMove(callback) { this._onMove = callback.bind(this) }
         get sizechange() { return this._sizechange }
@@ -691,6 +710,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
             this.moveLastFontColor = "red"; //ff0000
             this.firstColor = "black";
             this.lineStyle = "normal";
+            this.theme = defaultTheme;
 
             this.canvas = document.createElement("canvas");
             this.canvas.style.position = "absolute";
@@ -1280,6 +1300,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
         ctx.textBaseline = "middle";
         ctx.fillText(txt, x, y);
     }
+    
+    Board.prototype.hide = function() {
+    	this.parentNode.removeChild(this.viewBox);
+    }
 
     // 顺序棋盘上棋子，隐藏手数
     Board.prototype.hideNum = function() {
@@ -1309,6 +1333,15 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
         }
         return false;
     }
+    
+    Board.prototype.loadTheme = function(theme = {}) {
+    	this.theme = theme;
+    	Object.assign(this, theme);
+    	this.refreshCheckerBoard(); // 还需要刷新棋子颜色
+    	const msIndex = this.MSindex;
+    	this.toStart(this.isShowNum);
+    	while (msIndex > this.MSindex) this.toNext();
+    }
 
 
     Board.prototype.nextColor = function() {
@@ -1324,6 +1357,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
         let ctx = canvas.getContext("2d");
         ctx.fillStyle = this.backgroundColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        this.viewBox.style.backgroundColor = document.body.style.backgroundColor;
 
         let boardLinesInfo = this.getBoardLinesInfo();
         boardLinesInfo.map(lineInfo => this.printLine(lineInfo, ctx))
@@ -1553,6 +1587,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
             }
         }
     }
+    
+    Board.prototype.show = function() {
+    	this.parentNode.appendChild(this.viewBox);
+    }
 
     Board.prototype.showCheckerBoard = async function() {
         this.resetCBoardCoordinate();
@@ -1637,7 +1675,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
             this.viewBox.style.top = `${this.top - bw}px`;
         }
         else {
-            this.viewBox.style.border = `0px`;
+            this.viewBox.style.border = ``;
             this.viewBox.style.left = `${this.left}px`;
             this.viewBox.style.top = `${this.top}px`;
         }
@@ -1683,28 +1721,28 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
 
 
     // 跳到第 0 手。
-    Board.prototype.toStart = function(isShowNum) {
+    Board.prototype.toStart = function(isShowNum = this.isShowNum) {
         while (this.MSindex > -1) {
             this.toPrevious(isShowNum, 100);
         }
     }
 
     //跳到最后一手
-    Board.prototype.toEnd = function(isShowNum) {
+    Board.prototype.toEnd = function(isShowNum = this.isShowNum) {
         while (this.MSindex < this.MS.length - 1) {
             this.toNext(isShowNum, 100);
         }
     }
 
     // 返回上一手
-    Board.prototype.toPrevious = function(isShowNum, timeout = 0) {
+    Board.prototype.toPrevious = function(isShowNum = this.isShowNum, timeout = 0) {
         if (this.MSindex >= 0) {
             this.cleNb(this.MS[this.MSindex], isShowNum, timeout);
         }
     }
 
     // 跳到下一手
-    Board.prototype.toNext = function(isShowNum, timeout = 0) {
+    Board.prototype.toNext = function(isShowNum = this.isShowNum, timeout = 0) {
         if (this.MS.length - 1 > this.MSindex) {
             this.wNb(this.MS[this.MSindex + 1], "auto", isShowNum, undefined, undefined, timeout);
         }
@@ -1930,20 +1968,20 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2110.07";
     }
 
 
-    exports.TYPE_EMPTY = TYPE_EMPTY;
-    exports.TYPE_MARK = TYPE_MARK; // 标记
-    exports.TYPE_NUMBER = TYPE_NUMBER; // 顺序添加的棋子
-    exports.TYPE_BLACK = TYPE_BLACK; // 无序号 添加的黑棋
-    exports.TYPE_WHITE = TYPE_WHITE; // 无序号 添加的黑棋
-    exports.TYPE_MOVE = TYPE_MOVE; //VCF手顺
-    exports.TYPE_MARKFOUL = TYPE_MARKFOUL;
+    exports.TYPE_EMPTY = Board.TYPE_EMPTY = TYPE_EMPTY;
+    exports.TYPE_MARK = Board.TYPE_MARK = TYPE_MARK; // 标记
+    exports.TYPE_NUMBER = Board.TYPE_NUMBER = TYPE_NUMBER; // 顺序添加的棋子
+    exports.TYPE_BLACK = Board.TYPE_BLACK = TYPE_BLACK; // 无序号 添加的黑棋
+    exports.TYPE_WHITE = Board.TYPE_WHITE = TYPE_WHITE; // 无序号 添加的黑棋
+    exports.TYPE_MOVE = Board.TYPE_MOVE = TYPE_MOVE; //VCF手顺
+    exports.TYPE_MARKFOUL = Board.TYPE_MARKFOUL = TYPE_MARKFOUL;
 
-    exports.COORDINATE_ALL = COORDINATE_ALL;
-    exports.COORDINATE_LEFT_UP = COORDINATE_LEFT_UP;
-    exports.COORDINATE_RIGHT_UP = COORDINATE_RIGHT_UP;
-    exports.COORDINATE_RIGHT_DOWN = COORDINATE_RIGHT_DOWN;
-    exports.COORDINATE_LEFT_DOWN = COORDINATE_LEFT_DOWN;
-    exports.COORDINATE_NONE = COORDINATE_NONE;
+    exports.COORDINATE_ALL = Board.COORDINATE_ALL = COORDINATE_ALL;
+    exports.COORDINATE_LEFT_UP = Board.COORDINATE_LEFT_UP = COORDINATE_LEFT_UP;
+    exports.COORDINATE_RIGHT_UP = Board.COORDINATE_RIGHT_UP = COORDINATE_RIGHT_UP;
+    exports.COORDINATE_RIGHT_DOWN = Board.COORDINATE_RIGHT_DOWN = COORDINATE_RIGHT_DOWN;
+    exports.COORDINATE_LEFT_DOWN = Board.COORDINATE_LEFT_DOWN = COORDINATE_LEFT_DOWN;
+    exports.COORDINATE_NONE = Board.COORDINATE_NONE = COORDINATE_NONE;
 
     exports.animation = animation;
     exports.CheckerBoard = Board;

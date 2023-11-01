@@ -90,10 +90,13 @@
     
     // 棋盘保存PDF文件
     CheckerBoard.prototype.saveAsPDF = function(fontName) {
-        if (typeof jsPDF != "function") {
+        if (!("jsPDF" in self) || typeof jsPDF != "function") {
             warn(`${EMOJI_FOUL_THREE}缺少 jsPDF 插件`);
             return;
         }
+        const oldTheme = this.theme;
+        this.loadTheme(this.defaultTheme);
+        
         //新建文档
         let doc = new jsPDF("p", "pt", "a4"); // 594.3pt*840.51pt
         this.pdfOriginPoint = {
@@ -104,5 +107,7 @@
         this.refreshCheckerBoardPDF(doc, scale);
         let filename = this.autoFileName();
         doc.save(filename + ".pdf"); //保存文档
+        
+        this.loadTheme(oldTheme);
     };
 })))

@@ -1,5 +1,5 @@
 window.SCRIPT_VERSIONS = [];
-self.SCRIPT_VERSIONS["renju"] = "v2110.07";
+self.SCRIPT_VERSIONS["renju"] = "v2111.00";
 (() => { // 按顺序加载应用
     "use strict";
     window.DEBUG = true;
@@ -65,6 +65,27 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
         Msg += `_____________________\n\n `;
         log("testBrowser:\n" + Msg);
     }
+   
+    
+    function loadTheme() {
+    	const themes = {
+    		"light": {
+    			"color": "#333333",
+    			"backgroundColor": "white"
+    		},
+    		"grey": {
+    			"color": "#333333",
+    			"backgroundColor": "white"
+    		},
+    		"dark": {
+    			"color": "#d0d0d0",
+    			"backgroundColor": "#333333"
+    		}
+    	}
+    	const themeKey = localStorage.getItem("theme") || "light";
+    	Object.assign(document.body.style, themes[themeKey]);
+    }
+    
 
     //-----------------------------------------------
 
@@ -161,75 +182,10 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
         };
     }
 
-    function createUI() {
-        try {
-            let bodyDiv = d.createElement("div");
-            d.body.appendChild(bodyDiv);
-            bodyDiv.style.position = "absolute";
-            bodyDiv.style.width = dw < dh ? `${cWidth}px` : `${cWidth * 2}px`;
-            bodyDiv.style.height = dw < dh ? `${cWidth * 4}px` : `${cWidth}px`;
-            bodyDiv.style.left = "0px";
-            bodyDiv.style.top = "0px";
-            bodyDiv.style.opacity = "0";
-            //bodyDiv.style.backgroundColor = "black";
-            bodyDiv.setAttribute("class", "finish");
-            setTimeout(() => { bodyDiv.style.opacity = "1" }, 300);
-
-            let upDiv = d.createElement("div");
-            bodyDiv.appendChild(upDiv);
-            upDiv.style.position = "absolute";
-            upDiv.style.width = "0px";
-            upDiv.style.height = "0px";
-            upDiv.style.left = dw > dh ? ~~((dw - cWidth * 2) / 2) + "px" : ((cWidth / 0.95) - cWidth) / 2 + "px";
-            upDiv.style.top = dw > dh ? (dh - cWidth) / 2 + "px" : cWidth + "px";
-            //upDiv.style.backgroundColor = "green";
-
-            let downDiv = d.createElement("div");
-            bodyDiv.appendChild(downDiv);
-            downDiv.style.position = "absolute";
-            downDiv.style.width = "0px";
-            downDiv.style.height = "0px";
-            downDiv.style.left = dw > dh ? ~~((dw - cWidth * 2) / 2) + cWidth + "px" : "0px";
-            downDiv.style.top = dw > dh ? parseInt(upDiv.style.top) + ~~(cWidth / 13) + "px" : cWidth * 2.06 + "px";
-            //downDiv.style.backgroundColor = "blue";
-
-            cBoard = new CheckerBoard(upDiv, 0, 0, cWidth, cWidth);
-            cBoard.showCheckerBoard();
-
-            control.reset(cBoard, engine, msg, closeMsg, appData, dw, dh, [downDiv, 0, 0, cWidth, cWidth], bodyDiv);
-
-            let { firstColor, resetNum, moves, whiteMoves, blackMoves, cBoardSize, coordinateType, renjuCmdSettings } = appData.loadData();
-            if (window.codeURL) {
-                let obj = cBoard.parserCodeURL(window.codeURL);
-                resetNum = obj.resetNum;
-                cBoardSize = obj.cBoardSize;
-                moves = obj.moves;
-                whiteMoves = obj.whiteMoves;
-                blackMoves = obj.blackMoves;
-            }
-            //alert(`${window.codeURL}\n${moves}\n${blackMoves}\n${whiteMoves}\n${cBoardSize}`)
-            appData.renjuLoad({
-                firstColor: firstColor,
-                resetNum: resetNum,
-                moves: moves,
-                whiteMoves: whiteMoves,
-                blackMoves: blackMoves,
-                cBoardSize: cBoardSize,
-                coordinateType: coordinateType,
-                renjuCmdSettings: renjuCmdSettings
-            });
-
-            return bodyDiv;
-        }
-        catch (err) {
-            document.body.innerHTML = `<div><h1>出错啦</h1><h3><p>${err.stack || err.message}</p></h3><h2><a onclick="window.reloadApp()">点击刷新</a></h2></div>`;
-        }
-    }
-
     document.body.onload = async () => {
         window.SOURCE_FILES = await loadJSON("Version/SOURCE_FILES.json");
         window.UPDATA_INFO = await loadJSON("Version/UPDATA_INFO.json");
-
+		loadTheme();
         const sources = [
             {
                 progress: "0%",
@@ -302,8 +258,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
                 type: "scriptAll",
                 isAsync: true,
                 sources: [[SOURCE_FILES["PFSCMedium_js"]],
-                [SOURCE_FILES["PFSCHeavy_js"]],
-                [SOURCE_FILES["control"]]]
+                [SOURCE_FILES["PFSCHeavy_js"]]]
         }, {
                 progress: "63%",
                 type: "scriptAll",
@@ -337,7 +292,13 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
                 isAsync: true,
                 sources: [[SOURCE_FILES["404_html"]],
                 [SOURCE_FILES["renju_html"]]]
+        }, {
+        	progress: "99%",
+            type: "scriptAll",
+            isAsync: false,
+            sources: [[SOURCE_FILES["control"]]]
         }
+        
      ];
 
         mlog(`body onload`)
@@ -363,7 +324,6 @@ self.SCRIPT_VERSIONS["renju"] = "v2110.07";
             .then(() => {
                 initNoSleep();
                 removeMlog();
-                //const UI = createUI();
                 window.viewport1.resize();
                 window.DEBUG = true;
                 window.jsPDF = window.jspdf.jsPDF;

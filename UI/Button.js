@@ -47,10 +47,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function get_li({ text, fontSize, textAlign, lineHeight, width, height, paddingLeft, option }) {
 		const li = document.createElement("li");
+		option && (option.li = li);
 		li.option = option;
 		li.innerHTML = text;
 		li.style.fontWeight = "bold";
 		li.style.fontFamily = "mHeiTi, Roboto, emjFont, Symbola";
+		li.style.whiteSpace = "nowrap"; 
+		li.style.overflow = "hidden"; 
+		li.style.textOverflow = "ellipsis";
 		li.style.fontSize = ~~fontSize + "px";
 		li.style.textAlign = textAlign;
 		li.style.lineHeight = lineHeight + "px";
@@ -656,6 +660,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	Button.prototype.hideMenu = function(ms, callback = () => {}) {
 		this.menu.hide(ms, callback);
 	}
+	
+	
+	Button.prototype.loadTheme = function(theme = {}) {
+		Object.assign(this, theme);
+		const innerHTML = this.button.innerHTML;
+		this.show();
+		this.button.innerHTML = innerHTML;
+	}
 
 
 	//  移动和设置大小
@@ -793,6 +805,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		this.text2 = txt2 == null ? "" : txt2;
 		this.button.style.fontFamily = "mHeiTi, Roboto, emjFont, Symbola";
 		this.button.style.fontWeight = "bold";
+		this.button.style.whiteSpace = "nowrap"; 
+		this.button.style.overflow = "hidden"; 
+		this.button.style.textOverflow = "ellipsis";
 		if (this.checked) {
 			s = this.type == "radio" ? "☞" : this.type == "checkbox" ? "✔" : "";
 			s += this.text2 == "" ? this.text : this.text2;

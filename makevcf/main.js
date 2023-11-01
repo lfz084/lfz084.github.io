@@ -16,7 +16,6 @@
 		let l = (dw - w) / 2;
 		let t = (dh - dw) / 4;
 		t = t < 0 ? 1 : t;
-		//msgScale(mainUI.bodyScale);
 		return (await msg({
 			text: initStr,
 			type: "input",
@@ -208,7 +207,7 @@
 	}
 
 	function createLogDiv() {
-		return mainUI.createLogDiv({
+		return mainUI.newLabel({
 			id: "log",
 			type: "div",
 			width: mainUI.buttonWidth * 4.99,
@@ -224,7 +223,7 @@
 
 	function createLogDiv1() {
 		const lineHeight = mainUI.buttonHeight;
-		return mainUI.createLogDiv({
+		return mainUI.newLabel({
 			id: "log1",
 			type: "div",
 			width: mainUI.buttonWidth * 2.33,

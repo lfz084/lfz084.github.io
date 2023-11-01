@@ -161,7 +161,7 @@
     function log(text) { $("log").innerText = text }
 
     function createLogDiv() {
-        return mainUI.createLogDiv({
+        return mainUI.newLabel({
             id: "log",
             type: "div",
             width: mainUI.cmdWidth - mainUI.cmdPadding * 2,
@@ -176,7 +176,7 @@
 
     function createCommentDiv() {
         const fontSize = mainUI.cmdWidth / 28;
-        return mainUI.createLogDiv({
+        return mainUI.newComment({
             id: "comment",
             type: "div",
             width: mainUI.buttonWidth * 2.33,
@@ -300,7 +300,6 @@
         let l = (dw - w) / 2;
         let t = (dh - dw) / 4;
         t = t < 0 ? 1 : t;
-        //msgScale(mainUI.bodyScale);
         return (await msg({
             text: initStr,
             type: "input",

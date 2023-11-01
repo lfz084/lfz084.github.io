@@ -12,6 +12,12 @@ window.exWindow = (() => {
     const xIframe = document.createElement("div");
     xIframe.setAttribute("id", "exWindow");
     xWindow.appendChild(xIframe);
+    Object.assign(xIframe.style, {
+    	color: "black",
+    	borderColor: "black",
+    	backgroundColor: "white"
+    })
+        
 
     const butClose = document.createElement("img");
     butClose.src = "./pic/close.svg";
@@ -49,8 +55,6 @@ window.exWindow = (() => {
         s.fontSize = fontSize + "px";
         s.borderStyle = "solid";
         s.borderWidth = `${fontSize / 7}px`;
-        s.borderColor = "black";
-        s.background = "white";
         s.fontWeight = "normal";
         s.padding = `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`;
 
@@ -63,6 +67,10 @@ window.exWindow = (() => {
         s.height = sz + "px";
         s.opacity = "0.5";
         s.backgroundColor = "#c0c0c0";
+    }
+    
+    function loadTheme(theme = {}) {
+    	Object.assign(xIframe.style, theme);
     }
 
     function openWindow() {
@@ -87,6 +95,7 @@ window.exWindow = (() => {
         get innerHTML() {return setHTML},
         get open() {return openWindow},
         get close() {return closeWindow},
+        get loadTheme() {return loadTheme},
         
         set innerHTML(ihtml) {return setHTML(ihtml)}
     }

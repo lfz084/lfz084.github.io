@@ -3,10 +3,11 @@
     let busy = false;
     const dw = document.documentElement.clientWidth;
     const dh = document.documentElement.clientHeight;
-    const winWidth = 980 * (dw > dh ? 2 : 1);
+    const gridWidth = 980;
+    const winWidth = gridWidth * (dw > dh ? 2 : 1);
     const winHeight = winWidth * dh / dw;
     const padding = dw > dh ? winWidth / 5 : winHeight / 5;
-    const scale = dw / winWidth;
+    const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : winWidth);
     const FULL_DIV = document.createElement("div");
     document.body.appendChild(FULL_DIV);
     FULL_DIV.style.zIndex = -99999;
@@ -79,7 +80,7 @@
         s.left = padding + (winWidth - 820) / 2 + "px";
         s.top = padding + 5 + "px";
         s.width = 820 + "px";
-        s.height = (winHeight - 15) + "px";
+        s.height = winHeight + "px";
 
         s = IFRAME_DIV.style;
         s.backgroundColor = "#ddd";
@@ -87,7 +88,7 @@
         s.left = 10 + "px";
         s.top = 10 + "px";
         s.width = 800 + "px";
-        s.height = parseInt(WIN_DIV.style.height) - 20 + "px";
+        s.height = parseInt(WIN_DIV.style.height) + "px";
         //s.zIndex = -1;
 
         s = IFRAME.style;
@@ -101,7 +102,7 @@
         s = BUT_DIV.style;
         s.position = "absolute";
         s.left = (820 - 197) / 2 + "px";
-        s.top = parseInt(WIN_DIV.style.height) - 78 * 1.5 + "px";
+        s.top = parseInt(WIN_DIV.style.height) - 78 - 3 + "px";
         s.width = "197px";
         s.height = "78px";
         s.opacity = "0.5";

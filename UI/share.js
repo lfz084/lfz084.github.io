@@ -4,11 +4,15 @@ window.share = (() => {
     const d = document;
     const dw = d.documentElement.clientWidth;
     const dh = d.documentElement.clientHeight;
-    const winWidth = 980;
+    const gridWidth = 980;
+    const winWidth = gridWidth * (dw > dh ? 2 : 1);
     const winHeight = winWidth * dh / dw;
-    const scale = dw / 980;
+    const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : winWidth);
     
     let sharing = false;
+    
+    let color = "black";
+    let backgroundColor = "#d0d0d0";
 
     let shareWindow = document.createElement("div");
     shareWindow.ontouch = function() { if (event) event.preventDefault(); };
@@ -36,22 +40,20 @@ window.share = (() => {
     //取消按钮
     const ICO_DOWNLOAD = document.createElement("img");
     imgWindow.appendChild(ICO_DOWNLOAD);
-    ICO_DOWNLOAD.src = "./pic/docusign-white.svg";
+    ICO_DOWNLOAD.src = "./pic/docusign.svg";
     ICO_DOWNLOAD.oncontextmenu = (event) => {
         event.preventDefault();
     };
 
     const ICO_CLOSE = document.createElement("img");
     imgWindow.appendChild(ICO_CLOSE);
-    ICO_CLOSE.src = "./pic/close-white.svg";
+    ICO_CLOSE.src = "./pic/close.svg";
     ICO_CLOSE.oncontextmenu = (event) => {
         event.preventDefault();
     };
 
-    function refreshImg(_cBoard, backgroundColor, LbBackgroundColor) {
-        _cBoard.backgroundColor = backgroundColor;
-        _cBoard.LbBackgroundColor = LbBackgroundColor;
-        _cBoard.refreshCheckerBoard();
+    function refreshImg(_cBoard, theme) {
+        _cBoard.loadTheme(theme);
         shareImg.src = _cBoard.cutViewBox().toDataURL();
     }
 
@@ -62,13 +64,17 @@ window.share = (() => {
             sharing = false;
         }, ANIMATION_TIMEOUT);
     }
+    
+    function setOpacity(opacity) { // mainUI.bodyDiv 设置无效，改为设置 mainUI.upDiv + mainUI.downDiv
+    	const elems = self["mainUI"] ? [mainUI.upDiv, mainUI.downDiv] : [];
+    	elems.map(div => div.style.opacity = opacity);
+    }
 
-    return (_cBoard) => {
+    const share = (_cBoard) => {
         try {
             if (sharing) return;
             sharing = true;
-            let oldBackgroundColor = _cBoard.backgroundColor;
-            let oldLbBackgroundColor = _cBoard.LbBackgroundColor;
+            let oldTheme = _cBoard.theme;
 
             let s = shareWindow.style;
             s.position = "fixed";
@@ -80,7 +86,8 @@ window.share = (() => {
             s.transformOrigin = `0px 0px`;
             s.transform = `scale(${scale})`;
 
-            let imgWidth = winWidth < winHeight ? winWidth : winHeight;
+            
+            let imgWidth = gridWidth; //winWidth < winHeight ? winWidth : winHeight;
             imgWidth = ~~(imgWidth * 3 / 4);
             s = imgWindow.style;
             s.position = "relative";
@@ -88,9 +95,9 @@ window.share = (() => {
             s.height = imgWidth + "px";
             s.top = ~~((winHeight - imgWidth) / 2) + "px";
             s.left = ~~((winWidth - imgWidth) / 2) + "px";
-            s.backgroundColor = "#d0d0d0"; //"#666666";
+            s.backgroundColor = backgroundColor; //"#d0d0d0"; //"#666666";
             s.border = `0px solid `;
-
+			
             let iWidth = ~~(imgWidth * 3 / 5);
             s = shareImg.style;
             s.position = "absolute";
@@ -105,13 +112,16 @@ window.share = (() => {
             let l = (imgWidth - w) / 2;
             let t = imgWidth - h - (imgWidth - iWidth) / 8;
 
-            shareLabel.innerHTML = `<h1 style = "font-size: ${h*0.45}px;text-align: center;color:#f0f0f0">长按图片分享</h1>`;
+            shareLabel.innerHTML = `长按图片分享`;
             s = shareLabel.style;
             s.position = "absolute";
             s.width = w + "px";
             s.height = h + "px";
             s.top = (imgWidth - iWidth) / 8 + "px";
             s.left = l + "px";
+            s.textAlign = "center";
+            s.fontSize = h*0.45 + "px";
+            s.color = color;
             s.backgroundColor = imgWindow.style.backgroundColor || "#666666";
 
             s = checkDiv.style;
@@ -128,8 +138,8 @@ window.share = (() => {
             s.top = h / 3 + "px";
             s.left = 0 + "px";
             checkbox.onclick = () => {
-                if (checkbox.checked) refreshImg(_cBoard, oldBackgroundColor, oldLbBackgroundColor)
-                else refreshImg(_cBoard, "white", "white")
+                if (checkbox.checked) refreshImg(_cBoard, oldTheme)
+                else refreshImg(_cBoard, _cBoard.defaultTheme)
             };
 
             s = shareLabel2.style;
@@ -166,14 +176,27 @@ window.share = (() => {
             s.opacity = "0.8";
             setButtonClick(ICO_CLOSE, () => {
                 shareClose();
-                if (_cBoard.backgroundColor != oldBackgroundColor || _cBoard.LbBackgroundColor != oldLbBackgroundColor) {
-                    refreshImg(_cBoard, oldBackgroundColor, oldLbBackgroundColor);
+                if (_cBoard.theme != oldTheme) {
+                    refreshImg(_cBoard, oldTheme);
                 }
+                setOpacity("1")
             });
-
+            setOpacity("0.38")
+            
             checkbox.onclick();
+            
+            document.body.appendChild(shareWindow); 
             imgWindow.setAttribute("class", "show");
-            setTimeout(() => { document.body.appendChild(shareWindow); }, 1);
         } catch (e) { alert(e.stack) }
     };
+    
+    share.loadTheme = function(themes = {}) {
+    	const imgWindowTheme = themes || {};
+    	color = imgWindowTheme.color || color;
+    	backgroundColor = imgWindowTheme.backgroundColor || backgroundColor;
+		shareLabel.style.color = color;
+    	imgWindow.style.backgroundColor = shareLabel.style.backgroundColor = backgroundColor;
+    }
+    
+    return share;
 })();

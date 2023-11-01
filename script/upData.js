@@ -249,16 +249,16 @@ window.upData = (function() {
             if (oldVersion != currentVersion && checkVersion) {
                 let infoArr = window.UPDATA_INFO[currentVersion],
                     lineNum = infoArr ? infoArr.length + 7 : 1,
-                    Msg = lineNum > 1 ? "\n\t" : "";
+                    Msg = lineNum > 1 ? "\n " : "";
 
                 localStorage.setItem("RENJU_APP_VERSION", currentVersion);
                 Msg += `摆棋小工具 更新完毕`;
                 if (infoArr) {
-                    Msg += `\n\t_____________________ `;
-                    Msg += `\n\t版本： ${currentVersion}\n`;
+                    Msg += `\n _____________________ `;
+                    Msg += `\n 版本： ${currentVersion}\n`;
                     for (let i = 0; i < infoArr.length; i++)
-                        Msg += `\n\t${strLen(i+1, 2)}. ${lineWrap(infoArr[i])}`
-                    Msg += `\n\t_____________________ `;
+                        Msg += `\n${strLen(i+1, 2)}. ${lineWrap(infoArr[i])}`
+                    Msg += `\n _____________________ `;
                 }
                 return lineNum == 1 ? warn(Msg) : msg({
                     text: Msg,
