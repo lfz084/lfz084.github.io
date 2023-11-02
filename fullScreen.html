@@ -4,53 +4,9 @@
 <head>
     <title>全屏显示</title>
     <meta charset="utf-8" />
-    <style>
-        iframe {
-
-            padding: 0px 0px 0px 0px;
-            border-style=none;
-            background: #fff;
-            border: hidden;
-            overflow: hidden;
-            scroll: no;
-            position: absolute;
-            left: 0px;
-            top: 0px;
-            width: 100%;
-            height: 100%;
-        }
-
-        #fullDiv {
-
-            border: hidden;
-            position: absolute;
-            left: 0px;
-            top: 0px;
-            width: 100%;
-            height: 100%;
-        }
-
-        #btn {
-            position: absolute;
-            left: 0px;
-            top: 0px;
-            width: 200px;
-            height: 100px;
-            font-size: 50px;
-            z-index: 100;
-        }
-
-        h1 {
-            margin-left: 10px;
-        }
-    </style>
 </head>
 
 <body>
-    <div id="fullDiv">
-        <button type="button" id="btn">全屏</button>
-        <iframe id="iframe"></iframe>
-    </div>
     <script>
         const DW = document.documentElement.clientWidth;
         const DH = document.documentElement.clientHeight;
@@ -59,24 +15,56 @@
         const boardH = DW < DH ? DW :
             DH * 2 < DW ?
             DH : DW / 2;
-        const W_SCALE = SW / boardH / 2;
+        const W_SCALE = SW / 2 / boardH;
         const H_SCALE = SH / boardH;
         let scale = DW < DH ? SW / DW :
             W_SCALE < H_SCALE ?
             W_SCALE : H_SCALE;
-        const IFRAME = document.getElementById("iframe");
-        let fullDiv = document.getElementById("fullDiv");
-        let btn = document.getElementById("btn");
+       
+        const fullDiv = document.createElement("fullDiv");
+        const IFRAME = document.createElement("iframe");
+        const btn = document.createElement("button");
+        
+        document.body.appendChild(fullDiv);
+        fullDiv.appendChild(IFRAME);
+        fullDiv.appendChild(btn);
+        
+        Object.assign(fullDiv.style, {
+        	border: "hidden",
+        	position: "absolute",
+        	left: "0px",
+        	top: DW<DH ? "0px": (DH - boardH) / 2 + "px",
+        	width: DW + "px" ,
+        	height: DH + "px" 
+        })
+        
+        Object.assign(IFRAME.style, {
+        	padding: "0px 0px 0px 0px",
+        	borderStyle: "none",
+        	background: "#fff",
+        	border: "hidden",
+        	overflow: "hidden",
+        	scroll: "no",
+        	position: "absolute",
+        	left: "0px",
+        	top: "0px",
+        	width: DW + "px",
+        	height: DH + "px"
+        })
+        
+        Object.assign(btn.style, {
+        	position: "absolute",
+        	left: "0px",
+        	top: "0px",
+        	width: boardH * 100 / 980 + "px",
+        	height: boardH * 100 / 980 + "px",
+        	fontSize: boardH * 36 / 980 + "px",
+        	zIndex: "999"
+        })
+        
+        btn.innerHTML = "777";
+        IFRAME.src = "./renju.html";
 
-        document.body.onload = function() {
-
-            fullDiv.style.top = DW<DH ? "0px": (DH - boardH) / 2 + "px";
-            fullDiv.style.width = DW + "px";
-            fullDiv.style.height = DH + "px";
-            IFRAME.style.width = DW + "px";
-            IFRAME.style.height = DH + "px";
-            IFRAME.src = "./renju.html";
-        }
 
         btn.onclick = function() {
             if (!document.fullscreenElement) {

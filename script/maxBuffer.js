@@ -6,7 +6,7 @@ let wasm_exports;
 let memory;
 async function loadWASM(url, importObject) {
     try {
-        return fetch(url)
+        return fetch(url.split("?")[0] + "?v=" + new Date().getTime(), { cache: "no-store" })
             .then(response => {
                 //post("alert", `response = ${response}`);
                 return response.arrayBuffer()

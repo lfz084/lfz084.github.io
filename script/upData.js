@@ -2,12 +2,15 @@
 window.upData = (function() {
     'use strict';
 
+    const mlog = self["mlog"] || console.info;
+    
+    const keyRenjuVersion = "RENJU_APP_VERSION";
     const elements = document.getElementsByTagName("version");
     const htmlVersion = elements ? elements[0].getAttribute("v") : "";
-    let oldVersion = localStorage.getItem("RENJU_APP_VERSION"); // if oldVersion == null then upDate Version
+    let oldVersion = localStorage.getItem(keyRenjuVersion); // if oldVersion == null then upDate Version
     if (oldVersion != htmlVersion && htmlVersion.indexOf("up") + 1) oldVersion = null; //强制更新
 
-    let currentVersion = oldVersion || htmlVersion;
+    const currentVersion = oldVersion || htmlVersion;
     let updataVersion;
     //alert(`o:${oldVersion}\nc:${currentVersion}\nn:${htmlVersion}`)
     let checkVersion = true;
@@ -16,6 +19,10 @@ window.upData = (function() {
         return new Promise(resolve => {
             setTimeout(resolve, time);
         })
+    }
+    
+    function absoluteURL(url) {
+    	return new Request(url).url;
     }
 
     async function removeAppCache(filter = () => true) {
@@ -35,7 +42,11 @@ window.upData = (function() {
     }
 
     function resetUpdataVersion() {
-        localStorage.removeItem("RENJU_APP_VERSION");
+        localStorage.removeItem(keyRenjuVersion);
+    }
+    
+    function saveAppVersion(version) {
+    	localStorage.setItem(keyRenjuVersion, version);
     }
 
     function strLen(str, len, char = " ", align = "left") {
@@ -52,24 +63,35 @@ window.upData = (function() {
             let cs = `_____________________\n`;
             const cache = await caches.open(cacheName);
             const keys = cache ? await cache.keys() : [];
-            keys.length == 0 && typeof warn == "function" && warn(`️⚠ ️缓存异常 不能离线运行 刷新一下吧!`);
+            if (keys.length == 0) {
+            	typeof self.warn == "function" && warn(`️⚠ ️缓存异常 不能离线运行 刷新一下吧!`);
+            	console.error(`upData.js: caches.open(${cacheName}).cache.keys().length == 0`)
+            }
             cs += `______ [${cacheName}]  ${keys.length} 个文件 ______\n\n`
             keys.forEach(request => cs += `.\t${request.url.split("/").pop()}\n`);
             cs += `_____________________\n`;
-            console.log(cs);
+            return cs;
         }
+        return `"caches" in window === ${false}`;
     }
 
     async function logCaches() {
         if ("caches" in window) {
             let cs = `_____________________\n`;
             const cachesNames = await caches.keys();
-            cachesNames.length == 0 && typeof warn == "function" && warn(`️⚠ ️缓存异常 不能离线运行 刷新一下吧!`);
+            if (cachesNames.length == 0) {
+            	typeof self.warn == "function" && warn(`️⚠ ️缓存异常 不能离线运行 刷新一下吧!`);
+            	console.error(`upData.js: caches.keys().length == 0`)
+            }
             cs += `________ 离线缓存 ${cachesNames.length}个 ________\n\n`
-            cachesNames.forEach(cache => cs += `.\t[${cache}]\n`);
+            for (let index in cachesNames) {
+            	const cacheName = cachesNames[index];
+            	cs += `.\t[${cacheName}]\n${await logCache(cacheName)}\n`;
+            }
             cs += `_____________________\n`;
-            console.warn(cs);
+            return cs;
         }
+        return `"caches" in window === ${false}`;
     }
 
     function logVersions() {
@@ -80,7 +102,7 @@ window.upData = (function() {
             Msg += `${strLen(key + ".js  ", 20, "-")}  版本号: ${window.SCRIPT_VERSIONS[key]}\n`;
         }
         Msg += `_____________________\n\n `;
-        console.warn(Msg)
+        return Msg;
     }
 
     async function checkScriptVersion(filename) {
@@ -221,7 +243,7 @@ window.upData = (function() {
                 navigator.serviceWorker.controller.postMessage(MSG);
             }
 
-            if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+            if ("caches" in self && "serviceWorker" in navigator && navigator.serviceWorker.controller) {
                 const version = await getUpDataVersion();
                 if (version.isNewVersion) postUpData(version.version)
                 else resolve(true)
@@ -230,7 +252,7 @@ window.upData = (function() {
         })
     }
 
-    async function searchUpData() {
+    async function autoUpData() {
         if ("serviceWorker" in navigator) {
             let count = 0;
             await wait(5 * 1000);
@@ -241,7 +263,7 @@ window.upData = (function() {
         console.info("结束更新");
     }
 
-    function autoShowUpDataInformation() {
+    function logNewVersionInfo() {
         function lineWrap(str) {
             return str.split(/\\n|<br>/).join("\n")
         }
@@ -251,7 +273,6 @@ window.upData = (function() {
                     lineNum = infoArr ? infoArr.length + 7 : 1,
                     Msg = lineNum > 1 ? "\n " : "";
 
-                localStorage.setItem("RENJU_APP_VERSION", currentVersion);
                 Msg += `摆棋小工具 更新完毕`;
                 if (infoArr) {
                     Msg += `\n _____________________ `;
@@ -260,32 +281,28 @@ window.upData = (function() {
                         Msg += `\n${strLen(i+1, 2)}. ${lineWrap(infoArr[i])}`
                     Msg += `\n _____________________ `;
                 }
-                return lineNum == 1 ? warn(Msg) : msg({
-                    text: Msg,
-                    butNum: 2,
-                    lineNum: lineNum,
-                    textAlign: lineNum > 1 ? "left" : "center",
-                    enterTXT: "关闭",
-                    cancelTXT: "历史记录",
-                    callEnter: () => {},
-                    callCancel: () => { window.open("./help/renjuhelp/versionHistory.html", "helpWindow") }
-                })
-            }
-            else Promise.resolve()
+                return Msg;
+            } 
         }
-        else Promise.resolve()
+        return "";
     }
 
     return {
         get removeAppCache() { return removeAppCache },
         get removeOldAppCache() { return removeOldAppCache },
-        get searchUpData() { return searchUpData },
-        get autoShowUpDataInformation() { return autoShowUpDataInformation },
+        get upData() { return upData },
+        get autoUpData() { return autoUpData },
         get postVersion() { return postVersion },
         get checkAppVersion() { return checkAppVersion },
         get checkScriptVersion() { return checkScriptVersion },
         get resetApp() { return resetApp },
         get fetchTXT() { return fetchTXT },
-        get currentVersion() { return currentVersion}
+        get currentVersion() { return currentVersion},
+        get saveAppVersion() { return saveAppVersion },
+        
+        get logCache() { return logCache },
+        get logCaches() { return logCaches },
+        get logVersions() { return logVersions },
+        get logNewVersionInfo() { return logNewVersionInfo },
     }
 })()

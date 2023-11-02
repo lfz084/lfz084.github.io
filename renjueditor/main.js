@@ -470,8 +470,8 @@
         try {
             addEvents(cBoard);
             miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
-            mainUI.viewport.resize();
             mainUI.loadTheme();
+            mainUI.viewport.scrollTop();
             renjuEditor.onloadPage = onloadPage;
             log("打开(pdf,zip,jpg,png)");
             log1(`第${0}题 / ${0}题`);

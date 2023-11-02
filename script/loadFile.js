@@ -46,10 +46,10 @@
             head.appendChild(link);
         })
     }
-
+    
     function loadFile(url, responseType = "text") { //加载文件
-        url = url.split("?")[0];
         const filename = url.split("/").pop().split("?")[0];
+        url = url.split("?")[0] + "?v=" + new Date().getTime();
         return new Promise((resolve, reject) => {
             const oReq = new XMLHttpRequest();
             oReq.responseType = responseType;

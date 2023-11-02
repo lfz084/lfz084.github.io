@@ -5,10 +5,11 @@ window.share = (() => {
     const dw = d.documentElement.clientWidth;
     const dh = d.documentElement.clientHeight;
     const gridWidth = 980;
-    const winWidth = gridWidth * (dw > dh ? 2 : 1);
-    const winHeight = winWidth * dh / dw;
-    const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : winWidth);
-    
+    const tempWidth = gridWidth * (dw > dh ? 2 : 1);
+    const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : tempWidth);
+    const winWidth = dw / scale;
+    const winHeight = dh / scale;
+        
     let sharing = false;
     
     let color = "black";
@@ -87,7 +88,7 @@ window.share = (() => {
             s.transform = `scale(${scale})`;
 
             
-            let imgWidth = gridWidth; //winWidth < winHeight ? winWidth : winHeight;
+            let imgWidth = gridWidth;
             imgWidth = ~~(imgWidth * 3 / 4);
             s = imgWindow.style;
             s.position = "relative";
@@ -120,7 +121,7 @@ window.share = (() => {
             s.top = (imgWidth - iWidth) / 8 + "px";
             s.left = l + "px";
             s.textAlign = "center";
-            s.fontSize = h*0.45 + "px";
+            s.fontSize = ~~(h*0.45) + "px";
             s.color = color;
             s.backgroundColor = imgWindow.style.backgroundColor || "#666666";
 

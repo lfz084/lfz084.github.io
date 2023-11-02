@@ -160,23 +160,6 @@ function setButtonClick(elem, callback = () => {}) {
     }, 0);
 }
 
-/*------ iphone 长按弹出棋盘菜单后会误触发click事件。-----
--------- iphone 长按放大棋盘会误触发click事件-----------*/
-
-window.iphoneCancelClick = (() => {
-    let isCancelClick = false;
-    document.body.addEventListener("touchstart", () => { isCancelClick = false }, true);
-    document.body.addEventListener("touchend", () => { setTimeout(() => { isCancelClick = false }, 250) }, true);
-    return {
-        enable: () => {
-            isCancelClick = !!(navigator.userAgent.indexOf("iPhone") + 1);
-        },
-        isCancel: () => {
-            setTimeout(() => { isCancelClick = false }, 100);
-            return isCancelClick;
-        }
-    }
-})();
 
 //----------------------  退出前确认 ------------------------------------
 

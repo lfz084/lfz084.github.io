@@ -32,6 +32,7 @@ window.mainUI = (function() {
 	const menuFontSize = sw / 20;
 
 	const viewport = new View();
+	viewport.resize();
 	document.body.style.padding = "0";
 	document.body.style.margin = "0";
 
@@ -193,6 +194,29 @@ window.mainUI = (function() {
 		});
 		return cbd;
 	}
+	
+	//------------------ iphoneCancelClick ---------------------------------------------------
+	
+	/** iphone Safari 环境下长按 body.contextmenu 后放手会触发 body.click
+	 * 长按弹出 menu 后会误触发 click 事件
+	 * muWindow.onclick, menu.onclick, li.onclik
+	 * 三个事件同时触发
+	 * 用闭包判断取消误发 click 事件
+	*/
+	const iphoneCancelClick = (() => {
+    	let isCancelClick = false;
+    	const iPhone = !!(navigator.userAgent.indexOf("iPhone") + 1);
+    	document.body.addEventListener("contextmenu", () => { isCancelClick = iPhone;
+           console.log("contextmenu") }, true);
+    	document.body.addEventListener("touchend", () => { setTimeout(() => { isCancelClick = false }, 250); console.log("touchend") }, true);
+    	return {
+        	isCancel: () => {
+            	setTimeout(() => { isCancelClick = false }, 100);
+            	console.log(`isCancelClick === ${isCancelClick}`)
+            	return isCancelClick;
+        	}
+    	}
+	})();
 
 	//----------------------- Menu -----------------------------------------------------------
 
@@ -214,6 +238,7 @@ window.mainUI = (function() {
 			menuBut.index = -1;
 			menuBut.addOptions(button.options);
 			menuBut.setonshowmenu(button.onshowmenu);
+			menuBut.setonhidemenu(button.onhidemenu);
 			menuBut.setonchange(button.onchange || button.change);
 		}
 		return menuBut;
@@ -221,7 +246,7 @@ window.mainUI = (function() {
 	
 	function createMenu(button) {
 		const menuBut = _createMenu(button);
-		menuBut.createMenu(menuLeft + (dw > dh ? gridWidth : 0), autoMenuTop(menuBut), menuWidth, autoMenuHeight(menuBut), menuFontSize, true, undefined, bodyScale);
+		menuBut.createMenu(menuLeft + (dw > dh ? gridWidth : 0), autoMenuTop(menuBut), menuWidth, autoMenuHeight(menuBut), menuFontSize, true, iphoneCancelClick.isCancel, bodyScale);
 		return menuBut;
 	}
 	
@@ -248,6 +273,7 @@ window.mainUI = (function() {
 					setting.touchend && button.setontouchend(setting.touchend);
 					setting.change && button.setonchange(setting.change);
 					setting.onshowmenu && button.setonshowmenu(setting.onshowmenu);
+					setting.onhidemenu && button.setonhidemenu(setting.onhidemenu);
 					setting.options && button.addOptions(setting.options);
 					setting.type == "select" && createMenu(button);
 					buttons.push(button);
@@ -515,7 +541,7 @@ window.mainUI = (function() {
 			super(left, top, width, height);
 			this.startTime = new Date().getTime();
 			this.timer = null;
-			this.viewElem.style.fontSize = parseInt(this.height) / 1.8 + "px";
+			this.viewElem.style.fontSize = ~~(parseInt(this.height) / 1.8) + "px";
 			this.viewElem.style.textAlign = "center";
 			this.viewElem.style.lineHeight = parseInt(this.height) + "px";
 			this.viewElem.innerHTML = `00:00:00`;
@@ -580,7 +606,7 @@ window.mainUI = (function() {
 				"backgroundColor": "#fffffd"
 			},
 			"dark": {
-				"color": "#d0d0d0",
+				"color": "#c5c5c5",
 				"backgroundColor": "#333333"
 			}
 		},
@@ -598,7 +624,7 @@ window.mainUI = (function() {
 				"selectBackgroundColor": "#d0d0d0"
 			},
 			"dark": {
-				"color": "#d0d0d0",
+				"color": "#c5c5c5",
 				"selectColor": "#f0f0f0",
 				"backgroundColor": "#333333",
 				"selectBackgroundColor": "black"
@@ -641,7 +667,7 @@ window.mainUI = (function() {
 			},
 			"dark": {
 				"backgroundColor": "#777777",
-				"wNumColor": "#aaaaaa",
+				"wNumColor": "#a0a0a0",
 				"bNumColor": "#000000",
 				"wNumFontColor": "#000000",
 				"bNumFontColor": "#aaaaaa",
@@ -669,7 +695,7 @@ window.mainUI = (function() {
 				"backgroundColor": "#fffffd"
 			},
 			"dark": {
-				"color": "#d0d0d0",
+				"color": "#c5c5c5",
 				"borderColor": "black",
 				"backgroundColor": "#333333"
 			}
@@ -686,7 +712,7 @@ window.mainUI = (function() {
 				"textareaBackgroundColor": "#fffffd"
 			},
 			"dark": {
-				"color": "#d0d050",
+				"color": "#c5c5c5",
 				"backgroundColor": "#555555",
 				"textareaBackgroundColor": "#666666"
 			}

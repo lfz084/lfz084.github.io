@@ -183,6 +183,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	Menu.prototype.show = function show(x, y) {
 		if (isMenuShow) return;
+		try {this.button.onshowmenu.call(this.button, this.button)} catch (e) { console.error(e.stack) }
+		
 		const dh = document.documentElement.clientHeight;
 		const dw = document.documentElement.clientWidth;
 		const muWindow = this.menuWindow;
@@ -241,20 +243,21 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		}
 		this.anima.setAttribute("class", `${0?"hideContextMenu":"hide"}`);
 		ms = parseInt(ms) || 0;
-		if (ms > 0) {
-			this.timerHideMenu = setTimeout(function() {
-				clearTimeout(this.timerHideMenu);
-				this.timerHideMenu = null;
-				muWindow.parentNode.removeChild(muWindow);
-				isMenuShow = false;
-				callback();
-			}, ms);
-		}
-		else {
+		const close = () => {
 			muWindow.parentNode.removeChild(muWindow);
 			isMenuShow = false;
-			callback();
+			callback.call(this.button, this.button);
+			try { this.button.onhidemenu.call(this.button, this.button) } catch (e) { console.error(e.stack) }
 		}
+		if (ms > 0) {
+			this.timerHideMenu = setTimeout(() => {
+				clearTimeout(this.timerHideMenu);
+				this.timerHideMenu = null;
+				close();
+			}, ms);
+		}
+		else close();
+			
 	}
 
 	Menu.prototype.scroll = function(top) {
@@ -410,6 +413,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			if (type != "select" && type != "file") this.div.appendChild(this.input);
 			this.menu = null;
 			this.onshowmenu = () => {};
+			this.onhidemenu = () => {};
 
 			this.type = type;
 			this.width = width == null ? "200px" : parseInt(width) + "px";
@@ -739,8 +743,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	Button.prototype.setonshowmenu = function(callback = () => {}) {
 		this.type == "select" && (this.onshowmenu = callback);
 	};
-
-
+	
+	Button.prototype.setonhidemenu = function(callback = () => {}) {
+		this.type == "select" && (this.onhidemenu = callback);
+	};
+	
 	// 給事件绑定函数
 	Button.prototype.setonchange = function(callback = () => {}) {
 		let fun = this.change;
@@ -923,7 +930,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	Button.prototype.showMenu = function(x, y) {
 		log(`${this}.showMenu`)
-		try {this.onshowmenu.call(this, this)} catch (e) { console.error(e.stack) }
 		this.menu.show(x, y);
 	};
 

@@ -1,5 +1,5 @@
 
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.03";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -8,16 +8,17 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.00";
     const d = document;
     const dw = d.documentElement.clientWidth;
     const dh = d.documentElement.clientHeight;
-
+    
     let isMsgShow = false; // =true 屏蔽 bodytouch 事件;
     exports.msgWindow = (() => {
         const TYPE_MSG = 1;
         const TYPE_INPUT = 2;
         
         const gridWidth = 980;
-        const winWidth = gridWidth * (dw > dh ? 2 : 1);
-        const winHeight = winWidth * dh / dw;
-    	const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : winWidth);
+        const tempWidth = gridWidth * (dw > dh ? 2 : 1);
+        const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : tempWidth);
+        const winWidth = dw / scale;
+        const winHeight = dh / scale;
         const defaultWidth = gridWidth * 0.76;
         
         let closeTimer = null;
@@ -90,8 +91,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.00";
             s = windowDiv.style;
             s.width = width + "px";
             s.height = height + "px";
-            s.left = (winWidth - parseInt(s.width)) / 2 + "px";
-            s.top = (winHeight - parseInt(s.height)) / 2 + "px";
+            s.left = (winWidth - width) / 2 + "px";
+            s.top = (winHeight - height) / 2 + "px";
             s.backgroundColor = backgroundColor; //"#d0d0d0"; //"#666666";
             s.border = `0px solid ${butEnter.selectBackgroundColor}`;
             s.margin = "0px";
@@ -103,7 +104,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.00";
             s.left = `10px`;
             s.top = `10px`;
             s.width = `${parseInt(windowDiv.style.width) - 20}px`;
-            s.fontSize = parseInt(s.width) * 0.05 + "px";
+            s.fontSize = ~~(parseInt(s.width) * 0.05) + "px";
             s.height = parseInt(parseInt(s.fontSize) * 1.35 * lineNum) + "px";
             s.margin = "0px";
             s.padding = "0px";

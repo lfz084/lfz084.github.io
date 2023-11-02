@@ -58,7 +58,7 @@
             change: async function() {
                 try {
                 	mainUI.viewport.resize();
-                    const file = this.files[0];
+                	const file = this.files[0];
                     const path = this.value;
                     this.value = "";
                     const ratio = await game.openDatabass(file);
@@ -511,8 +511,8 @@
     addEventListener("load", () => {
         try {
             addEvents();
-            mainUI.viewport.resize();
             mainUI.loadTheme();
+            mainUI.viewport.scrollTop();
             log("你可以打开Rapfi保存的db棋谱")
         } catch (e) { alert(e.stack) }
     })

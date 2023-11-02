@@ -1,7 +1,7 @@
-    var VERSION = "v2111.00";
+    var VERSION = "v2111.03";
     var myInit = {
         cache: "no-store", //不使用缓存
-        //mode: 'cors' //支持跨域访问
+        mode: 'cors' //支持跨域访问
     };
     var response_err = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>404 err</title><style>body{width:800px}.main-view{word-wrap:break-word;position:absolute;top:0;left:0;right:0;bottom:0;margin:auto;width:500px;height:500px;border-radius:50px;background:#ddd;text-align:center}#info{position:absolute;top:10px;width:500px;height:250px;text-align:center}#link{position:absolute;top:260px;width:500px;height:250px;text-align:center}#refresh{font-size:70px;border-radius:50%;border:0}#refresh:hover{color:#858;opacity:.38}h1{font-size:25px;font-weight:blod;line-height:1.5}a{color:#636;font-size:26px;font-weight:blod;text-decoration:underline;line-height:1.8;cursor:pointer}a:link{color:#636;text-decoration:underline}a:visited{color:#525;text-decoration:underline}a:hover{color:#858;text-decoration:underline}a:active{color:blue;text-decoration:underline}</style></head><body><script>const HOMES = [ "https://lfz084.gitee.io/renju/", "https://lfz084.github.io/", "http://localhost:7700/" ]; const HOME = location.href.indexOf(HOMES[0]) + 1 ? HOMES[0] : location.href.indexOf(HOMES[1]) + 1 ? HOMES[1] : HOMES[2]; function clk(filename) { const URL = HOME + filename; window.open(URL, "_self"); } document.body.onload = () => { document.getElementById("refresh").onclick = () => { window.location.reload(); }; document.getElementById("home").onclick = () => { clk("index.html"); }; document.getElementById("renju").onclick = () => { clk("renju.html"); }; document.getElementById("tuya").onclick = () => { clk("tuya.html"); }; document.getElementById("url").innerHTML = window.location.href; if (window.top != window.self) document.getElementById("link").style.display = "none"; }</script><div class="main-view"><div id="info"><h1 id="url"></h1><h1>没有找到你要打开的页面</h1></br><button id="refresh">🔄</button></div><div id="link"><br><a id="home">返回主页</a></br><a id="renju">摆棋小工具</a></br><a id="tuya">五子棋涂鸦</a></br></div></div></body></html>`
     // 加载进度功能。
@@ -88,8 +88,7 @@
 
     function myFetch(url, version, clientID) {
         return new Promise((resolve, reject) => {
-            let req = new Request(url, myInit),
-                nRequest = new Request(req.url.split("?")[0] + "?v=" + new Date().getTime(), myInit);
+            let nRequest = new Request(url.split("?")[0] + "?v=" + new Date().getTime(), myInit);
             fetch(nRequest)
                 .then(response => {
                     load.finish(url);
@@ -274,7 +273,7 @@
             else if (event.data.cmd == "fetchTXT") {
                 let url = event.data.url.split("?")[0];
                 //postMsg(`fetchTXT: ${url}`)
-                fetch(new Request(url, myInit))
+                fetch(new Request(url + "?v=" + new Date().getTime(), myInit))
                     .then(response => {
                         return response.ok ? response.text() : Promise.reject(`response.ok = ${response.ok}`)
                     })

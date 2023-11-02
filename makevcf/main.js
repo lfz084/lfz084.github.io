@@ -294,8 +294,8 @@
 		try {
 			miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
 			//createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv.viewElem);
-			mainUI.viewport.resize();
 			mainUI.loadTheme();
+			mainUI.viewport.scrollTop();
 			addEvents();
 			setInterval(() => {
 				const info = makeVCF.getStateInfo();

@@ -1,5 +1,5 @@
 window.SCRIPT_VERSIONS = [];
-self.SCRIPT_VERSIONS["renju"] = "v2111.00";
+self.SCRIPT_VERSIONS["renju"] = "v2111.03";
 (() => { // 按顺序加载应用
     "use strict";
     window.DEBUG = true;
@@ -92,13 +92,8 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
     window.d = document;
     window.dw = d.documentElement.clientWidth;
     window.dh = d.documentElement.clientHeight;
-    window.cWidth = dw < dh ? dw * 0.95 : dh * 0.95;
-    cWidth = dw < dh ? cWidth : dh < ~~(dw / 2 * 0.985) ? dh : ~~(dw / 2 * 0.985);
-
-    window.viewport1 = null; // 控制缩放
+    
     window.vConsole = null; // 调试工具
-    window.openNoSleep = () => {}; //打开防休眠
-    window.closeNoSleep = () => {}; //关闭防休眠
     window.cBoard = null; //棋盘对象
 
     window.alert = function(name) { //更改默认标题
@@ -108,10 +103,6 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
         document.documentElement.appendChild(IFRAME);
         window.frames[0].window.alert(name);
         IFRAME.parentNode.removeChild(IFRAME);
-    }
-
-    window.absoluteURL = function(url) {
-        return new Request(url).url;
     }
 
     window.addEventListener("error", function(err) {
@@ -144,7 +135,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
     })()
 
     window.reloadApp = async function(codeURL) {
-        let reloadCount = localStorage.getItem("reloadCount") || 0;
+        let reloadCount = localStorage.getItem("reloadCount") * 1 || 0;
         const url = window.location.href.split("?")[0] + `?v=${new Date().getTime()}${codeURL ? "#" + codeURL : ""}`
             //如果反复刷新，就删除缓存文件
             ++reloadCount > 5 && await upData.resetApp();
@@ -159,7 +150,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
         let noSleep;
         let isNoSleep = false; // bodyTouchStart 防止锁屏
         let noSleepTime = 0;
-        if (typeof NoSleep == "function") {
+        if (self["NoSleep"] && typeof NoSleep == "function") {
             noSleep = new NoSleep();
             setInterval(function() {
                 if (isNoSleep) {
@@ -185,8 +176,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
     document.body.onload = async () => {
         window.SOURCE_FILES = await loadJSON("Version/SOURCE_FILES.json");
         window.UPDATA_INFO = await loadJSON("Version/UPDATA_INFO.json");
-		loadTheme();
-        const sources = [
+		const sources = [
             {
                 progress: "0%",
                 type: "cssAll",
@@ -213,15 +203,13 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
                 type: "scriptAll",
                 isAsync: false,
                 sources: [[SOURCE_FILES["Viewport"]],
-                [SOURCE_FILES["vconsole"], async () => {
-                        testBrowser();
-                        await openVConsole();
-                    }],
                 [SOURCE_FILES["utils"]],
                 [SOURCE_FILES["bindevent"]],
-                [SOURCE_FILES["mainUI"],() => {
-                	window.viewport1 = mainUI.viewport;
-                }],
+                [SOURCE_FILES["mainUI"]],
+                [SOURCE_FILES["vconsole"], async () => {
+                        await openVConsole();
+                        testBrowser();
+                 }],
                 [SOURCE_FILES["emoji"]], // first load emoji
                 [SOURCE_FILES["EvaluatorWebassembly"]],
                 [SOURCE_FILES["EvaluatorJScript"]],
@@ -291,7 +279,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
                 type: "fileAll",
                 isAsync: true,
                 sources: [[SOURCE_FILES["404_html"]],
-                [SOURCE_FILES["renju_html"]]]
+                [SOURCE_FILES["index_html"]]]
         }, {
         	progress: "99%",
             type: "scriptAll",
@@ -301,6 +289,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
         
      ];
 
+        loadTheme();
         mlog(`body onload`)
         loadScriptAll([[SOURCE_FILES["upData"]], [SOURCE_FILES["serviceWorker"]]], false)
             .then(() => {
@@ -324,26 +313,35 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.00";
             .then(() => {
                 initNoSleep();
                 removeMlog();
-                window.viewport1.resize();
                 window.DEBUG = true;
                 window.jsPDF = window.jspdf.jsPDF;
             })
             .then(() => {
-                console.info(`autoShowUpDataInformation`)
-                return upData.autoShowUpDataInformation() //更新已经完成，弹窗提示
+                upData.saveAppVersion(upData.currentVersion);
+                const str = upData.logNewVersionInfo();
+                if (str) { //更新已经完成，弹窗提示
+                	str.indexOf(`\n`) == -1 ? warn(str) : msg({
+                		text: str,
+                		butNum: 2,
+                		lineNum: 10,
+                		textAlign: "left",
+                		enterTXT: "关闭",
+                		cancelTXT: "历史记录",
+                		callEnter: () => {},
+                		callCancel: () => { window.open("./help/renjuhelp/versionHistory.html", "helpWindow") }
+                	})
+                }
             })
-            .then(() => {
+            .then(async () => {
                 console.info(`logCaches`)
-                //return logCaches()  // print caches information
+                console.info(await upData.logCaches());
+                console.info(upData.logVersions());
             })
-            .then(() => {
-                //return logCache(window.CURRENT_VERSION)
-            })
-            .then(() => { upData.searchUpData() })
             .then(() => {
                 localStorage.removeItem("reloadCount"); //window.reloadApp Count
                 //_loadScript(SOURCE_FILES["debugModule"]);
             })
+            .then(() => { upData.autoUpData() })
             .then(() => {
                 //window.SOURCE_FILES = undefined;
                 //window.SCRIPT_VERSIONS = undefined;

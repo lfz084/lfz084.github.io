@@ -284,7 +284,7 @@
         const canvas = document.getElementById("canvas");
         document.body.onload = () => {
             try {
-                mainUI.viewport.resize();
+            	mainUI.viewport.scrollTop();
             } catch (e) { alert(e.stack) }
         }
     </script>

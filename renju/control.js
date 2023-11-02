@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.03";
 window.control = (() => {
 	try {
 		"use strict";
@@ -235,7 +235,7 @@ window.control = (() => {
 				text: "输入代码",
 				touchend: function() {
 					if (isBusy()) return;
-					inputCode(`长按下面空白区域，粘贴棋谱代码\n-------------\n\n`);
+					inputCode(`长按下面空白区域，粘贴棋谱代码\n---------------------分割线-----------------------\n\n`);
 				}
 	        },
 			{
@@ -246,7 +246,7 @@ window.control = (() => {
 					if (isBusy()) return;
 					let code = cBoard.getCode();
 					code = code == "\n{}{}" ? "空棋盘没有棋盘代码" : code;
-					inputCode(`${code}\n\n\n-------------\n长按上面代码，复制棋谱代`);
+					inputCode(`${code}\n\n\n---------------------分割线-----------------------\n长按上面代码，复制棋谱代`);
 				}
 	        },
 			{
@@ -258,7 +258,6 @@ window.control = (() => {
 					2, "打开 lib 棋谱"
 				],
 				change: function(but) {
-					but.setText(`打开`);
 					if (isBusy()) return;
 					const FUN = {
 						1: () => {
@@ -274,7 +273,8 @@ window.control = (() => {
 					}
 					FUN[but.input.value]();
 					but.input.value = 0;
-				}
+				},
+				onhidemenu: function() {this.setText(`打开`) }
 	        },
 			{
 				varName: "cCutImage",
@@ -288,7 +288,6 @@ window.control = (() => {
  					6, "PDF / (*.pdf ) _____ 无损"
  				],
 				change: function(but) {
-					but.setText(`保存`);
 					if (isBusy()) return;
 					const FUN = {
 						2: () => { cBoard.saveAsImage("jpeg") },
@@ -299,7 +298,8 @@ window.control = (() => {
 					}
 					FUN[but.input.value]();
 					but.input.value = 0;
-				}
+				},
+				onhidemenu: function() {this.setText(`保存`) }
 	        },
 			{
 				varName: "cAutoadd",
@@ -406,9 +406,9 @@ window.control = (() => {
 				text: `${EMOJI_PEN} 颜色`,
 				options: lbColor.map((v, i) => [i, v.colName]).reduce((a, c) => a.concat(...c), []),
 				change: function(but) {
-					but.setText(`${EMOJI_PEN} 颜色`);
 					[but, cLba, cLbb, cLbc, cLbd, cLABC].map(button => button.setColor(lbColor[but.input.value].color));
-				}
+				},
+				onhidemenu: function() {this.setText(`${EMOJI_PEN} 颜色`) }
 	        },
 			{
 				varName: "cMode",
@@ -467,13 +467,12 @@ window.control = (() => {
 					12, "五连"
 				]),
 				change: function(but) {
-					but.setText("找点");
 					if (isBusy()) return;
 					if (but.input.value < 1 || !CALCULATE) {
 						but.input.value = 0;
 						return;
 					}
-					viewport1.resize();
+					mainUI.viewport.resize();
 					let arr = cBoard.getArray();
 					const FUN = {
 						1: async function() {
@@ -555,7 +554,8 @@ window.control = (() => {
 					}
 					execFunction(async function() { mergeTree((await FUN[but.input.value]())) });
 					but.input.value = 0;
-				}
+				},
+				onhidemenu: function() {this.setText(`找点`) }
 			},
 			{
 				varName: "cFindVCF",
@@ -580,13 +580,12 @@ window.control = (() => {
 					//13, "VCT(测试）"
 				]),
 				change: function(but) {
-					but.setText("解题");
 					if (isBusy()) return;
 					if (but.input.value < 1 || !CALCULATE) {
 						but.input.value = 0;
 						return;
 					}
-					viewport1.resize();
+					mainUI.viewport.resize();
 					let arr = cBoard.getArray(); // cBoard.getArray2D();
 					const FUN = {
 						1: async function() {
@@ -712,7 +711,8 @@ window.control = (() => {
 					}
 					execFunction(async function() { mergeTree(await FUN[but.input.value]()) });
 					but.input.value = 0;
-				}
+				},
+				onhidemenu: function() {this.setText(`解题`) }
 		}];
 		dw > dh && renjuButtonSettings.push(...renjuButtonSettings.splice(0, 4));
 		mainUI.addButtons(mainUI.createButtons(renjuButtonSettings), renjuCmdDiv, 0);
@@ -919,8 +919,8 @@ window.control = (() => {
 
 		//---------------------- createMenu ----------------------
 
-		const gameRulesMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [0, "无禁规则",
+		const gameRulesMenu = createMenu(
+					[0, "无禁规则",
 	                1, "禁手规则"],
 			function(but) {
 				if (isBusy()) return;
@@ -931,8 +931,8 @@ window.control = (() => {
 				const rules = [GOMOKU_RULES, RENJU_RULES];
 				[...but.input].map(op => op.checked = op.value == rules.indexOf(engine.gameRules));
 			});
-		const coordinateMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [0, "棋盘坐标:无坐标",
+		const coordinateMenu = createMenu(
+					[0, "棋盘坐标:无坐标",
 	                1, "棋盘坐标:上下左右",
 	                2, "棋盘坐标:上左",
 	                3, "棋盘坐标:上右",
@@ -945,8 +945,8 @@ window.control = (() => {
 			function(but) {
 				[...but.input].map((op, i) => op.checked = i === cBoard.coordinateType);
 			});
-		const cBoardSizeMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [15, "15路棋盘",
+		const cBoardSizeMenu = createMenu(
+					[15, "15路棋盘",
 	                14, "14路棋盘",
 	                13, "13路棋盘",
 	                12, "12路棋盘",
@@ -966,8 +966,8 @@ window.control = (() => {
 			function(but) {
 				[...but.input].map(op => op.checked = op.value == cBoard.size);
 			});
-		const setCBoardLineStyleMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [0, "正常",
+		const setCBoardLineStyleMenu = createMenu(
+					[0, "正常",
 	                1, "加粗",
 	                2, "特粗"],
 			function(but) {
@@ -977,8 +977,8 @@ window.control = (() => {
 			function(but) {
 				[...but.input].map((op, i) => op.checked = i === getLineStyle());
 			});
-		const loadRenjuSettingsMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [0, "默认",
+		const loadRenjuSettingsMenu = createMenu(
+					[0, "默认",
 	                1, "设置1",
 	                2, "设置2",
 	                3, "设置3",
@@ -990,8 +990,8 @@ window.control = (() => {
 				saveCmdSettings("renjuCmdSettings", renjuCmdSettings);
 				loadCmdSettings("renjuCmdSettings", renjuCmdSettings);
 			});
-		const saveRenjuSettingsMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	                [1, "设置1",
+		const saveRenjuSettingsMenu = createMenu(
+					[1, "设置1",
 	                2, "设置2",
 	                3, "设置3",
 	                4, "设置4",
@@ -1003,8 +1003,8 @@ window.control = (() => {
 			});
 			
 		const _themeNames = ["light","grey","dark"];
-		const themeMenu = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
-	    			[0, "白色",
+		const themeMenu = createMenu(
+					[0, "白色",
 	    			1, "灰色",
 	    			2, "黑色"],
 	    		function() {
@@ -1016,7 +1016,7 @@ window.control = (() => {
 	    			[...this.input].map(op => op.checked = op.value == index);
 	    		});	
 
-		const cShownum = createMenu(menuLeft, undefined, menuWidth, undefined, menuFontSize,
+		const cShownum = createMenu(
 					[0, "显示手数",
 					 1, "显示禁手",
 					 2, "显示路线",
@@ -1031,7 +1031,6 @@ window.control = (() => {
 					 //11, "加载按键设置",
 					 12, "重置数据"],
 			function(but) {
-				but.setText("设置");
 				if (isBusy()) return;
 				const FUN = {
 					0: () => { setShowNum(!getShowNum()) },
@@ -1056,10 +1055,56 @@ window.control = (() => {
 				but.input[2].checked = cBoard.isShowAutoLine;
 				but.input[3].checked = cBoard.scale > 1;
 				//but.input[4].checked = cBoard.isTransBranch;
-			}
-		);
+			},
+			function() {this.setText(`设置`) });
 
-		const cMenu = createContextMenu();
+		const cMenu = createContextMenu(
+				[0, "设置",
+				1, "打开",
+				2, `保存`,
+				3, `${EMOJI_SEARCH} 找点`,
+				4, `${EMOJI_QUESTION} 解题`,
+				5, "新棋局",
+				6, "添加标记",
+				7, "清空标记",
+				8, "分享图片",
+				9, "分享原图",
+				10, `下手为${EMOJI_ROUND_ONE}`,
+				11, "重置手数",
+				12, "显示手数",
+				13, "隐藏手数",
+				14, "输入代码",
+				15, "输出代码",
+				16, `🔄 刷新页面`],
+			function(but) {
+				if (isBusy()) return;
+				let idx = but.idx,
+					x = but.menu.showX,
+					y = but.menu.showY;
+				const FUN = {
+					0: () => { cShownum.showMenu(x, y) },
+					1: () => { cLoadImg.showMenu(x, y) },
+					2: () => { cCutImage.showMenu(x, y) },
+					3: () => { cFindPoint.showMenu(x, y) },
+					4: () => { cFindVCF.showMenu(x, y) },
+					5: () => { cNewGame.touchend() },
+					6: () => {
+						if (cBoard.P[idx].type == TYPE_MARK || cBoard.P[idx].type == TYPE_MOVE || cBoard.P[idx].type == TYPE_EMPTY)
+							inputLabel(idx);
+					},
+					7: () => { cCleLb.touchend() },
+					8: () => { cShareWhite.touchend() },
+					9: () => { cShare.touchend() },
+					10: () => { cNextone.touchend() },
+					11: () => { cResetnum.touchend() },
+					12: () => { setShowNum(true) },
+					13: () => { setShowNum(false) },
+					14: () => { cInputcode.touchend() },
+					15: () => { cOutputcode.touchend() },
+					16: () => { typeof window.reloadApp == "function" ? window.reloadApp() : window.location.reload() },
+				}
+				FUN[but.input.value]();
+			});
 
 		const fileInput = document.createElement("input");
 		fileInput.setAttribute("type", "file");
@@ -1185,7 +1230,7 @@ window.control = (() => {
 			renjuCmdDiv.show();
 			imgCmdDiv.hide();
 			busyCmdDiv.hide();
-			viewport1.resize();
+			mainUI.viewport.resize();
 			RenjuLib.closeLib();
 			}catch(e){console.error(e.stack)}
 		}
@@ -1332,63 +1377,14 @@ window.control = (() => {
 			}
 		}
 
-		function createMenu(left, top, width, height, fontSize, options = [], onchange = () => {}, onshowmenu = () => {}) {
-			const menu = mainUI.createMenu({ options, onchange, onshowmenu });
+		function createMenu(options = [], onchange = () => {}, onshowmenu = () => {}, onhidemenu = () => {}) {
+			const menu = mainUI.createMenu({ options, onchange, onshowmenu, onhidemenu });
 			mainUI.addButtons([menu], alwaysHideCmdDiv);
 			return menu;
 		}
-
-		function createContextMenu(left, top, width, height = cWidth * 0.8, fontSize) {
-			const menu = mainUI.createContextMenu({
-				options: [
-					0, "设置",
-					1, "打开",
-					2, `保存`,
-					3, `${EMOJI_SEARCH} 找点`,
-					4, `${EMOJI_QUESTION} 解题`,
-                	5, "新棋局",
-                	6, "添加标记",
-                	7, "清空标记",
-                	8, "分享图片",
-                	9, "分享原图",
-                	10, `下手为${EMOJI_ROUND_ONE}`,
-                	11, "重置手数",
-                	12, "显示手数",
-                	13, "隐藏手数",
-                	14, "输入代码",
-                	15, "输出代码",
-                	16, `🔄 刷新页面`
-            	],
-				onchange: function(but) {
-					if (isBusy()) return;
-					let idx = but.idx,
-						x = but.menu.showX,
-						y = but.menu.showY;
-					const FUN = {
-						0: () => { cShownum.showMenu(x, y) },
-						1: () => { cLoadImg.showMenu(x, y) },
-						2: () => { cCutImage.showMenu(x, y) },
-						3: () => { cFindPoint.showMenu(x, y) },
-						4: () => { cFindVCF.showMenu(x, y) },
-						5: () => { cNewGame.touchend() },
-						6: () => {
-							if (cBoard.P[idx].type == TYPE_MARK || cBoard.P[idx].type == TYPE_MOVE || cBoard.P[idx].type == TYPE_EMPTY)
-								inputLabel(idx);
-						},
-						7: () => { cCleLb.touchend() },
-						8: () => { cShareWhite.touchend() },
-						9: () => { cShare.touchend() },
-						10: () => { cNextone.touchend() },
-						11: () => { cResetnum.touchend() },
-						12: () => { setShowNum(true) },
-						13: () => { setShowNum(false) },
-						14: () => { cInputcode.touchend() },
-						15: () => { cOutputcode.touchend() },
-						16: () => { typeof window.reloadApp == "function" ? window.reloadApp() : window.location.reload() },
-					}
-					FUN[but.input.value]();
-				}
-			});
+		
+		function createContextMenu(options = [], onchange = () => {}, onshowmenu = () => {}, onhidemenu = () => {}) {
+			const menu = mainUI.createContextMenu({ options, onchange, onshowmenu, onhidemenu });
 			mainUI.addButtons([menu], alwaysHideCmdDiv);
 			return menu;
 		}
@@ -1412,7 +1408,7 @@ window.control = (() => {
 		
 		const renjuCmdSettings = { positions: [], defaultButtons: [], ButtonsIdx: [], idx: 0 };
 		const imgCmdSettings = { positions: [], defaultButtons: [], ButtonsIdx: [], idx: 0 };
-		const onLoadCmdSettings = function() { viewport1.scrollTop() };
+		const onLoadCmdSettings = function() { mainUI.viewport.scrollTop() };
 		
 		let editButtons = function() {};
 
@@ -1526,7 +1522,7 @@ window.control = (() => {
 			cSLTX.setText(cSLTX.input.value + " 列");
 			cSLTY.input.value = cBoard.SLTY;
 			cSLTY.setText(cSLTY.input.value + " 行");
-			viewport1.userScalable();
+			mainUI.viewport.userScalable();
 			warn(`长按棋盘，拖动虚线对齐棋子`);
 			miniBoard.backgroundColor = cBoard.backgroundColor;
 			miniBoard.setSize(cBoard.size);
@@ -1547,17 +1543,17 @@ window.control = (() => {
 
 		async function unLockImg() {
 			await cBoard.unlockArea();
-			viewport1.userScalable();
+			mainUI.viewport.userScalable();
 		}
 
 		async function lockImg() {
 			await cBoard.lockArea();
-			viewport1.resize();
+			mainUI.viewport.resize();
 		}
 	
 		cBoard.sizechange = function() {
 			cBoardSizeMenu.input.selectedIndex = 15 - this.size;
-			viewport1.scrollTop();
+			mainUI.viewport.scrollTop();
 			cBoardSize = this.size;
 			if (this.tree && this.tree.constructor.name == "Tree") {
 				let libSize = this.tree.centerPos.x * 2 - 1;
@@ -1566,7 +1562,7 @@ window.control = (() => {
 		};
 		cBoard.boardchange = function() {
 			coordinateMenu.input.selectedIndex = this.coordinateType;
-			viewport1.scrollTop();
+			mainUI.viewport.scrollTop();
 		};
 		cBoard.stonechange = function() {
 			if (playMode != MODE_RENJU &&
@@ -1683,6 +1679,8 @@ window.control = (() => {
 		}
 		
 		
+		mainUI.viewport.scrollTop();
+		
 		let p = { x: 0, y: 0 };
 		xyObjToPage(p, renjuCmdDiv.viewElem);
 
@@ -1740,7 +1738,6 @@ window.control = (() => {
 
 			function canvasKeepTouch(x, y) {
 				try {
-					iphoneCancelClick.enable();
 					if (playMode != MODE_LOADIMG) {
 						renjuKeepTouch(x, y);
 					}
@@ -1757,7 +1754,6 @@ window.control = (() => {
 
 			function canvasClick(x, y) {
 				try {
-					if (iphoneCancelClick.isCancel()) return;
 					//log(`event.button=${event.button}, typeof(x)=${typeof(x)}, x=${x}, y=${y}`);
 					//log(`get=${playMode },ren=${MODE_RENJU}`)
 					if (playMode != MODE_LOADIMG) {
@@ -1862,7 +1858,7 @@ window.control = (() => {
 		}
 		
 		async function userDefinedLabels(){
-			 const inputStr = await inputText(`可在下面编辑连续输入的标记。每个标记用英文 [,] 逗号隔开\n--------------------------分割线-----------------------\n\n${userdefinedLabels}`, 10, "保存标记");
+			 const inputStr = await inputText(`可在下面编辑连续输入的标记。每个标记用英文 [,] 逗号隔开\n---------------------分割线-----------------------\n\n${userdefinedLabels}`, 10, "保存标记");
 			 inputStr && newDefinedLabels(inputStr);
 			 return userdefinedLabels;
 		}
@@ -2196,7 +2192,6 @@ window.control = (() => {
 					cMenu.showMenu(undefined, y - window.scrollY - cMenu.menu.fontSize * 2.5 * 3);
 				}
 				else {
-					iphoneCancelClick.enable();
 					scaleCBoard(cBoard.scale == 1, true);
 				}
 			}

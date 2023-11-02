@@ -52,7 +52,7 @@ window.exWindow = (() => {
         s.top = "0px";
         s.width = exWinWidth - fontSize + "px";
         s.height = exWinHeight - fontSize + "px";
-        s.fontSize = fontSize + "px";
+        s.fontSize = ~~fontSize + "px";
         s.borderStyle = "solid";
         s.borderWidth = `${fontSize / 7}px`;
         s.fontWeight = "normal";

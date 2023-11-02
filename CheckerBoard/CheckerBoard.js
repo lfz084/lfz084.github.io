@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.00";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.03";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -104,7 +104,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.00";
             while (fonts.length) {
                 const font = fonts.shift();
                 const fontCSS = `${font.descriptors.weight} 50px ${font.family}`;
-                const text = "1aA五○";
+                const text = "五子棋renju123㉕㉖";
                 log_str += `css: ${fontCSS}\n`;
                 const fontFaces = await document.fonts.load(fontCSS, text);
                 const logFontFaces = fontFaces.map(fontFace => `${fontFace.weight} 50px ${fontFace.family} ${fontFace.status}`).join("\n") || "没有找到字体";
