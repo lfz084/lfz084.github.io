@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.05";
 window.control = (() => {
 	try {
 		"use strict";
@@ -1309,20 +1309,19 @@ window.control = (() => {
 				}
 			}
 			else if (msgStr.indexOf("debug") > -1) {
-
-				if (vConsole == null) {
-					vConsole = new VConsole();
-					appData.setKey("debug", true);
-				}
+				vConsole = window.top.openVconsole(true)
 				return;
 			}
 			else if (msgStr.indexOf("close") > -1) {
-
-				if (vConsole) {
-					vConsole.destroy();
-					appData.setKey("debug", false);
-				}
-				vConsole = null;
+				vConsole = window.top.closeVconsole()
+				return;
+			}
+			else if (msgStr.indexOf("showSwitch") > -1) {
+				vConsole.showSwitch()
+				return;
+			}
+			else if (msgStr.indexOf("hideSwitch") > -1) {
+				vConsole.hideSwitch()
 				return;
 			}
 			else if (msgStr.indexOf("offline") > -1 || msgStr.indexOf("icon") > -1) {

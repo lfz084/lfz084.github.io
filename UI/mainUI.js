@@ -90,7 +90,7 @@ window.mainUI = (function() {
 	downDiv.style.top = `${downDivTop}px`;
 	downDiv.setAttribute("id", "downDiv");
 	debug && (downDiv.style.backgroundColor = "blue");
-
+	
 	const settings = [];
 	createSettings();
 

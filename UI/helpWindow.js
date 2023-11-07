@@ -4,10 +4,12 @@
     const dw = document.documentElement.clientWidth;
     const dh = document.documentElement.clientHeight;
     const gridWidth = 980;
-    const winWidth = gridWidth * (dw > dh ? 2 : 1);
-    const winHeight = winWidth * dh / dw;
-    const padding = dw > dh ? winWidth / 5 : winHeight / 5;
-    const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : winWidth);
+    const tempWidth = gridWidth * (dw > dh ? 2 : 1);
+    const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : tempWidth);
+    const winWidth = dw / scale;
+    const winHeight = dh / scale;
+    const padding = dw > dh ? winWidth / 2 : winHeight / 2;
+    
     const FULL_DIV = document.createElement("div");
     document.body.appendChild(FULL_DIV);
     FULL_DIV.style.zIndex = -99999;
@@ -67,18 +69,18 @@
         let s = FULL_DIV.style;
         s.position = "fixed";
         s.backgroundColor = "#666";
-        s.left = -padding + "px";
-        s.top = -padding + "px";
+        s.left = 0 + "px";
+        s.top = 0 + "px";
         s.width = winWidth + padding * 2 + "px";
         s.height = winHeight + padding * 2 + "px";
-        s.transformOrigin = `${padding}px ${padding}px`;
+        s.transformOrigin = `${0}px ${0}px`;
         s.transform = `scale(${scale})`;
 
-        s = WIN_DIV.style;
+    	s = WIN_DIV.style;
         s.backgroundColor = "#666";
-        s.position = "absolute";
-        s.left = padding + (winWidth - 820) / 2 + "px";
-        s.top = padding + 5 + "px";
+        s.position = "relative";
+        s.left = (winWidth * document.documentElement.clientWidth / dw - 820) / 2 + "px";
+        s.top = (winHeight * document.documentElement.clientHeight / dh - winHeight) / 2 + "px";
         s.width = 820 + "px";
         s.height = winHeight + "px";
 

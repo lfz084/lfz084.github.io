@@ -1,5 +1,5 @@
 
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.05";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -37,17 +37,12 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.03";
         windowDiv.style.position = "relative";
 		
         // 文本框
-        let msgTextarea = document.createElement("textarea");
+        let msgTextarea = document.createElement("textarea"); //
         windowDiv.appendChild(msgTextarea);
-        msgTextarea.style.position = "relative";
+        msgTextarea.style.position = "absolute";
         msgTextarea.style.fontFamily = "mHeiTi, Roboto, emjFont, Symbola";
         msgTextarea.style.fontWeight = "bold";
         
-        /*
-        msgTextarea.oninput = function(event){
-          //alert(event.keyCode);
-        };
-        */
         //确认按钮
         let butEnter = new Button(windowDiv, "button", 50, 50, 50, 50);
         butEnter.show();
@@ -56,93 +51,94 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.03";
         let butCancel = new Button(windowDiv, "button", 50, 50, 50, 50);
         butCancel.show();
 
-
-
         function msg(text, type = `msgbox`, left, top, width, height, enterTXT, cancelTXT, callEnter, callCancel, butNum, lineNum, textAlign) {
-
-            isMsgShow = true; // 屏蔽 bodytouch 事件;
+			isMsgShow = true; // 屏蔽 bodytouch 事件;
             if (closeTimer) {
                 clearTimeout(closeTimer);
                 closeTimer = null;
             }
 
+            const numChars = 21;
             butNum = butNum == null ? type == "input" ? 2 : 1 : butNum;
-
-            let s = MsgBoxobj.style;
-            s.position = "fixed";
-            s.zIndex = 9999;
-            s.width = winWidth + "px";
-            s.height = winHeight * 2+ "px";
-            s.top = "0px";
-            s.left = "0px";
+			if (lineNum == "auto") {
+				lineNum = !height ? 1 : ~~(height * 0.8 / winWidth / 0.05 / 1.25);
+			}
+			else if (!lineNum) {
+				lineNum = Math.min(
+					(text || "").split(`\n`)
+					.map(lineStr => ~~(lineStr.length / numChars) + 1)
+					.reduce((c, v) => c + v, 0),
+				12)
+			}
+			width = width || defaultWidth;
+            height = height || width / numChars * (lineNum + (butNum === 0 ? 0.8 : 3)) * 1.3;
+            
+            Object.assign(MsgBoxobj.style, {
+            	position: "fixed",
+            	zIndex: 9999,
+            	width: winWidth + "px",
+            	height: winHeight * 2+ "px",
+            	top: "0px",
+            	left: "0px"
+            })
             MsgBoxobj.ontouchend = MsgBoxobj.onclick = butNum == 0 ? () => { closeMsg(1) } : null;
 
-            if (lineNum == "auto") {
-                lineNum = (!height && 1 ) || parseInt(height * 0.8 / parseInt(s.width) / 0.05 / 1.25);
-            }
-            else if (!lineNum) {
-                lineNum = parseInt(String(text).length / 20) + 1;
-                lineNum = lineNum > 10 ? 10 : lineNum;
-            }
-
-            width = width || defaultWidth;
-            height = height || width / 20 * (lineNum + (butNum === 0 ? 0.8 : 3)) * 1.3;
-            
-            s = windowDiv.style;
-            s.width = width + "px";
-            s.height = height + "px";
-            s.left = (winWidth - width) / 2 + "px";
-            s.top = (winHeight - height) / 2 + "px";
-            s.backgroundColor = backgroundColor; //"#d0d0d0"; //"#666666";
-            s.border = `0px solid ${butEnter.selectBackgroundColor}`;
-            s.margin = "0px";
-            s.padding = "0px";
+            Object.assign(windowDiv.style, {
+        		width: width + "px",
+            	height: height + "px",
+            	left: (winWidth / dw * document.documentElement.clientWidth - width) / 2 + "px",
+            	top: (winHeight / dh * document.documentElement.clientHeight - height) / 2 + "px",
+            	backgroundColor: backgroundColor,
+            	border: `0px solid ${butEnter.selectBackgroundColor}`
+            })
             windowDiv.ontouchend = windowDiv.onclick = butNum == 0 ? () => { closeMsg(1) } : null;
-
 			
-            s = msgTextarea.style;
-            s.left = `10px`;
-            s.top = `10px`;
-            s.width = `${parseInt(windowDiv.style.width) - 20}px`;
-            s.fontSize = ~~(parseInt(s.width) * 0.05) + "px";
-            s.height = parseInt(parseInt(s.fontSize) * 1.35 * lineNum) + "px";
-            s.margin = "0px";
-            s.padding = "0px";
+            const fontSize = ~~(width / numChars);
+            const borderWidth = ~~(fontSize / 20);
+            const paddingWidth = 10;
             if (type == "msgbox") {
-                msgTextarea.readOnly = true;
-                s.textAlign = textAlign || "center";
-                s.border = `0px`;
-                s.color = color; //"black"; //"#f0f0f0";
-                s.backgroundColor = backgroundColor; //"#d0d0d0"; //"#666666";
+            	msgTextarea.readOnly = true;
+            	Object.assign(msgTextarea.style, {
+            		textAlign: textAlign || "center",
+            		border: `0px`,
+            		color: color,
+            		backgroundColor: backgroundColor
+            	})
             }
             else {
-                msgTextarea.readOnly = false;
-                s.textAlign = "left";
-                s.border = `${parseInt(s.fontSize)/20}px solid black`;
-                s.left = parseInt(s.left) - parseInt(s.fontSize) / 20 + "px";
-                s.color = color; //"black";
-                s.backgroundColor = textareaBackgroundColor; //"white";
+            	msgTextarea.readOnly = false;
+            	Object.assign(msgTextarea.style, {
+            		textAlign: "left",
+            		border: `${borderWidth}px solid black`,
+            		color: color,
+            		backgroundColor: textareaBackgroundColor
+            	})
             }
+            Object.assign(msgTextarea.style, {
+            	left: `${paddingWidth}px`,
+            	top: `${paddingWidth}px`,
+            	width: `${parseInt(windowDiv.style.width) - (paddingWidth + borderWidth) * 2}px`,
+            	fontSize: fontSize + "px",
+            	height: ~~(fontSize * 1.35 * lineNum) + "px"
+            })
             msgTextarea.value = text || "";
 
-            let w = parseInt(s.fontSize) * 5;
-            let h = w / 3.1;
-            let t = parseInt(s.height) + parseInt(s.top) + (parseInt(windowDiv.style.height) - parseInt(s.height) - h) / 2;
+            const s = msgTextarea.style;
+            const w = fontSize * 5;
+            const h = w / 3.1;
+            const t = parseInt(s.height) + parseInt(s.top) + (parseInt(windowDiv.style.height) - parseInt(s.height) - h) / 2;
 
             if (butNum != 0) {
                 butEnter.setText(enterTXT ? enterTXT : "确定");
-                butEnter.show(butNum == 1 ? w * 1.5 : w * 0.66, t, w, h);
-                butEnter.div.style.border = `1px solid black`;
+                butEnter.show(butNum == 2 ? (width - 2 * w) / 3 : (width - w) / 2, t, w, h);
                 butEnter.setontouchend(function() {
                     closeMsg(1);
                     if (callEnter) callEnter(String(msgTextarea.value));
                 });
             }
-            
 
             if (butNum == 2 || butNum == null) {
-                butCancel.show(w * 2.32, t, w, h);
-                butCancel.div.style.border = `1px solid black`;
+                butCancel.show((width - 2 * w) / 3 * 2 + w, t, w, h);
                 butCancel.setText(cancelTXT ? cancelTXT : "取消");
                 butCancel.setontouchend(function() {
                     closeMsg(1);
@@ -158,7 +154,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.03";
                 butCancel.hide();
                 butEnter.hide();
             }
-
+            
             windowDiv.setAttribute("class", butNum ? "show" : "showlabel");
             setTimeout(() => { document.body.appendChild(MsgBoxobj) }, 1);
 

@@ -1,6 +1,6 @@
 window.SCRIPT_VERSIONS = [];
-self.SCRIPT_VERSIONS["renju"] = "v2111.03";
-(() => { // 按顺序加载应用
+self.SCRIPT_VERSIONS["renju"] = "v2111.05";
+window.loadApp = (() => { // 按顺序加载应用
     "use strict";
     window.DEBUG = true;
     const TEST_LOADAPP = true;
@@ -35,25 +35,11 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.03";
         console.trace("trace")
     }
 
-    function openVConsole() {
-        return new Promise((resolve, reject) => {
-            try {
-                const IS_DEBUG = localStorage.getItem("debug");
-                if (IS_DEBUG == "true") {
-                    if (vConsole == null) vConsole = new VConsole();
-                    resolve(vConsole)
-                }
-                else {
-                    resolve()
-                }
-            }
-            catch (err) { resolve() }
-        })
-    }
+    
 
-    function testBrowser() {
+    function logTestBrowser() {
         let Msg = "";
-        Msg += `_____________________\n\n `;
+        Msg += `__________ logTestBrowser ___________\n\n `;
         Msg += `Worker: ${"Worker" in window}\n`;
         Msg += `caches: ${"caches" in window}\n`;
         Msg += `serviceWorker: ${"serviceWorker" in navigator}\n`;
@@ -63,7 +49,7 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.03";
         Msg += `_____________________\n\n `;
         Msg += `\nuserAgent: ${window.navigator.userAgent}\n`
         Msg += `_____________________\n\n `;
-        log("testBrowser:\n" + Msg);
+        return Msg;
     }
    
     
@@ -92,6 +78,9 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.03";
     window.d = document;
     window.dw = d.documentElement.clientWidth;
     window.dh = d.documentElement.clientHeight;
+    const isTopWindow = window === window.top;
+	const fullscreenEnabled = document.fullscreenEnabled && isTopWindow && !localStorage.getItem("fullscreenCancel");
+		
     
     window.vConsole = null; // 调试工具
     window.cBoard = null; //棋盘对象
@@ -103,6 +92,28 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.03";
         document.documentElement.appendChild(IFRAME);
         window.frames[0].window.alert(name);
         IFRAME.parentNode.removeChild(IFRAME);
+    }
+    
+    window.fullscreenCancel = function(){}
+    //window.fullscreenEnabled = function(){}
+    
+    
+    window.openVconsole = function (open) {
+    	const IS_DEBUG = open ? "true" : localStorage.getItem("debug");
+    	if (isTopWindow && IS_DEBUG == "true") {
+    		localStorage.setItem("debug", true);
+    		if (vConsole == null) vConsole = new VConsole();
+    		console.log(new Array(128).fill("---- reset vConsole touch ----").join("\n"))
+    		return vConsole;
+    	}
+    }
+    
+    window.closeVconsole = function () {
+    	if (vConsole) {
+			vConsole.destroy();
+			localStorage.setItem("debug", false);
+		}
+		vConsole = null;
     }
 
     window.addEventListener("error", function(err) {
@@ -121,12 +132,14 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.03";
 
     window.mlog = (function() {
         let timer;
-        return function(message) {
-            if (timer) clearTimeout(timer);
+        return function(message, type = "log") {
+        	if (timer) clearTimeout(timer);
             if (!BUT.parentNode) return;
             BUT.innerHTML = message;
             BUT.removeAttribute("class");
-            console.log(message);
+            
+            console[type || "log"](message);
+            
             timer = setTimeout(() => {
                 BUT.innerHTML = `<a href="renju.html" target="_self">点击刷新</a>`;
                 BUT.setAttribute("class", "refresh")
@@ -135,12 +148,10 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.03";
     })()
 
     window.reloadApp = async function(codeURL) {
-        let reloadCount = localStorage.getItem("reloadCount") * 1 || 0;
+    	let reloadCount = localStorage.getItem("reloadCount") * 1 || 0;
+        localStorage.setItem("reloadCount", ++reloadCount);
         const url = window.location.href.split("?")[0] + `?v=${new Date().getTime()}${codeURL ? "#" + codeURL : ""}`
-            //如果反复刷新，就删除缓存文件
-            ++reloadCount > 5 && await upData.resetApp();
-        localStorage.setItem("reloadCount", reloadCount);
-        window.onbeforeunload = null;
+        reloadCount > 16 && (localStorage.removeItem("reloadCount"),  window.upData && (await upData.resetApp()));
         window.location.href = url;
     }
 
@@ -173,184 +184,134 @@ self.SCRIPT_VERSIONS["renju"] = "v2111.03";
         };
     }
 
-    document.body.onload = async () => {
-        window.SOURCE_FILES = await loadJSON("Version/SOURCE_FILES.json");
+	document.body.onload = async function load() {
+    try {
+    	window.console = window.top.console;
+    	if (isTopWindow) {
+    		await loadScript("debug/vconsole.min.js");
+    	}
+    	openVconsole();
+    	console.info(`isTopWindow: ${isTopWindow}`)
+    	console.info(`fullscreenEnabled: ${fullscreenEnabled}`)
+    	console.info(logTestBrowser());
+    	
+        window.SOURCE_FILES = window.SOURCE_FILES || await loadJSON("Version/SOURCE_FILES.json");
         window.UPDATA_INFO = await loadJSON("Version/UPDATA_INFO.json");
-		const sources = [
-            {
-                progress: "0%",
-                type: "cssAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["loaders"]],
-                [SOURCE_FILES["main"]]]
-        }, {
-                progress: "5%",
-                type: "fontAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["enMedium_ttf"]],
-                [SOURCE_FILES["enBold_ttf"]],
-                [SOURCE_FILES["enHeavy_ttf"]],
-                [SOURCE_FILES["cnMedium_ttf"]],
-                [SOURCE_FILES["cnHeavy_ttf"]],
-                [SOURCE_FILES["cnBold_ttf"]],
-                [SOURCE_FILES["emjMedium_ttf"]],
-                [SOURCE_FILES["emjBold_ttf"]],
-                [SOURCE_FILES["emjHeavy_ttf"]],
-                [SOURCE_FILES["Symbola_ttf"]],
-                [SOURCE_FILES["Evaluator_wasm"]]]
-        }, {
-                progress: "20%",
-                type: "scriptAll",
-                isAsync: false,
-                sources: [[SOURCE_FILES["Viewport"]],
-                [SOURCE_FILES["utils"]],
+		
+		const sources = window.appSources;
+		const uiSources = fullscreenEnabled && 
+			[{
+				progress: "0%",
+				type: "cssAll",
+				isAsync: true,
+				sources: [[SOURCE_FILES["loaders"]],
+				[SOURCE_FILES["fullscreen"]]]
+			},{
+			 	progress: "1%",
+			 	type: "fontAll",
+			 	isAsync: true,
+			 	sources: [[SOURCE_FILES["enMedium_ttf"]],
+				[SOURCE_FILES["enBold_ttf"]],
+				[SOURCE_FILES["enHeavy_ttf"]]]
+			},{
+			 	progress: "2%",
+				type: "scriptAll",
+				isAsync: false,
+				sources:[[SOURCE_FILES["fullscreenUI"]]]
+			}] || 
+			[{
+				progress: "3%",
+				type: "cssAll",
+				isAsync: true,
+				sources: [[SOURCE_FILES["loaders"]],
+				[SOURCE_FILES["main"]]]
+			}, {
+				progress: "5%",
+				type: "fontAll",
+				isAsync: true,
+				sources: [[SOURCE_FILES["enMedium_ttf"]],
+				[SOURCE_FILES["enBold_ttf"]],
+				[SOURCE_FILES["enHeavy_ttf"]],
+				[SOURCE_FILES["cnMedium_ttf"]],
+				[SOURCE_FILES["cnBold_ttf"]],
+				[SOURCE_FILES["cnHeavy_ttf"]],
+				[SOURCE_FILES["emjMedium_ttf"]],
+				[SOURCE_FILES["emjBold_ttf"]],
+				[SOURCE_FILES["emjHeavy_ttf"]],
+				[SOURCE_FILES["Symbola_ttf"]]]
+			},{
+				progress: "25%",
+				type: "scriptAll",
+				isAsync: false,
+				sources:[[SOURCE_FILES["emoji"]],
+				[SOURCE_FILES["utils"]],
                 [SOURCE_FILES["bindevent"]],
-                [SOURCE_FILES["mainUI"]],
-                [SOURCE_FILES["vconsole"], async () => {
-                        await openVConsole();
-                        testBrowser();
-                 }],
-                [SOURCE_FILES["emoji"]], // first load emoji
-                [SOURCE_FILES["EvaluatorWebassembly"]],
-                [SOURCE_FILES["EvaluatorJScript"]],
-                [SOURCE_FILES["TypeBuffer"]],
-                [SOURCE_FILES["CheckerBoard"]],
-                [SOURCE_FILES["image2board"]],
-                [SOURCE_FILES["markLine"]],
-                [SOURCE_FILES["pdf"]],
-                [SOURCE_FILES["saveFile"]],
-                [SOURCE_FILES["svg"]],
-                [SOURCE_FILES["tree"]],
-                [SOURCE_FILES["share"]],
-                [SOURCE_FILES["exWindow"]],
-                [SOURCE_FILES["editButtons"]],
-                [SOURCE_FILES["helpWindow"]]]
-        }, {
-                progress: "30%",
-                type: "scriptAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["Button"]],
-                [SOURCE_FILES["Evaluator"]],
-                [SOURCE_FILES["RenjuTree"]]]
-        }, {
-                progress: "35%",
-                type: "scriptAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["msgbox"]],
-                [SOURCE_FILES["appData"]],
-                [SOURCE_FILES["engine"]],
-                [SOURCE_FILES["NoSleep"]],
-                [SOURCE_FILES["jspdf"]]]
-        }, {
-                progress: "50%",
-                type: "scriptAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["PFSCMedium_js"]],
-                [SOURCE_FILES["PFSCHeavy_js"]]]
-        }, {
-                progress: "63%",
-                type: "scriptAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["TextCoder"]],
-                [SOURCE_FILES["MoveList"]],
-                [SOURCE_FILES["Stack"]],
-                [SOURCE_FILES["RenjuLib"]],
-                [SOURCE_FILES["IndexedDB"]],
-                [SOURCE_FILES["gif"]],
-                [SOURCE_FILES["gifFile"]],
-                [SOURCE_FILES["CheckerBoardGIF"]]]
-        }, {
-                progress: "78%",
-                type: "fileAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["JFile"]],
-                [SOURCE_FILES["JPoint"]],
-                [SOURCE_FILES["MoveNode"]],
-                [SOURCE_FILES["LibraryFile"]],
-                [SOURCE_FILES["worker"]],
-                [SOURCE_FILES["work_ReadLib"]],
-                [SOURCE_FILES["IntervalPost"]],
-                [SOURCE_FILES["RenLibDoc"]],
-                [SOURCE_FILES["RenLibDoc_wasm"]],
-                [SOURCE_FILES["RenLib_wasm"]],
-                [SOURCE_FILES["gifWorker"]]]
-        }, {
-                progress: "91%",
-                type: "fileAll",
-                isAsync: true,
-                sources: [[SOURCE_FILES["404_html"]],
-                [SOURCE_FILES["index_html"]]]
-        }, {
-        	progress: "99%",
-            type: "scriptAll",
-            isAsync: false,
-            sources: [[SOURCE_FILES["control"]]]
+                [SOURCE_FILES["mainUI"]]]
+			}];
+		
+		loadTheme();
+        
+        mlog(`body onload`)
+        await loadScriptAll([
+        	[SOURCE_FILES["loadAnimation"]],
+        	[SOURCE_FILES["upData"]],
+        	[SOURCE_FILES["serviceWorker"]],
+        	[SOURCE_FILES["Viewport"]]
+    	], false)
+    	
+        await upData.checkAppVersion();
+        mlog("removeOldAppCache ......");
+        await upData.removeOldAppCache();
+        
+        mlog("registerServiceWorker ......");
+        await serviceWorker.registerServiceWorker();
+        mlog("postVersion ......");
+        await upData.postVersion();
+        
+        mlog("upData CacheFiles ......");
+        const urls = Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key])
+        isTopWindow && await upData.saveCacheFiles(urls, upData.currentVersion)
+        
+        mlog(`loading UI fullscreenEnabled: ${fullscreenEnabled}......`);
+        await loadSources(uiSources);
+        
+        if ("fullscreenUI" in self) {
+        	mlog(`fullscreenUI.src = ${window.location.href}`, "warn")
+        	fullscreenUI.src = window.location.href;
+        	return;
         }
         
-     ];
-
-        loadTheme();
-        mlog(`body onload`)
-        loadScriptAll([[SOURCE_FILES["upData"]], [SOURCE_FILES["serviceWorker"]]], false)
-            .then(() => {
-                return upData.checkAppVersion()
-            })
-            .then(() => {
-                mlog("removeOldAppCache ......");
-                return upData.removeOldAppCache()
-            })
-            .then(() => {
-                mlog("registerServiceWorker ......");
-                return serviceWorker.registerServiceWorker()
-            })
-            .then(() => {
-                mlog("postVersion ......");
-                return upData.postVersion()
-            })
-            .then(() => {
-                return loadSources(sources)
-            })
-            .then(() => {
-                initNoSleep();
-                removeMlog();
-                window.DEBUG = true;
-                window.jsPDF = window.jspdf.jsPDF;
-            })
-            .then(() => {
-                upData.saveAppVersion(upData.currentVersion);
-                const str = upData.logNewVersionInfo();
-                if (str) { //更新已经完成，弹窗提示
-                	str.indexOf(`\n`) == -1 ? warn(str) : msg({
-                		text: str,
-                		butNum: 2,
-                		lineNum: 10,
-                		textAlign: "left",
-                		enterTXT: "关闭",
-                		cancelTXT: "历史记录",
-                		callEnter: () => {},
-                		callCancel: () => { window.open("./help/renjuhelp/versionHistory.html", "helpWindow") }
-                	})
-                }
-            })
-            .then(async () => {
-                console.info(`logCaches`)
-                console.info(await upData.logCaches());
-                console.info(upData.logVersions());
-            })
-            .then(() => {
-                localStorage.removeItem("reloadCount"); //window.reloadApp Count
-                //_loadScript(SOURCE_FILES["debugModule"]);
-            })
-            .then(() => { upData.autoUpData() })
-            .then(() => {
-                //window.SOURCE_FILES = undefined;
-                //window.SCRIPT_VERSIONS = undefined;
-                //window.UPDATA_INFO = undefined;
-            })
-            .catch((err) => {
-                const MSG = "❌" + "加载过程出现了错误，准备刷新" + "\n" + (err.stack || err)
-                alert(MSG)
-                window.reloadApp()
-            })
+        await loadSources(sources);
+        localStorage.removeItem("reloadCount");
+        loadAnimation.lock(false);
+        loadAnimation.close();
+        
+        removeMlog();
+        initNoSleep();
+        window.DEBUG = true;
+        window.jsPDF = window.jspdf.jsPDF;
+         
+        upData.saveAppVersion(upData.currentVersion);
+        const str = upData.logNewVersionInfo();
+    	if (str) { //更新已经完成，弹窗提示
+    		str.indexOf(`\n`) == -1 ? warn(str) : msg({
+                	text: str,
+                	butNum: 1,
+                	lineNum: 10,
+                	textAlign: "left",
+                	enterTXT: "关闭",
+                	callEnter: () => {},
+                	callCancel: () => { window.open("./help/renjuhelp/versionHistory.html", "helpWindow") }
+        	})
+        }
+        console.info(`logCaches`)
+        console.info(await upData.logCaches());
+        console.info(upData.logVersions());
+        
+    }catch {err => {
+    	const MSG = "❌" + "加载过程出现了错误，准备刷新" + "\n" + (err && err.stack)
+    	alert(MSG)
+    	window.reloadApp()
+    }}
     }
 })()

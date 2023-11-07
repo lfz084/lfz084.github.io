@@ -1,4 +1,4 @@
-    var VERSION = "v2111.03";
+    var VERSION = "v2111.05";
     var myInit = {
         cache: "no-store", //不使用缓存
         mode: 'cors' //支持跨域访问
@@ -63,11 +63,13 @@
     }
     
     function formatURL(url, version) {
-    	postMsg(`>> ${url}`) //如果url是域名系统会自动加上"/"
+    	const _msg = `sw.js: formatURL("${url}")` //如果url是域名系统会自动加上"/"
     	url = (url.split("?")[0]).split("#")[0];
     	const URL_VERSION = getUrlVersion(version);
         const indexHtml = url.split("/").pop().indexOf(".") == -1 ? (url.slice(-1) == "/" ? "" : "/") + "index.html" : "";
-    	return url + indexHtml + URL_VERSION;
+    	url = url + indexHtml + URL_VERSION
+    	postMsg(`${_msg} "${url}"`)
+    	return url;
     }
 
     function initCaches() {

@@ -20,6 +20,14 @@
             nextPromise();
         })
     }
+    
+    function formatURL(url) {
+    	return url.split("?")[0].split("#")[0] + "?v=" + new Date().getTime();
+    }
+    
+    function getFileName(url) {
+    	return url.split("/").pop().split("?")[0].split("#")[0];
+    }
 
     function createScript(code) { // 用code 创建脚步
         return new Promise((resolve, reject) => {
@@ -33,9 +41,10 @@
     }
 
     function loadCss(url) { //加载css
-        url = url.split("?")[0];
-        const filename = url.split("/").pop().split("?")[0];
-        return new Promise((resolve, reject) => {
+        url = formatURL(url);
+        const filename = getFileName(url);
+        console.log(`loadFile: loadCss("${url}")`)
+    	return new Promise((resolve, reject) => {
             const head = document.getElementsByTagName('head')[0];
             const link = document.createElement('link');
             link.type = 'text/css';
@@ -48,9 +57,10 @@
     }
     
     function loadFile(url, responseType = "text") { //加载文件
-        const filename = url.split("/").pop().split("?")[0];
-        url = url.split("?")[0] + "?v=" + new Date().getTime();
-        return new Promise((resolve, reject) => {
+        url = formatURL(url);
+        const filename = getFileName(url);
+        console.log(`loadFile: loadFile("${url}", "${responseType}")`)
+    	return new Promise((resolve, reject) => {
             const oReq = new XMLHttpRequest();
             oReq.responseType = responseType;
             oReq.addEventListener("load", () => setTimeout(resolve, 0, oReq.response));
@@ -73,9 +83,10 @@
     }
 
     function loadScript(url) { //加载脚本
-        url = url.split("?")[0];
-        const filename = url.split("/").pop().split("?")[0];
-        return new Promise((resolve, reject) => {
+        url = formatURL(url);
+        const filename = getFileName(url);
+        console.log(`loadFile: loadScript("${url}")`)
+    	return new Promise((resolve, reject) => {
             const oHead = document.getElementsByTagName('HEAD').item(0);
                 const oScript = document.createElement("script");
                 oHead.appendChild(oScript);
@@ -85,12 +96,12 @@
                 oScript.onload = () => {
                     setTimeout(() => {
                         const ver = filename.split(/[\-\_\.]/)[0];
-                        upData.checkScriptVersion(ver);
+                        self["upData"] && upData.checkScriptVersion(ver);
                         resolve();
                     }, 0);
                 }
                 oScript.onerror = (event) => {
-                    reject(`加载Script出错: ${filename}`)
+                	reject(`加载Script出错: ${filename}`)
                 }
                 oScript.src = url;
         })
@@ -147,6 +158,7 @@
     }
 
     function loadAll(loadFun, config, ayc = false) {
+        console.info(`\n---------- loadFile: loadAll --------\nfunction: ${loadFun.name}All\nasync: ${ayc}\n\t${config.map(u => `url = "${u}"`).join("\n\t")}\n------------------\n`)
         const thenables = createThenables(loadFun, config);
         if (ayc) {
             let ps = [];
@@ -184,17 +196,13 @@
                 fontAll: loadFontAll,
                 scriptAll: loadScriptAll
             }
-            "loadAnimation" in window == false && await loadScript("UI/loadAnimation.js");
-            loadAnimation.open();
-            loadAnimation.lock(true);
+            window.loadAnimation && (loadAnimation.open(), loadAnimation.lock(true));
             let source;
             while (source = sources.shift()) {
-                loadAnimation.text(source.progress);
-                console.info(source.progress);
+                window.loadAnimation && (loadAnimation.text(source.progress), console.log(`progress: ${source.progress}`));
                 await fun[source.type](source.sources, source.isAsync);
             }
-            loadAnimation.lock(false);
-            loadAnimation.close();
+            window.loadAnimation && (loadAnimation.lock(false), loadAnimation.close());
         } catch (e) {
             return Promise.reject(e.stack)
         }

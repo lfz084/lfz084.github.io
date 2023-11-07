@@ -20,8 +20,7 @@ window.exWindow = (() => {
         
 
     const butClose = document.createElement("img");
-    butClose.src = "./pic/close.svg";
-    //butClose.setAttribute("class", "button");
+    butClose.src = "./pic/xmark-circle-svgrepo-com.svg";
     butClose.oncontextmenu = (event) => {
         event.preventDefault();
     }
@@ -67,6 +66,7 @@ window.exWindow = (() => {
         s.height = sz + "px";
         s.opacity = "0.5";
         s.backgroundColor = "#c0c0c0";
+        s.borderRadius = sz / 2 + "px"
     }
     
     function loadTheme(theme = {}) {

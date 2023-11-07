@@ -1,0 +1,9 @@
+1106: 
+	1.iphone Contextmemu bug
+	2.iphone serverWorker caches err
+	3.???engine removeFinallyPromise, Promise.race
+	
+	
+	
+	upData 
+	serviceWorker.onmessage change to addEventListener

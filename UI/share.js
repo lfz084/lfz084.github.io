@@ -41,14 +41,14 @@ window.share = (() => {
     //取消按钮
     const ICO_DOWNLOAD = document.createElement("img");
     imgWindow.appendChild(ICO_DOWNLOAD);
-    ICO_DOWNLOAD.src = "./pic/docusign.svg";
+    ICO_DOWNLOAD.src = "./pic/arrow-to-line-down-svgrepo-com.svg";
     ICO_DOWNLOAD.oncontextmenu = (event) => {
         event.preventDefault();
     };
 
     const ICO_CLOSE = document.createElement("img");
     imgWindow.appendChild(ICO_CLOSE);
-    ICO_CLOSE.src = "./pic/close.svg";
+    ICO_CLOSE.src = "./pic/xmark-circle-svgrepo-com.svg";
     ICO_CLOSE.oncontextmenu = (event) => {
         event.preventDefault();
     };
@@ -94,8 +94,8 @@ window.share = (() => {
             s.position = "relative";
             s.width = imgWidth + "px";
             s.height = imgWidth + "px";
-            s.top = ~~((winHeight - imgWidth) / 2) + "px";
-            s.left = ~~((winWidth - imgWidth) / 2) + "px";
+            s.top = ~~((winHeight / dh * document.documentElement.clientHeight - imgWidth) / 2) + "px";
+            s.left = ~~((winWidth / dw * document.documentElement.clientWidth - imgWidth) / 2) + "px";
             s.backgroundColor = backgroundColor; //"#d0d0d0"; //"#666666";
             s.border = `0px solid `;
 			
@@ -161,6 +161,7 @@ window.share = (() => {
             s.left = imgWidth / 2 - parseInt(s.width) * 1.5 + "px";
             s.backgroundColor = "#e0e0e0"; //#787878";
             s.opacity = "0.8";
+            s.borderRadius = parseInt(s.width) / 2 + "px";
             setButtonClick(ICO_DOWNLOAD, () => {
                 try{
                 _cBoard.saveAsImage("png");
@@ -175,6 +176,7 @@ window.share = (() => {
             s.left = imgWidth / 2 + parseInt(s.width) * 0.5 + "px";
             s.backgroundColor = "#e0e0e0"; //"#787878";
             s.opacity = "0.8";
+            s.borderRadius = parseInt(s.width) / 2 + "px";
             setButtonClick(ICO_CLOSE, () => {
                 shareClose();
                 if (_cBoard.theme != oldTheme) {

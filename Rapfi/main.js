@@ -295,18 +295,9 @@
     }
 
     async function inputText(initStr = "") {
-        let w = cBoard.width * 0.8;
-        let h = w;
-        let l = (dw - w) / 2;
-        let t = (dh - dw) / 4;
-        t = t < 0 ? 1 : t;
         return (await msg({
             text: initStr,
             type: "input",
-            left: l,
-            top: t,
-            width: w,
-            height: h,
             butNum: 1,
             lineNum: 10
         })).inputStr
@@ -508,12 +499,10 @@
         */
     }
 
-    addEventListener("load", () => {
-        try {
-            addEvents();
-            mainUI.loadTheme();
-            mainUI.viewport.scrollTop();
-            log("你可以打开Rapfi保存的db棋谱")
-        } catch (e) { alert(e.stack) }
-    })
+    //------------------------ load ------------------------ 
+    
+	addEvents();
+    mainUI.loadTheme();
+    mainUI.viewport.scrollTop();
+    log("你可以打开Rapfi保存的db棋谱")
 })()

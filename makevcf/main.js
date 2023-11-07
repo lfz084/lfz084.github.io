@@ -11,18 +11,9 @@
 	function log1(str) { $("log1") && ($("log1").innerText = str) }
 
 	async function inputText(initStr = "") {
-		let w = cBoard.width * 0.8;
-		let h = w;
-		let l = (dw - w) / 2;
-		let t = (dh - dw) / 4;
-		t = t < 0 ? 1 : t;
 		return (await msg({
 			text: initStr,
 			type: "input",
-			left: l,
-			top: t,
-			width: w,
-			height: h,
 			butNum: 1,
 			lineNum: 10
 		})).inputStr
@@ -290,25 +281,6 @@
 		})
 	}
 
-	addEventListener("load", () => {
-		try {
-			miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
-			//createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv.viewElem);
-			mainUI.loadTheme();
-			mainUI.viewport.scrollTop();
-			addEvents();
-			setInterval(() => {
-				const info = makeVCF.getStateInfo();
-				log(`${STATE_STRING[info.state]}  进度${(info.progress*100).toFixed(2)}%   局面:${info.gameCount}`)
-				log1(`${info.filterIdx+1} / ${info.filterArr.length} VCF`);
-				if (oldState != info.state) {
-					miniBoard.cle();
-					oldState = info.state;
-				}
-			}, 1000)
-		} catch (e) { alert(e.stack) }
-	})
-
 	async function testGames(games) {
 		let result = await makeVCF.testGames(games, (arr, i) => {
 			miniBoard.unpackArray(arr);
@@ -329,7 +301,7 @@
 			const count = v.winMoves.length;
 			return `第${idx + 1}题，找到${count}个VCF,最短${v.winMoves[0] && v.winMoves[0].length || "[ ]"}手`;
 		}).join("\n");
-		inputText(`错误:\n${error || "没有发现错误"}\n提示:\n${warn || "没有发现问题"}\n测试结果:\n${log || "没有记录"}`);
+		inputText(`错误: ${result.error.length} 个\n${error || "没有发现错误"}\n提示: ${result.warn.length} 个\n${warn || "没有发现问题"}\n测试通过: ${result.log.length} 个\n${log || "没有记录"}`);
 		return result;
 	}
 
@@ -349,4 +321,21 @@
 		}
 		return true;
 	}
+	
+	//------------------- load -------------------------
+	
+	miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
+	//createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv.viewElem);
+	mainUI.loadTheme();
+	mainUI.viewport.scrollTop();
+	addEvents();
+	setInterval(() => {
+		const info = makeVCF.getStateInfo();
+		log(`${STATE_STRING[info.state]}  进度${(info.progress*100).toFixed(2)}%   局面:${info.gameCount}`)
+		log1(`${info.filterIdx+1} / ${info.filterArr.length} VCF`);
+		if (oldState != info.state) {
+			miniBoard.cle();
+			oldState = info.state;
+		}
+	}, 1000)
 })()

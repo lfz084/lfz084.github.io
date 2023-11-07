@@ -1,7 +1,7 @@
 (() => {
     "use strict";
     const TEST_HELP = true;
-
+    
     function log(param, type = "log") {
         const  print = console[type] || console.log;
         TEST_HELP && window.top.DEBUG && print(`[help.js]\n>>  ${ param}`);

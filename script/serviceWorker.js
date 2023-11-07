@@ -15,14 +15,16 @@ window.serviceWorker = (() => {
                         serviceWorker_state == "waiting" ||
                         serviceWorker_state == "redundant")
                         resolve(serviceWorker)
+                	console.warn(`serviceWorker._statechange: ${state}`)
                 }
 
                 function registerError() {
                     resolve()
                 }
-
-                navigator.serviceWorker.addEventListener('statechange', e => console.log(' >>> ' + e.target.state));
-                navigator.serviceWorker.addEventListener("message", event => TEST_SERVER_WORKER && console.info(`[serviceWorker onmessage: ${event.data}]`));
+                
+				if(window === window.top) {
+                	navigator.serviceWorker.addEventListener("message", event => TEST_SERVER_WORKER && console.info(`serviceWorker.message: ${JSON.stringify(event.data)}`));
+                }
                 // 开始注册service workers
                 navigator.serviceWorker.register('./sw.js', { scope: './' })
                     .then(registration => {
@@ -44,8 +46,9 @@ window.serviceWorker = (() => {
             }
             else resolve()
         })
-        //首次使用， ServiceWorker 没有正常工作就刷新
+        //首次使用 ServiceWorker 没有正常工作就刷新
         if (sWorker && !navigator.serviceWorker.controller) {
+            console.warn(`ServiceWorker 没有正常工作,刷新网页...`)
             window.reloadApp();
         }
     }

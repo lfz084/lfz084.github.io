@@ -465,16 +465,14 @@
         butLock.setChecked(false);
         log(`第${pageIndex}页 / ${numPages}页`);
     }
-
-    addEventListener("load", () => {
-        try {
-            addEvents(cBoard);
-            miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
-            mainUI.loadTheme();
-            mainUI.viewport.scrollTop();
-            renjuEditor.onloadPage = onloadPage;
-            log("打开(pdf,zip,jpg,png)");
-            log1(`第${0}题 / ${0}题`);
-        } catch (e) { alert(e.stack) }
-    })
+	
+	//------------------ load -----------------------------
+	
+    addEvents(cBoard);
+    miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
+    mainUI.loadTheme();
+    mainUI.viewport.scrollTop();
+    renjuEditor.onloadPage = onloadPage;
+    log("打开(pdf,zip,jpg,png)");
+    log1(`第${0}题 / ${0}题`);
 })()

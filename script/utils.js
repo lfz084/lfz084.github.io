@@ -163,24 +163,36 @@ function setButtonClick(elem, callback = () => {}) {
 
 //----------------------  退出前确认 ------------------------------------
 
-function setBlockUnload(enable) {
-    if (enable) {
-        window.onbeforeunload = function(e) {
-            e = e || window.event;
-            // 兼容IE8和Firefox 4之前的版本
-            if (e) {
-                e.returnValue = '离开提示';
-            }
-            // Chrome, Safari, Firefox 4+, Opera 12+ , IE 9+
-            return '离开提示';
-        }
-        console.log("blockUnload: enable");
-    }
-    else {
-        window.onbeforeunload = null;
-        console.log("blockUnload: disable");
-    }
-}
+(() => {
+	const funBlockUnload= function(e) {
+		e = e || window.event;
+		// 兼容IE8和Firefox 4之前的版本
+		if (e) {
+			e.returnValue = '离开提示';
+		}
+		// Chrome, Safari, Firefox 4+, Opera 12+ , IE 9+
+		return '离开提示';
+	}
+	
+	let block = false;
+
+	window.setBlockUnload = function setBlockUnload(enable) {
+    	if (enable) {
+        	window.addEventListener("beforeunload", funBlockUnload, true)
+        	block = true;
+        	console.warn("blockUnload: enable");
+    	}
+    	else {
+        	window.removeEventListener("beforeunload", funBlockUnload, true)
+        	block = false;
+        	console.warn("blockUnload: disable");
+    	}
+	}
+
+	self.getBlockUnload = function getBlockUnload() {
+		return block && !confirm(`离开页面可能会丢失数据，是否离开`)
+	}
+})()
 
 //----------------------  bufferToBase64String ----------------
 

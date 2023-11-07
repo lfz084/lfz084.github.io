@@ -1,0 +1,20 @@
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    font-family: sans;
+    font-weight: bold;
+    scroll-behavior: smooth;
+    -webkit-user-select: none;
+    /*background-color: #303030*/
+    /* Chrome/Safari/Opera */
+}
+
+#mlog {
+    text-align: center;
+    width: 100%;
+    opacity: 0.3;
+}
