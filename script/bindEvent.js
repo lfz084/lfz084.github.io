@@ -245,25 +245,25 @@ window.bindEvent = (function() {
 	let bodyDivScale = 1; // 如果用 css scale bodyDid 时，事件返回的是屏幕坐标， 需要 scale 计算实际坐标
 
 	function addEvents() {
-		bodyDiv.addEventListener("contextmenu", bodyContextMenu, true);
-		bodyDiv.addEventListener("touchstart", bodyTouchStart, true);
-		bodyDiv.addEventListener("touchend", bodyTouchEnd, true);
-		bodyDiv.addEventListener("touchcancel", bodyTouchCancel, true);
-		bodyDiv.addEventListener("touchleave", bodyTouchCancel, true);
-		bodyDiv.addEventListener("touchmove", bodyTouchMove, true);
-		bodyDiv.addEventListener("click", bodyClick, true);
-		bodyDiv.addEventListener("dblclick", bodyDblClick, true);
+		bodyDiv.addEventListener("contextmenu", bodyContextMenu, false);
+		bodyDiv.addEventListener("touchstart", bodyTouchStart, false);
+		bodyDiv.addEventListener("touchend", bodyTouchEnd, false);
+		bodyDiv.addEventListener("touchcancel", bodyTouchCancel, false);
+		bodyDiv.addEventListener("touchleave", bodyTouchCancel, false);
+		bodyDiv.addEventListener("touchmove", bodyTouchMove, false);
+		bodyDiv.addEventListener("click", bodyClick, false);
+		bodyDiv.addEventListener("dblclick", bodyDblClick, false);
 	}
 
 	function removeEvents() {
-		bodyDiv.removeEventListener("contextmenu", bodyContextMenu, true);
-		bodyDiv.removeEventListener("touchstart", bodyTouchStart, true);
-		bodyDiv.removeEventListener("touchend", bodyTouchEnd, true);
-		bodyDiv.removeEventListener("touchcancel", bodyTouchCancel, true);
-		bodyDiv.removeEventListener("touchleave", bodyTouchCancel, true);
-		bodyDiv.removeEventListener("touchmove", bodyTouchMove, true);
-		bodyDiv.removeEventListener("click", bodyClick, true);
-		bodyDiv.removeEventListener("dblclick", bodyDblClick, true);
+		bodyDiv.removeEventListener("contextmenu", bodyContextMenu, false);
+		bodyDiv.removeEventListener("touchstart", bodyTouchStart, false);
+		bodyDiv.removeEventListener("touchend", bodyTouchEnd, false);
+		bodyDiv.removeEventListener("touchcancel", bodyTouchCancel, false);
+		bodyDiv.removeEventListener("touchleave", bodyTouchCancel, false);
+		bodyDiv.removeEventListener("touchmove", bodyTouchMove, false);
+		bodyDiv.removeEventListener("click", bodyClick, false);
+		bodyDiv.removeEventListener("dblclick", bodyDblClick, false);
 	}
 
 	function toPageCoordinate(point, htmlElement) {

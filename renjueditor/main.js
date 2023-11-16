@@ -215,7 +215,7 @@
     function createCmdDiv() {
         const cDiv = mainUI.createCmdDiv();
         buttons.push(...mainUI.createButtons(buttonSettings));
-        mainUI.addButtons(buttons, cDiv, 0);
+        mainUI.addButtons(buttons, cDiv, 1);
         return cDiv;
     }
 
@@ -412,7 +412,7 @@
             }
             else if (status == UNLOCK) {
                 const p = { x: x, y: y };
-                cbd.setxy(p, 2);
+                cbd.setxy(p, event && event.type == "click" ? 2 : 1);
                 cbd.setCutDiv(p.x, p.y, true);
                 cbd.resetP();
                 cbd.printBorder();
@@ -471,7 +471,7 @@
     addEvents(cBoard);
     miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
     mainUI.loadTheme();
-    mainUI.viewport.scrollTop();
+    mainUI.viewport.resize();
     renjuEditor.onloadPage = onloadPage;
     log("打开(pdf,zip,jpg,png)");
     log1(`第${0}题 / ${0}题`);

@@ -1,4 +1,4 @@
-    var VERSION = "v2111.05";
+    var VERSION = "v2111.06";
     var myInit = {
         cache: "no-store", //不使用缓存
         mode: 'cors' //支持跨域访问
@@ -34,7 +34,7 @@
         return {
             loading: (url, client) => {
                 let filename = url.split("/").pop().split("?")[0];
-                if (/\.css$|\.ttf$|\.woff$|\.html$|\.ico$|\.png$|\.gif$|\.jpg$|\.svg$/i.test(filename)) {
+                if (/\.css$|\.ttf$|\.woff$|\.html$|\.png$|\.gif$|\.jpg$/i.test(filename)) {
                     if (!timer) {
                         timer = setInterval(interval, 300);
                     }

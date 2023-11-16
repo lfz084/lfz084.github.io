@@ -177,7 +177,7 @@
             }.bind(this)
 
             function exitAnima() {
-                isExitAnima = true;
+            	isExitAnima = true;
             }
 
             const oldBorder = this.cutDiv.style.border;
@@ -238,7 +238,6 @@
             constructor(...args) {
                 super(...args);
                 this.cutDiv = document.createElement("div");
-                this.cutDiv.addEventListener("touchend", () => event.preventDefault());
                 this.oldScrollLeft = 0;
                 this.oldScrollTop = 0;
                 this.oldScale = 1;
@@ -266,20 +265,23 @@
                         animationZoomArea.call(this, startTouchs[0].pageX, startTouchs[0].pageY, startTouchs[1].pageX, startTouchs[1].pageY);
                     }
                     else startTouchs.length = 0
-                })
+                }, true)
                 this.cutDiv.addEventListener("mousedown", () => {
                     event.preventDefault();
                     animationMoveArea.call(this, event.pageX, event.pageY);
-                })
+                }, true)
+                this.cutDiv.addEventListener("click", () => {
+                	event.cancelBubble = true;
+                }, true);
                 this.cutDiv.addEventListener("touchend", () => {
                     startTouchs.length = 0;
-                })
+                }, true)
                 this.cutDiv.addEventListener("touchleave", () => {
                     startTouchs.length = 0;
-                })
+                }, true)
                 this.cutDiv.addEventListener("touchcancel", () => {
                     startTouchs.length = 0;
-                })
+                }, true)
             }
         }
 
@@ -563,6 +565,13 @@
             let ctx = canvas.getContext("2d");
             ctx.drawImage(img, 0, 0, w, h, padding, padding, w1, h1);
             ctx = null;
+            this.mode = MODE_IMG;
+            
+            const bakCanvas = this.bakCanvas;
+            ctx = bakCanvas.getContext("2d");
+            bakCanvas.width = canvas.width;
+            bakCanvas.height = canvas.height;
+            ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
         }
 
         Board.prototype.selectArea = function(x, y) {
@@ -639,6 +648,12 @@
                     this.YT = t + h / 13;
                     this.YB = t + h / 13 * 12;
                 }
+                
+                ctx = bakCanvas.getContext("2d");
+                bakCanvas.width = canvas.width;
+                bakCanvas.height = canvas.height;
+                ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+
                 
                 /*const imgData = ctx.getImageData(0, 0, this.width, this.height);
                 const threshold = gray(imgData);

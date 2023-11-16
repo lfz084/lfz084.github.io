@@ -192,7 +192,7 @@
 		try{
 		const cDiv = mainUI.createCmdDiv();
 		const buttons = mainUI.createButtons(buttonSettings);
-		mainUI.addButtons(buttons, cDiv, 0);
+		mainUI.addButtons(buttons, cDiv, 1);
 		return cDiv;
 		}catch(e){alert(e.stack)}
 	}
@@ -327,7 +327,7 @@
 	miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
 	//createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv.viewElem);
 	mainUI.loadTheme();
-	mainUI.viewport.scrollTop();
+	mainUI.viewport.resize();
 	addEvents();
 	setInterval(() => {
 		const info = makeVCF.getStateInfo();

@@ -68,7 +68,7 @@ window.share = (() => {
     
     function setOpacity(opacity) { // mainUI.bodyDiv 设置无效，改为设置 mainUI.upDiv + mainUI.downDiv
     	const elems = self["mainUI"] ? [mainUI.upDiv, mainUI.downDiv] : [];
-    	elems.map(div => div.style.opacity = opacity);
+    	elems.map(div => div.setAttribute("class", opacity == 1 ? "exitBackgroundImg" : "backgroundImg"));
     }
 
     const share = (_cBoard) => {
@@ -159,7 +159,7 @@ window.share = (() => {
             s.height = s.width;
             s.top = imgWidth - parseInt(s.width) * 1.5 + "px";
             s.left = imgWidth / 2 - parseInt(s.width) * 1.5 + "px";
-            s.backgroundColor = "#e0e0e0"; //#787878";
+            //s.backgroundColor = "#e0e0e0"; //#787878";
             s.opacity = "0.8";
             s.borderRadius = parseInt(s.width) / 2 + "px";
             setButtonClick(ICO_DOWNLOAD, () => {
@@ -174,7 +174,7 @@ window.share = (() => {
             s.height = ICO_DOWNLOAD.style.height;
             s.top = ICO_DOWNLOAD.style.top;
             s.left = imgWidth / 2 + parseInt(s.width) * 0.5 + "px";
-            s.backgroundColor = "#e0e0e0"; //"#787878";
+            //s.backgroundColor = "#e0e0e0"; //"#787878";
             s.opacity = "0.8";
             s.borderRadius = parseInt(s.width) / 2 + "px";
             setButtonClick(ICO_CLOSE, () => {
@@ -199,6 +199,8 @@ window.share = (() => {
     	backgroundColor = imgWindowTheme.backgroundColor || backgroundColor;
 		shareLabel.style.color = color;
     	imgWindow.style.backgroundColor = shareLabel.style.backgroundColor = backgroundColor;
+    	ICO_DOWNLOAD.src = themes.iconDownload;
+    	ICO_CLOSE.src = themes.iconClose;
     }
     
     return share;

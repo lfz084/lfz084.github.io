@@ -1,5 +1,5 @@
 window.SCRIPT_VERSIONS = [];
-self.SCRIPT_VERSIONS["renju"] = "v2111.05";
+self.SCRIPT_VERSIONS["renju"] = "v2111.06";
 window.loadApp = (() => { // 按顺序加载应用
     "use strict";
     window.DEBUG = true;
@@ -62,6 +62,10 @@ window.loadApp = (() => { // 按顺序加载应用
     		"grey": {
     			"color": "#333333",
     			"backgroundColor": "white"
+    		},
+    		"green": {
+    			"color": "#333333",
+    			"backgroundColor": "#118800"
     		},
     		"dark": {
     			"color": "#d0d0d0",
@@ -217,7 +221,9 @@ window.loadApp = (() => { // 按顺序加载应用
 			 	progress: "2%",
 				type: "scriptAll",
 				isAsync: false,
-				sources:[[SOURCE_FILES["fullscreenUI"]]]
+				sources:[[SOURCE_FILES["Button"]],
+				[SOURCE_FILES["ImgButton"]],
+				[SOURCE_FILES["fullscreenUI"]]]
 			}] || 
 			[{
 				progress: "3%",
@@ -246,6 +252,8 @@ window.loadApp = (() => { // 按顺序加载应用
 				sources:[[SOURCE_FILES["emoji"]],
 				[SOURCE_FILES["utils"]],
                 [SOURCE_FILES["bindevent"]],
+                [SOURCE_FILES["Button"]],
+                [SOURCE_FILES["ImgButton"]],
                 [SOURCE_FILES["mainUI"]]]
 			}];
 		
@@ -272,7 +280,7 @@ window.loadApp = (() => { // 按顺序加载应用
         const urls = Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key])
         isTopWindow && await upData.saveCacheFiles(urls, upData.currentVersion)
         
-        mlog(`loading UI fullscreenEnabled: ${fullscreenEnabled}......`);
+        mlog(`loading ${fullscreenEnabled ? "fullscreenUI" : "mainUI"}......`);
         await loadSources(uiSources);
         
         if ("fullscreenUI" in self) {
@@ -289,7 +297,7 @@ window.loadApp = (() => { // 按顺序加载应用
         removeMlog();
         initNoSleep();
         window.DEBUG = true;
-        window.jsPDF = window.jspdf.jsPDF;
+        window.jsPDF = window.jspdf && window.jspdf.jsPDF;
          
         upData.saveAppVersion(upData.currentVersion);
         const str = upData.logNewVersionInfo();

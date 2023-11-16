@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.06";
 window.control = (() => {
 	try {
 		"use strict";
@@ -78,7 +78,7 @@ window.control = (() => {
 					RenjuLib.cancal();
 				}
 		}];
-		mainUI.addButtons(mainUI.createButtons(busyButtonSettings), busyCmdDiv, 0);
+		mainUI.addButtons(mainUI.createButtons(busyButtonSettings), busyCmdDiv, 1);
 
 		//---------------------- renjuCmdDiv buttons ----------------------
 		
@@ -274,7 +274,7 @@ window.control = (() => {
 					FUN[but.input.value]();
 					but.input.value = 0;
 				},
-				onhidemenu: function() {this.setText(`打开`) }
+				reset: function() {this.setText(`打开`, `打开`) }
 	        },
 			{
 				varName: "cCutImage",
@@ -299,7 +299,7 @@ window.control = (() => {
 					FUN[but.input.value]();
 					but.input.value = 0;
 				},
-				onhidemenu: function() {this.setText(`保存`) }
+				reset: function() {this.setText(`保存`, `保存`) }
 	        },
 			{
 				varName: "cAutoadd",
@@ -408,7 +408,7 @@ window.control = (() => {
 				change: function(but) {
 					[but, cLba, cLbb, cLbc, cLbd, cLABC].map(button => button.setColor(lbColor[but.input.value].color));
 				},
-				onhidemenu: function() {this.setText(`${EMOJI_PEN} 颜色`) }
+				reset: function() {this.setText(`${EMOJI_PEN} 颜色`, `${EMOJI_PEN} 颜色`) }
 	        },
 			{
 				varName: "cMode",
@@ -429,7 +429,8 @@ window.control = (() => {
 						4: MODE_EDITLIB
 					};
 					setPlayMode(modes[but.input.value]);
-				}
+				},
+				onhidemenu: function() {this.setText({0: "摆棋", 10: "无序", 8: "只读", 9: "编辑", 7: "RenLib"}[playMode]) }
 			},
 			{
 				varName: "cSelBlack",
@@ -555,7 +556,7 @@ window.control = (() => {
 					execFunction(async function() { mergeTree((await FUN[but.input.value]())) });
 					but.input.value = 0;
 				},
-				onhidemenu: function() {this.setText(`找点`) }
+				reset: function() {this.setText(`找点`, `找点`) }
 			},
 			{
 				varName: "cFindVCF",
@@ -712,10 +713,10 @@ window.control = (() => {
 					execFunction(async function() { mergeTree(await FUN[but.input.value]()) });
 					but.input.value = 0;
 				},
-				onhidemenu: function() {this.setText(`解题`) }
+				reset: function() {this.setText(`解题`, `解题`) }
 		}];
 		dw > dh && renjuButtonSettings.push(...renjuButtonSettings.splice(0, 4));
-		mainUI.addButtons(mainUI.createButtons(renjuButtonSettings), renjuCmdDiv, 0);
+		mainUI.addButtons(mainUI.createButtons(renjuButtonSettings), renjuCmdDiv, 1);
 
 		//---------------------- imgCmdDiv buttons ----------------------
 
@@ -915,7 +916,7 @@ window.control = (() => {
 		imgButtonSettings.splice(24, 0, null, null);
 		imgButtonSettings.splice(28, 0, null, null);
 
-		mainUI.addButtons(mainUI.createButtons(imgButtonSettings), imgCmdDiv, 0);
+		mainUI.addButtons(mainUI.createButtons(imgButtonSettings), imgCmdDiv, 1);
 
 		//---------------------- createMenu ----------------------
 
@@ -1678,7 +1679,7 @@ window.control = (() => {
 		}
 		
 		
-		mainUI.viewport.scrollTop();
+		mainUI.viewport.resize();
 		
 		let p = { x: 0, y: 0 };
 		xyObjToPage(p, renjuCmdDiv.viewElem);
@@ -1734,7 +1735,9 @@ window.control = (() => {
 			bindEvent.addEventListener(cBoard.viewBox, "dblclick", canvasDblClick);
 			bindEvent.addEventListener(cBoard.viewBox, "dbltouchstart", continueSetCutDivStart);
 			bindEvent.addEventListener(cBoard.viewBox, "contextmenu", canvasKeepTouch);
-
+			bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
+				cBoard.zoomStart(x1, y1, x2, y2);
+			})
 			function canvasKeepTouch(x, y) {
 				try {
 					if (playMode != MODE_LOADIMG) {
@@ -1761,7 +1764,7 @@ window.control = (() => {
 					else if (!cLockImg.checked) {
 						if (cBoard.isOut(x, y, cBoard.viewBox)) return;
 						let p = { x: x, y: y };
-						cBoard.setxy(p, 2);
+						cBoard.setxy(p, event && event.type == "click" ? 2 : 1);
 						cBoard.setCutDiv(p.x, p.y, true);
 						cBoard.resetP();
 						cBoard.printBorder();

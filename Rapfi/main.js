@@ -198,7 +198,7 @@
     function createCmdDiv() {
         const cDiv = mainUI.createCmdDiv();
         buttons.push(...mainUI.createButtons(buttonSettings));
-        mainUI.addButtons(buttons, cDiv, 0);
+        mainUI.addButtons(buttons, cDiv, 1);
         return cDiv;
     }
 
@@ -489,7 +489,10 @@
         bindEvent.addEventListener(game.cBoard.viewBox, "contextmenu", (x, y) => {
             game.scaleBoard();
         })
-        /*
+        bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
+        	cBoard.zoomStart(x1, y1, x2, y2);
+        })
+		/*
         bindEvent.addEventListener(game.cBoard.viewBox, "dbltouchstart", (x, y) => {
             
         })
@@ -503,6 +506,6 @@
     
 	addEvents();
     mainUI.loadTheme();
-    mainUI.viewport.scrollTop();
+    mainUI.viewport.resize();
     log("你可以打开Rapfi保存的db棋谱")
 })()

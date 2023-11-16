@@ -87,7 +87,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			}.bind(this);
 			anima.appendChild(menu);
 			menu.setAttribute("class", "menu");
-			menu.setAttribute("id", "menu");
 
 			const borderWidth = parseInt(fontSize) / 3;
 			height = height || document.clientHeight * 0.8;
@@ -422,7 +421,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.top = top == null ? "0px" : parseInt(top) + "px";
 			this.color = "#333333"; //字体默认颜色
 			this.selectColor = "black"; //按钮按下时字体颜色
-			this.notChangeColor = false; // 不自动调整按钮字体颜色
+			this.lockColor = null; // 优先显示lockColor
 			this.backgroundColor = "white"; //"#f0f0f0"; //按钮颜色999999
 			this.selectBackgroundColor = "#e0e0e0"; // "#d0d0d0"; / / 666666
 			//if (this.type=="button") {
@@ -435,9 +434,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.fontSize = parseInt(this.height) / 2.2 + "px";
 			this.textAlign = "center";
 			this.checked = false;
-			this.borderRadius = (parseInt(this.width) > parseInt(this.height) ? parseInt(this.height) : parseInt(this.width)) / 2 + "px";
+			this.borderRadius = (parseInt(this.width) > parseInt(this.height) ? parseInt(this.height) : parseInt(this.width)) / 2 * 30 / 28 + "px";
 			this.text = ""; //未选中显示的文本
-			this.text2 = ""; //选中时显示的文本
+			this.text2 = ""; //优先显示text2
 
 			this.isEventMove = false; // 记录 touchstart 到 touchend 中间 是否触发 touchmove;
 			this.touchStart = [];
@@ -459,6 +458,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.click = click.bind(this);
 			this.change = change.bind(this);
 			this.touchmove = touchmove.bind(this);
+			
+			this.button.style.cursor = this.input.style.cursor = "default";
 
 			const key = (this.type == "select" || this.type == "file") ? "div" : "input";
 			this[key].addEventListener("touchstart", this.touchstart, true);
@@ -483,7 +484,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			group.buttons.push(this);
 			}catch(e){alert(e.stack)}
 		}
-
 	}
 
 
@@ -559,7 +559,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			let cancel = false; // 判断是否取消单击
 
 			if (this.isEventMove) cancel = true; // 不触发单击事件
-
+			
 			// radio, checkbox 修改 checked
 			if ((!cancel) && ((this.mode || this.type) == "radio" || (this.mode || this.type) == "checkbox")) {
 				this.checked = this.type == "radio" || !this.checked;
@@ -568,7 +568,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			if (this.checked) {
 				// 选中的时，按钮外观
 				s = this.type == "radio" ? "☞" : this.type == "checkbox" ? "✔" : "";
-				s += this.text2 == "" ? this.text : this.text2;
+				s += this.text2 || this.text;
 
 				if (this.type == "select") {
 					s = s + "&nbsp;" + "&nbsp" + "&nbsp;";
@@ -576,7 +576,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 				this.button.innerHTML = s;
 				this.button.style.fontSize = this.fontSize;
-				this.button.style.color = this.notChangeColor ? this.color : this.selectColor;
+				this.button.style.color = this.lockColor || this.selectColor;
 				this.button.style.backgroundColor = this.selectBackgroundColor;
 			}
 			else {
@@ -588,7 +588,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 					timeout = 0;
 				}
 				s = this.type == "radio" ? "" : this.type == "checkbox" ? "" : "";
-				s += this.text;
+				s += this.text2 || this.text;
 
 				if (this.type == "select") {
 					s = s + "&nbsp;" + "&nbsp" + "&nbsp;";
@@ -599,13 +599,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 				if (timeout) {
 					setTimeout(function() {
 						but.button.style.fontSize = but.fontSize;
-						but.button.style.color = but.color;
+						but.button.style.color = but.lockColor || but.color;
 						but.button.style.backgroundColor = but.backgroundColor;
 					}, timeout);
 				}
 				else {
 					but.button.style.fontSize = but.fontSize;
-					but.button.style.color = but.color;
+					but.button.style.color = but.lockColor || but.color;
 					but.button.style.backgroundColor = but.backgroundColor;
 				}
 			}
@@ -628,7 +628,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 					}
 				})
 			}
-
+			
 			return cancel ? false : true;
 		} catch (e) { console.error(e.stack) }
 	};
@@ -669,7 +669,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	Button.prototype.loadTheme = function(theme = {}) {
 		Object.assign(this, theme);
 		const innerHTML = this.button.innerHTML;
-		this.show();
+		this.div.parentNode && this.show();
 		this.button.innerHTML = innerHTML;
 	}
 
@@ -706,8 +706,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	Button.prototype.setColor = function(color) {
 		//log(`sclr t=${this.text}`);
-		this.color = color;
-		this.selectColor = color;
+		this.lockColor = color;
 		this.button.style.color = color;
 	};
 
@@ -732,13 +731,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.button.style.fontSize = this.fontSize;
 		}
 	};
-
-
-
-	Button.prototype.setNotChangeColor = function(nc) {
-		this.notChangeColor = !!nc;
-	};
-	
 	
 	Button.prototype.setonshowmenu = function(callback = () => {}) {
 		this.type == "select" && (this.onshowmenu = callback);
@@ -805,7 +797,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	// 设置文本
-	Button.prototype.setText = function(txt, txt2) {
+	Button.prototype.setText = function(txt, txt2 = this.text2) {
 		//log(`stxt t=${this.text}`);
 		let s;
 		this.text = txt == null ? "" : txt;
@@ -817,10 +809,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		this.button.style.textOverflow = "ellipsis";
 		if (this.checked) {
 			s = this.type == "radio" ? "☞" : this.type == "checkbox" ? "✔" : "";
-			s += this.text2 == "" ? this.text : this.text2;
+			s += this.text2 || this.text;
 			this.button.innerHTML = s;
 			this.button.style.fontSize = this.fontSize;
-			this.button.style.color = this.notChangeColor ? this.color : this.selectColor;
+			this.button.style.color = this.lockColor || this.selectColor;
 			this.button.style.backgroundColor = this.selectBackgroundColor;
 		}
 		else {
@@ -832,21 +824,21 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 				timeout = 0;
 			}
 			s = this.type == "radio" ? "" : this.type == "checkbox" ? "" : "";
-			s += this.text;
+			s += this.text2 || this.text;
 			this.button.innerHTML = s;
 
 			let but = this;
 			if (timeout) {
 				setTimeout(function() {
 					but.button.style.fontSize = but.fontSize;
-					but.button.style.color = but.color;
+					but.button.style.color = but.lockColor || but.color;
 					but.button.style.backgroundColor = but.backgroundColor;
 				}, timeout);
 			}
 			else
 			{
 				but.button.style.fontSize = but.fontSize;
-				but.button.style.color = but.color;
+				but.button.style.color = but.lockColor || but.color;
 				but.button.style.backgroundColor = but.backgroundColor;
 			}
 		}
@@ -862,7 +854,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	//显示，刷新
 	Button.prototype.show = function(left, top, width, height) {
-
 		if (!this.div.parentNode) this.parentNode.appendChild(this.div);
 
 		this.div.style.position = "absolute";
@@ -898,7 +889,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		this.button.style.lineHeight = parseInt(this.height) + "px";
 		this.button.style.backgroundColor = this.backgroundColor;
 		this.button.style.fontSize = this.fontSize;
-		this.button.style.color = this.color;
+		this.button.style.color = this.lockColor || this.color;
 		this.button.style.opacity = 0.9;
 		if (this.type == "select") {
 			let s = this.label.style;

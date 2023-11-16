@@ -168,31 +168,25 @@ a:active {
 
 .menu {
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
+    -ms-overflow-style: none;  /* IE and Edge */
+	scrollbar-width: none;  /* Firefox */
     -webkit-overflow-scrolling: touch;
-    /*
-    width: 300px;
-    left: 300px;
-    top: 100px;
-    height: 300px;
-    border-radius: 30px;
-    background: #ccc;
-    */
+}
+
+.menu::-webkit-scrollbar {
+	display: none;
 }
 
 .menu li {
-    /*font-size: 20px;*/
     list-style: none;
-    /*line-height: 38px;
-    margin-left: -1px;
-    padding-left: 26px;*/
 }
-
+/*
 .menu li:hover {
     background-color: #4281f4;
     color: #fff;
 }
-
+*/
 hr {
     height: 3px;
     margin: 0 0 0 0;
@@ -204,8 +198,10 @@ hr {
 }
 
 #viewBox {
-    overflow-x: scroll;
-    overflow-y: scroll;
+    overflow-x: auto;
+    overflow-y: auto;
+    -ms-overflow-style: none;  /* IE and Edge */
+	scrollbar-width: none;  /* Firefox */
     -webkit-overflow-scrolling: touch;
 }
 
@@ -214,19 +210,15 @@ hr {
 }
 
 #wrapper {
-    overflow-x: scroll;
-    overflow-y: scroll;
+    overflow-x: auto;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
 
 #exWindow {
-    overflow-x: scroll;
-    overflow-y: scroll;
+    overflow-x: auto;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-}
-
-#menu::-webkit-scrollbar {
-    display: none;
 }
 
 .showHelpWindow {
@@ -764,3 +756,163 @@ hr {
     animation: selectLine 3s linear 1.5s infinite alternate;
 
 }
+
+.backgroundImg {
+	-webkit-animation: backgroundImg 250ms ease-in;
+	-moz-animation: backgroundImg 250ms ease-in;
+	animation: backgroundImg 250ms ease-in;
+	-webkit-animation-fill-mode: both;
+	-moz-animation-fill-mode: both;
+	animation-fill-mode: both;
+}
+
+@-webkit-keyframes backgroundImg {
+	0% {
+		opacity: 1;
+	}
+	
+	100% {
+		opacity: 0.18;
+	}
+}
+
+@-moz-keyframes backgroundImg {
+	0% {
+		opacity: 1;
+	}
+	
+	100% {
+		opacity: 0.18;
+	}
+}
+
+@keyframes backgroundImg {
+	0% {
+		opacity: 1;
+	}
+	
+	100% {
+		opacity: 0.18;
+	}
+}
+
+
+.exitBackgroundImg {
+	-webkit-animation: exitBackgroundImg 250ms ease-in;
+	-moz-animation: exitBackgroundImg 250ms ease-in;
+	animation: exitBackgroundImg 250ms ease-in;
+	-webkit-animation-fill-mode: both;
+	-moz-animation-fill-mode: both;
+	animation-fill-mode: both;
+}
+
+@-webkit-keyframes exitBackgroundImg {
+	0% {
+		opacity: 0.18;
+	}
+	
+	100% {
+		opacity: 1;
+	}
+}
+
+@-moz-keyframes exitBackgroundImg {
+	0% {
+		opacity: 0.18;
+	}
+	
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes exitBackgroundImg {
+	0% {
+		opacity: 0.18;
+	}
+	
+	100% {
+		opacity: 1;
+	}
+}
+
+
+.hideBody {
+	-webkit-animation: hideBody 500ms ease-in;
+	-moz-animation: hideBody 500ms ease-in;
+	animation: hideBody 500ms ease-in;
+	-webkit-animation-fill-mode: both;
+	-moz-animation-fill-mode: both;
+	animation-fill-mode: both;
+}
+
+@-webkit-keyframes hideBody {
+	0% {
+		opacity: 1;
+	}
+	
+	100% {
+		opacity: 0;
+	}
+}
+
+@-moz-keyframes hideBody {
+	0% {
+		opacity: 1;
+	}
+	
+	100% {
+		opacity: 0;
+	}
+}
+
+@keyframes hideBody {
+	0% {
+		opacity: 1;
+	}
+	
+	100% {
+		opacity: 0;
+	}
+}
+
+
+.showBody {
+	-webkit-animation: showBody 500ms ease-in;
+	-moz-animation: showBody 500ms ease-in;
+	animation: showBody 500ms ease-in;
+	-webkit-animation-fill-mode: both;
+	-moz-animation-fill-mode: both;
+	animation-fill-mode: both;
+}
+
+@-webkit-keyframes showBody {
+	0% {
+		opacity: 0;
+	}
+	
+	100% {
+		opacity: 1;
+	}
+}
+
+@-moz-keyframes showBody {
+	0% {
+		opacity: 0;
+	}
+	
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes showBody {
+	0% {
+		opacity: 0;
+	}
+	
+	100% {
+		opacity: 1;
+	}
+}
+

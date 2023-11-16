@@ -65,12 +65,13 @@ window.exWindow = (() => {
         s.width = sz + "px";
         s.height = sz + "px";
         s.opacity = "0.5";
-        s.backgroundColor = "#c0c0c0";
+        //s.backgroundColor = xIframe.style.backgroundColor;
         s.borderRadius = sz / 2 + "px"
     }
     
     function loadTheme(theme = {}) {
     	Object.assign(xIframe.style, theme);
+		butClose.src = theme.icons;
     }
 
     function openWindow() {

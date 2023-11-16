@@ -52,12 +52,13 @@ window.mainUI = (function() {
 	bodyDiv.style.height = `${bodyHeight}px`;
 	bodyDiv.style.left = `${bodyLeft}px`;
 	bodyDiv.style.top = `${bodyTop}px`;
+	bodyDiv.style.border = `none`;
 	bodyDiv.style.opacity = "0";
 	bodyDiv.style.transformOrigin = `0px 0px`;
 	bodyDiv.style.transform = `scale(${bodyScale})`;
 	bodyDiv.setAttribute("id", "bodyDiv");
-	bodyDiv.setAttribute("class", "finish");
-	setTimeout(() => { bodyDiv.style.opacity = "1" }, 300);
+	//bodyDiv.setAttribute("class", "finish");
+	//setTimeout(() => { bodyDiv.style.opacity = "1" }, 300);
 	debug && (bodyDiv.style.backgroundColor = "red");
 
 	const upDiv = d.createElement("div");
@@ -67,6 +68,7 @@ window.mainUI = (function() {
 	upDiv.style.height = `${gridWidth}px`;
 	upDiv.style.left = `${upDivLeft}px`;
 	upDiv.style.top = `${upDivTop}px`;
+	upDiv.style.border = `none`;
 	upDiv.setAttribute("id", "upDiv");
 	debug && (upDiv.style.backgroundColor = "green");
 
@@ -74,7 +76,7 @@ window.mainUI = (function() {
 	const markTop = d.createElement("div");
 	document.body.appendChild(markTop);
 	markTop.style.position = "absolute";
-	markTop.style.top = `${xyObjToPage(p, upDiv).y*dw / bodyWidth}px`;
+	markTop.style.top = `${(xyObjToPage(p, upDiv).y - gridPadding)*dw / bodyWidth}px`;
 	markTop.setAttribute("id", "top");
 	!debug && (markTop.style.zIndex = -100);
 	debug && (markTop.style.width = "50px");
@@ -88,6 +90,7 @@ window.mainUI = (function() {
 	downDiv.style.height = `${gridWidth}px`;
 	downDiv.style.left = `${downDivLeft}px`;
 	downDiv.style.top = `${downDivTop}px`;
+	downDiv.style.border = `none`;
 	downDiv.setAttribute("id", "downDiv");
 	debug && (downDiv.style.backgroundColor = "blue");
 	
@@ -98,13 +101,14 @@ window.mainUI = (function() {
 
 	function createSettings() {
 		let t = dw < dh ? 0 - cmdWidth - buttonHeight * 2.5 : 0;
+		
 		const buttonSettings = [];
 		const marktopSetting = {};
 		for (let i = 0; i < 15; i++) { // set positions
 			if (i === 0) {
 				if (dw < dh) {
-					t = 0 - gridWidth - buttonHeight * 1.5;
-					const p = { x: 0, y: gridPadding - buttonHeight * 1.5 };
+					t = buttonHeight * 0;
+					const p = { x: 0, y: - gridPadding };
 					marktopSetting.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
 				}
 				else {
@@ -112,12 +116,6 @@ window.mainUI = (function() {
 					const p = { x: 0, y: 0 };
 					marktopSetting.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
 				}
-			}
-			else if (i === 1) {
-				if (dw < dh)
-					t = buttonHeight * 0;
-				else
-					t += buttonHeight * 1.5;
 			}
 			else {
 				t += buttonHeight * 1.5;
@@ -132,14 +130,14 @@ window.mainUI = (function() {
 			}
 		}
 		settings.push({ buttonSettings: buttonSettings, marktopSetting: marktopSetting });
-
+		
 		const buttonSettings1 = [];
-		const marktopSetting1 = [];
+		const marktopSetting1 = {};
 		for (let i = 0; i < 15; i++) { // set positions
 			if (i === 0) {
 				if (dw < dh) {
-					t = buttonHeight * 0;
-					const p = { x: 0, y: 0 };
+					t = 0 - gridWidth - buttonHeight * 1.5;
+					const p = { x: 0, y: - gridPadding - buttonHeight * 1.5 };
 					marktopSetting1.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
 				}
 				else {
@@ -147,6 +145,12 @@ window.mainUI = (function() {
 					const p = { x: 0, y: 0 };
 					marktopSetting1.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
 				}
+			}
+			else if (i === 1) {
+				if (dw < dh)
+					t = buttonHeight * 0;
+				else
+					t += buttonHeight * 1.5;
 			}
 			else {
 				t += buttonHeight * 1.5;
@@ -161,6 +165,42 @@ window.mainUI = (function() {
 			}
 		}
 		settings.push({ buttonSettings: buttonSettings1, marktopSetting: marktopSetting1 });
+
+		const buttonSettings2 = [];
+		const marktopSetting2 = {};
+		for (let i = 0; i < 15; i++) { // set positions
+			if (i === 0) {
+				if (dw < dh) {
+					t = 0 - gridWidth - buttonHeight * 3;
+					const p = { x: 0, y: - gridPadding - buttonHeight * 3 };
+					marktopSetting2.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
+				}
+				else {
+					t = buttonHeight * 1.2;
+					const p = { x: 0, y: 0 };
+					marktopSetting2.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
+				}
+			}
+			else if (i === 2) {
+				if (dw < dh)
+					t = buttonHeight * 0;
+				else
+					t += buttonHeight * 1.5;
+			}
+			else {
+				t += buttonHeight * 1.5;
+			}
+			for (let j = 0; j < 4; j++) {
+				buttonSettings2.push({
+					left: ~~(cmdPadding + buttonWidth * j * 1.33),
+					top: ~~t,
+					width: ~~buttonWidth,
+					height: ~~buttonHeight
+				});
+			}
+		}
+		settings.push({ buttonSettings: buttonSettings2, marktopSetting: marktopSetting2 });
+
 	}
 
 	//----------------------- CheckerBoard  -------------------------------------------------
@@ -206,9 +246,8 @@ window.mainUI = (function() {
 	const iphoneCancelClick = (() => {
     	let isCancelClick = false;
     	const iPhone = !!(navigator.userAgent.indexOf("iPhone") + 1);
-    	document.body.addEventListener("contextmenu", () => { isCancelClick = iPhone;
-           console.log("contextmenu") }, true);
-    	document.body.addEventListener("touchend", () => { setTimeout(() => { isCancelClick = false }, 250); console.log("touchend") }, true);
+    	bodyDiv.addEventListener("contextmenu", () => { isCancelClick = iPhone; console.log("contextmenu") }, true);
+    	bodyDiv.addEventListener("touchend", () => { setTimeout(() => { isCancelClick = false }, 250); console.log("touchend") }, true);
     	return {
         	isCancel: () => {
             	setTimeout(() => { isCancelClick = false }, 100);
@@ -276,6 +315,7 @@ window.mainUI = (function() {
 					setting.onhidemenu && button.setonhidemenu(setting.onhidemenu);
 					setting.options && button.addOptions(setting.options);
 					setting.type == "select" && createMenu(button);
+					typeof setting.reset == "function" && setting.reset.call(button);
 					buttons.push(button);
 				}
 				else {
@@ -288,7 +328,7 @@ window.mainUI = (function() {
 	}
 
 
-	function addButtons(buttons, cmdDiv, settingIndex = 0) {
+	function addButtons(buttons, cmdDiv, settingIndex = 1) {
 		const buttonSettings = settings[settingIndex].buttonSettings;
 		for (let i = 0; i < buttons.length; i++) {
 			if (buttons[i] && buttons[i].move) {
@@ -304,7 +344,7 @@ window.mainUI = (function() {
 				})
 			}
 		}
-		markTop.style.top = `${settings[settingIndex].marktopSetting.top}px`;
+		markTop.style.top = Math.min(parseInt(markTop.style.top), settings[settingIndex].marktopSetting.top) + `px`;
 	}
 
 
@@ -593,148 +633,12 @@ window.mainUI = (function() {
 
 	//---------------------- themes ------------------------
 
-	const themes = {"light":"light", "grey":"grey", "dark":"dark"};
+	const themes = {"light":"light", "grey":"grey", "green":"green", "dark":"dark"};
 	const defaultTheme = "light";
-	const THEMES = {
-		"body": {
-			"light": {
-				"color": "#333333",
-				"backgroundColor": "white"
-			},
-			"grey": {
-				"color": "#333333",
-				"backgroundColor": "#fffffd"
-			},
-			"dark": {
-				"color": "#c5c5c5",
-				"backgroundColor": "#333333"
-			}
-		},
-		"Button": {
-			"light": {
-				"color": "#333333",
-				"selectColor": "black",
-				"backgroundColor": "white",
-				"selectBackgroundColor": "#e0e0e0"
-			},
-			"grey": {
-				"color": "#333333",
-				"selectColor": "black",
-				"backgroundColor": "#f0f0f0",
-				"selectBackgroundColor": "#d0d0d0"
-			},
-			"dark": {
-				"color": "#c5c5c5",
-				"selectColor": "#f0f0f0",
-				"backgroundColor": "#333333",
-				"selectBackgroundColor": "black"
-			}
-		},
-		"Board": {
-			"light": {
-				"backgroundColor": "white",
-				"wNumColor": "white",
-				"bNumColor": "#000000",
-				"wNumFontColor": "#000000",
-				"bNumFontColor": "#ffffff",
-				"LbBackgroundColor": "white",
-				"coordinateColor": "#000000",
-				"lineColor": "#000000",
-				"wLastNumColor": "#ff0000",
-				"bLastNumColor": "#ffaaaa",
-				"moveWhiteColor": "#bbbbbb",
-				"moveBlackColor": "#bbbbbb",
-				"moveWhiteFontColor": "#ffffff",
-				"moveBlackFontColor": "#000000",
-				"moveLastFontColor": "red"
-			},
-			"grey": {
-				"backgroundColor": "#f0f0f0",
-				"wNumColor": "white",
-				"bNumColor": "#000000",
-				"wNumFontColor": "#000000",
-				"bNumFontColor": "#ffffff",
-				"LbBackgroundColor": "#f0f0f0",
-				"coordinateColor": "#000000",
-				"lineColor": "#000000",
-				"wLastNumColor": "#ff0000",
-				"bLastNumColor": "#ffaaaa",
-				"moveWhiteColor": "#bbbbbb",
-				"moveBlackColor": "#bbbbbb",
-				"moveWhiteFontColor": "#ffffff",
-				"moveBlackFontColor": "#000000",
-				"moveLastFontColor": "red"
-			},
-			"dark": {
-				"backgroundColor": "#777777",
-				"wNumColor": "#a0a0a0",
-				"bNumColor": "#000000",
-				"wNumFontColor": "#000000",
-				"bNumFontColor": "#aaaaaa",
-				"LbBackgroundColor": "#777777",
-				"coordinateColor": "#000000",
-				"lineColor": "#000000",
-				"wLastNumColor": "#ff0000",
-				"bLastNumColor": "#ffaaaa",
-				"moveWhiteColor": "#999999",
-				"moveBlackColor": "#999999",
-				"moveWhiteFontColor": "#ffffff",
-				"moveBlackFontColor": "#000000",
-				"moveLastFontColor": "red"
-			}
-		},
-		"exWindow": {
-			"light": {
-				"color": "black",
-				"borderColor": "black",
-				"backgroundColor": "white"
-			},
-			"grey": {
-				"color": "black",
-				"borderColor": "black",
-				"backgroundColor": "#fffffd"
-			},
-			"dark": {
-				"color": "#c5c5c5",
-				"borderColor": "black",
-				"backgroundColor": "#333333"
-			}
-		},
-		"msgWindow": {
-			"light": {
-				"color": "black",
-				"backgroundColor": "#dddddd",
-				"textareaBackgroundColor": "white"
-			},
-			"grey": {
-				"color": "black",
-				"backgroundColor": "#999999",
-				"textareaBackgroundColor": "#fffffd"
-			},
-			"dark": {
-				"color": "#c5c5c5",
-				"backgroundColor": "#555555",
-				"textareaBackgroundColor": "#666666"
-			}
-		},
-		"share": {
-			"light": {
-				"color": "black",
-				"backgroundColor": "#eeeeee"
-			},
-			"grey": {
-				"color": "black",
-				"backgroundColor": "#aaaaaa"
-			},
-			"dark": {
-				"color": "#d0d0d0",
-				"backgroundColor": "#666666"
-			}
-		}
-	};
-
-	function _theme(themeKey) {
-		Object.assign(document.body.style, THEMES["body"][themeKey]);
+	
+	async function _theme(themeKey, cancel) {
+		let theme = await loadJSON(`UI/theme/${themeKey}/theme.json`);
+		Object.assign(document.body.style, theme["body"]);
 		
 		const childs = this.getChilds();
 		for (let index in childs) {
@@ -745,31 +649,33 @@ window.mainUI = (function() {
 				case "Label":
 				case "Timer":
 				case "Comment":
-					child.loadTheme(THEMES["body"][themeKey])
+					child.loadTheme(theme["body"])
 					break;
 				case "Board":
 				case "Button":
-					typeof child.loadTheme === "function" && child.loadTheme(THEMES[className][themeKey])
+					typeof child.loadTheme === "function" && child.loadTheme(theme[className])
 			}
 		}
 		
-		self["exWindow"] && exWindow.loadTheme(THEMES["exWindow"][themeKey]);
+		self["exWindow"] && exWindow.loadTheme(theme["exWindow"]);
 		self["msgWindow"] && msgWindow.loadTheme({
-			"msgWindow": THEMES["msgWindow"][themeKey],
-			"Button": THEMES["Button"][themeKey]
+			"msgWindow": theme["msgWindow"],
+			"Button": theme["Button"]
 		});
-		self["share"] && share.loadTheme(THEMES["share"][themeKey]);
+		self["share"] && share.loadTheme(theme["share"]);
+		if (!cancel && window.top.fullscreenUI && (typeof window.top.fullscreenUI.loadTheme === "function")) window.top.fullscreenUI.loadTheme(true)
 	}
 	
-	function setTheme(themeKey = defaultTheme) {
+	function setTheme(themeKey = defaultTheme, cancel) {
 		themeKey = themes[themeKey] || defaultTheme;
 		localStorage.setItem("theme", themeKey);
-		_theme.call(this, themeKey);
+		_theme.call(this, themeKey, cancel);
 	}
 	
-	function loadTheme() {
+	function loadTheme(cancel) {
 		const themeKey = localStorage.getItem("theme");
-		setTheme.call(this, themeKey);
+		setTheme.call(this, themeKey, cancel);
+		bodyDiv.setAttribute("class", "showBody");
 	}
 	
 	function getThemeName() {
@@ -797,7 +703,6 @@ window.mainUI = (function() {
 	Object.defineProperty(exports, "gridWidth", { value: gridWidth });
 	Object.defineProperty(exports, "gridPadding", { value: gridPadding });
 	Object.defineProperty(exports, "boardWidth", { value: cmdWidth });
-	Object.defineProperty(exports, "boardPadding", { value: cmdPadding });
 	Object.defineProperty(exports, "cmdWidth", { value: cmdWidth });
 	Object.defineProperty(exports, "cmdPadding", { value: cmdPadding });
 	Object.defineProperty(exports, "buttonWidth", { value: buttonWidth });

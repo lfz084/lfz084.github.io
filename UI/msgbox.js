@@ -1,5 +1,5 @@
 
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.06";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -147,7 +147,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.05";
 				setOpacity("0.38");
             }
             else if (butNum == 1) {
-                butCancel.hide();
+            	butCancel.hide();
                 setOpacity("0.38")
             }
             else {
@@ -204,7 +204,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.05";
         
         function setOpacity(opacity) { // mainUI.bodyDiv 设置无效，改为设置 mainUI.upDiv + mainUI.downDiv
         	const elems = self["mainUI"] ? [mainUI.upDiv, mainUI.downDiv] : [];
-        	elems.map(div => div.style.opacity = opacity);
+        	elems.map(div => div.setAttribute("class", opacity == 1 ? "exitBackgroundImg" : "backgroundImg"));
         }
 
         return {
@@ -296,4 +296,5 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.05";
             isShowLabel = true;
         }
     })();
+    
 })))

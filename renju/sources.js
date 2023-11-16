@@ -25,8 +25,7 @@
 			progress: "30%",
 			type: "scriptAll",
 			isAsync: true,
-			sources: [[SOURCE_FILES["Button"]],
-                [SOURCE_FILES["Evaluator"]],
+			sources: [[SOURCE_FILES["Evaluator"]],
                 [SOURCE_FILES["RenjuTree"]]]
         }, {
 			progress: "35%",
@@ -55,7 +54,7 @@
                 [SOURCE_FILES["gif"]],
                 [SOURCE_FILES["gifFile"]],
                 [SOURCE_FILES["CheckerBoardGIF"]]]
-        }, {
+        }, {/*
 			progress: "78%",
 			type: "fileAll",
 			isAsync: true,
@@ -70,13 +69,7 @@
                 [SOURCE_FILES["RenLibDoc_wasm"]],
                 [SOURCE_FILES["RenLib_wasm"]],
                 [SOURCE_FILES["gifWorker"]]]
-        }, {
-			progress: "91%",
-			type: "fileAll",
-			isAsync: true,
-			sources: [[SOURCE_FILES["404_html"]],
-                [SOURCE_FILES["index_html"]]]
-        }, {
+        }, {*/
 			progress: "99%",
 			type: "scriptAll",
 			isAsync: false,

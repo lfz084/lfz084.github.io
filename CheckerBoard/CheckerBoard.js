@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.06";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -19,6 +19,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
     const COORDINATE_RIGHT_UP = 3;
     const COORDINATE_RIGHT_DOWN = 4;
     const COORDINATE_LEFT_DOWN = 5;
+    
+    const MODE_BOARD = 0;
+    const MODE_IMG = 1;
 
     const MAX_SCALE = 1.5;
     const MAX_ZOOM = 5;
@@ -47,6 +50,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
     	"LbBackgroundColor": "white",
     	"coordinateColor": "#000000",
     	"lineColor": "#000000",
+    	"borderColor": "#bbbbbb",
     	"wLastNumColor": "#ff0000",
     	"bLastNumColor": "#ffaaaa",
     	"moveWhiteColor": "#bbbbbb",
@@ -122,7 +126,12 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
 
 
     //------------------------ Animation ------------------
-
+	/** 封装好的动画函数
+	 * @callbackCondition {function} 返回一个bool值，false 立刻关闭动画
+	 * @callBackFrame {function} 处理每一针动画
+	 * @callBackStart {function} 可选，动画开始前执行
+	 * @callbackEnd {function} 可选，动画结束后执行
+	 */ 
     const animation = (() => {
         let _callbackCondition = () => {},
             _callBackStart = () => {},
@@ -206,9 +215,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
                 //this.scaleBox.style.transform = `scale(${this.scale})`;
                 this.viewBox.scrollLeft = p.x * this.scale / oldScale - centerX; // 中心点在 viewBox 保存不变
                 this.viewBox.scrollTop = p.y * this.scale / oldScale - centerY;
-                this.setViewBoxBorder(this.scale > 1);
             },
-            () => {},
+            () => {this.setViewBoxBorder(true)},
             () => {
                 this.setViewBoxBorder(this.scale > 1);
                 box.removeEventListener("touchmove", setMove, true);
@@ -232,7 +240,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
             width_arr = getScaleArray(this.width * (1 - oldScale), points, this.width * oldScale, this.width);
         }
         else {
-            this.setViewBoxBorder(true);
             points = getPoints(this.width * (newScale - oldScale));
             moves_x = getMoveArray(Math.max(0, this.width * (newScale - 1) / 2) - this.viewBox.scrollLeft, points);
             moves_y = getMoveArray(Math.max(0, this.width * (newScale - 1) / 2) - this.viewBox.scrollTop, points);
@@ -248,7 +255,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
                 moves_x.length && (this.viewBox.scrollLeft += moves_x.shift());
                 moves_y.length && (this.viewBox.scrollTop += moves_y.shift());
             },
-            () => {},
+            () => this.setViewBoxBorder(true),
             () => this.setViewBoxBorder(newScale > 1))
     }
 
@@ -621,6 +628,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
             this._boardchange = () => {};
             this._viewchange = () => {};
             this._stonechange = () => {};
+            
+            this.mode = MODE_BOARD;
 
             this.parentNode = parentNode;
             this.left = parseInt(left);
@@ -701,6 +710,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
             this.LbBackgroundColor = "#f0f0f0"; //888888
             this.coordinateColor = "#000000"; //111111
             this.lineColor = "#000000"; //111111
+            this.borderColor = "#bbbbbb";
             this.wLastNumColor = "#ff0000"; //dd0000
             this.bLastNumColor = "#ffaaaa"; //dd0000
             this.moveWhiteColor = "#bbbbbb"; //bbbbbb
@@ -745,7 +755,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
                 let div = document.createElement("div");
                 div.style.borderRadius = "50%";
                 this.scaleBox.appendChild(div);
-                div.addEventListener("touchend", () => event.preventDefault());
+                div.addEventListener("touchend", () => event.preventDefault(), true);
                 //div.addEventListener("touchmove", () => event.preventDefault());
                 this.P[i] = new point(-500, -500, div);
             }
@@ -1335,12 +1345,19 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
     }
     
     Board.prototype.loadTheme = function(theme = {}) {
-    	this.theme = theme;
-    	Object.assign(this, theme);
-    	this.refreshCheckerBoard(); // 还需要刷新棋子颜色
-    	const msIndex = this.MSindex;
-    	this.toStart(this.isShowNum);
-    	while (msIndex > this.MSindex) this.toNext();
+    	if (this.mode == MODE_BOARD) {
+    		const wNumColor = this.wNumColor;
+    		const bNumColor = this.bNumColor;
+    		this.theme = theme;
+    		Object.assign(this, theme);
+    		// 还需要刷新棋子颜色
+    		this.P.map(p => {
+    			if ([TYPE_BLACK, TYPE_WHITE, TYPE_NUMBER].indexOf(p.type) + 1) {
+    				p.color = p.color == wNumColor ? this.wNumColor : p.color == bNumColor ? this.bNumColor : p.color;
+    			}
+    		})
+    		this.refreshCheckerBoard();
+    	}
     }
 
 
@@ -1350,7 +1367,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
 
 
     Board.prototype.printEmptyCBoard = function() {
-        let canvas = this.bakCanvas; // 准备在后台画棋盘
+    	let canvas = this.bakCanvas; // 准备在后台画棋盘
         // 画图之前，设置画布大小
         canvas.width = this.width;
         canvas.height = this.height;
@@ -1374,6 +1391,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
         canvas2.height = canvas.height;
         ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
         ctx = null;
+        
+        this.mode = MODE_BOARD;
     }
 
 
@@ -1551,7 +1570,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
 
 
     Board.prototype.refreshCheckerBoard = function() {
-        this.printEmptyCBoard();
+    	this.printEmptyCBoard();
         this.refreshBoardPoint("all");
         this.stonechange();
     }
@@ -1593,9 +1612,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
     }
 
     Board.prototype.showCheckerBoard = async function() {
+        if (this.mode != MODE_BOARD) return;
         this.resetCBoardCoordinate();
         this.printEmptyCBoard();
         await loadFonts();
+        if (this.mode != MODE_BOARD) return;
         this.printEmptyCBoard();
         this.refreshBoardPoint("all");
         log("showCheckerBoard: refreshCheckerBoard");
@@ -1670,14 +1691,16 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
     Board.prototype.setViewBoxBorder = function(value) {
         const bw = ~~(this.width / 100);
         if (value) {
-            this.viewBox.style.border = `${bw}px solid ${this.moveWhiteColor}`; // ridge groove
+            this.viewBox.style.border = `${bw}px solid ${this.borderColor}`;
             this.viewBox.style.left = `${this.left - bw}px`;
             this.viewBox.style.top = `${this.top - bw}px`;
+            this.viewBox.style.backgroundColor = "black";
         }
         else {
             this.viewBox.style.border = ``;
             this.viewBox.style.left = `${this.left}px`;
             this.viewBox.style.top = `${this.top}px`;
+            this.viewBox.style.backgroundColor = document.body.style.backgroundColor;
         }
     }
 
@@ -1802,7 +1825,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
                 switch (targetType) {
                     case TYPE_NUMBER:
                         if (0 == (this.MSindex & 1)) this.wNb(225, "auto", showNum, undefined, undefined, 100);
-                        this.wNb(nameToIdx(a), "0", showNum, undefined, undefined, 100);
+                        this.wNb(nameToIdx(a), "auto", showNum, undefined, undefined, 100);
                         break;
                     default:
                         this.wNb(nameToIdx(a), "black", showNum, undefined, undefined, 100);
@@ -1926,7 +1949,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
             this.MS[i] = idx; //顺序添加的棋子 记录下来
         }
         this.P[idx].color = c == "black" ? this.bNumColor : this.wNumColor;
-        this.P[idx].type = type == null ? color == "auto" ? TYPE_NUMBER : c == this.wNumColor ? TYPE_WHITE : TYPE_BLACK : type;
+        this.P[idx].type = type == null ? color == "auto" ? TYPE_NUMBER : c == "white" ? TYPE_WHITE : TYPE_BLACK : type;
         this.P[idx].text = this.P[idx].type == TYPE_NUMBER ? String(i + 1) : "";
         this.printPoint(idx, showNum);
         this.delay(function() {
@@ -1967,7 +1990,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.05";
         p.y = p.y + t;
     }
 
-
+    exports.MODE_BOARD = Board.MODE_BOARD = MODE_BOARD;
+    exports.MODE_IMG = Board.MODE_IMG = MODE_IMG;
+    
     exports.TYPE_EMPTY = Board.TYPE_EMPTY = TYPE_EMPTY;
     exports.TYPE_MARK = Board.TYPE_MARK = TYPE_MARK; // 标记
     exports.TYPE_NUMBER = Board.TYPE_NUMBER = TYPE_NUMBER; // 顺序添加的棋子

@@ -243,7 +243,7 @@
             try {
                 const cDiv = mainUI.createCmdDiv();
                 const buttons = createButtons(buttonSettings);
-                mainUI.addButtons(buttons, cDiv, 1);
+                mainUI.addButtons(buttons, cDiv, 0);
                 return cDiv;
             } catch (e) { alert(e.stack) }
         }
