@@ -8,6 +8,7 @@
 		const colors = ["black", "red", "green", "white"];
 
 		const fileButtonSettings = [
+			undefined,
 			{
 				type: "button",
 				text: "分享图片",
@@ -17,29 +18,12 @@
     	},
 			{
 				type: "button",
-				text: "上一记录",
+				text: "使用帮助",
 				touchend: async function() {
-					if (Loading) return;
-					tempHistoryIndex = getHistoryIndex(-1);
-					loadHistory();
+					window.open("./help/tuyahelp/tuyahelp.html", "_self");
 				}
     	},
-			{
-				type: "button",
-				text: "下一记录",
-				touchend: async function() {
-					if (Loading) return;
-					tempHistoryIndex = getHistoryIndex(1);
-					loadHistory();
-				}
-    	},
-			{
-				type: "button",
-				text: "删除记录",
-				touchend: async function() {
-					moveHistory(false)
-				}
-    	},
+			undefined,
 			{
 				type: "file",
 				text: "打开图片",

@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2111.06";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2111.08";
 
 function loadEvaluatorJScript() {
     (function(global, factory) {

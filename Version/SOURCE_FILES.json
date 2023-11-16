@@ -105,6 +105,7 @@
     
     "tuyaMain": "tuya/main.js",
     "tuyaSources": "tuya/sources.js",
+    "start_png": "tuya/start.png",
     
     "TypeBuffer": "TypeBuffer/TypeBuffer.js",
     

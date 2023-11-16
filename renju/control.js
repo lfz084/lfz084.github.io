@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.06";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.08";
 window.control = (() => {
 	try {
 		"use strict";
