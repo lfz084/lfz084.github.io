@@ -447,7 +447,11 @@
             }
         })
         bindEvent.addEventListener(cbd.viewBox, "zoomstart", (x1, y1, x2, y2) => {
-            status == UNLOCK && cbd.zoomStart(x1, y1, x2, y2)
+            cbd.zoomStart(x1, y1, x2, y2)
+        })
+        
+        bindEvent.addEventListener(miniBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
+        	miniBoard.zoomStart(x1, y1, x2, y2)
         })
     }
 

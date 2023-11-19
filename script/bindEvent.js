@@ -43,9 +43,8 @@ window.bindEvent = (function() {
 	}
 
 	//处理触摸开始事件
-	function bodyTouchStart(evt) {
-		let touches = evt.changedTouches; // touchstart  事件里面 evt.changedTouches.length === 1
-		if (isOutArea(touches[0].pageX, touches[0].pageY)) return;
+	function bodyTouchStart(event) {
+		let touches = event.changedTouches; // touchstart  事件里面 event.changedTouches.length === 1
 		moveX = touches[0].pageX;
 		moveY = touches[0].pageY;
 		if (bodyStartTouches.length == 0) {
@@ -54,7 +53,7 @@ window.bindEvent = (function() {
 				timerClick = null;
 			}
 			if (bodyPreviousTouch.length) { //触发 dbltouchstart
-				evt.preventDefault();
+				event.preventDefault();
 				bodyDblTouchStart();
 				// 触发长按事件之前删除定时器，变量timerContextMenu还要用来判断双击事件，由touchend 清空变量。
 				setTimeout(function() { clearTimeout(timerContextMenu) }, 0);
@@ -88,8 +87,8 @@ window.bindEvent = (function() {
 	}
 
 	//处理触摸移动事件
-	function bodyTouchMove(evt) {
-		let touches = evt.changedTouches;
+	function bodyTouchMove(event) {
+		let touches = event.changedTouches;
 		moveX = touches[0].pageX;
 		moveY = touches[0].pageY;
 		selectArea && event.preventDefault();
@@ -100,15 +99,15 @@ window.bindEvent = (function() {
 				timerContextMenu = null;
 			}
 		}
-		if (bodyStartTouches.length == 2) {
-			bodyZoom(); // 两指缩放中
+		if (touches.length == 2) {
+			bodyZoom(event); // 两指缩放中
 		}
 	}
 
 	//处理触摸结束事件
-	function bodyTouchEnd(evt) {
+	function bodyTouchEnd(event) {
 		let cancelClick = false;
-		let touches = evt.changedTouches;
+		let touches = event.changedTouches;
 		let idx = onTouchesIndex(touches[0].identifier, bodyStartTouches);
 		if (timerContextMenu) { //取消长按事件
 			clearTimeout(timerContextMenu);
@@ -133,7 +132,7 @@ window.bindEvent = (function() {
 			}
 			if (!cancelClick && isBodyClick) {
 				//log(`cancelClick=${cancelClick}, isBodyClick=${isBodyClick}, length=${bodyPreviousTouch.length } `);
-				evt.preventDefault(); // 屏蔽浏览器 自动触发鼠标 click 事件，导致一次触摸点击产生两个 click 事件
+				event.preventDefault(); // 屏蔽浏览器 自动触发鼠标 click 事件，导致一次触摸点击产生两个 click 事件
 				if ((bodyPreviousTouch.length > 0) &&
 					(Math.abs(bodyPreviousTouch[0].pageX - tX) < MAX_CANCEL_MOVE) &&
 					(Math.abs(bodyPreviousTouch[0].pageY - tY) < MAX_CANCEL_MOVE)
@@ -162,9 +161,9 @@ window.bindEvent = (function() {
 	}
 
 	//处理触摸对出事件
-	function bodyTouchCancel(evt) {
+	function bodyTouchCancel(event) {
 		//log(`touchCancel`)
-		let touches = evt.changedTouches;
+		let touches = event.changedTouches;
 		if (timerContextMenu) { // 取消长按事件
 			clearTimeout(timerContextMenu);
 			timerContextMenu = null;
@@ -230,7 +229,7 @@ window.bindEvent = (function() {
 		}
 	}
 
-	function bodyZoom() {
+	function bodyZoom(event) {
 		const oldDistance = distance;
 		const touches = event.changedTouches;
 		if (!oldDistance) return; // touchstart 出错，退出

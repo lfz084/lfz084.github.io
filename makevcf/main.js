@@ -270,6 +270,10 @@
 		bindEvent.addEventListener(cBoard.viewBox, "contextmenu", (x, y) => {
 			//log("contextmenu")
 		})
+		bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
+			cBoard.zoomStart(x1, y1, x2, y2)
+		})
+		
 		bindEvent.addEventListener(miniBoard.viewBox, "click", (x, y) => {
 			let idx = miniBoard.getIndex(x, y);
 			if (miniBoard.P[idx].type == 0) miniBoard.wNb(idx, "auto", true)
@@ -278,6 +282,9 @@
 		bindEvent.addEventListener(miniBoard.viewBox, "dblclick", (x, y) => {
 			let idx = miniBoard.getIndex(x, y);
 			ctnBack(idx)
+		})
+		bindEvent.addEventListener(miniBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
+			miniBoard.zoomStart(x1, y1, x2, y2)
 		})
 	}
 

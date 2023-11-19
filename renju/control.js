@@ -766,7 +766,7 @@ window.control = (() => {
 				type: "button",
 				text: "摆入棋盘",
 				touchend: function() {
-					if (true || cBoard.SLTX == cBoard.size && cBoard.SLTY == cBoard.size) {
+					if (cBoard.SLTX == cBoard.size && cBoard.SLTY == cBoard.size) {
 						putBoard();
 					}
 					else {
@@ -1329,7 +1329,7 @@ window.control = (() => {
 
 				cBoard.cutImg.style.width = ~~(cBoard.canvas.width) + "px";
 				cBoard.cutImg.style.height = ~~(cBoard.canvas.height) + "px";
-				cBoard.cutImg.src = "./icon.png";
+				cBoard.cutImg.src = "./icon(192x192).png";
 				cBoard.parentNode.appendChild(cBoard.cutImg);
 				renjuCmdDiv.hide();
 				cBoard.cutImg.ontouchend = cBoard.cutImg.onclick = function() {
@@ -1735,9 +1735,8 @@ window.control = (() => {
 			bindEvent.addEventListener(cBoard.viewBox, "dblclick", canvasDblClick);
 			bindEvent.addEventListener(cBoard.viewBox, "dbltouchstart", continueSetCutDivStart);
 			bindEvent.addEventListener(cBoard.viewBox, "contextmenu", canvasKeepTouch);
-			bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
-				cBoard.zoomStart(x1, y1, x2, y2);
-			})
+			bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => cBoard.zoomStart(x1, y1, x2, y2))
+			bindEvent.addEventListener(miniBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => miniBoard.zoomStart(x1, y1, x2, y2))
 			function canvasKeepTouch(x, y) {
 				try {
 					if (playMode != MODE_LOADIMG) {

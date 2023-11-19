@@ -207,7 +207,7 @@
     "icon_dark_17": "./UI/theme/dark/arrow-ccw-svgrepo-com.svg",
     "icon_dark_18": "./UI/theme/dark/arrow-cw-svgrepo-com.svg",
     
-    "icon_png": "icon.png",
+    "icon_png": "icon(192x192).png",
     "icon_ico": "icon(128x128).ico",
     "404_html": "404.html",
     "index_html": "index.html",

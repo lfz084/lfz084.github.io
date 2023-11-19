@@ -267,7 +267,7 @@ window.loadApp = (() => { // 按顺序加载应用
         	[SOURCE_FILES["Viewport"]]
     	], false)
     	
-        await upData.checkAppVersion();
+    	await upData.checkAppVersion();
         mlog("removeOldAppCache ......");
         await upData.removeOldAppCache();
         
@@ -316,10 +316,10 @@ window.loadApp = (() => { // 按顺序加载应用
         console.info(await upData.logCaches());
         console.info(upData.logVersions());
         
-    }catch {err => {
-    	const MSG = "❌" + "加载过程出现了错误，准备刷新" + "\n" + (err && err.stack)
-    	alert(MSG)
-    	window.reloadApp()
-    }}
+    }catch(err) {
+    	const ASK = `❌加载过程出现了错误...\n${err && err.stack}\n\n`;
+    	const PS = `是否重置数据\n\n`;
+    	confirm(ASK + PS) ? window.location.href = "reset.html" : 	window.reloadApp();
+    }
     }
 })()

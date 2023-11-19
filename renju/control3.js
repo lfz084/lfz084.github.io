@@ -332,7 +332,7 @@ window.control = (() => {
 
 			cBd.cutImg.style.width = ~~(cBd.canvas.width) + "px";
 			cBd.cutImg.style.height = ~~(cBd.canvas.height) + "px";
-			cBd.cutImg.src = "./icon.png";
+			cBd.cutImg.src = "./icon(192x192).png";
 			cBd.parentNode.appendChild(cBd.cutImg);
 			let pNode = renjuCmddiv.parentNode;
 			pNode.removeChild(renjuCmddiv);
