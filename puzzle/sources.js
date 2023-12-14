@@ -1,0 +1,42 @@
+"use strict";
+(async () => {
+	window.SOURCE_FILES = await loadJSON("Version/SOURCE_FILES.json");
+
+	window.appSources = [
+		{
+			progress: "28%",
+			type: "scriptAll",
+			isAsync: false,
+			sources: [[SOURCE_FILES["CheckerBoard"]],
+                [SOURCE_FILES["image2board"]],
+                [SOURCE_FILES["markLine"]],
+                [SOURCE_FILES["tree"]],
+                [SOURCE_FILES["share"]],
+                [SOURCE_FILES["helpWindow"]],
+                [SOURCE_FILES["msgbox"]]]
+        }, {
+			progress: "39%",
+			type: "scriptAll",
+			isAsync: false,
+			sources: [[SOURCE_FILES["TypeBuffer"]],
+				[SOURCE_FILES["TextCoder"]],
+				[SOURCE_FILES["RenjuTree"]],
+				[SOURCE_FILES["EvaluatorWebassembly"]],
+				[SOURCE_FILES["EvaluatorJScript"]],
+			    [SOURCE_FILES["Evaluator"]],
+			    [SOURCE_FILES["engine"]]]
+		}, {
+			progress: "80%",
+			type: "scriptAll",
+			isAsync: false,
+			sources: [[SOURCE_FILES["gomocalc"]]]
+		}, {
+			progress: "99%",
+			type: "scriptAll",
+			isAsync: false,
+			sources: [[SOURCE_FILES["puzzleCoder"]],
+				[SOURCE_FILES["puzzleAI"]],
+				[SOURCE_FILES["puzzleMain"]]]
+        }
+     ];
+})()

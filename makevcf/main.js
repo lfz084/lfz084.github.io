@@ -142,17 +142,9 @@
 			touchend: async function() {
 				try {
 					const games = makeVCF.games();
-					const gamesL = games.slice(0);
-					for (let idx = 0; idx < games.length; idx++) {
-						games[idx] = renjuEditor.gameToArr2D(games[idx]);
-						miniBoard.unpackArray(games[idx]);
-						log1(`读取... ${idx+1} / ${games.length}`);
-						await makeVCF.wait(0);
-					}
 					if (games.length == 0) return;
-					const json = await renjuEditor.toKaiBaoJSON(games, log1);
-					const gamesR = renjuEditor.json2Games(json);
-					renjuEditor.downloadKaiBaoJSON(json, "vcf");
+					const json = await puzzleCoder.games2kaibaoJSON(games, log1);
+					puzzleCoder.downloadJSON(json, "vcf");
 				} catch (e) { alert(e.stack) }
 			}
         },
@@ -169,7 +161,7 @@
 			text: "导入JSON",
 			change: async function() {
 				try {
-					const games = await renjuEditor.openFile(this.files[0], this.value.split("/").pop(), log);
+					const games = await puzzleCoder.loadJSON(this.files[0], log1);
 					setTimeout(() => this.value = "", 0);
 					const result = await testGames(games);
 					makeVCF.pushGames(result.log, arr => miniBoard.unpackArray(arr));
@@ -268,7 +260,7 @@
 			//log("dbl")
 		})
 		bindEvent.addEventListener(cBoard.viewBox, "contextmenu", (x, y) => {
-			//log("contextmenu")
+			cBoard.setScale(cBoard.scale != 1 ? 1 : 1.5, true);
 		})
 		bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
 			cBoard.zoomStart(x1, y1, x2, y2)
@@ -282,6 +274,9 @@
 		bindEvent.addEventListener(miniBoard.viewBox, "dblclick", (x, y) => {
 			let idx = miniBoard.getIndex(x, y);
 			ctnBack(idx)
+		})
+		bindEvent.addEventListener(miniBoard.viewBox, "contextmenu", (x, y) => {
+			miniBoard.setScale(miniBoard.scale != 1 ? 1 : 1.5, true);
 		})
 		bindEvent.addEventListener(miniBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
 			miniBoard.zoomStart(x1, y1, x2, y2)

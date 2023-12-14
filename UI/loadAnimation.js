@@ -101,11 +101,11 @@ window.loadAnimation = (function() { //控制加载动画
         const MSG = event.data;
         if (MSG.indexOf("loading...") + 1) {
             loadAnimation.open();
-            console.info(`open`);
+            console.info(`loadAnimation.open`);
         }
         else if (MSG.indexOf("load finish") + 1) {
             loadAnimation.close();
-            console.info(`close`);
+            console.info(`loadAnimation.close`);
         }
     }
 })

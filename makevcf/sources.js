@@ -19,7 +19,8 @@
 			sources: [[SOURCE_FILES["TypeBuffer"]],
 				[SOURCE_FILES["RenjuTree"]],
 				[SOURCE_FILES["makevcf"]],
-				[SOURCE_FILES["renjueditor"]]]
+				[SOURCE_FILES["saveFile_js"]],
+				[SOURCE_FILES["puzzleCoder"]]]
 		}, {
 			progress: "80%",
 			type: "scriptAll",

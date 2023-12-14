@@ -477,15 +477,13 @@ window.control = (() => {
 					let arr = cBoard.getArray();
 					const FUN = {
 						1: async function() {
-							return engine.createTreeVCT({
+							return engine.createTreePointsVCT({
 								color: getRenjuSelColor(),
 								arr: arr,
-								radius: 3,
 								ftype: FIND_ALL,
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000,
-								maxDepthVCT: 5,
+								maxNode: 1000
 							})
 						},
 						2: async function() {
@@ -1003,11 +1001,12 @@ window.control = (() => {
 				editButtons(xyObjToPage({ x: renjuCmdDiv.viewElem.offsetLeft, y: renjuCmdDiv.viewElem.offsetTop }, renjuCmdDiv.viewElem.parentNode), "renjuCmdSettings", renjuCmdSettings);
 			});
 			
-		const _themeNames = ["light","grey","dark"];
+		const _themeNames = ["light","grey","green","dark"];
 		const themeMenu = createMenu(
 					[0, "白色",
 	    			1, "灰色",
-	    			2, "黑色"],
+	    			2, "绿色",
+	    			3, "黑色"],
 	    		function() {
 	    			if (isBusy()) return;
 	    			mainUI.setTheme(_themeNames[this.input.value*1]);
@@ -1480,7 +1479,7 @@ window.control = (() => {
 		async function inputCode(initStr = "") {
 			const inputStr = await inputText(initStr, 10, "输入代码");
 			const type = (playMode == MODE_READLIB || playMode == MODE_EDITLIB) ? TYPE_NUMBER : undefined;
-			checkCommand(inputStr) || cBoard.unpackCode(getShowNum(), inputStr, type);
+			checkCommand(inputStr) || cBoard.unpackCode(inputStr, type, getShowNum());
 		}
 		
 		function shareURL() {
@@ -1574,7 +1573,11 @@ window.control = (() => {
 				playMode != MODE_LINE_EDIT) return;
 
 			if (playMode == MODE_READLIB || playMode == MODE_EDITLIB) {
-				this.showBranchs();
+				this.showBranchs(iHTML => {
+					let exWindow = window.exWindow;
+					exWindow.innerHTML((iHTML).split("<br><br>").join("<br>"));
+					iHTML && exWindow.open();
+				});
 			}
 			else if (playMode == MODE_RENLIB) {
 				RenjuLib.showBranchs({ path: this.MS.slice(0, this.MSindex + 1), position: this.getArray2D() });
@@ -1699,6 +1702,7 @@ window.control = (() => {
 			cBoard: cBoard,
 			getShowNum: getShowNum
 		});
+		engine.board = cBoard;
 		
 		loadRenjuData();
 		
@@ -2249,7 +2253,7 @@ window.control = (() => {
 							centerPos = { x: cBoard.size / 2 + 0.5, y: cBoard.size / 2 + 0.5 },
 							tree = new RenjuTree(1, 640, centerPos);
 						playMode = MODE_EDITLIB;
-						cBoard.unpackCode(getShowNum(), code, TYPE_NUMBER);
+						cBoard.unpackCode(code, TYPE_NUMBER, getShowNum());
 						cBoard.addTree(tree);
 						cBoard.tree.createPath(cBoard.MS.slice(0, cBoard.MSindex + 1));
 					}
@@ -2261,7 +2265,7 @@ window.control = (() => {
 						let code = cBoard.getCode();
 						cBoard.removeTree();
 						playMode = MODE_RENJU;
-						cBoard.unpackCode(getShowNum(), code);
+						cBoard.unpackCode(code, undefined, getShowNum());
 					}
 					else if (mode == MODE_RENJU_FREE) {
 						let arr = cBoard.getArray();

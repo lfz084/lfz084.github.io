@@ -79,10 +79,10 @@
         this.firstColor = "black";
         this.tree = undefined;
         this.cleLb("all");
-        window.exWindow.close();
+        window.exWindow && window.exWindow.close();
     }
     
-    Board.prototype.showBranchs = function() {
+    Board.prototype.showBranchs = function(outputComment = _outputComment) {
         //log(this.tree)
         this.cleLb("all");
         let path = this.MS.slice(0, this.MSindex + 1),
@@ -112,15 +112,19 @@
                 }
             }
         });
-
-        let exWindow = window.exWindow;
-        exWindow.innerHTML(iHtml);
-        iHtml && exWindow.open();
+        
+        outputComment(iHtml)
 
         if (this.MSindex + 1 === this.MS.length && nextMove.idx > -1 && nextMove.idx < 225) {
             (this.MSindex & 1) + 1 == nextMove.idxColor && this.MS.push(225);
             this.MS.push(nextMove.idx);
         }
+    }
+    
+    function _outputComment(iHtml) {
+        let exWindow = window.exWindow;
+        exWindow.innerHTML(iHtml);
+        iHtml && exWindow.open();
     }
     
     exports.CheckerBoard = Board;

@@ -474,6 +474,10 @@ window.mainUI = (function() {
 		get getChildsForVarname() { return getChildsForVarname }
 		get getChildByName() { return getChildByName }
 		get getChildsByName() { return getChildsByName }
+		get innerHTML() { return this.viewElem.innerHTML }
+		set innerHTML(html) { return this.viewElem.innerHTML = html }
+		get innerText() { return this.viewElem.innerText }
+		set innerText(text) { return this.viewElem.innerText = text }
 	}
 
 	viewElem.prototype.move = function(left = this.left, top = this.top, width = this.width, height = this.height, parent = this.parent, conver = false) {
@@ -532,7 +536,7 @@ window.mainUI = (function() {
 	}
 
 	function newClass(param = {}, _class = viewElem) {
-		const vElem = new _class(param.left, param.top, param.width, param.height);
+		const vElem = new _class(param.left, param.top, param.width, param.height, param.parent || param.parentNode, param.type);
 		param = formatParam(param);
 		param.varName && (vElem.varName = param.varName);
 		vElem.style(param.style);

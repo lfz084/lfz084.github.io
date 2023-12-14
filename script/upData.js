@@ -1,7 +1,7 @@
 // import removeServiceWorker form "serviceWorker.js"
 window.upData = (function() {
     'use strict';
-
+	const DEBUG_UPDATA = false;
     const mlog = self["mlog"] || console.warn;
     
     const keyRenjuVersion = "RENJU_APP_VERSION";
@@ -348,12 +348,12 @@ window.upData = (function() {
     }
     
     async function loadCache(cache, url) {
-    	console.log(`upData.js: loadCache ${url}`)
+    	DEBUG_UPDATA && console.log(`upData.js: loadCache ${url}`)
     	return await cache.match(new Request(url, myInit))
     }
     
     async function putCache(cache, url, response) {
-    	console.log(`upData.js: putCache ${url}`)
+    	DEBUG_UPDATA && console.log(`upData.js: putCache ${url}`)
     	return await cache.put(new Request(url, myInit), response)
     }
     
@@ -375,7 +375,7 @@ window.upData = (function() {
     	if(!checkServiceWorkerAndCaches()) return;
     	const response = await loadCache(cache, url);
     	if (response) {
-    		console.info(`upData.js: saveCacheFile loaded "${url}" in cache ${version}`)
+    		DEBUG_UPDATA && console.info(`upData.js: saveCacheFile loaded "${url}" in cache ${version}`)
     		return true;
     	}
     	else {

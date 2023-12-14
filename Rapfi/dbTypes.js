@@ -50,31 +50,31 @@ function reflectX(centerY, _x, _y) {
     return _x + (centerY * 2 - _y) * 15;
 }
 
-function rotatePosstion(w, h, posstion) {
-    const nPosstion = new Array(225).fill(0);
+function rotatePosition(w, h, position) {
+    const nPosition = new Array(225).fill(0);
     for (let i = 0; i < 225; i++) {
-        if (posstion[i]) {
+        if (position[i]) {
             const idx = rotate90((w - 1) / 2, (h - 1) / 2, i % 15, ~~(i / 15))
-            nPosstion[idx] = posstion[i];
+            nPosition[idx] = position[i];
         }
     }
-    return nPosstion;
+    return nPosition;
 }
 
-function reflectPosstion(w, h, posstion) {
-    const nPosstion = new Array(225).fill(0);
+function reflectPosition(w, h, position) {
+    const nPosition = new Array(225).fill(0);
     for (let i = 0; i < 225; i++) {
-        if (posstion[i]) {
+        if (position[i]) {
             const idx = reflectX((h - 1) / 2, i % 15, ~~(i / 15))
-            nPosstion[idx] = posstion[i];
+            nPosition[idx] = position[i];
         }
     }
-    return nPosstion;
+    return nPosition;
 }
 
 //------------------------- getStones --------------------------
 
-function getStones(posstion, sideToMove) {
+function getStones(position, sideToMove) {
     let blackIndex = 0;
     let whiteIndex = 0;
     const blackStones = [];
@@ -82,11 +82,11 @@ function getStones(posstion, sideToMove) {
     for (let x = 0; x < 15; x++) {
         for (let y = 0; y < 15; y++) {
             const idx = x + y * 15;
-            if (posstion[idx] == 1) {
+            if (position[idx] == 1) {
                 blackStones[blackIndex++] = x;
                 blackStones[blackIndex++] = y;
             }
-            else if (posstion[idx] == 2) {
+            else if (position[idx] == 2) {
                 whiteStones[whiteIndex++] = x;
                 whiteStones[whiteIndex++] = y;
             }
@@ -175,16 +175,16 @@ class DBKey extends CompactDBKey{
 }
 */
 
-function constructAllDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {
+function constructAllDBKey(rule, boardWidth, boardHeight, sideToMove, position) {
     const Keys = [];
     for (let i = 0; i < 8; i++) {
         if (i == 4) {
-            posstion = reflectPosstion(boardWidth, boardHeight, posstion);
+            position = reflectPosition(boardWidth, boardHeight, position);
         }
         else if (i) { // 1,2,3,5,6,7
-            posstion = rotatePosstion(boardWidth, boardHeight, posstion);
+            position = rotatePosition(boardWidth, boardHeight, position);
         }
-        const stones = getStones(posstion, sideToMove);
+        const stones = getStones(position, sideToMove);
         const numKeyBytes = 3 + stones.length;
         Keys[i] = [numKeyBytes & 0xFF, numKeyBytes >>> 8, rule, boardWidth, boardHeight].concat(stones);
     }
@@ -192,16 +192,16 @@ function constructAllDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) 
 }
 
 
-function constructDBKey(rule, boardWidth, boardHeight, sideToMove, posstion) {
+function constructDBKey(rule, boardWidth, boardHeight, sideToMove, position) {
     let small = [0xFFFF, 0xFFFF];
     for (let i = 0; i < 8; i++) {
         if (i == 4) {
-            posstion = reflectPosstion(boardWidth, boardHeight, posstion);
+            position = reflectPosition(boardWidth, boardHeight, position);
         }
         else if (i) { // 1,2,3,5,6,7
-            posstion = rotatePosstion(boardWidth, boardHeight, posstion);
+            position = rotatePosition(boardWidth, boardHeight, position);
         }
-        const stones = getStones(posstion, sideToMove);
+        const stones = getStones(position, sideToMove);
         small = smallStones(stones, small);
     }
     const numKeyBytes = 3 + small.length;

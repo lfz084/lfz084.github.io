@@ -54,23 +54,8 @@
                 [SOURCE_FILES["gif"]],
                 [SOURCE_FILES["gifFile"]],
                 [SOURCE_FILES["CheckerBoardGIF"]]]
-        }, {/*
-			progress: "78%",
-			type: "fileAll",
-			isAsync: true,
-			sources: [[SOURCE_FILES["JFile"]],
-                [SOURCE_FILES["JPoint"]],
-                [SOURCE_FILES["MoveNode"]],
-                [SOURCE_FILES["LibraryFile"]],
-                [SOURCE_FILES["worker"]],
-                [SOURCE_FILES["work_ReadLib"]],
-                [SOURCE_FILES["IntervalPost"]],
-                [SOURCE_FILES["RenLibDoc"]],
-                [SOURCE_FILES["RenLibDoc_wasm"]],
-                [SOURCE_FILES["RenLib_wasm"]],
-                [SOURCE_FILES["gifWorker"]]]
-        }, {*/
-			progress: "99%",
+        }, {
+        	progress: "99%",
 			type: "scriptAll",
 			isAsync: false,
 			sources: [[SOURCE_FILES["control"]]]

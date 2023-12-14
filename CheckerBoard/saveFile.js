@@ -26,6 +26,7 @@
                 document.body.appendChild(save_link);
                 save_link.click();
                 save_link.parentNode.removeChild(save_link);
+                save_link.remove();
                 setTimeout(() => { URL.revokeObjectURL(save_link.href); }, 1000 * 60);
                 console.log("click downloading...");
             }

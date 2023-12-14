@@ -149,7 +149,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	const svgHideButtons = "./UI/theme/light/dots-3-vertical-svgrepo-com.svg";
 		
 	class ButtonBoard {
-		constructor(parentNode, left, top, width, height, numButtons = 8) {
+		constructor(parentNode, left, top, width, height, numButtons = 8, position = "fixed") {
 			numButtons = numButtons >>> 1;
 			
 			this.parentNode = parentNode;
@@ -171,7 +171,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this.board.appendChild(this.topBoard);
 			
 			const butBoardStyle = {
-				position: "absolute",
+				position: position,
 				left: left + "px",
 				top: top + "px",
 				width: width + "px",
@@ -184,7 +184,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			
 			Object.assign(this.board.style, butBoardStyle)
 			
-			Object.assign(butBoardStyle, {left: "0px", top: "0px", overflow: "hidden"})
+			Object.assign(butBoardStyle, { position: "absolute", left: "0px", top: "0px", overflow: "hidden"})
 			Object.assign(this.leftBoard.style, butBoardStyle)
 			Object.assign(this.rightBoard.style, butBoardStyle)
 			Object.assign(this.topBoard.style, butBoardStyle)
@@ -221,12 +221,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		}
 	}
 	
-	ButtonBoard.prototype.moveCenter = function(x, y, parentNode = this.parentNode) {
+	ButtonBoard.prototype.moveCenter = function(x, y, parentNode = this.parentNode, position = this.board.style.position) {
 		this.parentNode = parentNode;
 		this.parentNode.appendChild(this.board);
 		this.left = x - parseInt(this.board.style.width) / 2;
 		this.top = y - parseInt(this.board.style.height) / 2;
 		Object.assign(this.board.style, {
+			position: position,
 			left: this.left + "px",
 			top: this.top + "px"
 		})

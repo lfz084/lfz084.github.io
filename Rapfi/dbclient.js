@@ -140,7 +140,7 @@ window.DBClient = (() => {
             if (enable) {
                 return await wk.promiseMessage({ cmd: "getBranchNodes", parameter: param });
             }
-            return {comment: undefined, records: [], posstion: param.posstion};
+            return {comment: undefined, records: [], position: param.position};
         }
     }
 })()

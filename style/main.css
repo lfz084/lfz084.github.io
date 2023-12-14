@@ -431,6 +431,114 @@ hr {
     }
 }
 
+@-webkit-keyframes stoneReady {
+	0% {
+		opacity: 0.8;
+		-webkit-transform: scale(0.8);
+		-moz-transform: scale(0.8);
+		-ms-transform: scale(0.8);
+		transform: scale(0.8);
+	}
+	
+	100% {
+		opacity: 0.8;
+		-webkit-transform: scale(1);
+		-moz-transform: scale(1);
+		-ms-transform: scale(1);
+		transform: scale(1);
+	}
+}
+
+@-moz-keyframes stoneReady {
+	0% {
+		opacity: 0.8;
+		-webkit-transform: scale(0.8);
+		-moz-transform: scale(0.8);
+		-ms-transform: scale(0.8);
+		transform: scale(0.8);
+	}
+	
+	100% {
+		opacity: 0.8;
+		-webkit-transform: scale(1);
+		-moz-transform: scale(1);
+		-ms-transform: scale(1);
+		transform: scale(1);
+	}
+}
+
+@keyframes stoneReady {
+	0% {
+		opacity: 0.8;
+		-webkit-transform: scale(0.8);
+		-moz-transform: scale(0.8);
+		-ms-transform: scale(0.8);
+		transform: scale(0.8);
+	}
+	
+	100% {
+		opacity: 0.8;
+		-webkit-transform: scale(1);
+		-moz-transform: scale(1);
+		-ms-transform: scale(1);
+		transform: scale(1);
+	}
+}
+
+@-webkit-keyframes putStone {
+    0% {
+        opacity: 1;
+        -webkit-transform: scale(0.8);
+        -moz-transform: scale(0.8);
+        -ms-transform: scale(0.8);
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 1;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+@-moz-keyframes putStone {
+    0% {
+        opacity: 1;
+        -webkit-transform: scale(0.8);
+        -moz-transform: scale(0.8);
+        -ms-transform: scale(0.8);
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 1;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+@keyframes putStone {
+    0% {
+        opacity: 1;
+        -webkit-transform: scale(0.8);
+        -moz-transform: scale(0.8);
+        -ms-transform: scale(0.8);
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 1;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
 @-webkit-keyframes selectLine {
     0% {
         opacity: 1;
@@ -747,8 +855,19 @@ hr {
     -webkit-animation: startPoint 1s linear 0.5s infinite alternate;
     -moz-animation: startPoint 1s linear 0.5s infinite alternate;
     animation: startPoint 1s linear 0.5s infinite alternate;
-
 }
+
+.stoneReady {
+	-webkit-animation: stoneReady 1s linear 0.5s infinite alternate;
+	-moz-animation: stoneReady 1s linear 0.5s infinite alternate;
+	animation: stoneReady 1s linear 0.5s infinite alternate;
+}
+
+.putStone {
+	-webkit-animation: putStone 380ms ease-in;
+	-moz-animation: putStone 380ms ease-in;
+	animation: putStone 380ms ease-in;
+} 
 
 .selectLine {
     -webkit-animation: selectLine 3s linear 1.5s infinite alternate;

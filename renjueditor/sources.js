@@ -27,7 +27,9 @@
 			progress: "99%",
 			type: "scriptAll",
 			isAsync: false,
-			sources: [[SOURCE_FILES["renjueditor"]],
+			sources: [[SOURCE_FILES["saveFile_js"]],
+				[SOURCE_FILES["puzzleCoder"]],
+				[SOURCE_FILES["renjueditor"]],
 				[SOURCE_FILES["renjueditorMain"]]]
         }
      ];

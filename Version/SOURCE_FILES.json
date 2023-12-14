@@ -16,6 +16,7 @@
     "EvaluatorJScript": "eval/EvaluatorJScript.js",
     "EvaluatorWebassembly": "eval/EvaluatorWebassembly.js",
     "worker": "eval/worker.js",
+    
     "CheckerBoardGIF": "gif/CheckerBoardGIF.js",
     "gif": "gif/gif.js",
     "gifWorker": "gif/gif.worker.js",
@@ -25,6 +26,12 @@
     "appData": "historyGames/appData.js",
     "IndexedDB": "IndexedDB/IndexedDB.js",
     "mylz4": "lz4/mylz4.js",
+    
+    "gomocalc_worker": "gomocalc/engine-warpper.worker.8389b800.worker.js",
+    "gomocalc": "gomocalc/gomocalc.js",
+    "rapfi_data": "gomocalc/rapfi-single.data",
+    "rapfi_js": "gomocalc/rapfi-single.js",
+    "rapfi_wasm": "gomocalc/rapfi-single.wasm",
     
     "makevcfMain": "makevcf/main.js",
     "makevcf": "makevcf/makeVCF.js",
@@ -42,6 +49,10 @@
     "chevron-left_svg": "pic/chevron-left.svg",
     "close-white_svg": "pic/close-white.svg",
     "docusign-white_svg": "pic/docusign-white.svg",
+    
+    "puzzleMain": "puzzle/main.js",
+    "puzzleAI": "puzzle/puzzleAI.js",
+    "puzzleSources": "puzzle/sources.js",
     
     "databass": "Rapfi/databass.js",
     "dbclient": "Rapfi/dbclient.js",
@@ -73,6 +84,7 @@
     "renjueditorMain": "renjueditor/main.js",
     "mypdfjs": "renjueditor/myPDFJS.js",
     "myzip": "renjueditor/myZip.js",
+    "puzzleCoder": "renjueditor/puzzleCoder.js",
     "renjueditor": "renjueditor/renjuEditor.js",
     "renjueditorSources": "renjueditor/sources.js",
     
@@ -207,15 +219,20 @@
     "icon_dark_17": "./UI/theme/dark/arrow-ccw-svgrepo-com.svg",
     "icon_dark_18": "./UI/theme/dark/arrow-cw-svgrepo-com.svg",
     
-    "icon_png": "icon(192x192).png",
-    "icon_ico": "icon(128x128).ico",
+    "icon_ico_128x128": "icon(128x128).ico",
+    "icon_ico_192x192": "icon(192x192).ico",
+    "icon_png_57x57": "icon(57x57).png",
+    "icon_png_72x72": "icon(72x72).png",
+    "icon_png_114x114": "icon(114x114).png",
+    "icon_png_192x192": "icon(192x192).png",
     "404_html": "404.html",
+    "dbread_html": "dbread.html",
     "index_html": "index.html",
     "lib2sgf_html": "lib2sgf.html",
     "makevcf_html": "makevcf.html",
+    "puzzle_html": "puzzle.html",
     "renju_html": "renju.html",
     "renjueditor_html": "renjueditor.html",
-    "tuya_html": "tuya.html",
-    "dbread_html": "dbread.html",
-    "reset_html": "reset.html"
+    "reset_html": "reset.html",
+    "tuya_html": "tuya.html"
 }

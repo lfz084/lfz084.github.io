@@ -39,9 +39,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["appData"] = "v2111.08";
                 control.loadCmdSettings("renjuCmdSettings", data.renjuCmdSettings);
             if (data.firstColor != "undefined" && data.firstColor) cBoard.firstColor = data.firstColor;
             if (parseInt(data.resetNum) > 0) cBoard.resetNum = parseInt(data.resetNum);
-            if (data.moves) cBoard.unpackCodeType(true, TYPE_NUMBER, TYPE_NUMBER, data.moves);
-            if (data.whiteMoves) cBoard.unpackCodeType(true, TYPE_WHITE, TYPE_WHITE, data.whiteMoves);
-            if (data.blackMoves) cBoard.unpackCodeType(true, TYPE_BLACK, TYPE_BLACK, data.blackMoves);
+            if (data.moves) cBoard.unpackCodeType(data.moves, TYPE_NUMBER, TYPE_NUMBER, true);
+            if (data.whiteMoves) cBoard.unpackCodeType(data.whiteMoves, TYPE_WHITE, TYPE_WHITE, true);
+            if (data.blackMoves) cBoard.unpackCodeType(data.blackMoves, TYPE_BLACK, TYPE_BLACK, true);
         }, 300);
     };
 

@@ -54,16 +54,16 @@ var recordDB = {
     }
 };
 
-function forEveryEmpty(posstion, callback) {
+function forEveryEmpty(position, callback) {
     for (let i = 0; i < 225; i++) {
-        if (0 == posstion[i]) callback(i);
+        if (0 == position[i]) callback(i);
     }
 }
 
-function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, posstion}) {
+function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, position}) {
     let comment = new Uint8Array();
     let records = [];
-    const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove, posstion);
+    const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove, position);
     const recordBuffer = recordDB.get(sKey);
     if (recordBuffer) {
         const record = new DBRecord(recordBuffer);
@@ -71,17 +71,17 @@ function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, posstion}) {
         //alert(comment)
     }
 
-    forEveryEmpty(posstion, function(idx) {
-        const nPosstion = posstion.slice(0);
-        nPosstion[idx] = sideToMove + 1;
+    forEveryEmpty(position, function(idx) {
+        const nPosition = position.slice(0);
+        nPosition[idx] = sideToMove + 1;
         /*
-        const sKeys = constructAllDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosstion);
+        const sKeys = constructAllDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosition);
         let recordBuffer;
         for (let i = 0; i < 8; i++) {
             if (recordBuffer = recordDB.get(sKeys[i])) break;
         }
         */
-        const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosstion);
+        const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove ^ 1, nPosition);
         const recordBuffer = recordDB.get(sKey);
         if (recordBuffer) {
             const record = {idx: idx, buffer: recordBuffer};
@@ -109,7 +109,7 @@ const CMD = {
     getBranchNodes: function(param) {
         const cmd = "resolve";
         const parameter = getBranchNodes(param);
-        parameter.posstion = param.posstion;
+        parameter.position = param.position;
         post(cmd, parameter);
     },
     close: function() {

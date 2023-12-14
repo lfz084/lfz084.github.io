@@ -326,7 +326,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuTree"] = "v2111.08";
                     buf = TextCoder.encode(str, "GBK").slice(0, COMMENT_SIZE - 4);
                 if (0 == pointer) {
                     pointer = this.commentBuf.alloc();
-                    pointer==0 && alert(pointer)
+                    //pointer==0 && alert(pointer)
                     this.commentBuf.setUint8(pointer, 1);
                     this.nodeBuf.setUint32(this.pointer + 16, pointer);
                 }

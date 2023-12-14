@@ -28,13 +28,15 @@ window.engine = (function() {
             //-------------------------- COMMAND -------------------------------
 
             let isPrintMoves = false;
+			const defaultBoard =  {printMoves: ()=>{},wNb:()=>{},wLb:()=>{},cleNb:()=>{},cleLb:()=>{},printSearchPoint:()=>{},cleSearchPoint:()=>{}};
+            let board = defaultBoard;
             const COLOR_NAME = { "-1": "出界", 0: "空格", 1: "黑棋", 2: "白棋" };
             const COMMAND = {
                 log: function(param) { log(param, "log") },
                 info: function(param) { log(param, "info") },
                 error: function(param) { log(param, "error") },
                 warn: function(param) { log(param, "warn") },
-                moves: function(param) { isPrintMoves && cBoard.printMoves(param.moves, param.firstColor) },
+                moves: function(param) { isPrintMoves && board.printMoves(param.moves, param.firstColor) },
                 vcfInfo: function(param) { this.result = param.vcfInfo },
                 points: function(param) { this.result = param.points },
                 levelBInfo: function(param) { this.result = param.levelBInfo },
@@ -174,7 +176,7 @@ window.engine = (function() {
             }
 
             function loopWaitThreadList() {
-                THREADS.map(thread => (thread.isBusy = false, thread.unlock(LOCK2)));
+            	THREADS.map(thread => (thread.isBusy = false, thread.unlock(LOCK2)));
                 waitThreadInterval && clearInterval(waitThreadInterval);
                 waitThreadInterval = setInterval(() => {
                     try {
@@ -182,8 +184,8 @@ window.engine = (function() {
                             getFreeThreads().map(thread => {
                                 waitThreadList.length && (thread.lock(), waitThreadList.shift()(thread)); //resolve(thread)
                             })
-                        else if (getFreeThreads().length == MAX_THREAD_NUM)
-                            stopWaitThreadList();
+                        /*else if (getFreeThreads().length == MAX_THREAD_NUM)
+                            stopWaitThreadList();*/
 
                     }
                     catch (e) {
@@ -208,32 +210,52 @@ window.engine = (function() {
             function reset() {
                 return Promise.all(THREADS.map(thread => thread.cancel()));
             }
-
-            function cancel() {
-                return new Promise((resolve) => {
-                    if (canceling) {
-                        resolve();
-                    }
-                    else {
-                        THREADS.map(thread => thread.lock(LOCK2));
-                        reset()
-                            .then(() => {
-                                canceling = true;
-                                THREADS.map(thread => thread.unlock(LOCK2));
-                                let count = 0,
-                                    timer = setInterval(() => {
-                                        count = THREADS.find(thread => thread.isBusy) ? 0 : count + 1;
-                                        if (count > 15) {
-                                            clearInterval(timer);
-                                            resolve();
-                                            setTimeout(() => canceling = false, 1500)
-                                            log("engine.cancel", "warn")
-                                        }
-                                    }, 100)
-                            })
-                    }
-                })
+            
+            async function cancel() {
+            	if (!canceling) {
+            		if (waitThreadList.length || THREADS.find(thread => thread.isBusy)) {
+           				canceling = true;
+           				await reset();
+           			}
+           			await waitValue(waitThreadList, "length", 0, 10);
+           			await waitValue({get c() { return !!THREADS.find(thread => thread.isBusy) }}, "c", false, 10);
+            	}
+            	await waitValue({get c() { return canceling}}, "c", false, 10);
             }
+            
+            async function ready() {
+            	await waitValue({get c() { return THREADS.find(thread => thread.isBusy) }}, "c", undefined, 0);
+            	loopWaitThreadList()
+            }
+            
+            /*
+            function cancel() {
+            	return new Promise(async (resolve) => {
+            		if (canceling) {
+            			await waitValue({get c() { return canceling}}, "c", false, 0);
+            			resolve();
+            		}
+            		else {
+            			THREADS.map(thread => thread.lock(LOCK2));
+            			reset()
+            				.then(() => {
+            					canceling = true;
+            					THREADS.map(thread => thread.unlock(LOCK2));
+            					let count = 0,
+            						timer = setInterval(() => {
+            							count = THREADS.find(thread => thread.isBusy) ? 0 : count + 1;
+            							if (count > 15) {
+            								clearInterval(timer);
+            								resolve();
+            								setTimeout(() => canceling = false, 1500)
+            								log("engine.cancel", "warn")
+            							}
+            						}, 100)
+            				})
+            		}
+            	})
+            }
+            */
 
             //------------------------ Evaluator -------------------
             const NEWLINE = String.fromCharCode(10);
@@ -463,7 +485,7 @@ window.engine = (function() {
             }
 
             //param: {arr, color}
-            function createTreeNodes(param, callback) {
+	        function createTreeNodes(param, callback = ()=>true) {
                 let { tree, positionMoves, isPushPass, current } = createTree(param),
                     nodes = getNodes(param, callback);
 
@@ -512,10 +534,6 @@ window.engine = (function() {
                         ps.push(getLevelThreeNode(idx, infoArr[idx], param)
                             .then(node => node && nodes.push(node))
                         );
-                        /*if (ps.length >= MAX_THREAD_NUM) {
-                            await Promise.race(ps);
-                            await removeFinallyPromise(ps);
-                        }*/
                     }
                 }
                 await Promise.all(ps);
@@ -558,7 +576,9 @@ window.engine = (function() {
                 nextMoves = await _nextMoves(param);
                 param.color = INVERT_COLOR[param.color];
 
-                tPoints = await getLevelThreePoints(param, nextMoves);
+                const filterArr = new Array(226);
+                nextMoves.map(idx => filterArr[idx] = 1)
+                tPoints = await getLevelThreePoints(param, filterArr);
                 nextMoves.map(idx => sortArr[idx] = 2)
                 fPoints.map(idx => sortArr[idx]++);
                 tPoints.map(idx => sortArr[idx]++);
@@ -584,9 +604,9 @@ window.engine = (function() {
 
             //------------------------- exports --------------------
 
-            function _setGameRules(rules) {
+            async function _setGameRules(rules) {
                 setGameRules(rules);
-                reset();
+                THREADS.map(thread => thread.run({ cmd: "setGameRules", param: { rules: gameRules } }));
                 return gameRules;
             }
 
@@ -613,7 +633,7 @@ window.engine = (function() {
             async function waitValue(obj, key, value, timeout = 500) {
                 return new Promise((resolve) => {
                     let timer = setInterval(() => {
-                        if (obj[key] == value) {
+                    	if (obj[key] == value) {
                             clearInterval(timer);
                             resolve(obj[key]);
                         }
@@ -662,12 +682,12 @@ window.engine = (function() {
             }
 
             async function putMove(idx, waitTime = 500) {
-                cBoard.wNb(idx, "auto", true);
+                board.wNb(idx, "auto", true);
                 await wait(waitTime);
             }
 
             async function takeMove(idx, waitTime = 500) {
-                cBoard.cleNb(idx, true);
+                board.cleNb(idx, true);
                 await wait(waitTime);
             }
 
@@ -1156,20 +1176,17 @@ window.engine = (function() {
         moves = moves.slice(0);
         let ps = [],
             count = 0,
-            done = false,
-            isFour = FOUR_NOFREE == (FOUL_MAX & testPointFour(current.idx, param.color, param.arr));
+            done = false;
         
         for (let i = blkPoints.length - 1; i >= 0; i--) {
             let idx = blkPoints[i],
-                arr = param.arr,
-                blkCur = tree.newNode(idx, DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]),
-                nIsFour = isFour || FOUR_NOFREE == (FOUL_MAX & testPointFour(idx, INVERT_COLOR[param.color], arr));
+            	arr = param.arr,
+            	blkCur = tree.newNode(idx, DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]);
                 
             current.addChild(blkCur);
             arr[idx] = INVERT_COLOR[param.color];
             moves.push(idx);
             
-            !nIsFour && (param.maxDepthVCT -= 2);
             ps.push(_addBranchSimpleWin(param, tree, blkCur, moves)
                 .then(wNode => {
                     if (wNode) count++
@@ -1179,7 +1196,6 @@ window.engine = (function() {
                     }
                 })
             )
-            !nIsFour && (param.maxDepthVCT += 2);
             
             moves.pop();
             arr[idx] = 0;
@@ -1199,7 +1215,9 @@ window.engine = (function() {
             winNode = undefined,
             done = false,
             arr = param.arr,
-            color = param.color;
+            color = param.color,
+            isSideFour = moves.length ? (getLevelPoint(moves[moves.length - 1], INVERT_COLOR[color], arr) & 0xff) >= LEVEL_NOFREEFOUR : (getLevel(arr, INVERT_COLOR[color]) & 0xff) >= LEVEL_NOFREEFOUR;
+            
         for (let i = nodes.length - 1; i >= 0; i--) {
             let node = nodes[i],
                 idx = node.idx,
@@ -1208,10 +1226,14 @@ window.engine = (function() {
             arr[idx] = color;
             moves.push(idx);
             current.addChild(cur);
-                    
+            
+            const isFour = FOUR_NOFREE == (FOUL_MAX & testPointFour(idx, color, arr));
+            const isChangeDepth = !(isSideFour || (isFour && param.maxDepthVCT == 1));
+            isChangeDepth && (param.maxDepthVCT -= 2);
+            
             if (node.winMoves) { //levelThreeNode
                 blkPoints = getBlockVCF(arr, color, node.winMoves, true);
-                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 防点:<br>[${movesToName(blkPoints)}]<br>`;
+                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>[${movesToName(blkPoints)}]<br>`;
                 let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
                     nParam = copyParam(param),
                     nMoves = moves.slice(0);
@@ -1232,7 +1254,7 @@ window.engine = (function() {
                     .then(() => {
                         if (1 >= moves.length) {
                             if (canceling) current.removeChild(cur);
-                            else cBoard.wLb(cur.idx, cur.boardText, "black");
+                            else board.wLb(cur.idx, cur.boardText, "black");
                         }
                     })
                     .then(() => idx)
@@ -1252,24 +1274,27 @@ window.engine = (function() {
                     .then(() => {
                         if (1 >= moves.length) {
                             if (canceling) current.removeChild(cur);
-                            else cBoard.wLb(cur.idx, cur.boardText, "black");
+                            else board.wLb(cur.idx, cur.boardText, "black");
                         }
                     })
                     .then(() => idx)
                 )
             }
+            
+            isChangeDepth && (param.maxDepthVCT += 2);
+            
             moves.pop();
             arr[idx] = 0;
-            moves.length == 0 && cBoard.printSearchPoint(idx, idx, "green");
+            moves.length == 0 && board.printSearchPoint(idx, idx, "green");
             if (ps.length >= MAX_THREAD_NUM) {
                 await Promise.race(ps)
-                    .then(idx => moves.length == 0 && cBoard.cleSearchPoint(idx))
+                    .then(idx => moves.length == 0 && board.cleSearchPoint(idx))
                 await removeFinallyPromise(ps);
             }
             if (done) break;
         }
         ps.length && await Promise.all(ps);
-        moves.length == 0 && cBoard.cleSearchPoint();
+        moves.length == 0 && board.cleSearchPoint();
         return winNode;
     }
     
@@ -1297,7 +1322,7 @@ window.engine = (function() {
         else if (param.maxDepthVCT >= 0) {
             current.score = SCORE_WAIT;
             winNode = winNode || await _addBranchVCF(param, tree, current, moves);
-            if (param.maxDepthVCT >= 2) {
+            if (param.maxDepthVCT >= 2 || (getLevel(arr, INVERT_COLOR[param.color]) & 0xff) >= LEVEL_NOFREEFOUR) {
                 winNode = winNode || await _addBranchSimpleVCT(param, tree, current, moves);
             }
         }
@@ -1315,7 +1340,7 @@ window.engine = (function() {
         let { tree, positionMoves, isPushPass, current } = createTree(param),
             winNode = await _addBranchSimpleWin(param, tree, current);
         
-        tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: 坂田三手胜<br>.先手方要在三手内取胜<br>.最后的VCF算一手棋<br>.被动防冲四不增加手数<br>-----点击棋盘查看计算结果-----<br>`;
+        tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: 坂田三手胜<br>.先手方要在三手内取胜<br>.最后的VCF算一手棋<br>.被动防冲四手数不变<br>-----点击棋盘查看计算结果-----<br>`;
         
         return tree;
     }
@@ -1346,7 +1371,7 @@ window.engine = (function() {
                 let wMoves = await _findVCF(param);
                 if (wMoves.length) {
                     let bPoints = getBlockVCF(param.arr, param.color, wMoves, true);
-                    cur.comment = `<br><br>${COLOR_NAME[param.color]} 挡四后有 VCF:<br>[${movesToName(wMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]}防点:<br>[${movesToName(bPoints)}]<br>`;
+                    cur.comment = `<br><br>${COLOR_NAME[param.color]} 挡四后有 VCF:<br>[${movesToName(wMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]}考虑防点:<br>[${movesToName(bPoints)}]<br>`;
                     isDoubleVCF = await _addBranchIsDoubleVCF(param, bPoints, tree, cur, depth + 1);
                 }
                 else{
@@ -1438,7 +1463,7 @@ window.engine = (function() {
             param.includeFour = true;
             let blkPoints = await _getBlockVCF(param);
             if (param.blkDepth == 1) {
-                current.addChilds(tree.createNodes(blkPoints, {boardText: DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]})).map(cur => {
+            	current.addChilds(tree.createNodes(blkPoints, {boardText: DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]})).map(cur => {
                     cur.comment = `<br><br>${COLOR_NAME[param.color]} VCF:<br>[${movesToName(vcfInfo.winMoves[0])}]<br>已经不成立<br>`;
                 })
             }
@@ -1446,7 +1471,7 @@ window.engine = (function() {
                 await _addBranchIsDoubleVCF(param, blkPoints, tree, current);
             }
                 
-            iHtml += `${COLOR_NAME[INVERT_COLOR[param.color]]}防点:<br>`;
+            iHtml += `${COLOR_NAME[INVERT_COLOR[param.color]]}考虑防点:<br>`;
             iHtml += `[${movesToName(blkPoints)}]<br>${param.blkDepth > 1 ? "***找到成立的直接防点，不会算先手防***" : ""}<br>-----点击棋盘查看计算结果-----<br>`;
         }
         else {
@@ -1483,16 +1508,16 @@ window.engine = (function() {
                     
                 ps.push(_addBranchIsDoubleVCF(nParam, blkPoints, tree, cur)
                     .then(isDoubleVCF => {
-                        cur.comment = `<br><br>${COLOR_NAME[param.color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防点:<br>[${movesToName(blkPoints)}]<br>双杀 ${isDoubleVCF?"成立":"不成立"}<br>`;
+                        cur.comment = `<br><br>${COLOR_NAME[param.color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]} 考虑防点:<br>[${movesToName(blkPoints)}]<br>双杀 ${isDoubleVCF?"成立":"不成立"}<br>`;
                         if (canceling) current.removeChild(cur);
-                        else cBoard.wLb(cur.idx, cur.boardText, "black");
+                        else board.wLb(cur.idx, cur.boardText, "black");
                     })
                     .then(() => idx)
                 )
-                cBoard.printSearchPoint(idx, idx, "green");
+                board.printSearchPoint(idx, idx, "green");
                 if (ps.length >= MAX_THREAD_NUM) {
                     await Promise.race(ps)
-                        .then(idx => cBoard.cleSearchPoint(idx))
+                        .then(idx => board.cleSearchPoint(idx))
                     await removeFinallyPromise(ps);
                 }
             }
@@ -1606,12 +1631,10 @@ window.engine = (function() {
     //param: {arr, color}
     //return Promise resolve: RenjuTree
     async function createTreeTestFoul(param) {
-        let { tree, positionMoves, isPushPass, current} = createTree(param, 1),
-            infoArr = getTestThreeInfo(param);
+        let { tree, positionMoves, isPushPass, current} = createTree(param, 1);
         tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: 全盘禁手分析<br>-----点击棋盘查看计算结果-----<br>`;
         for (let idx = 0; idx < 225; idx++) {
-            let fmf = infoArr[idx] & FOUL_MAX_FREE;
-            if (fmf >= THREE_FREE) {
+            if (param.arr[idx] == 0 && THREE_FREE <= (testPointFour(idx, 1, param.arr) & FOUL_MAX_FREE)) {
                 _addBranchIsFoul(idx, param.arr, tree, current);
             }
         }
@@ -1733,7 +1756,7 @@ window.engine = (function() {
                 done = false;
             arr[idx] = 1;
             
-            0 == depth && cBoard.printSearchPoint(0, idx, "green");
+            0 == depth && board.printSearchPoint(0, idx, "green");
             let hasScore = await hasPositionScore(arr, tree);
             if (hasScore == SCORE_RESOLVE) (isBlk = true, done = true)
             else if (hasScore == SCORE_REJECT) (isBlk = false, done = true)
@@ -1799,7 +1822,7 @@ window.engine = (function() {
             let info = ctnInfo[i];
             arr[info.idx] = 1;
             arr[info.bIdx] = 2;
-            0 == depth && cBoard.printSearchPoint(0, info.idx, "green");
+            0 == depth && board.printSearchPoint(0, info.idx, "green");
             let isBlk = await _addBranchContinueBlockFoul(catchFoulArray, markArr, arr, tree, info.bCur, depth + 1);
             info.cur.score = isBlk ? SCORE_RESOLVE : SCORE_REJECT;
             isBlock = isBlock || isBlk;
@@ -1808,7 +1831,7 @@ window.engine = (function() {
         }
         
         if (0 == depth) {
-            cBoard.cleSearchPoint();
+            board.cleSearchPoint();
             current.map(cur => {
                 let nodes = cur.getChilds();
                 nodes.map(node => {
@@ -1916,7 +1939,7 @@ window.engine = (function() {
                     
             if (node.winMoves) { //levelThreeNode
                 blkPoints = getBlockVCF(arr, color, node.winMoves, true);
-                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 防点:<br>[${movesToName(blkPoints)}]<br>`;
+                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>[${movesToName(blkPoints)}]<br>`;
                 let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
                     nParam = copyParam(param),
                     nMoves = moves.slice(0);
@@ -1937,7 +1960,7 @@ window.engine = (function() {
                     .then(() => {
                         if (1 >= moves.length) {
                             if (canceling) current.removeChild(cur);
-                            else cBoard.wLb(cur.idx, cur.boardText, "black");
+                            else board.wLb(cur.idx, cur.boardText, "black");
                         }
                     })
                     .then(() => idx)
@@ -1957,7 +1980,7 @@ window.engine = (function() {
                     .then(() => {
                         if (1 >= moves.length) {
                             if (canceling) current.removeChild(cur);
-                            else cBoard.wLb(cur.idx, cur.boardText, "black");
+                            else board.wLb(cur.idx, cur.boardText, "black");
                         }
                     })
                     .then(() => idx)
@@ -1965,16 +1988,16 @@ window.engine = (function() {
             }
             moves.pop();
             arr[idx] = 0;
-            moves.length == 0 && cBoard.printSearchPoint(idx, idx, "green");
+            moves.length == 0 && board.printSearchPoint(idx, idx, "green");
             if (ps.length >= MAX_THREAD_NUM) {
                 await Promise.race(ps)
-                    .then(idx => moves.length == 0 && cBoard.cleSearchPoint(idx))
+                    .then(idx => moves.length == 0 && board.cleSearchPoint(idx))
                 await removeFinallyPromise(ps);
             }
             if (done) break;
         }
         ps.length && await Promise.all(ps);
-        moves.length == 0 && cBoard.cleSearchPoint();
+        moves.length == 0 && board.cleSearchPoint();
         return winNode;
     }
     
@@ -2004,7 +2027,7 @@ window.engine = (function() {
             arr[idx] = color;
             moves.push(idx);
             current.addChild(cur);
-            cur.comment = `<br><br>${COLOR_NAME[color]} 做VCT:<br>[${movesToName(node.bestMove)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 防点:<br>[${movesToName(blkPoints)}]<br>`;
+            cur.comment = `<br><br>${COLOR_NAME[color]} 做VCT:<br>[${movesToName(node.bestMove)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>[${movesToName(blkPoints)}]<br>`;
                 
             let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
                 nParam = copyParam(param),
@@ -2026,14 +2049,14 @@ window.engine = (function() {
                 .then(() => {
                     if (1 >= moves.length) {
                         if (canceling) current.removeChild(cur);
-                        else cBoard.wLb(cur.idx, cur.boardText, "black");
+                        else board.wLb(cur.idx, cur.boardText, "black");
                     }
                 })
             )
             
             moves.pop();
             arr[idx] = 0;
-            moves.length == 0 && cBoard.printSearchPoint(ps.length, idx, "green");
+            moves.length == 0 && board.printSearchPoint(ps.length, idx, "green");
             if (ps.length == MAX_THREAD_NUM) {
                 await Promise.all(ps);
                 ps = [];
@@ -2041,7 +2064,7 @@ window.engine = (function() {
             if (done) break;
         }
         ps.length && await Promise.all(ps);
-        moves.length == 0 && cBoard.cleSearchPoint();
+        moves.length == 0 && board.cleSearchPoint();
         return winNode;
     }
     
@@ -2074,15 +2097,15 @@ window.engine = (function() {
             )
             moves.length -= 2;
             param.arr[idx] = 0;
-            moves.length == 0 && cBoard.printSearchPoint(idx, idx, "green");
+            moves.length == 0 && board.printSearchPoint(idx, idx, "green");
             if (ps.length >= MAX_THREAD_NUM) {
                 await Promise.race(ps)
-                    .then(idx => moves.length == 0 && cBoard.cleSearchPoint(idx))
+                    .then(idx => moves.length == 0 && board.cleSearchPoint(idx))
                 await removeFinallyPromise(ps);
             }
         }
         ps.length && await Promise.all(ps);
-        moves.length == 0 && cBoard.cleSearchPoint();
+        moves.length == 0 && board.cleSearchPoint();
         //vc2Nodes.map(node => {
             //(idxToName(node.idx) == "G9" || idxToName(node.idx) =="F8") && console.log(`[${idxToName(node.idx)}], blkP: [${movesToName(node.blkPoints)}]`)
         //})
@@ -2135,22 +2158,22 @@ window.engine = (function() {
         let wTree = await createTreeWin(param, LEVEL_FREEFOUR);
         if (wTree) return wTree;
         
-        let { tree, positionMoves, isPushPass, current} = createTree(param),
-            winNode = await _addBranchNumberWin(param, tree, current);
-        
+        let { tree, positionMoves, isPushPass, current} = createTree(param);
+        let winNode = await _addBranchNumberWin(param, tree, current);
         tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: ${["零","一","二","三","四","五","六","七"][(param.maxDepth + 3) / 2]}手五连<br>.${{1: "黑白", 2: "白黑"}[param.color]}双方依次落子<br>.${COLOR_NAME[param.color]}只有 ${["0","1","2","3","4","5","6","7"][(param.maxDepth + 3) / 2]} 次落子机会<br>.${COLOR_NAME[param.color]}必须在落子机会内完成五连<br>-----点击棋盘查看计算结果-----<br>`;
         
         return tree;
     }
 
     //------------------------ exports ----------------------
-    async function exe(param, callback) {
+    async function exe(callback, ...param) {
         try {
-            cBoard.cleLb("all");
+            board.cleLb("all");
             //loopWaitThreadList();
-            let result =  await callback(param);
+            let result =  await callback(...param);
             //stopWaitThreadList();
-            cBoard.cleSearchPoint();
+            board.cleSearchPoint();
+            canceling = false;
             return result;
         }
         catch(err) {
@@ -2161,35 +2184,43 @@ window.engine = (function() {
         // const //
         MAX_THREAD_NUM: MAX_THREAD_NUM,
         // function //
-        waitFreeThread: waitFreeThread,
         stopWaitThreadList: stopWaitThreadList,
         loopWaitThreadList: loopWaitThreadList,
-        cancel: cancel,
+        createTree: createTree,
+        positionToMoves: positionToMoves,
         // async function //
         wait: wait,
+        cancel: cancel,
+        ready: ready,
+        waitFreeThread: waitFreeThread,
         removeFinallyPromise: removeFinallyPromise,
-        isVCF: async (param) => isVCF(copyParam(param)),
-        findVCF: async (param) => findVCF(copyParam(param)),
-        createTreeVCF: async (param) => exe(param, createTreeVCF),
-        createTreeFive: async (param) => exe(param, createTreeFive),
-        createTreeFour: async (param) => exe(param, createTreeFour),
-        createTreeThree: async (param) => exe(param, createTreeThree),
-        createTreePointsVCT: async (param) => exe(param, createTreePointsVCT),
-        createTreeLevelThree: async (param) => exe(param, createTreeLevelThree),
-        createTreeBlockVCF: async (param) => exe(param, createTreeBlockVCF),
-        createTreeDoubleVCF: async (param) => exe(param, createTreeDoubleVCF),
-        createTreeTestFoul: async (param) => exe(param, createTreeTestFoul),
-        createTreeNumberWin: async (param) => exe(param, createTreeNumberWin),
-        createTreeBlockCatchFoul: async (param) => exe(param, createTreeBlockCatchFoul),
-        createTreeSimpleWin: async (param) => exe(param, createTreeSimpleWin),
+        isVCF: async (param) => exe(isVCF, copyParam(param)),
+        findVCF: async (param) => exe(findVCF, copyParam(param)),
+        getLevelB: async (param) => exe(_getLevelB, copyParam(param)),
+        getBlockPoints: async (param) => exe(getBlockPoints, copyParam(param)),
+        createTreeVCF: async (param) => exe(createTreeVCF, param),
+        createTreeNodes: async (param) => exe(createTreeNodes, param),
+        createTreeFive: async (param) => exe(createTreeFive, param),
+        createTreeFour: async (param) => exe(createTreeFour, param),
+        createTreeThree: async (param) => exe(createTreeThree, param),
+        createTreePointsVCT: async (param) => exe(createTreePointsVCT, param),
+        createTreeLevelThree: async (param) => exe(createTreeLevelThree, param),
+        createTreeBlockVCF: async (param) => exe(createTreeBlockVCF, param),
+        createTreeDoubleVCF: async (param) => exe(createTreeDoubleVCF, param),
+        createTreeTestFoul: async (param) => exe(createTreeTestFoul, param),
+        createTreeNumberWin: async (param) => exe(createTreeNumberWin, param),
+        createTreeBlockCatchFoul: async (param) => exe(createTreeBlockCatchFoul, param),
+        createTreeSimpleWin: async (param) => exe(createTreeSimpleWin, param),
+        addBranchSimpleWin: async (...param) => exe(_addBranchSimpleWin, ...param),
+        addBranchNumberWin: async (...param) => exe(_addBranchNumberWin, ...param),
+        addBranchBlockNumberWin: async (...param) => exe(_addBranchBlockNumberWin, ...param),
         get gameRules() { return gameRules },
         set gameRules(rules) { return _setGameRules(rules) },
+        set board(b = defaultBoard) { board = b},
         // test function //
         excludeBlockVCF: excludeBlockVCF,
-        getBlockPoints: getBlockPoints,
         createTreeVCT: createTreeVCT,
         getBlockVCF: _getBlockVCF,
-        getLevelB: _getLevelB,
         _findVCF: _findVCF,
         _nextMoves: _nextMoves,
         _addBranchIsFoul: _addBranchIsFoul,

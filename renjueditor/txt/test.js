@@ -25,7 +25,7 @@ try{
     let codes = [];
     for(let j= 0; j < codeArr.length; j++) {
         //cBoard.cle();
-        cBoard.unpackCode(false, codeArr[j])
+        cBoard.unpackCode(codeArr[j])
         await engine.wait(0)
         autoRotate(j) && codes.push(toKaiBaoCode())
     }

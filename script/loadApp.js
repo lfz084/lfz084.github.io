@@ -98,8 +98,7 @@ window.loadApp = (() => { // 按顺序加载应用
         IFRAME.parentNode.removeChild(IFRAME);
     }
     
-    window.fullscreenCancel = function(){}
-    //window.fullscreenEnabled = function(){}
+    window.fullscreenCancel = function(){localStorage.setItem("fullscreenCancel", "true")}
     
     
     window.openVconsole = function (open) {

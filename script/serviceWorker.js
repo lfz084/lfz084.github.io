@@ -1,7 +1,7 @@
 window.serviceWorker = (() => {
     "use strict";
 
-    const TEST_SERVER_WORKER = true;
+    const TEST_SERVER_WORKER = false;
     let serviceWorker_state;
 
     async function registerServiceWorker() {

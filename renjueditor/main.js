@@ -49,12 +49,13 @@
                 try {
                 	mainUI.viewport.resize();
                     await unlockArea();
-                    const games = await renjuEditor.openFile(this.files[0], this.value.split("/").pop(), log);
+                    const games = await renjuEditor.openFile(this.files[0], this.value.split("/").pop(), log1);
                     filename = getFileName(this.value);
                     setTimeout(() => this.value = "", 0);
                     for(let i = 0; i < games.length; i++) {
-                    	pushGame(renjuEditor.gameToArr2D(games[i], i < games.length - 1));
-                    	await renjuEditor.wait(0);
+                    	pushGame(games[i]);
+                    	await puzzleCoder.wait(0);
+                    	i == games.length - 1 && miniBoard.unpackArray(games[i])
                     }
                 } catch (e) { alert(e.stack) }
             }
@@ -63,8 +64,7 @@
             type: "checkbox",
             text: "选定棋盘",
             touchend: async function() {
-                this.checked = !this.checked;
-                if (butLock.checked) await lockArea();
+            	if (butLock.checked) await lockArea();
                 else unlockArea();
             }
         },
@@ -74,10 +74,10 @@
             touchend: function() {
                 if (warn && (cBoard.SLTX < 15 || cBoard.SLTY < 15)) {
                     warn = false;
-                    alert(`长按图片天元点可对齐棋盘\n（鼠标可右键代替长按）`);
+                    msgbox({text: `长按图片天元点可对齐棋盘\n（鼠标可右键代替长按）`, btnNum: 1});
                 }
                 const array = cBoard.getArray();
-                array.find(v => v > 0) && pushGame(cBoard.getArray2D());
+                array.find(v => v > 0) && (pushGame(array),miniBoard.unpackArray(array));
             }
         },
         {
@@ -135,7 +135,7 @@
             text: "↗90°",
             touchend: () => {
                 miniBoard.rotate90();
-                games[gameIndex] = miniBoard.getArray2D();
+                games[gameIndex] = miniBoard.getArray();
             }
         },
         {
@@ -143,7 +143,7 @@
             text: "↔180°",
             touchend: () => {
                 miniBoard.rotateY180();
-                games[gameIndex] = miniBoard.getArray2D();
+                games[gameIndex] = miniBoard.getArray();
             }
         },
         {
@@ -151,7 +151,7 @@
             text: "←",
             touchend: () => {
                 miniBoard.translate(0, -1);
-                games[gameIndex] = miniBoard.getArray2D();
+                games[gameIndex] = miniBoard.getArray();
             }
         },
         {
@@ -159,7 +159,7 @@
             text: "→",
             touchend: () => {
                 miniBoard.translate(0, 1);
-                games[gameIndex] = miniBoard.getArray2D();
+                games[gameIndex] = miniBoard.getArray();
             }
         },
         {
@@ -167,7 +167,7 @@
         	text: "↑",
         	touchend: () => {
         		miniBoard.translate(-1, 0);
-        		games[gameIndex] = miniBoard.getArray2D();
+        		games[gameIndex] = miniBoard.getArray();
         	}
         },
         {
@@ -175,7 +175,7 @@
         	text: "↓",
         	touchend: () => {
         		miniBoard.translate(1, 0);
-        		games[gameIndex] = miniBoard.getArray2D();
+        		games[gameIndex] = miniBoard.getArray();
         	}
         },
         {
@@ -198,8 +198,8 @@
             text: "输出文件",
             touchend: async () => {
                 if (games.length == 0) return;
-                const json = await renjuEditor.toKaiBaoJSON(games, log);
-                renjuEditor.downloadKaiBaoJSON(json, filename);
+                const json = await puzzleCoder.games2kaibaoJSON(games, log1);
+                puzzleCoder.downloadJSON(json, filename);
             }
         }
     ];
@@ -283,11 +283,9 @@
 
     //------------------------ GAMES ------------------------ 
     
-    function pushGame(arr2D, unpack = true) {
+    function pushGame(array) {
         gameIndex++;
-        games.splice(gameIndex, 0, arr2D);
-        if (!unpack) return;
-        miniBoard.unpackArray(arr2D);
+        games.splice(gameIndex, 0, array);
         log1(`第${gameIndex+1}题 / ${games.length}题`);
     }
 
@@ -442,8 +440,9 @@
             else if (status == LOCK) {
                 const idx = cbd.getIndex(x, y);
                 if (idx < 0) return;
-                const arr2d = cbd.getArray2D();
-                pushGame(changeCoordinate(arr2d, idx));
+                const arr = array2DToArray(changeCoordinate(cbd.getArray2D(), idx));
+                pushGame(arr);
+                miniBoard.unpackArray(arr);
             }
         })
         bindEvent.addEventListener(cbd.viewBox, "zoomstart", (x1, y1, x2, y2) => {
@@ -453,6 +452,9 @@
         bindEvent.addEventListener(miniBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
         	miniBoard.zoomStart(x1, y1, x2, y2)
         })
+        bindEvent.addEventListener(miniBoard.viewBox, "contextmenu", (x, y) => {
+			miniBoard.setScale(miniBoard.scale != 1 ? 1 : 1.5, true);
+		})
     }
 
     async function onloadPage(pageIndex, numPages, url) {

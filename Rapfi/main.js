@@ -182,7 +182,7 @@
             width: mainUI.buttonWidth * 2.33,
             height: mainUI.buttonHeight * 8.5,
             style: {
-            	posstion: "absolute",
+            	position: "absolute",
         		fontSize: `${fontSize}px`,
             	wordBreak: "break-all",
             	overflowY: "auto",
@@ -362,7 +362,7 @@
             inputText(code);
         },
         scaleBoard: function() {
-            const scale = cBoard.scale != 1 ? 1 : 2;
+            const scale = cBoard.scale != 1 ? 1 : 1.5;
             cBoard.setScale(scale, true);
         },
         ctnBack: function(idx) { // 触发快速悔棋
@@ -397,10 +397,10 @@
                     boardWidth: game.boardWidth,
                     boardHeight: game.boardHeight,
                     sideToMove: game.sideToMove,
-                    posstion: cBoard.getArray()
+                    position: cBoard.getArray()
                 });
                 //alert(info.comment)
-                if (!isEqual(info.posstion, cBoard.getArray())) return;
+                if (!isEqual(info.position, cBoard.getArray())) return;
                 if (info.comment) {
                     const text = textDecoder.decode(info.comment);
                     $("comment").innerHTML = text || DBREAD_HELP;
@@ -413,8 +413,8 @@
                     const label = readLabel(record.buffer);
                     cBoard.wLb(record.idx, label, "black");
                 })
-                game.rule == Rule.RENJU && game.sideToMove == 0 && info.posstion.map((v,i) => {
-                    if (v == 0 && ("isFoul" in self) && isFoul(i, info.posstion)) {
+                game.rule == Rule.RENJU && game.sideToMove == 0 && info.position.map((v,i) => {
+                    if (v == 0 && ("isFoul" in self) && isFoul(i, info.position)) {
                         cBoard.wLb(i, EMOJI_FOUL, "red");
                     }
                 })

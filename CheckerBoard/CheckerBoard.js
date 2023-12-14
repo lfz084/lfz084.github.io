@@ -6,13 +6,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
 
     const TEST_CHECKER_BOARD = true;
     const TYPE_EMPTY = 0;
-    const TYPE_MARK = 1; // 标记
-    const TYPE_NUMBER = 2; // 顺序添加的棋子
-    const TYPE_BLACK = 3; // 无序号 添加的黑棋
-    const TYPE_WHITE = 4; // 无序号 添加的黑棋
-    const TYPE_MOVE = 5; //VCF手顺
-    const TYPE_MARKFOUL = 6;
-
+    const TYPE_MARK = 1 << 4; // 标记
+    const TYPE_MOVE = TYPE_MARK | 1; //VCF手顺
+    const TYPE_MARKFOUL = TYPE_MARK | 2;
+	const TYPE_NUMBER = 2 << 4; // 顺序添加的棋子
+    const TYPE_BLACK = TYPE_NUMBER | 1; // 无序号 添加的黑棋
+    const TYPE_WHITE = TYPE_NUMBER | 2; // 无序号 添加的黑棋
+    
     const COORDINATE_NONE = 0;
     const COORDINATE_ALL = 1;
     const COORDINATE_LEFT_UP = 2;
@@ -604,6 +604,26 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
         }
         return codeStr;
     }
+    
+    function putStone(idx, type = TYPE_NUMBER) {
+    	if (!this.P[idx]) return false;
+    	const oldType = this.P[idx].type;
+    	this.P[idx].type = type;
+    	const { x, y, radius, color, lineWidth } = this.getBoardPointInfo(idx, false).circle;
+    	this.P[idx].type = oldType;
+    	const fill =[this.bNumColor, this.wNumColor][(this.MSindex + (this.firstColor=="black"?1:2)) % 2]
+    	Object.assign(this.stoneDiv.style, {
+    		position: "absolute",
+    		left: x - radius + "px",
+    		top: y - radius + "px",
+    		width: radius * 2 + "px",
+    		height: radius * 2 + "px",
+    		border: `${lineWidth}px solid ${color}`,
+    		backgroundColor: fill
+    	})
+    	this.viewBox.appendChild(this.stoneDiv);
+    	return true;
+    }
 
     //---------------------- Board ------------------------
 
@@ -722,6 +742,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
             this.lineStyle = "normal";
             this.theme = defaultTheme;
 
+            this.pixelRatio = window.devicePixelRatio || 1;
             this.canvas = document.createElement("canvas");
             this.canvas.style.position = "absolute";
             this.canvas.style.width = this.viewBox.style.width;
@@ -759,6 +780,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
                 //div.addEventListener("touchmove", () => event.preventDefault());
                 this.P[i] = new point(-500, -500, div);
             }
+            
+            this.stoneDiv = document.createElement("div");
+            this.stoneDiv.style.borderRadius = "50%";
+            this.stoneDiv.addEventListener("touchend", () => event.preventDefault(), true);
 
             this.delay = function() { // 设置延迟执行
                 let timer;
@@ -1022,7 +1047,25 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
             resetNum: resetNum
         }
     }
-
+    
+    Board.prototype.putStone = async function(idx, type = TYPE_NUMBER) {
+    	this.stoneDiv.setAttribute("class", "putStone");
+    	this.stoneDiv.style.opacity = "1";
+    	this.stoneDiv.style.transform = `scale(0.8)`;
+    	putStone.call(this, idx, type);
+    }
+    
+    Board.prototype.showStone = function(idx, type = TYPE_NUMBER) {
+    	this.stoneDiv.setAttribute("class", "stoneReady");
+    	this.stoneDiv.style.opacity = "0.8";
+    	this.stoneDiv.style.transform = `scale(0.8)`;
+    	putStone.call(this, idx, type) && (this.startIdx = idx);
+    }
+    
+    Board.prototype.hideStone = function() {
+    	this.startIdx = -1;
+    	this.stoneDiv.parentNode && this.stoneDiv.parentNode.removeChild(this.stoneDiv)
+    }
 
     Board.prototype.codeString2CodeArray = function(codeString) {
         let codeArray = [],
@@ -1772,7 +1815,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
     }
 
 
-    Board.prototype.unpackCode = function(showNum, codeStr, targetType, resetNum = 0, firstColor = "black") {
+    Board.prototype.unpackCode = function(codeStr, targetType, showNum = this.isShowNum, resetNum = 0, firstColor = "black") {
         let st = 0;
         let end = codeStr.indexOf("{");
         end = end == -1 ? codeStr.length : end;
@@ -1791,44 +1834,52 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
             this.cle();
             this.resetNum = resetNum;
             this.firstColor = firstColor;
-            if (moves) this.unpackCodeType(showNum, TYPE_NUMBER, targetType, moves);
-            if (blackMoves) this.unpackCodeType(showNum, TYPE_BLACK, targetType, blackMoves);
-            if (whiteMoves) this.unpackCodeType(showNum, TYPE_WHITE, targetType, whiteMoves);
+            if (moves) this.unpackCodeType(moves, TYPE_NUMBER, targetType, showNum);
+            if (blackMoves) this.unpackCodeType(blackMoves, TYPE_BLACK, targetType, showNum);
+            if (whiteMoves) this.unpackCodeType(whiteMoves, TYPE_WHITE, targetType, showNum);
         }
     }
-
+    
+    Board.prototype.moveCode2Points = function(moveCode = "") {
+    	let points = [];
+    	let m = moveCode;
+    	while (m.length) {
+    		let a = m.substring(0, 2); //取前两个字符
+    		m = m.substring(2); //去掉前两个字符
+    		//每个棋子落点横坐标用A-O表示，纵坐标用1-15来表
+    		//判断棋子纵坐标是否是2位，是则继续截取，补足3位。
+    		let d = m.charCodeAt() - "0".charCodeAt();
+    		if (d >= 0 && d <= 9) {
+    			a += m.substring(0, 1);
+    			m = m.substring(1);
+    		}
+    		points.push(nameToIdx(a));
+    	}
+    	return points;
+    }
 
     //解析（已经通过this.getCodeType 格式化）棋谱,摆棋盘
-    Board.prototype.unpackCodeType = function(showNum, sourceType = TYPE_NUMBER, targetType = sourceType, moves = "") {
+    Board.prototype.unpackCodeType = function(moves = "", sourceType = TYPE_NUMBER, targetType = sourceType, showNum = this.isShowNum) {
         if (sourceType == TYPE_NUMBER) {
             this.MS.length = 0; //清空数组
             this.MSindex = -1;
         }
-        let m = moves;
-        while (m.length) {
-            let a = m.substring(0, 2); //取前两个字符
-            m = m.substring(2); //去掉前两个字符
-            //每个棋子落点横坐标用A-O表示，纵坐标用1-15来表
-            //判断棋子纵坐标是否是2位，是则继续截取，补足3位。
-            let d = m.charCodeAt() - "0".charCodeAt();
-            if (d >= 0 && d <= 9) {
-                a += m.substring(0, 1);
-                m = m.substring(1);
-            }
-            // 棋谱坐标转成 index 后添加棋子
+        const points = this.moveCode2Points(moves);
+        points.map(idx => {
+        	// 棋谱坐标转成 index 后添加棋子
             if (sourceType == TYPE_NUMBER) {
                 //console.log(`unpackCodeType sourceType == TYPE_NUMBER`);
-                this.wNb(nameToIdx(a), "auto", showNum, undefined, undefined, 100);
+                this.wNb(idx, "auto", showNum, undefined, undefined, 100);
             }
             else if (sourceType == TYPE_BLACK) {
                 //console.log(`unpackCodeType sourceType == TYPE_BLACK`);
                 switch (targetType) {
                     case TYPE_NUMBER:
                         if (0 == (this.MSindex & 1)) this.wNb(225, "auto", showNum, undefined, undefined, 100);
-                        this.wNb(nameToIdx(a), "auto", showNum, undefined, undefined, 100);
+                        this.wNb(idx, "auto", showNum, undefined, undefined, 100);
                         break;
                     default:
-                        this.wNb(nameToIdx(a), "black", showNum, undefined, undefined, 100);
+                        this.wNb(idx, "black", showNum, undefined, undefined, 100);
                         break;
                 }
             }
@@ -1837,14 +1888,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
                 switch (targetType) {
                     case TYPE_NUMBER:
                         if (1 == (this.MSindex & 1)) this.wNb(225, "auto", showNum, undefined, undefined, 100);
-                        this.wNb(nameToIdx(a), "auto", showNum, undefined, undefined, 100);
+                        this.wNb(idx, "auto", showNum, undefined, undefined, 100);
                         break;
                     default:
-                        this.wNb(nameToIdx(a), "white", showNum, undefined, undefined, 100);
+                        this.wNb(idx, "white", showNum, undefined, undefined, 100);
                         break;
                 }
             }
-        }
+        })
     }
 
 
