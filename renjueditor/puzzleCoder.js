@@ -428,6 +428,16 @@ window.puzzleCoder = (() => {
  			"comment": "找全长连禁手"
  		},
  		{
+ 			"blackStones": "E9E6F8G8G6H5H4I8I6J8J5K8K6K4",
+ 			"side": 1,
+ 			"rule": 2,
+ 			"size": 15,
+ 			"mode": 202,
+ 			"level": 1,
+ 			"title": "长连禁手",
+ 			"comment": "找全长连禁手"
+ 		},
+ 		{
  			"blackStones": "D4D3E7F8G8H13I13I8J8K8L13L6L5L4N13O13",
  			"side": 1,
  			"rule": 2,

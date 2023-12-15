@@ -22,6 +22,13 @@ window.puzzleAI = (() => {
 		const STATE_GOMOCALC_THINKING = 0x08;
 		const STATE_AI_READY = STATE_RENJU_READY | STATE_GOMOCALC_READY;
 		const STATE_AI_THINKING = STATE_RENJU_THINKING | STATE_GOMOCALC_THINKING;
+		
+		const MARKFOUL_33 = 0x01;
+		const MARKFOUL_44_DBL_LINE = 0x02;
+		const MARKFOUL_44_ONE_LINE = 0x04;
+		const MARKFOUL_44 = MARKFOUL_44_DBL_LINE | MARKFOUL_44_ONE_LINE;
+		const MARKFOUL_6 = 0x08;
+		const MARKFOUL_5 = 0x10;
 
 		let aiState = 0;
 
@@ -197,14 +204,16 @@ window.puzzleAI = (() => {
 		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_NOTFREE_FOUR] = function(node) { return "4" == getBoardText(node) }
 		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL] = function(node) { return "❌" == getBoardText(node) }
 		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL_33] = function(node, tree) {
-			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && ( foulInfo(tree, getIdx(node)) == (FOUL | THREE_NOFREE) );
+			const foulMark = foulInfo(tree, getIdx(node));
+			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_33);
 		}
 		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL_44] = function(node, tree) {
-			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && ( foulInfo(tree, getIdx(node)) == (FOUL | FOUR_NOFREE) );
+			const foulMark = foulInfo(tree, getIdx(node));
+			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_44);
 		}
 		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL_6] = function(node, tree) {
-			foulInfo(tree, getIdx(node))
-			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && ( true )
+			const foulMark = foulInfo(tree, getIdx(node));
+			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_6);
 		}
 		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_CATCH_FOUL] = function(node) { return "❌" != getBoardText(node)  }
 		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_REVIVE_FREE_THREE] = function(node, tree) {
@@ -268,7 +277,7 @@ window.puzzleAI = (() => {
 			aiState = aiState | STATE_RENJU_THINKING;
 			const tree = await filterCallbackTree[game.puzzle.mode](game);
 			game.options = await filterOption(tree, filtetlrCallbackOptions[game.puzzle.mode]);
-			alert(`game.options: ${game.options}`)
+			console.log(`game.options: ${game.options}`)
 			aiState = aiState & ~STATE_RENJU_THINKING;
 			return game.options;
 		}
@@ -278,14 +287,14 @@ window.puzzleAI = (() => {
 			const options = [];
 			const path = tree.init.MS.slice(0, tree.init.MSindex + 1)
 			const nodes = tree.getBranchNodes(path);
-			alert(`filter: ${filter.toString()}\nnodes: ${nodes}`)
+			console.log(`filter: ${filter.toString()}\nnodes: ${nodes}`)
 			nodes.map(node => filter(node, tree) && options.push(getIdx(node)))
 			return options;
 			}catch(e){alert(e.stack)}
 		}
 		
 		function tree2Position(tree) {
-			const arr = new Array(226);
+			const arr = new Array(226).fill(0);
 			const path = tree.init.MS.slice(0, tree.init.MSindex + 1);
 			path.map((idx, i) => arr[idx] = i % 2 + 1);
 			arr[225] = -1;
@@ -300,21 +309,27 @@ window.puzzleAI = (() => {
 		function foulInfo(tree, idx) {
 			let threeCount = 0;
 			let fourCount = 0;
-			let sixCount = 0;
-			let fiveCount = 0;
 			let out = `idx: ${idx}\n`
+			let info = 0
+			const arr = tree2Position(tree);
+			console.log(testLine.toString())
+			console.log(arr.map((v,i) => v>0 && `[${v},${i}]`).filter(v=>v).toString())
 			for (let direction = 0; direction < 4; direction++) {
-				let info = testLineThree(idx, direction, 1, tree2Position(tree)),
-					v = FOUL_MAX_FREE & info;
-				if (v == FIVE) fiveCount++;
-				else if (v == SIX) sixCount++;
-				else if (v == LINE_DOUBLE_FOUR) fourCount += 2;
-				else if ((v & FOUR_NOFREE) == FOUR_NOFREE) fourCount++;
-				else if ((v & THREE_FREE) == THREE_FREE) threeCount++;
-				out += `${v.toString(2)}\n`
+				let lineInfo = testLine(idx, direction, 1, arr),
+					v = FOUL_MAX_FREE & lineInfo;
+				if (v == FIVE) info |= MARKFOUL_5;
+				else if (v == SIX) info |= MARKFOUL_6;
+				else if (v == LINE_DOUBLE_FOUR) info |= MARKFOUL_44_ONE_LINE;
+				else if (v >= FOUR_NOFREE) fourCount++;
+				else if (v == THREE_FREE) threeCount++;
+				out += `${("0000000000000000" + lineInfo.toString(2)).slice(-16)}\n`
 			}
-			out += `fiveCount: ${fiveCount}\nsixCount: ${sixCount}\nfourCount: ${fourCount}\nthreeCount: ${threeCount}`
-			alert(out);
+			out += `fourCount: ${fourCount}\nthreeCount: ${threeCount}`
+			console.log(out);
+			threeCount > 1 && ( info |= MARKFOUL_33 );
+			fourCount > 1 && ( info |= MARKFOUL_44_DBL_LINE );
+			console.log(`info: ${("00000000" + info.toString(2)).slice(-8)}`)
+			return info;
 		}
 		
 		function getBoardText(node) {

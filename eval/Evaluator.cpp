@@ -500,7 +500,7 @@ int init(BYTE size, BYTE rules) {
 
 // (long*)lineInfo,  (lineInfo >> 3) & 0b111
 DWORD testLine(BYTE idx, BYTE direction, char color, char* arr) {
-    char max = -1; // -1 | 0 | 1 | 2 | 3 | 4 | 5 | SIX
+    char max = 0; // 0 | 1 | 2 | 3 | 4 | 5 | (SIX >> 1)
     BYTE addFree = 0, // 0 | 1
         addCount = 0,
         free = 0, // >= 0
@@ -531,7 +531,7 @@ DWORD testLine(BYTE idx, BYTE direction, char color, char* arr) {
                 (color == valueList[move] || color == valueList[move + 6]))
             {
                 if (colorCount == 5 && colorCount > max) {
-                    max = SIX;
+                    max = (SIX >> 1);
                     free = 0;
                     count = 0;
                     markMove = move;
@@ -586,7 +586,7 @@ DWORD testLine(BYTE idx, BYTE direction, char color, char* arr) {
 
 
 DWORD testLineFoul(BYTE idx, BYTE direction, char color, char* arr) {
-    char max = 0; // 0 | 3 | 4 | 5 | SIX
+    char max = 0; // 0 | 3 | 4 | 5 | (SIX >> 1)
     BYTE addFree = 0, // 0 | 1
         addCount = 0,
         free = 0, // >= 0
@@ -616,7 +616,7 @@ DWORD testLineFoul(BYTE idx, BYTE direction, char color, char* arr) {
                 if (1 == valueList[move] ||
                     1 == valueList[move + 6])
                 {
-                    max = SIX;
+                    max = (SIX >> 1);
                 }
                 else {
                     max = 5;
@@ -702,7 +702,7 @@ DWORD testLineFoul(BYTE idx, BYTE direction, char color, char* arr) {
 // 不会验证x,y是否有棋子
 // idx,点在 direction指定这条线上是不是一个冲4点,活4
 DWORD testLineFour(BYTE idx, BYTE direction, char color, char* arr) {
-    char max = 0; // 0 | 4 | 5 | SIX
+    char max = 0; // 0 | 4 | 5 | (SIX >> 1)
     BYTE addFree = 0, // 0 | 1
         addCount = 0,
         free = 0, // >= 0
@@ -730,7 +730,7 @@ DWORD testLineFour(BYTE idx, BYTE direction, char color, char* arr) {
                     (color == getArrValue(idx, move - 5, direction, arr) ||
                         color == getArrValue(idx, move + 1, direction, arr)))
                 {
-                    max = SIX;
+                    max = (SIX >> 1);
                 }
                 else {
                     max = 5;
@@ -790,7 +790,7 @@ DWORD testLineFour(BYTE idx, BYTE direction, char color, char* arr) {
 
 
 DWORD testLineThree(BYTE idx, BYTE direction, char color, char* arr) {
-    char max = 0; // 0 | 3 | 4 | 5 | SIX
+    char max = 0; // 0 | 3 | 4 | 5 | (SIX >> 1)
     BYTE addFree = 0, // 0 | 1
         addCount = 0,
         free = 0, // >= 0
@@ -822,7 +822,7 @@ DWORD testLineThree(BYTE idx, BYTE direction, char color, char* arr) {
                     (color == valueList[move] ||
                         color == valueList[move + 6]))
                 {
-                    max = SIX;
+                    max = (SIX >> 1);
                 }
                 else {
                     max = 5;

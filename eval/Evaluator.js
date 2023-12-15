@@ -92,7 +92,7 @@ let cBoardSize = 15;
 
 //---------------  ------------------ ------------------
 
-if ("WebAssembly" in self && typeof WebAssembly.instantiate == "function") {
+if (0 && "WebAssembly" in self && typeof WebAssembly.instantiate == "function") {
 	loadEvaluatorWebassembly.call(this);
 	console.warn("loadEvaluatorWebassembly");
 }

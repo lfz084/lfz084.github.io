@@ -212,3 +212,24 @@ let tree = cBoard.tree,
 catch(err){
     console.log(err.stack)
 }
+
+
+
+
+//------
+
+self.cBoard = fullscreenUI.contentWindow.cBoard;
+self.testLine = fullscreenUI.contentWindow.testLine;
+self.testLineFoul = fullscreenUI.contentWindow.testLineFoul;
+self.testLineFour = fullscreenUI.contentWindow.testLineFour;
+self.testLineThree = fullscreenUI.contentWindow.testLineThree;
+try{
+["testLine","testLineFoul","testLineFour","testLineThree"].map(key => {
+	console.log(`key:\n${self[key]}`)
+	console.log( cBoard.getArray().map((v,i) => v>0 && `[${v},${i}]`).filter(v=>v).toString() )
+	for(let direction = 0; direction < 4; direction++) {
+		const info = self[key](142, direction, 1, cBoard.getArray());
+		console.log(("0000000000000000" + info.toString(2)).slice(-16));
+	}
+})
+}catch(e){alert(e.stack)}

@@ -364,5 +364,6 @@
 		mainUI.viewport.resize();
 		game.reset()
 		puzzleAI.processOutput = processOutput;
+		self.cBoard = cBoard;
 	} catch (e) { console.error(e.stack) }
 })()

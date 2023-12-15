@@ -213,7 +213,7 @@ function loadEvaluatorJScript() {
 
         // (long*)lineInfo,  (lineInfo >>> 3) & 0b111
         function _testLine(idx, direction, color, arr) {
-            let max = -1, // -1 | 0 | 1 | 2 | 3 | 4 | 5 | SIX
+            let max = 0, // 0 | 1 | 2 | 3 | 4 | 5 | (SIX >> 1)
                 addFree = 0, // 0 | 1
                 addCount = 0,
                 free = 0, // >= 0
@@ -246,7 +246,7 @@ function loadEvaluatorJScript() {
                         (color == vs[move] || color == vs[move + 6]))
                     {
                         if (colorCount == 5 && colorCount > max) {
-                            max = SIX;
+                            max = (SIX >> 1);
                             free = 0;
                             count = 0;
                             markMove = move;
@@ -310,7 +310,7 @@ function loadEvaluatorJScript() {
 
 
         function _testLineFoul(idx, direction, color, arr) {
-            let max = 0, // 0 | 3 | 4 | 5 | SIX
+            let max = 0, // 0 | 3 | 4 | 5 | (SIX >> 1)
                 addFree = 0, // 0 | 1
                 addCount = 0,
                 free = 0, // >= 0
@@ -342,7 +342,7 @@ function loadEvaluatorJScript() {
                         if (1 == vs[move] ||
                             1 == vs[move + 6])
                         {
-                            max = SIX;
+                            max = (SIX >> 1);
                         }
                         else {
                             max = 5;
@@ -439,7 +439,7 @@ function loadEvaluatorJScript() {
         // idx,点在 direction指定这条线上是不是一个冲4点,活4
         function _testLineFour(idx, direction, color, arr) {
 
-            let max = 0, // 0 | 4 | 5 | SIX
+            let max = 0, // 0 | 4 | 5 | (SIX >> 1)
                 addFree = 0, // 0 | 1
                 addCount = 0,
                 free = 0, // >= 0
@@ -469,7 +469,7 @@ function loadEvaluatorJScript() {
                             (color == getArrValue(idx, move - 5, direction, arr) ||
                                 color == getArrValue(idx, move + 1, direction, arr)))
                         {
-                            max = SIX;
+                            max = (SIX >> 1);
                         }
                         else {
                             max = 5;
@@ -538,7 +538,7 @@ function loadEvaluatorJScript() {
 
 
         function _testLineThree(idx, direction, color, arr) {
-            let max = 0, // 0 | 3 | 4 | 5 | SIX
+            let max = 0, // 0 | 3 | 4 | 5 | (SIX >> 1)
                 addFree = 0, // 0 | 1
                 addCount = 0,
                 free = 0, // >= 0
@@ -571,7 +571,7 @@ function loadEvaluatorJScript() {
                             (color == vs[move] ||
                                 color == vs[move + 6]))
                         {
-                            max = SIX;
+                            max = (SIX >> 1);
                         }
                         else {
                             max = 5;
