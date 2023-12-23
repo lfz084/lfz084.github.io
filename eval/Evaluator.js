@@ -1,5 +1,5 @@
 "use strict";
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2111.08";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2023.12";
 const DIRECTIONS = [0, 1, 2, 3] //[→, ↓, ↘, ↗]; // 米字线
 const FIND_ALL = 0;
 const ONLY_FREE = 1; // 只找活3，活4
@@ -92,7 +92,7 @@ let cBoardSize = 15;
 
 //---------------  ------------------ ------------------
 
-if (0 && "WebAssembly" in self && typeof WebAssembly.instantiate == "function") {
+if ("WebAssembly" in self && typeof WebAssembly.instantiate == "function") {
 	loadEvaluatorWebassembly.call(this);
 	console.warn("loadEvaluatorWebassembly");
 }

@@ -33,7 +33,7 @@ window.puzzleAI = (() => {
 		let aiState = 0;
 
 		let processOutput = () => {};
-		gomocalc.init(gomocalcOutput);
+		self["gomocalc"] && gomocalc.init(gomocalcOutput);
 		engine.ready().then(() => aiState = aiState | STATE_RENJU_READY)
 		//setInterval(() => processOutput({sideLabel: aiState})}, 1000)
 		function idx2Pos(idx = -1) {
@@ -127,7 +127,6 @@ window.puzzleAI = (() => {
 				processOutput({ pos: idx2Pos(levelInfo >> 8 & 0xFF) })
 			}
 			else {
-				engine.board = game.board;
 				const vcfMoves = (await engine.findVCF(param)).winMoves[0];
 				processOutput({ pos: idx2Pos(vcfMoves[0] || -1) })
 			}
@@ -150,7 +149,6 @@ window.puzzleAI = (() => {
 				maxDepthVCT: (game.residueStones + 1) * 2 - 3,
 				maxNodeVCT: 1000000
 			}
-			engine.board = game.board;
 			const { tree, positionMoves, isPushPass, current } = engine.createTree(param);
 			await engine.addBranchSimpleWin(param, tree, current);
 			current.comment = "W胜点<br>L败点<br>点击标记查看分支<br>点击或双击棋子后退"
@@ -168,7 +166,6 @@ window.puzzleAI = (() => {
 				maxNode: 1000000,
 				nMaxDepth: 180
 			}
-			engine.board = game.board;
 			const { tree, positionMoves, isPushPass, current } = engine.createTree(param);
 			const timer = setInterval(() => {
 				const nodes = current.getChilds();
@@ -185,112 +182,97 @@ window.puzzleAI = (() => {
 			aiState = aiState & ~STATE_RENJU_THINKING;
 		}
 		
+		filterAIHelp[puzzleCoder.MODE.BASE] = async function(game) {
+			aiState = aiState | STATE_RENJU_THINKING;
+			const options = game.options  = game.options || await getOptions(game);
+			processOutput({ state: game.STATE.READ, sideLabel: "参考答案", options: options });
+			aiState = aiState & ~STATE_RENJU_THINKING;
+		}
+		
 		//--------------------------------------------------------------------------
 		
 		const filterCallbackTree = {};
-		filterCallbackTree[puzzleCoder.MODE.BASE_FOUL] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_33] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_44] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_6] = getFoulPoints;
-		filterCallbackTree[puzzleCoder.MODE.BASE_CATCH_FOUL] = getBlockCatchFoulPoints;
-		filterCallbackTree[puzzleCoder.MODE.BASE_FREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_NOTFREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_FREE_FOUR] = filterCallbackTree[puzzleCoder.MODE.BASE_NOTFREE_FOUR] = getPoints;
-		filterCallbackTree[puzzleCoder.MODE.BASE_REVIVE_FREE_THREE] = getReviveFreeThreePoints;
-		filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF] = filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF_43] = filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF_44] = getMakeVCFPoints;
-		filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_VCF] = filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_VCF_4] = getBlockVCFPoints;
-		filterCallbackTree[puzzleCoder.MODE.BASE_DOUBLE_VCF] = getDoubleVCFPoints;
-		filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_DOUBLE_VCF] = getBlockDoubleVCFPoints;
+		filterCallbackTree[puzzleCoder.MODE.VCF] = createTreeVCF;
+		filterCallbackTree[puzzleCoder.MODE.VCT] = createTreePointsVCT;
+		filterCallbackTree[puzzleCoder.MODE.VCT3] = createTreeVCT3;
+		filterCallbackTree[puzzleCoder.MODE.STONES4] = filterCallbackTree[puzzleCoder.MODE.BASE_DOUBLE_VCF_43] = createTreeDoubleVCF43;
 		
-		const filtetlrCallbackOptions = {};
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FREE_THREE] = function(node) { return "③" == getBoardText(node) }
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_NOTFREE_THREE] = function(node) { return  "3" == getBoardText(node) }
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FREE_FOUR] = function(node) { return "④" == getBoardText(node) }
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_NOTFREE_FOUR] = function(node) { return "4" == getBoardText(node) }
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL] = function(node) { return "❌" == getBoardText(node) }
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL_33] = function(node, tree) {
+		filterCallbackTree[puzzleCoder.MODE.BASE_FOUL] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_33] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_44] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_6] = createTreeFoul;
+		filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_CATCH_FOUL] = createTreeBlockCatchFoul;
+		filterCallbackTree[puzzleCoder.MODE.BASE_FREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_NOTFREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_FREE_FOUR] = filterCallbackTree[puzzleCoder.MODE.BASE_NOTFREE_FOUR] = createTreeNodes;
+		filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF] = filterCallbackTree[puzzleCoder.MODE.BASE_REVIVE_FREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF_43] = filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF_44] = createTreeMakeVCF;
+		filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_VCF] = filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_VCF_4] = createTreeBlockVCFDepth;
+		filterCallbackTree[puzzleCoder.MODE.BASE_DOUBLE_VCF] = createTreeDoubleVCF;
+		filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_DOUBLE_VCF] = createTreeBlockVCFDepth;
+		filterCallbackTree[puzzleCoder.MODE.BASE_DOUBLE_VCF_43] = createTreeDoubleVCF43;
+		
+		const filtetlrOptionsCallback = {};
+		filtetlrOptionsCallback[puzzleCoder.MODE.VCF] = filtetlrOptionsCallback[puzzleCoder.MODE.VCT3] = filtetlrOptionsCallback[puzzleCoder.MODE.STONES4] = filtetlrOptionsCallback[puzzleCoder.MODE.BASE_DOUBLE_VCF_43] = function(node) { return "W" == getBoardText(node) }
+		filtetlrOptionsCallback[puzzleCoder.MODE.VCT] = function(node) { return getBoardText(node) }
+		
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FREE_THREE] = function(node) { return "③" == getBoardText(node) }
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_NOTFREE_THREE] = function(node) { return  "3" == getBoardText(node) }
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FREE_FOUR] = function(node) { return "④" == getBoardText(node) }
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_NOTFREE_FOUR] = function(node) { return "4" == getBoardText(node) }
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FOUL] = function(node) { return "❌" == getBoardText(node) }
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FOUL_33] = function(node, tree) {
 			const foulMark = foulInfo(tree, getIdx(node));
-			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_33);
+			return filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_33);
 		}
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL_44] = function(node, tree) {
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FOUL_44] = function(node, tree) {
 			const foulMark = foulInfo(tree, getIdx(node));
-			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_44);
+			return filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_44);
 		}
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL_6] = function(node, tree) {
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FOUL_6] = function(node, tree) {
 			const foulMark = foulInfo(tree, getIdx(node));
-			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_6);
+			return filtetlrOptionsCallback[puzzleCoder.MODE.BASE_FOUL](node) && !(foulMark & MARKFOUL_5) && (foulMark & MARKFOUL_6);
 		}
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_CATCH_FOUL] = function(node) { return "❌" != getBoardText(node)  }
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_REVIVE_FREE_THREE] = function(node, tree) {
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_BLOCK_CATCH_FOUL] = function(node) { return "❌" != getBoardText(node)  }
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_REVIVE_FREE_THREE] = function(node, tree) {
 			const boardText = getBoardText(node) ; 
-			const color = (node.branchsInfo + 1 & 1) + 1;
-			const infoArr = new Array(226);
-			testThree(tree2Position(tree), color, infoArr)
-			return boardText == "V" && ( infoArr[getIdx(node)] & FOUL_MAX_FREE ) != THREE_FREE;
+			return boardText == "❸";
 		}
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_MAKE_VCF] = function(node) { 
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_MAKE_VCF] = function(node, tree) { 
 			const boardText = getBoardText(node) ; 
-			const depth = parseInt(boardText.slice(1));
-			let vcfDepth = 5;
-			return boardText.indexOf("V") == 0 && depth >= vcfDepth; 
+			return boardText.indexOf("V") == 0 && boardText != "V3"; 
 		}
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_MAKE_VCF_43] = function(node) { 
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_MAKE_VCF_43] = function(node) { 
 			const boardText = getBoardText(node) ; 
-			return boardText == "V3" 
+			return boardText == "V3";
 		}
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_MAKE_VCF_44] = function(node, tree) { 
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_MAKE_VCF_44] = function(node, tree) { 
 			const boardText = getBoardText(node) ; 
-			const color = (node.branchsInfo + 1 & 1) + 1;
-			const infoArr = new Array(226);
-			testThree(tree2Position(tree), color, infoArr)
-			return boardText == "V" && ( infoArr[getIdx(node)] & FOUL_MAX_FREE ) == THREE_NOFREE;
+			return boardText == "㊹";
 		}
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_BLOCK_VCF] = function(node) { return "L" != getBoardText(node) }
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_BLOCK_VCF_4] = function(node, tree) {
-			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_BLOCK_VCF](node);
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_BLOCK_VCF] = function(node) { return "L" != getBoardText(node) }
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_BLOCK_VCF_4] = function(node, tree) {
+			return filtetlrOptionsCallback[puzzleCoder.MODE.BASE_BLOCK_VCF](node);
 		}
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_DOUBLE_VCF] = function(node) { return "W" == getBoardText(node) }
-		filtetlrCallbackOptions[puzzleCoder.MODE.BASE_BLOCK_DOUBLE_VCF] = function(node, tree) {
-			return filtetlrCallbackOptions[puzzleCoder.MODE.BASE_BLOCK_VCF](node);
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_DOUBLE_VCF] = function(node) { return "W" == getBoardText(node) }
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_BLOCK_DOUBLE_VCF] = function(node, tree) {
+			return filtetlrOptionsCallback[puzzleCoder.MODE.BASE_BLOCK_VCF](node);
 		}
-		
-		/*
-		BASE_FREE_THREE: { value: 6 << 5 | 2, name: "点点题模式" },
-		BASE_REVIVE_FREE_THREE: { value: 6 << 5 | 3, name: "点点题模式" },
-		BASE_NOTFREE_THREE: { value: 6 << 5 | 4, name: "点点题模式" },
-		BASE_FREE_FOUR: { value: 6 << 5 | 5, name: "点点题模式" },
-		BASE_NOTFREE_FOUR: { value: 6 << 5 | 6, name: "点点题模式" },
-		
-		BASE_FOUL: { value: 6 << 5 | 7, name: "点点题模式" },
-		BASE_FOUL_33: { value: 6 << 5 | 8, name: "点点题模式" },
-		BASE_FOUL_44: { value: 6 << 5 | 9, name: "点点题模式" },
-		BASE_FOUL_6: { value: 6 << 5 | 10, name: "点点题模式" },
-		BASE_CATCH_FOUL: { value: 6 << 5 | 11, name: "点点题模式" },
-		
-		BASE_MAKE_VCF: { value: 6 << 5 | 12, name: "点点题模式" },
-		BASE_MAKE_VCF_43: { value: 6 << 5 | 13, name: "点点题模式" },
-		BASE_MAKE_VCF_44: { value: 6 << 5 | 14, name: "点点题模式" },
-		BASE_BLOCK_VCF: { value: 6 << 5 | 15, name: "点点题模式" },
-		BASE_BLOCK_VCF_4: { value: 6 << 5 | 16, name: "点点题模式" },
-		
-		BASE_DOUBLE_VCF: { value: 6 << 5 | 17, name: "点点题模式" },
-		BASE_BLOCK_DOUBLE_VCF: { value: 6 << 5 | 18, name: "点点题模式" },
-		*/
+		filtetlrOptionsCallback[puzzleCoder.MODE.BASE_DOUBLE_VCF_43] = function(node) { return "W" == getBoardText(node) }
 		
 		async function getOptions(game) {
-			if (game.options) return;
-			aiState = aiState | STATE_RENJU_THINKING;
-			const tree = await filterCallbackTree[game.puzzle.mode](game);
-			game.options = await filterOption(tree, filtetlrCallbackOptions[game.puzzle.mode]);
-			console.log(`game.options: ${game.options}`)
-			aiState = aiState & ~STATE_RENJU_THINKING;
-			return game.options;
+			if (game.options) {
+				return game.options;
+			}
+			else {
+				aiState = aiState | STATE_RENJU_THINKING;
+				const tree = await filterCallbackTree[game.puzzle.mode](game.board.getArray(), game.playerSide);
+				const options = filterOptions(tree, filtetlrOptionsCallback[game.puzzle.mode]);
+				aiState = aiState & ~STATE_RENJU_THINKING;
+				return options;
+			}
 		}
 		
-		function filterOption(tree, filter = ()=>true) {
-			try{
+		function filterOptions(tree, filter = ()=>true) {
 			const options = [];
 			const path = tree.init.MS.slice(0, tree.init.MSindex + 1)
 			const nodes = tree.getBranchNodes(path);
-			console.log(`filter: ${filter.toString()}\nnodes: ${nodes}`)
 			nodes.map(node => filter(node, tree) && options.push(getIdx(node)))
 			return options;
-			}catch(e){alert(e.stack)}
 		}
 		
 		function tree2Position(tree) {
@@ -309,11 +291,8 @@ window.puzzleAI = (() => {
 		function foulInfo(tree, idx) {
 			let threeCount = 0;
 			let fourCount = 0;
-			let out = `idx: ${idx}\n`
 			let info = 0
 			const arr = tree2Position(tree);
-			console.log(testLine.toString())
-			console.log(arr.map((v,i) => v>0 && `[${v},${i}]`).filter(v=>v).toString())
 			for (let direction = 0; direction < 4; direction++) {
 				let lineInfo = testLine(idx, direction, 1, arr),
 					v = FOUL_MAX_FREE & lineInfo;
@@ -322,13 +301,9 @@ window.puzzleAI = (() => {
 				else if (v == LINE_DOUBLE_FOUR) info |= MARKFOUL_44_ONE_LINE;
 				else if (v >= FOUR_NOFREE) fourCount++;
 				else if (v == THREE_FREE) threeCount++;
-				out += `${("0000000000000000" + lineInfo.toString(2)).slice(-16)}\n`
 			}
-			out += `fourCount: ${fourCount}\nthreeCount: ${threeCount}`
-			console.log(out);
 			threeCount > 1 && ( info |= MARKFOUL_33 );
 			fourCount > 1 && ( info |= MARKFOUL_44_DBL_LINE );
-			console.log(`info: ${("00000000" + info.toString(2)).slice(-8)}`)
 			return info;
 		}
 		
@@ -340,34 +315,59 @@ window.puzzleAI = (() => {
 			return node.branchs[node.branchsInfo + 1 & 1].idx;
 		}
 		
-		async function getFoulPoints(game) {
-			return engine.createTreeTestFoul({
-			 	arr: game.board.getArray(),
-			 	color: 1,
-			});
-		}
+		//-------------------- createTree ------------------------------------
 		
-		async function getPoints(game) {
-			return await engine.createTreeNodes({
-				arr: game.board.getArray(),
-				color: game.playerSide
-			})
-		}
-		
-		async function getReviveFreeThreePoints(game) {
-			return engine.createTreeLevelThree({
-				arr: game.board.getArray(),
-				color: game.playerSide,
-				ftype: FIND_ALL,
+		async function createTreeVCF (arr, color) {
+			return engine.createTreeVCF({
+				arr,
+				color,
 				maxVCF: 1,
-				maxDepth: 1,
+				maxDepth: 180,
 				maxNode: 1000000
 			})
 		}
 		
-		async function getBlockCatchFoulPoints(game) {
+		async function createTreePointsVCT(arr, color) {
+			return engine.createTreePointsVCT({
+				color: color,
+				arr: arr,
+				ftype: FIND_ALL,
+				maxVCF: 1,
+				maxDepth: 180,
+				maxNode: 1000
+			})
+		}
+		
+		async function createTreeVCT3(arr, color) {
+			return engine.createTreeSimpleWin({
+				arr,
+				color,
+				maxVCF: 1,
+				maxDepth: 180,
+				maxNode: 1000000,
+				maxVCT: 1,
+				maxDepthVCT: 4 * 2 - 3,
+				maxNodeVCT: 1000000
+			})
+		}
+		
+		async function createTreeFoul(arr, color) {
+			return engine.createTreeTestFoul({
+			 	arr,
+			 	color: 1,
+			});
+		}
+		
+		async function createTreeNodes(arr, color) {
+			return await engine.createTreeNodes({
+				arr,
+				color
+			})
+		}
+		
+		async function createTreeBlockCatchFoul(arr, color) {
 			return engine.createTreeBlockCatchFoul({
-				arr: game.board.getArray(),
+				arr,
 				color: 1,
 				maxVCF: 1,
 				maxDepth: 180,
@@ -375,10 +375,10 @@ window.puzzleAI = (() => {
 			});
 		}
 		
-		async function getMakeVCFPoints(game) {
+		async function createTreeMakeVCF(arr, color) {
 			return engine.createTreeLevelThree({
-				arr: game.board.getArray(),
-				color: game.playerSide,
+				arr,
+				color,
 				ftype: FIND_ALL,
 				maxVCF: 1,
 				maxDepth: 180,
@@ -386,31 +386,42 @@ window.puzzleAI = (() => {
 			})
 		}
 		
-		async function getBlockVCFPoints(game) {
+		async function createTreeBlockVCF(arr, color) {
 			return engine.createTreeBlockVCF({
-				arr: game.board.getArray(),
-				color: game.playerSide,
+				arr,
+				color,
 				maxVCF: 1,
 				maxDepth: 180,
 				maxNode: 1000000,
-				blkDepth: 2
+				blkDepth: 1
 			});
 		}
 		
-		async function getDoubleVCFPoints(game) {
+		async function createTreeDoubleVCF(arr, color) {
 			return engine.createTreeDoubleVCF({
-				arr: game.board.getArray(),
-				color: game.playerSide,
+				arr,
+				color,
 				maxVCF: 1,
 				maxDepth: 180,
 				maxNode: 1000000
 			});
 		}
 		
-		async function getBlockDoubleVCFPoints(game) {
+		async function createTreeDoubleVCF43(arr, color) {
+			return engine.createTreeNumberWin({
+				arr,
+				color,
+				maxVCF: 1,
+				maxDepth: 4 * 2 - 3,
+				maxNode: 1000000,
+				nMaxDepth: 180
+			});
+		}
+		
+		async function createTreeBlockVCFDepth(arr, color) {
 			return engine.createTreeBlockVCF({
-				arr: game.board.getArray(),
-				color: game.playerSide,
+				arr,
+				color,
 				maxVCF: 1,
 				maxDepth: 180,
 				maxNode: 1000000,
@@ -421,8 +432,9 @@ window.puzzleAI = (() => {
 		//--------------------------------------------------------------------------
 		
 		async function checkWin(game, idx) {
+			engine.board = undefined;
 			if ((game.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE) {
-				return checkWinBASE(game);
+				checkWinBASE(game);
 			}
 			else {
 				const side = game.board.getArray()[idx];
@@ -438,36 +450,112 @@ window.puzzleAI = (() => {
 		}
 		
 		async function checkWinBASE(game) {
-			try{
 			aiState = aiState | STATE_RENJU_THINKING;
 			processOutput({ sideLabel: "计算中..." })
-			const options = game.options || await getOptions(game);
+			const options = game.options  = game.options || await getOptions(game);
 			const selectPoints = game.board.P.map((p, idx) => {
 				if (p.type == TYPE_MARK && p.text == game.puzzle.mark) return idx;
 				else return undefined;
 			}).filter(v => v!==undefined);
-			const errCount = selectPoints.map(v => options.indexOf(v) + 1).filter(v => v == 0).length;
-			const lastCount = options.length - selectPoints.length + errCount;
-			if (options.length == selectPoints.length && errCount == 0 && lastCount == 0) {
-				processOutput({ state: game.STATE.WIN, sideLabel: "答题结束", warn: "回答正确"})
-			}
-			else if(errCount) {
-				processOutput({ state: game.STATE.PLAYING, sideLabel: `错${errCount}` })
+			//const errCount = selectPoints.map(v => options.indexOf(v) + 1).filter(v => v == 0).length;
+			//const lastCount = options.length - selectPoints.length + errCount;
+			const over = 0 == options.map(idx => selectPoints.indexOf(idx)).filter(index => index < 0).length;
+			if (over) {
+				if (selectPoints.length) {
+					if (options.length == selectPoints.length) {
+						processOutput({ state: game.STATE.WIN, sideLabel: "答题结束", warn: "回答正确"})
+					}
+					else {
+						const errorPoints = selectPoints.filter(idx => options.indexOf(idx) == -1)
+						processOutput({ state: game.STATE.LOST, sideLabel: "答题结束", warn: `${errorPoints.length}处错误`, errorPoints: errorPoints})
+					}
+				}
 			}
 			else {
 				processOutput({ sideLabel: "继续答题" })
 			}
 			aiState = aiState & ~STATE_RENJU_THINKING;
-			}catch(e){alert(e.stack)}
 		}
 
 		async function checkMove(game, idx) {
+			engine.board = undefined;
 			if (game.board.getArray()[idx] != game.playerSide) return;
 			const state = await (filterCheckMove[game.puzzle.mode] || function() {})(game, idx)
 			const GAME_STATE = {"0": game.STATE.PLAYING, "1": game.STATE.WIN, "-1": game.STATE.LOST, "-2": game.STATE.LOST, "-5": game.STATE.LOST}
 			const COMMENT = {"-5": "不符合解题规则"}
 			const WARN = {"-5": "不合规则"}
 			state && processOutput({ state: GAME_STATE[state], sideLabel: "棋局结束", comment: COMMENT[state], warn: WARN[state]});
+		}
+		
+		/**
+		 *  测试残局是否有误, 无误返回 true, 有误返回 false,
+		 * @arr		game position 
+		 * @side	 playSide
+		 * @rule	 rapfi rule
+		 * @mode	 puzzle mode
+		 * @board
+		 */
+		async function checkPuzzle(arr, side, rule, mode, board) {
+			aiState = aiState | STATE_RENJU_THINKING;
+			try{
+			console.info(`checkPuzzle\narr: ${arr}\nside: ${side}\nrule: ${rule}\nmode: ${mode}`)
+			engine.gameRules = RENJU_RULE[rule];
+			const over = getGameOver(arr, side);
+			if (over) return false;
+				
+			if ("function" !== typeof filterCallbackTree[mode]) {
+				console.info(`typeof filterCallbackTree[mode]: ${typeof filterCallbackTree[mode]}`)
+				return true;
+			}
+			
+			engine.board = board;
+			const tree = await filterCallbackTree[mode](arr, side);
+			const options = filterOptions(tree, filtetlrOptionsCallback[mode]);
+			return !!options.length;
+			}catch(e){console.error(e.stack)}
+			aiState = aiState & ~STATE_RENJU_THINKING;
+		}
+		
+		/**
+		 * 
+ 		*/
+		async function autoSetMode(puzzle, board) {
+			console.log()
+			for (let i = 0; i < 32; i+=8) {
+				const mode = (puzzle.modes >>> i) & 0xFF;
+				if (mode == 0) break;
+				const checked = await checkPuzzle(puzzle.arr, puzzle.side, puzzle.rule, mode, board);
+				if (checked) {
+					puzzle.mode = mode;
+					return true;
+				}
+			}
+			puzzle.mode = puzzleCoder.MODE.FREE;
+			return false;
+		}
+		
+		/**
+		 * 传入 Puzzles 对象，根据参数自动计算后，转成 puzzleCoder 可用的 Puzzles 对象。返回一个log string
+		 * @Puzzles		包含 arr， modes 对象
+		 * @board		CheckBoard 对象，输出计算结果
+		 * @callback	
+ 		*/
+		async function checkPuzzles(puzzles, board, callback = () => {}) {
+			let logStr = "";
+			for(let i = 0; i < puzzles.length; i++) {
+				const puzzle = puzzles[i];
+				board.setSize = puzzle.size;
+				board.unpackArray(puzzle.arr);
+				const rt = await autoSetMode(puzzle, board);
+				const codeArr = board.getCode().split(/{|}/);
+				puzzle.stones = codeArr[0].split("\n").join("");
+				puzzle.blackStones =  codeArr[1].split("\n").join("");
+				puzzle.whiteStones = codeArr[3].split("\n").join("");
+				logStr += `第${i + 1}题测试：${rt ? "通过" : "失败"}\n  解题模式: ${puzzleCoder.MODE_TITLE[puzzle.mode]}\n  玩家: ${[,"黑棋","白棋"][puzzle.side]}\n  规则: ${puzzle.rule==2 ? "有禁" : "无禁"}\n  棋盘: ${puzzle.size}路\n`;
+				try{callback(i/puzzles.length)}catch(e){console.error(e.stack)}
+			}
+			console.log(logStr)
+			return logStr;
 		}
 
 		function gomocalcThink(game, side, min = 30, max = 100) {
@@ -493,6 +581,7 @@ window.puzzleAI = (() => {
 
 		function think(game) {
 			if (aiState == STATE_AI_READY) {
+				engine.board = undefined;
 				processOutput({ sideLabel: "思考中..." })
 				engine.gameRules = RENJU_RULE[game.puzzle.rule];
 				if ((game.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE) {
@@ -506,12 +595,13 @@ window.puzzleAI = (() => {
 
 		function aiHelp(game) {
 			if (aiState == STATE_AI_READY) {
+				engine.board = game.board;
+				processOutput({ sideLabel: "思考中..." })
+				engine.gameRules = RENJU_RULE[game.puzzle.rule];
 				if ((game.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE) {
-					
+					(filterAIHelp[puzzleCoder.MODE.BASE] || function() {})(game);
 				}
 				else {
-					processOutput({ sideLabel: "思考中..." })
-					engine.gameRules = RENJU_RULE[game.puzzle.rule];
 					(filterAIHelp[game.puzzle.mode] || function() {})(game);
 				}
 			}
@@ -570,6 +660,7 @@ window.puzzleAI = (() => {
 			stopThinking,
 			checkWin,
 			checkMove,
+			checkPuzzles,
 			set processOutput(output) { processOutput = output }
 		}
 	} catch (e) { console.error(e.stack) }

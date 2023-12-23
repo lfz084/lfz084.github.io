@@ -127,6 +127,7 @@
     "fullscreenUI": "UI/fullscreenUI.js",
     "helpWindow": "UI/helpWindow.js",
     "ImgButton": "UI/ImgButton.js",
+    "InputButton": "UI/InputButton.js",
     "loadAnimation": "UI/loadAnimation.js",
     "mainUI": "UI/mainUI.js",
     "msgbox": "UI/msgbox.js",

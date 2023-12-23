@@ -200,6 +200,41 @@ window.mainUI = (function() {
 			}
 		}
 		settings.push({ buttonSettings: buttonSettings2, marktopSetting: marktopSetting2 });
+		
+		const buttonSettings3 = [];
+		const marktopSetting3 = {};
+		for (let i = 0; i < 15; i++) { // set positions
+			if (i === 0) {
+				if (dw < dh) {
+					t = 0 - gridWidth - buttonHeight * 1.5;
+					const p = { x: 0, y: -gridPadding - buttonHeight * 1.5 };
+					marktopSetting1.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
+				}
+				else {
+					t = buttonHeight * 0;
+					const p = { x: 0, y: 0 };
+					marktopSetting1.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
+				}
+			}
+			else if (i === 1) {
+				if (dw < dh)
+					t = buttonHeight * 0;
+				else
+					t += buttonHeight * 1.5;
+			}
+			else {
+				t += buttonHeight * 1.5;
+			}
+			for (let j = 0; j < 4; j++) {
+				buttonSettings3.push({
+					left: ~~(cmdPadding + buttonWidth * j * 1.33),
+					top: ~~t,
+					width: ~~buttonWidth,
+					height: ~~buttonHeight
+				});
+			}
+		}
+		settings.push({ buttonSettings: buttonSettings3, marktopSetting: marktopSetting3 });
 
 	}
 
@@ -465,6 +500,14 @@ window.mainUI = (function() {
 			this.height = height;
 			this.viewElem = document.createElement(tagName);
 			this.varName = void 0;
+			if (this.constructor.name != "CmdDiv") {
+				this.viewElem.addEventListener("touchstart", () => {
+					event.cancelBubble = true;
+				}, true);
+				this.viewElem.addEventListener("contextmenu", () => {
+					event.cancelBubble = true;
+				}, true);
+			}
 		}
 
 		get type() { return this.constructor.name }
@@ -634,6 +677,52 @@ window.mainUI = (function() {
 		const comment = newClass(param, Comment);
 		return comment;
 	}
+	
+	//---------------------- TextBox ------------------------
+	
+	class TextBox extends viewElem {
+		constructor(left = 0, top = 0, width = 500, height = 500) {
+			super(left, top, width, height, undefined, "textarea");
+			this.div = document.createElement("div");
+			this.viewElem.addEventListener("click", () => {
+				this.viewElem.scrollIntoView(false);
+				this.showDiv();
+			})
+			this.viewElem.addEventListener("input", () => {
+				//this.viewElem.scrollIntoView(false);
+				this.showDiv()
+			})
+			this.div.addEventListener("click", () => {
+				this.hideDiv()
+			})
+		}
+		get value() { return this.viewElem.value || "" }
+		set value(text) { this.viewElem.value = text }
+	}
+	
+	TextBox.prototype.showDiv = function() {
+		if (this.div.parentNode) return;
+		document.body.appendChild(this.div);
+		const width = document.documentElement.clientWidth * 2;
+		const height = document.documentElement.clientHeight * 2;
+		Object.assign(this.div.style, {
+			position: "fixed",
+			left : -(width >> 2) + "px",
+			top: -(height >> 2) + "px",
+			width: width + "px",
+			height: height + "px",
+			zIndex: 9999
+		})
+	}
+	
+	TextBox.prototype.hideDiv = function() {
+		this.div.parentNode && this.div.parentNode.removeChild(this.div);
+	}
+	
+	function newTextBox(param = {}) {
+		const textBox = newClass(param, TextBox);
+		return textBox;
+	}
 
 	//---------------------- themes ------------------------
 
@@ -653,10 +742,12 @@ window.mainUI = (function() {
 				case "Label":
 				case "Timer":
 				case "Comment":
+				case "TextBox":
 					child.loadTheme(theme["body"])
 					break;
 				case "Board":
 				case "Button":
+				case "InputButton":
 					typeof child.loadTheme === "function" && child.loadTheme(theme[className])
 			}
 		}
@@ -734,6 +825,7 @@ window.mainUI = (function() {
 	Object.defineProperty(exports, "newLabel", { value: newLabel });
 	Object.defineProperty(exports, "newTimer", { value: newTimer });
 	Object.defineProperty(exports, "newComment", { value: newComment });
+	Object.defineProperty(exports, "newTextBox", { value: newTextBox });
 
 	return exports;
 })()

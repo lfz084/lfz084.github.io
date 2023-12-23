@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2111.08";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2023.12";
 window.engine = (function() {
             "use strict";
             const TEST_ENGINE = false;
@@ -312,9 +312,64 @@ window.engine = (function() {
             const LEVEL_THREE_POINTS_TXT = new Array(225);
             LEVEL_THREE_POINTS_TXT.fill(1).map((v, i) => {
                 if (i < 2) LEVEL_THREE_POINTS_TXT[i] = `V`;
-                else if (i < 100) LEVEL_THREE_POINTS_TXT[i] = `V${i}`;
-                else LEVEL_THREE_POINTS_TXT[i] = `V++`;
+                else LEVEL_THREE_POINTS_TXT[i] = `V${i}`;
             })
+            /**
+             * 区分活三，复活三，做四四，做冲四抓禁的标记
+        	 * ③	活三
+        	 * ❸	复活三
+             * ㊹	做四四
+             * ⊗	做冲四抓禁
+             * 一手棋可能同时存在两种以上的杀，按优先顺序返回字符串
+             */
+            function setV (arr, color, idx, moves, lineInfo) {
+            	if ((lineInfo & FOUL_MAX_FREE ) == THREE_FREE) {
+					return "③"
+				}
+				else if(color == 1) {
+					return "❸"
+				}
+				else {
+					const oldV = arr[idx];
+					const oldV1 = arr[moves[0]];
+					arr[idx] = color;
+					arr[moves[0]] = color;
+					const level = getLevelPoint(moves[0], color, arr);
+					arr[idx] = oldV;
+					arr[moves[0]] = oldV1;
+					if (level & (LEVEL_MARK_LINE_DOUBLEFOUR | LEVEL_MARK_MULTILINE_DOUBLEFOUR))
+						return "㊹"
+					else return "⊗"
+				}
+            }
+            /**
+             * 区分四三杀，冲四再四四，冲四冲四抓禁
+        	 * V3	四三杀
+        	 * V4	冲四再四四
+             * VX	冲四冲四抓禁
+             * @VCFS 可能包括多套短杀同时存在不同类型的短杀，按优先顺序返回字符串
+             */
+            function setV3(arr, color, idx, VCFS) {
+            	let mark = 0;
+            	if (!VCFS[0].length) VCFS = [VCFS];
+            	for (let i = VCFS.length - 1; i >= 0; i--) {
+            		const moves = VCFS[i];
+            		const oldV = arr[idx];
+            		const oldVS = [];
+            		moves.map(idx => oldVS.push(arr[idx]));
+            		arr[idx] = color;
+            		moves.map((idx, i) => arr[idx] = i % 2 ? 3 - color : color);
+            		const level = getLevelPoint(moves[moves.length-1], color, arr);
+					moves.map(idx => arr[idx] = oldVS.splice(0, 1)[0]);
+					arr[idx] = oldV;
+					if (level & LEVEL_MARK_FREEFOUR)
+						mark |= (1 << 2);
+					else if (level & (LEVEL_MARK_LINE_DOUBLEFOUR | LEVEL_MARK_MULTILINE_DOUBLEFOUR))
+						mark |= (1 << 1);
+					else mark |= 1;
+            	}
+            	return (mark & (1 << 2)) ? "V3" : (mark & (1 << 1)) ? "V4" : "VX";
+            }
 
             //return param
             function copyParam(param) {
@@ -876,21 +931,61 @@ window.engine = (function() {
 
             //param: {arr, color, maxVCF, maxDepth, maxNode, ftype}
             //return Promise resolve: RenjuTree
-            async function _createTreeLevelThree(param) {
-                let { tree, positionMoves, isPushPass, current } = createTree(param),
-                    filterArr = await _selectPoints(param, AROUND_MODE),
-                    nodes = await getLevelThreeNodes(param, filterArr);
-
-                nodes.filter(FILTER_VCF_NODE[param.ftype]).map(node => {
+            async function _createTreeLevelThree(param, filterArr) {
+            	try{
+                const oldDepth = param.maxDepth;
+                const oldMaxVCF = param.maxVCF;
+                let { tree, positionMoves, isPushPass, current } = createTree(param);
+                filterArr = filterArr || await _selectPoints(param, AROUND_MODE);
+                
+                param.maxDepth = 1;
+                param.maxVCF = 255;
+                const nodes = await getLevelThreeNodes(param, filterArr);
+                nodes.map(node => {
+                	filterArr[node.idx] = 0;
+                	node.boardText = setV(param.arr, param.color, node.idx, node.winMoves, node.lineInfo);
+                })
+                
+                param.maxDepth = 3;
+                param.maxVCF = 255; // 255 找全各类型短杀
+                const infoArr = getTestThreeInfo(param);
+                for (let idx = 0; idx < 225; idx++) {
+                	if (filterArr[idx] && param.arr[idx] == 0 && FOUR_NOFREE > (infoArr[idx] & FOUL_MAX_FREE)) {
+                		const ov = param.arr[idx];
+                		param.arr[idx] = param.color;
+                		const vcfInfo = (await findVCF(param));
+                		const shortVCF = vcfInfo.winMoves;
+                		if(shortVCF.length) {
+                			filterArr[idx] = 0;
+                			const node = { idx: idx, lineInfo: 0, winMoves: shortVCF[0] };
+                			node.boardText = setV3(param.arr, param.color, idx, shortVCF);
+                			nodes.push(node);
+                		}
+                		param.arr[idx] = ov;
+                	}
+                }
+                
+                param.maxDepth = oldDepth;
+                param.maxVCF = oldMaxVCF;
+                const nodes5 = await getLevelThreeNodes(param, filterArr);
+                nodes5.map(node => {
+                	filterArr[node.idx] = 0;
+                	node.boardText = LEVEL_THREE_POINTS_TXT[node.winMoves.length];
+                })
+                		
+                nodes.concat(nodes5).filter(FILTER_VCF_NODE[param.ftype]).map(node => {
                     let nNode = tree.newNode(),
                         nodePass = tree.newNode();
                     nNode.idx = node.idx;
-                    nNode.boardText = LEVEL_THREE_POINTS_TXT[node.winMoves.length];
+                    nNode.boardText = node.boardText;
                     current.addChild(nNode);
                     nNode.addChild(nodePass);
                     tree.createPathVCF(nodePass, node.winMoves);
                 })
+                
+                tree.createPath(positionMoves).comment = ` ③	活三点<br> ❸	复活三点<br> ㊹	做四四<br> ⊗	做冲四抓禁<br> V3	做四三杀<br> V4	做冲四再四四<br> VX	做冲四冲四抓禁<br> V5 ~ V180	做VCF，数字后缀表示VCF双色步数，以活四、四四、冲四抓为最后一手`
                 return tree;
+                }catch(e){alert(e.stack)}
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode, ftype}
@@ -900,7 +995,7 @@ window.engine = (function() {
                 if (wTree) return wTree;
 
                 let tree = await _createTreeLevelThree(param);
-                return tree;
+            	return tree;
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode}
@@ -909,7 +1004,8 @@ window.engine = (function() {
                 let wTree = await createTreeWin(param);
                 if (wTree) return wTree;
 
-                let tree = await _createTreeLevelThree(param);
+                const filterArr = await _selectPoints(param, BLOCK_MODE)
+                let tree = await _createTreeLevelThree(param, filterArr);
                 tree.mergeTree(createTreeFour(param));
                 return tree;
             }
@@ -2216,7 +2312,7 @@ window.engine = (function() {
         addBranchBlockNumberWin: async (...param) => exe(_addBranchBlockNumberWin, ...param),
         get gameRules() { return gameRules },
         set gameRules(rules) { return _setGameRules(rules) },
-        set board(b = defaultBoard) { board = b},
+        set board(b) { board = b || defaultBoard},
         // test function //
         excludeBlockVCF: excludeBlockVCF,
         createTreeVCT: createTreeVCT,

@@ -11,9 +11,11 @@
                 [SOURCE_FILES["image2board"]],
                 [SOURCE_FILES["markLine"]],
                 [SOURCE_FILES["tree"]],
+                [SOURCE_FILES["saveFile"]],
                 [SOURCE_FILES["share"]],
                 [SOURCE_FILES["helpWindow"]],
-                [SOURCE_FILES["msgbox"]]]
+                [SOURCE_FILES["msgbox"]],
+                [SOURCE_FILES["InputButton"]]]
         }, {
 			progress: "39%",
 			type: "scriptAll",

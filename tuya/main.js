@@ -29,6 +29,8 @@
 				text: "打开图片",
 				change: async function() {
 					await game.openImg(this);
+					window.setBlockUnload(true);
+					this.value = "";
 				},
 				reset: function() {
 					this.input.accept = "image/*";

@@ -79,8 +79,8 @@
     	s = WIN_DIV.style;
         s.backgroundColor = "#666";
         s.position = "relative";
-        s.left = (winWidth * document.documentElement.clientWidth / dw - 820) / 2 + "px";
-        s.top = (winHeight * document.documentElement.clientHeight / dh - winHeight) / 2 + "px";
+        s.left = (winWidth * (window.fullscreenUIWidth || document.documentElement.clientWidth) / dw - 820) / 2 + "px";
+        s.top = (winHeight * (window.fullscreenUIHeight || document.documentElement.clientHeight) / dh - winHeight) / 2 + "px";
         s.width = 820 + "px";
         s.height = winHeight + "px";
 

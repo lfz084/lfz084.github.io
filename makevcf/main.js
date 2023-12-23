@@ -20,7 +20,9 @@
 	}
 
 	//-------------------------------------------------------------
-
+	
+	let filename = "VCF";
+	
 	const STATE_STRING = {
 		0: "已经完成搜索",
 		1: "点击棋盘添加、删除",
@@ -47,6 +49,7 @@
 				const numStones = arr.filter(v => v > 0).length;
 				makeVCF.resetMakeVCF(arr, numStones - (numStones >>> 1), numStones >>> 1, log);
 				makeVCF.continueMakeVCF(arr => cBoard.unpackArray(arr));
+				window.setBlockUnload(true)
 			}
         },
 		{
@@ -56,6 +59,7 @@
 				makeVCF.continueMakeVCF(arr => cBoard.unpackArray(arr));
 			}
         },
+        mainUI.createMiniBoard({varName: "miniBoard"}),
 		{
 			type: "button",
 			text: "清空棋盘",
@@ -137,35 +141,58 @@
 			}
         },
 		{
-			type: "button",
-			text: "导出JSON",
-			touchend: async function() {
-				try {
-					const games = makeVCF.games();
-					if (games.length == 0) return;
-					const json = await puzzleCoder.games2kaibaoJSON(games, log1);
-					puzzleCoder.downloadJSON(json, "vcf");
-				} catch (e) { alert(e.stack) }
-			}
+			varName: "btnOutput",
+			type: "select",
+            options: [0, "开宝JSON", 1, "小工具JSON"],
+            reset: function() { this.setText("","导出JSON") },
+            change: async function() {
+                setBusy(true);
+                try {
+            		const games = makeVCF.games();
+                	if (games.length) {
+                	if (this.input.value * 1 == 0) {
+                		const json = await puzzleCoder.games2kaibaoJSON(games, outputProgress);
+                		puzzleCoder.downloadJSON(json, filename);
+                	}
+                	else {
+                		const puzzles = createPuzzles(games);
+            			const json = await puzzleCoder.puzzles2RenjuJSON({puzzles}, outputProgress);
+            			puzzleCoder.downloadJSON(json, filename);
+                	}
+                	}
+				} catch (e) { console.error(e.stack) }
+                setBusy(false);
+            }
         },
 		{
+			varName: "btnTest",
 			type: "button",
 			text: "测试题集",
 			touchend: async function() {
-				const games = makeVCF.games();
-				await testGames(games);
+				setBusy(true);
+				try{
+					const games = makeVCF.games();
+					await testGames(games);
+				} catch (e) { console.error(e.stack) }
+				setBusy(false);
 			}
         },
 		{
+			varName: "btnLoad",
 			type: "file",
 			text: "导入JSON",
 			change: async function() {
+				setBusy(true);
 				try {
-					const games = await puzzleCoder.loadJSON(this.files[0], log1);
-					setTimeout(() => this.value = "", 0);
+					const file = this.files[0];
+					const games = await puzzleCoder.loadJSON2Games(file, outputProgress);
 					const result = await testGames(games);
 					makeVCF.pushGames(result.log, arr => miniBoard.unpackArray(arr));
-				} catch (e) { alert(e.stack) }
+					filename = file.name.slice(0, file.name.lastIndexOf("."));
+					window.setBlockUnload(true);
+				} catch (e) { console.error(e.stack) }
+				this.value = "";
+				setBusy(false);
 			}
         }
 
@@ -174,7 +201,7 @@
 
 	buttonSettings.splice(0, 0, createLogDiv(), null, null, null);
 	buttonSettings.splice(4, 0, createLogDiv1(), null);
-	buttonSettings.splice(8, 0, null, null);
+	buttonSettings.splice(9, 0, null);
 	buttonSettings.splice(12, 0, null, null);
 	buttonSettings.splice(16, 0, null, null);
 	buttonSettings.splice(20, 0, null, null);
@@ -186,7 +213,7 @@
 		const buttons = mainUI.createButtons(buttonSettings);
 		mainUI.addButtons(buttons, cDiv, 1);
 		return cDiv;
-		}catch(e){alert(e.stack)}
+		}catch(e){console.error(e.stack)}
 	}
 
 	function createLogDiv() {
@@ -232,10 +259,53 @@
 		})
 	}
 
-	const cBoard = mainUI.createCBoard();
-	const miniBoard = mainUI.createMiniBoard();
 	const cmdDiv = createCmdDiv();
-
+	const cBoard = mainUI.createCBoard();
+	const { 
+		miniBoard,
+		btnOutput,
+		btnTest,
+		btnLoad
+		} = mainUI.getChildsForVarname();
+		
+	function setBusy(isBusy) {
+		btnOutput.disabled = btnTest.disabled = btnLoad.disabled = !!isBusy;
+	}
+	
+	function outputProgress(progress) {
+		log1(`${(progress*100).toFixed(2)}%`)
+	}
+	
+	/**
+	 * 传入 games ， 转成 puzzleCoder 专用 Puzzles 对象
+ 	*/
+	function createPuzzles(games) {
+		const puzzles = [];
+		games.map((game, i) => {
+			let numBlackStones = 0, numWhiteStones = 0;
+			game.map(v => { v == 1 && numBlackStones++; v == 2 && numWhiteStones++; })
+			const side = numBlackStones <= numWhiteStones ? 1 : 2;
+			
+			miniBoard.unpackArray(game);
+			const codeArr = miniBoard.getCode().split(/{|}/);
+			const stones = codeArr[0].split("\n").join("");
+			const blackStones = codeArr[1].split("\n").join("");
+			const whiteStones = codeArr[3].split("\n").join("");
+			
+			puzzles.push({
+				stones: stones || undefined,
+				blackStones: blackStones || undefined,
+				whiteStones: whiteStones || undefined,
+				side: side,
+				rule: 2,
+				size: 15,
+				mode: puzzleCoder.MODE.VCF,
+				randomRotate: true
+			})
+		})
+		return puzzles;
+	}
+	
 	function addEvents() {
 		function ctnBack(idx) { // 触发快速悔棋
 			if (idx + 1 && miniBoard.P[idx].type == TYPE_NUMBER) {
@@ -326,7 +396,7 @@
 	
 	//------------------- load -------------------------
 	
-	miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
+	//miniBoard.move(undefined, undefined, undefined, undefined, cmdDiv.viewElem);
 	//createLogDiv().move(0, (dw > dh ? 1 : -1) * mainUI.buttonHeight * 1.1, undefined, undefined, cmdDiv.viewElem);
 	mainUI.loadTheme();
 	mainUI.viewport.resize();

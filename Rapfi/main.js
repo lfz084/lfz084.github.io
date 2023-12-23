@@ -57,18 +57,10 @@
             text: "打开文件",
             change: async function() {
                 try {
-                	mainUI.viewport.resize();
-                	const file = this.files[0];
-                    const path = this.value;
-                    this.value = "";
-                    const ratio = await game.openDatabass(file);
-                    if (ratio > 0) {
-                        log(getFileName(path));
-                        game.toStart();
-                        await game.showBranchNodes();
-                    }
-                    else log("");
-                } catch (e) { alert(e.stack) }
+                	await game.openFile(this);
+					window.setBlockUnload(true)
+                } catch (e) { console.error(e.stack) }
+                this.value = "";
             }
         },
         {
@@ -104,8 +96,8 @@
             text: "输出代码",
             touchend: async function() {
                 try {
-                    game.outCode();
-                } catch (e) { alert(e.stack) }
+                    game.outputCode();
+                } catch (e) { console.error(e.stack) }
             }
         },
 
@@ -117,6 +109,7 @@
             }
         },
         {
+            varName: "btnRule",
             type: "select",
             text: "renju",
             options: [2, "renju", 1, "standard", 0, "freestyle"],
@@ -135,6 +128,7 @@
             }
         },
         {
+            varName: "btnEncoding",
             type: "select",
             text: "gbk",
             options: [0, "gbk", 1, "big5", 2, "utf-8"],
@@ -204,6 +198,7 @@
 
     const cBoard = mainUI.createCBoard();
     const cmdDiv = createCmdDiv();
+    const { btnRule, btnEncoding } = mainUI.getChildsForVarname();
 
     function getFileName(path) {
         let temp = path.split(".");
@@ -357,7 +352,7 @@
         saveAsImage: function() {
             cBoard.saveAsImage();
         },
-        outCode: function() {
+        outputCode: function() {
             const code = cBoard.getCode().split(/{}/).join("");
             inputText(code);
         },
@@ -374,7 +369,22 @@
                 }
             }
         },
+        openFile: async function(fileInput) {
+        	mainUI.viewport.resize();
+            const file = fileInput.files[0];
+            const path = fileInput.value;
+            fileInput.value = "";
+            const ratio = await game.openDatabass(file);
+            if (ratio > 0) {
+            	log(getFileName(path));
+        		game.toStart();
+            	await game.showBranchNodes();
+            }
+            else log("");
+            return ratio;
+        },
         openDatabass: async function(file) {
+        	await DBClient.closeDatabass();
             const ratio = await DBClient.openDatabass(file, v => {
                 if (typeof v == "number") {
                     if (v <= 1) log(`${~~(v * 10000)/100}%`);
@@ -387,7 +397,7 @@
                 }
                 else if (typeof v == "string") log(v);
             });
-            if (ratio < 1) alert(`浏览器内存不足，只打开了${parseInt(ratio*10000)/100}%棋谱`);
+            if (ratio < 1) (self.msgbox || alert)(`浏览器内存不足，只打开了${parseInt(ratio*10000)/100}%棋谱\n建议使用最新版chrome浏览器，获得更大内存`);
             return ratio;
         },
         showBranchNodes: async function() {
@@ -419,7 +429,7 @@
                     }
                 })
                 //inputText(output);
-            } catch (e) { alert(e.stack) }
+            } catch (e) { console.error(e.stack) }
         },
 
         get boardWidth() {
@@ -445,7 +455,6 @@
             }
             return count;
         },
-
         set boardSize(size) {
             cBoard.setSize(size);
         },
@@ -507,5 +516,67 @@
 	addEvents();
     mainUI.loadTheme();
     mainUI.viewport.resize();
-    log("你可以打开Rapfi保存的db棋谱")
+    log("你可以打开Rapfi保存的db棋谱") 
+    $("comment").innerHTML = DBREAD_HELP;
+    //------------------------ support Renlib  ------------------------ 
+    
+    log("你可以打开db棋谱、lib棋谱") 
+    RenjuLib.reset({
+    	newGame: () => cBoard.cle(),
+    	cBoard: cBoard,
+    	getShowNum: () => true,
+    	outputComment: (text) => $("comment").innerHTML = text || DBREAD_HELP
+    });
+    
+    const oldOpenFile = game.openFile;
+    const oldshowBranchNodes = game.showBranchNodes;
+    Object.assign(game, {
+    	MODE: {
+    		DATABASS: 1,
+    		RENLIB: 2
+    	},
+    	mode: 0,
+    	openFile: async function(fileInput) {
+    		mainUI.viewport.resize();
+    		const file = fileInput.files[0];
+    		const path = fileInput.value;
+    		const type = file.name.toLowerCase().split(".").pop();
+    		await DBClient.closeDatabass();
+    		RenjuLib.closeLib();
+    		if (type == "db") {
+    			(await oldOpenFile.call(this, fileInput)) > 0 && (this.mode = this.MODE.DATABASS);
+    			btnEncoding.enabled = true;
+    		}
+    		else {
+    			cBoard.cle();
+    			(await RenjuLib.openLib(file)) && (this.mode = this.MODE.RENLIB);
+    			RenjuLib.getAutoMove();
+    			btnEncoding.enabled = false;
+    		}
+    		log(file.name);
+    		fileInput.value = "";
+    	},
+    	showBranchNodes: async function() {
+    		if (this.mode == this.MODE.DATABASS) oldshowBranchNodes.call(this);
+    		else if (this.mode == this.MODE.RENLIB) {
+    			RenjuLib.showBranchs({ 
+    				path: cBoard.MS.slice(0, cBoard.MSindex + 1),
+    				position: cBoard.getArray2D(),
+    				callback:() => game.rule == Rule.RENJU && game.sideToMove == 0 && cBoard.getArray().map((color, idx, arr) => {
+    					color == 0 && ("isFoul" in self) && isFoul(idx, arr) && cBoard.wLb(idx, EMOJI_FOUL, "red");
+    				})
+    			})
+    		}
+    	}
+    })
+    
+    Object.defineProperty(game, 'boardSize', {
+    	set: function(size) {
+    		cBoard.cle();
+    		cBoard.setSize(size);
+			RenjuLib.setCenterPos({ x: cBoard.size / 2 + 0.5, y: cBoard.size / 2 + 0.5 });
+			RenjuLib.getAutoMove();
+    	}
+    });
+    
 })()

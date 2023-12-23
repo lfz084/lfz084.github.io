@@ -9,6 +9,12 @@
 		"backgroundColor": "white",
 		"selectBackgroundColor": "#e0e0e0"
 	},
+	"InputButton": {
+		"color": "#333333",
+		"selectColor": "black",
+		"backgroundColor": "white",
+		"selectBackgroundColor": "#e0e0e0"
+	},
 	"Board": {
 		"backgroundColor": "white",
 		"wNumColor": "white",
@@ -53,7 +59,7 @@
 	"fullscreenUI": {
 		"btnBoard": {
 			"leftButtons": [
-				{ "icons": ["./UI/theme/light/pen-tool-svgrepo-com.svg"] },
+				{ "icons": ["./UI/theme/light/question-circle-svgrepo-com.svg"] },
 				{ "icons": ["./UI/theme/light/fullscreen-alt-svgrepo-com.svg", "./UI/theme/light/fullscreen-exit-alt-svgrepo-com.svg"] },
 				{ "icons": ["./UI/theme/light/sun-svgrepo-com.svg", "./UI/theme/light/eye-svgrepo-com.svg", "./UI/theme/light/moon-svgrepo-com.svg"] },
 				{ "icons": ["./UI/theme/light/arrow-cw-svgrepo-com.svg"] }],

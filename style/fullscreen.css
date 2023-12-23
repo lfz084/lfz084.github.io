@@ -54,9 +54,11 @@ h1 {
 }
 
 #mlog {
-	text-align: center;
+    text-align: center;
     width: 100%;
     opacity: 0.3;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
 }
 
 .hideBoard {

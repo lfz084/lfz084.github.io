@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2111.08";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2023.12";
 window.RenjuLib = (() => {
     "use strict";
     //console.log(exports);
@@ -18,6 +18,7 @@ window.RenjuLib = (() => {
         newGame,
         cBoard,
         getShowNum,
+        callback,
         isLoading = false,
         colour = false,
         buffer_scale = 5,
@@ -208,9 +209,14 @@ window.RenjuLib = (() => {
             }
         }
         if (cBoard.MSindex + 1 === cBoard.MS.length && nextMove.idx > -1) cBoard.MS.push(nextMove.idx);
-        let exWindow = window.exWindow;
-        exWindow.innerHTML(innerHTML);
-        if (innerHTML) exWindow.open();
+        outputComment(innerHTML);
+        "function" == typeof callback && callback()
+    }
+    
+    let outputComment = function(innerHTML) {
+    	let exWindow = window.exWindow;
+    	exWindow.innerHTML(innerHTML);
+    	if (innerHTML) exWindow.open();
     }
 
     function autoMove(path) {
@@ -236,6 +242,7 @@ window.RenjuLib = (() => {
             newGame = param.newGame;
             cBoard = param.cBoard;
             getShowNum = param.getShowNum;
+            outputComment = param.outputComment || outputComment;
         },
         isEmpty: function() {
             return !enable;
@@ -268,8 +275,15 @@ window.RenjuLib = (() => {
                     }, 1000);
                 }
                 else {
-                    wk.promiseMessage({ cmd: "setCenterPos", parameter: centerPos })
-                        .then(() => wk.promiseMessage({ cmd: "showBranchs", parameter: param }))
+                    wk.promiseMessage({ 
+                    	cmd: "setCenterPos", 
+                    	parameter: centerPos 
+                    })
+                    .then(() => {
+                    	callback = param.callback;
+                    	param.callback = undefined;
+                    	return wk.promiseMessage({ cmd: "showBranchs", parameter: param })
+                    })
                 }
             }
         },
@@ -288,6 +302,6 @@ window.RenjuLib = (() => {
         },
         setCenterPos: setCenterPos,
         setBufferScale: setBufferScale,
-        setPostStart: setPostStart
+        setPostStart: setPostStart,
     }
 })()

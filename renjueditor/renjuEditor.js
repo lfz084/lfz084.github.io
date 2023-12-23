@@ -58,7 +58,7 @@ window.renjuEditor = (() => {
             mode = ZIP;
         }
         else if (/\.json$/i.test(filename)) {
-        	return await puzzleCoder.loadJSON(file, callback);
+        	return await puzzleCoder.loadJSON2Games(file, callback);
         }
         else {
             await openImage(file);

@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2023.12";
 (function(global, factory) {
 	(global = global || self, factory(global));
 }(this, (function(exports) {
@@ -122,21 +122,27 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 				});
 				lis.push(li);
 				menu.appendChild(li);
-				li.onclick = function() {
-					if (isCancelMenuClick()) return;
-					if (event) event.cancelBubble = true;
-					input.selectedIndex = i; // input.onchange();
-					if (muWindow.parentNode) {
-						this.hide(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT, this.button.change.bind(this.button));
-					}
-					const type = input[i].type || "_";
-					if (type.indexOf("radio") + 1) {
-						[...input].map(option => { if (option.type === type) option.checked = option == input[i] });
-					}
-					else if (type.indexOf("checked") + 1) {
-						input[i].checked = !input[i].checked;
-					}
-				}.bind(this);
+				if (li.option.type == "disabled") {
+					li.style.opacity = 0.5;
+					li.addEventListener("click", () => { event.cancelBubble = true }, true);
+				}
+				else {
+					li.addEventListener("click", function() {
+						if (isCancelMenuClick()) return;
+						if (event) event.cancelBubble = true;
+						input.selectedIndex = i; // input.onchange();
+						if (muWindow.parentNode) {
+							this.hide(closeAnimation ? ANIMATION_TIMEOUT : ANIMATION_TIMEOUT, this.button.change.bind(this.button));
+						}
+						const type = input[i].type || "_";
+						if (type.indexOf("radio") + 1) {
+							[...input].map(option => { if (option.type === type) option.checked = option == input[i] });
+						}
+						else if (type.indexOf("checked") + 1) {
+							input[i].checked = !input[i].checked;
+						}
+					}.bind(this))
+				}
 				i < input.length - 1 && menu.appendChild(get_hr());
 			}
 			if (input.length && ((height - (fontSize + 3) * 1) < optionsHeight)) {
@@ -182,10 +188,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	Menu.prototype.show = function show(x, y) {
 		if (isMenuShow) return;
+		if (this.button.disabled) return;
 		try {this.button.onshowmenu.call(this.button, this.button)} catch (e) { console.error(e.stack) }
 		
-		const dh = document.documentElement.clientHeight;
-		const dw = document.documentElement.clientWidth;
+		const dh = window.fullscreenUIHeight || document.documentElement.clientHeight;
+		const dw = window.fullscreenUIWidth || document.documentElement.clientWidth;
 		const muWindow = this.menuWindow;
 		muWindow.style.position = "fixed";
 		muWindow.style.zIndex = 9999;
@@ -301,6 +308,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function touchstart() {
 		try {
+			if (this.disabled) return;
 			log(`default touchstart......`)
 			if (event) event.cancelBubble = true;
 			this.defaultontouchstart();
@@ -309,6 +317,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function mousedown() {
 		try {
+			if (this.disabled) return;
 			log(`default mousedown......`)
 			if (event) {
 				event.cancelBubble = true;
@@ -320,6 +329,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function touchcancel() {
 		try {
+			if (this.disabled) return;
 			log(`default touchcancel......`)
 			if (event) event.cancelBubble = true;
 			this.isEventMove = true;
@@ -329,6 +339,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function touchleave() {
 		try {
+			if (this.disabled) return;
 			log(`default touchleave......`)
 			if (event) event.cancelBubble = true;
 			this.isEventMove = true;
@@ -338,6 +349,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function touchend() {
 		try {
+			if (this.disabled) return;
 			log(`default touchend......`)
 			if (event) event.cancelBubble = true;
 			this.defaultontouchend();
@@ -346,6 +358,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function mouseup() {
 		try {
+			if (this.disabled) return;
 			log(`default mouseup......`)
 			if (event) {
 				event.cancelBubble = true;
@@ -364,12 +377,14 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function click() {
 		try {
+			if (this.disabled) return;
 			log(`default click......`)
 		} catch (e) { console.error(e.stack) }
 	}
 
 	function change() {
 		try {
+			if (this.disabled) return;
 			log(`default change......`)
 			if (event) event.cancelBubble = true;
 			this.defaultonchange();
@@ -378,6 +393,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	function touchmove() {
 		try {
+			if (this.disabled) return;
 			log(`default touchmove......`)
 			if (event) event.cancelBubble = true;
 			this.defaultontouchmove();
@@ -449,6 +465,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			this._group = void 0;
 			this.mode = void 0;
 
+			this._disabled = false;
 			this.touchstart = touchstart.bind(this);
 			this.mousedown = mousedown.bind(this);
 			this.touchcancel = touchcancel.bind(this);
@@ -484,6 +501,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			group.buttons.push(this);
 			}catch(e){alert(e.stack)}
 		}
+		get disabled() { return	this._disabled }
+		set disabled(v) { 
+			this._disabled = !!v;
+			this.div.style.opacity = this._disabled ? 0.5 : 0.9;
+		}
+		get enabled() { return !this.disabled }
+		set enabled(v) { this.disabled = !v }
 	}
 
 
@@ -519,6 +543,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	Button.prototype.defaultontouchstart = function() {
 		try {
+			if (this.disabled) return;
 			//log(`str t=${this.text}`);
 			if (this.tyle == "select" && event) event.preventDefault();
 			this.isEventMove = false;
@@ -540,6 +565,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	Button.prototype.defaultontouchmove = function() {
 		try {
+			if (this.disabled) return;
 			//log(`mov t=${this.text}`);
 			this.isEventMove = true; // 取消单击事件
 			return true;
@@ -551,6 +577,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 	// 默认事件，
 	Button.prototype.defaultontouchend = function() {
 		try {
+			if (this.disabled) return;
 			//log(`typeof event=${typeof event}, isEventMove=${this.isEventMove}`);
 			if (event) event.preventDefault();
 			//   "✔  ○●",radio,checked,前面加上特殊字符。
@@ -643,6 +670,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 	Button.prototype.defaultonchange = function() {
 		try {
+			if (this.disabled) return;
 			//log(`chg t=${this.text}`);
 			//log(`defaultonchange  ,i=${this.input.selectedIndex==-1 ? this.input[1].text : this.input.options[this.input.selectedIndex].text} `);
 			if (this.type != "select" || this.input.selectedIndex < 0) return true;
@@ -651,6 +679,23 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			return true;
 		} catch (e) { console.error(e.stack) }
 	};
+	/**
+	 * 返回 button 内匹配的第一个 option，失败返回undefined
+	 * @value  先匹配option.value
+	 * @text 匹配value失败，再匹配option.text
+ 	*/
+	Button.prototype.getOption = function(value, text) {
+		if (this.type == "select") {
+			let option;
+			if (value !== undefined) {
+				option = [...this.input].find(op => op.value == value);
+			}
+			if (option === undefined && text !== undefined) {
+				option = [...this.input].find(op => op.text == text);
+			}	
+			return option;
+		}
+	}
 
 
 	//移出节点
@@ -746,6 +791,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		let but = this;
 		this.change = function() {
 			try {
+				if (but.disabled) return;
 				log(`new setonchange......`)
 				if (event) event.cancelBubble = true;
 				if (but.defaultonchange()) callback.call(this, but)
@@ -763,6 +809,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 		let but = this;
 		this.touchstart = function() {
 			try {
+				if (but.disabled) return;
 				log(`new touchstart......`)
 				if (event) event.cancelBubble = true;
 				if (but.defaultontouchstart()) callback.call(this, but);
@@ -785,6 +832,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 			const fun = button.touchend;
 			button.touchend = () => {
 				try {
+					if (button.disabled) return;
 					log(`new touchend......`)
 					if (event) event.cancelBubble = true;
 					if (button.defaultontouchend()) callback.call(button, button);
@@ -920,6 +968,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
 
 
 	Button.prototype.showMenu = function(x, y) {
+		if (this.disabled) return;
 		log(`${this}.showMenu`)
 		this.menu.show(x, y);
 	};

@@ -18,6 +18,14 @@
 			isAsync: false,
 			sources: [[SOURCE_FILES["dbTypes"]],
 				[SOURCE_FILES["dbclient"]]]
+		},{
+			progress: "63%",
+			type: "scriptAll",
+			isAsync: true,
+			sources: [[SOURCE_FILES["TextCoder"]],
+		    	[SOURCE_FILES["MoveList"]],
+		        [SOURCE_FILES["Stack"]],
+		        [SOURCE_FILES["RenjuLib"]]]
 		}, {
 			progress: "80%",
 			type: "scriptAll",

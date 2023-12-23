@@ -10,6 +10,7 @@ window.fullscreenUI = (() => {
 		const svgDBRead = "./UI/theme/light/alpha-w.svg";
 		const svgEditor = "./UI/theme/light/alpha-k.svg";
 		const svgMakeVCF = "./UI/theme/light/alpha-v.svg";
+		const svgPuzzle = "./UI/theme/light/question-circle-svgrepo-com.svg";
 
 		const svgTheme01 = "./UI/theme/light/sun-svgrepo-com.svg";
 		const svgTheme02 = "./UI/theme/light/exposure-2-svgrepo-com.svg";
@@ -33,7 +34,7 @@ window.fullscreenUI = (() => {
 			w_scale < h_scale ?
 			w_scale : h_scale;
 			
-		const bodyHeight = dh; //dw < dh ? Math.max(dh, boardH * 2) : dh;
+		const bodyHeight = dw < dh ? Math.max(dh, boardH * 2) : dh;
 
 		const numButtons = 4;
 		const btnTag = "div";
@@ -75,8 +76,8 @@ window.fullscreenUI = (() => {
 		btnRefresh.setText("O");
 		btnTheme.setText("T");
 
-		btnHome.setontouchend(() => IFRAME.src = "tuya.html")
-		btnHome.setIcons(svgTuya)
+		btnHome.setontouchend(() => IFRAME.src = "puzzle.html")
+		btnHome.setIcons(svgPuzzle)
 
 		btnFullscreen.setClickFunctions([requestFullscreen, exitFullscreen]);
 		btnFullscreen.setIcons([svgFullscreen, svgExitFullscreen])
@@ -118,7 +119,7 @@ window.fullscreenUI = (() => {
 			left: "0px",
 			top: "0px",
 			width: dw + "px",
-			height: dh + "px",
+			height: bodyHeight + "px",
 			border: "0px dashed black",
 			zIndex: "1"
 		})
@@ -133,7 +134,7 @@ window.fullscreenUI = (() => {
 			left: `0px`,
 			top: `0px`,
 			width: dw + "px",
-			height: dh + "px",
+			height: bodyHeight + "px",
 			zIndex: "2"
 		})
 
@@ -154,6 +155,10 @@ window.fullscreenUI = (() => {
 			IFRAME.addEventListener("load", () => {
 				//window.console = IFRAME.contentWindow.console;
 				window.addEventListener("scroll", touchmove, true);
+				Object.assign(IFRAME.contentWindow, {
+					fullscreenUIWidth: dw,
+					fullscreenUIHeight: dh
+				})
 				IFRAME.contentWindow.addEventListener("scroll", touchmove, true);
 				IFRAME.contentWindow.addEventListener("touchmove", touchmove, true);
 				IFRAME.contentWindow.addEventListener("mousemove", touchmove, true);

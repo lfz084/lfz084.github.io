@@ -94,8 +94,8 @@ window.share = (() => {
             s.position = "relative";
             s.width = imgWidth + "px";
             s.height = imgWidth + "px";
-            s.top = ~~((winHeight / dh * document.documentElement.clientHeight - imgWidth) / 2) + "px";
-            s.left = ~~((winWidth / dw * document.documentElement.clientWidth - imgWidth) / 2) + "px";
+            s.top = ~~((winHeight / dh * (window.fullscreenUIHeight || document.documentElement.clientHeight) - imgWidth) / 2) + "px";
+            s.left = ~~((winWidth / dw * (window.fullscreenUIWidth || document.documentElement.clientWidth) - imgWidth) / 2) + "px";
             s.backgroundColor = backgroundColor; //"#d0d0d0"; //"#666666";
             s.border = `0px solid `;
 			

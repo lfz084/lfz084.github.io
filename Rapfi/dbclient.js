@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient"] = "v2111.08";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient"] = "v2023.12";
 window.DBClient = (() => {
     "use strict";
     //console.log(exports);
@@ -128,12 +128,12 @@ window.DBClient = (() => {
             isBusy = false;
             return ratio;
         },
-        closeDatabass: function() {
-            wk && removeWorker();
+        closeDatabass: async function() {
+            wk && (await removeWorker());
             enable = false;
         },
-        cancal: function() {
-            wk && removeWorker();
+        cancal: async function() {
+            wk && (await removeWorker());
             enable = false;
         },
         getBranchNodes: async function(param) {

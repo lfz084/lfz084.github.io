@@ -177,12 +177,12 @@ function setButtonClick(elem, callback = () => {}) {
 	let block = false;
 
 	window.setBlockUnload = function setBlockUnload(enable) {
-    	if (enable) {
+    	if (enable && !block) {
         	window.addEventListener("beforeunload", funBlockUnload, true)
         	block = true;
         	console.warn("blockUnload: enable");
     	}
-    	else {
+    	else if(!enable && block){
         	window.removeEventListener("beforeunload", funBlockUnload, true)
         	block = false;
         	console.warn("blockUnload: disable");

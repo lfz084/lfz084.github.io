@@ -157,6 +157,8 @@ a:active {
     text-align: center;
     width: 100%;
     opacity: 0.3;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
 }
 
 .refresh {

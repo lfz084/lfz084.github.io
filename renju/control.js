@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2111.08";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2023.12";
 window.control = (() => {
 	try {
 		"use strict";
@@ -493,7 +493,7 @@ window.control = (() => {
 								ftype: ONLY_VCF,
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 500000
+								maxNode: 1000000
 							})
 						},
 						3: async function() {
@@ -503,7 +503,7 @@ window.control = (() => {
 								ftype: ONLY_SIMPLE_WIN,
 								maxVCF: 1,
 								maxDepth: 3,
-								maxNode: 500000
+								maxNode: 1000000
 							})
 						},
 						4: async function() {
@@ -513,7 +513,7 @@ window.control = (() => {
 								ftype: FIND_ALL,
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 500000
+								maxNode: 1000000
 							})
 						},
 						5: async function() {

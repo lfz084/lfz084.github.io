@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2023.12";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -437,7 +437,16 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
     }
 
     //------------------------ transform board ------------------
-
+	/*
+	function rotate90({x, y}, size = 15) {
+	    return {x: size - 1 - y, y: x}
+	}
+	    
+	function rotateY180({x, y}, size = 15) {
+	    return {x: size - 1 - x, y: y}
+	}
+	*/
+		
     function isStoneOut(x, y) {
         return x >= this.size || y >= this.size;
     }
@@ -445,7 +454,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
     function isStoneMoveOut(x, y, row, col) {
         return x + col < 0 || x + col >= this.size || y + row < 0 || y + row >= this.size;
     }
-
+    
     function isBoardMoveOut(row, col) {
         for (let i = 0; i < 225; i++) {
             switch (this.P[i].type) {
@@ -480,8 +489,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
 
     function rotate90_MS() {
         transform_MS.call(this, (i, x, y) => {
-            let x1 = this.SLTY - 1 - y,
-                y1 = x;
+            let x1 =  this.SLTY - 1 - y,
+            	y1 =  x;
             this.MS[i] = y1 * 15 + x1;
         });
     }
@@ -489,7 +498,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
     function rotateY180_MS() {
         transform_MS.call(this, (i, x, y) => {
             let x1 = this.SLTX - 1 - x,
-                y1 = y;
+            	y1 = y;
             this.MS[i] = y1 * 15 + x1;
         });
     }
@@ -839,6 +848,36 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
         translate_P.call(this, row, col);
         this.refreshCheckerBoard();
     }
+    
+    Board.prototype.rotateMoves90 = function(moves) {
+    	const oldMS = this.MS;
+    	const oldMSindex = this.MSindex;
+    	this.MS = moves;
+    	rotate90_MS.call(this);
+    	this.MS = oldMS;
+    	this.MSindex = oldMSindex;
+    	return moves;
+    }
+    
+    Board.prototype.rotateMovesY180 = function(moves) {
+    	const oldMS = this.MS;
+    	const oldMSindex = this.MSindex;
+    	this.MS = moves;
+    	rotateY180_MS.call(this);
+    	this.MS = oldMS;
+    	this.MSindex = oldMSindex;
+    	return moves;
+    }
+     
+    Board.prototype.translateMoves = function(moves, row, col) {
+    	const oldMS = this.MS;
+    	const oldMSindex = this.MSindex;
+    	this.MS = moves;
+    	translate_MS.call(this, row, col);
+    	this.MS = oldMS;
+    	this.MSindex = oldMSindex;
+    	return moves;
+    }
 
     // 清空棋盘上每一个点的显示，和记录
     Board.prototype.cle = function() {
@@ -1083,7 +1122,6 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
         start < len && codeArray.push(codeString.slice(start, end));
         return codeArray;
     }
-
 
     // 当前棋盘显示的棋子， 转成棋谱返回
     Board.prototype.getCodeType = function(type) {
@@ -1388,19 +1426,18 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
     }
     
     Board.prototype.loadTheme = function(theme = {}) {
-    	if (this.mode == MODE_BOARD) {
-    		const wNumColor = this.wNumColor;
-    		const bNumColor = this.bNumColor;
-    		this.theme = theme;
-    		Object.assign(this, theme);
-    		// 还需要刷新棋子颜色
-    		this.P.map(p => {
-    			if ([TYPE_BLACK, TYPE_WHITE, TYPE_NUMBER].indexOf(p.type) + 1) {
-    				p.color = p.color == wNumColor ? this.wNumColor : p.color == bNumColor ? this.bNumColor : p.color;
-    			}
-    		})
-    		this.refreshCheckerBoard();
-    	}
+    	const wNumColor = this.wNumColor;
+    	const bNumColor = this.bNumColor;
+    	this.theme = theme;
+    	Object.assign(this, theme);
+    	// 还需要刷新棋子颜色
+    	this.P.map(p => {
+    		if ([TYPE_BLACK, TYPE_WHITE, TYPE_NUMBER].indexOf(p.type) + 1) {
+    			p.color = p.color == wNumColor ? this.wNumColor : p.color == bNumColor ? this.bNumColor : p.color;
+    		}
+    	})
+    	this.mode == MODE_BOARD && this.printEmptyCBoard();
+    	this.refreshBoardPoint("all");
     }
 
 
@@ -1856,6 +1893,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2111.08";
     		points.push(nameToIdx(a));
     	}
     	return points;
+    }
+    
+    Board.prototype.points2MoveCode = function(moves) {
+    	return moves.map(idx => idxToName(idx)).join("");
     }
 
     //解析（已经通过this.getCodeType 格式化）棋谱,摆棋盘

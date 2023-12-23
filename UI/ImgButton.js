@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "2015.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2023.12";
 (function(global, factory) {
 	(global = global || self, factory(global));
 }(this, (function(exports) {

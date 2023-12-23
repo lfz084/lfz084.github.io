@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.08";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2023.12";
 (function(global, factory) {
 	(global = global || self, factory(global));
 }(this, (function(exports) {
@@ -96,8 +96,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2111.08";
 			Object.assign(windowDiv.style, {
 				width: width + "px",
 				height: height + "px",
-				left: (winWidth / dw * document.documentElement.clientWidth - width) / 2 + "px",
-				top: (winHeight / dh * document.documentElement.clientHeight - height) / 2 + "px",
+				left: (winWidth / dw * (window.fullscreenUIWidth || document.documentElement.clientWidth) - width) / 2 + "px",
+				top: (winHeight / dh * (window.fullscreenUIHeight || document.documentElement.clientHeight) - height) / 2 + "px",
 				backgroundColor: backgroundColor,
 				border: `0px solid ${butEnter.selectBackgroundColor}`
 			})
