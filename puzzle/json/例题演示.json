@@ -1,106 +1,12 @@
-window.puzzleCoder = (() => {
-	"use strict";
-
-	async function wait(time) {
-		return new Promise(resolve => {
-			setTimeout(resolve, time);
-		})
-	}
-
-	function code2Idx(code) {
-		const x = code.charCodeAt(0) - 97;
-		const y = 15 - code.slice(1);
-		return y * 15 + x;
-	}
-
-	function gameToArr2D(game) {
-		const arr2D = [];
-		for (let i = 0; i < 15; i++) {
-			arr2D[i] = game.slice(i * 15, (i + 1) * 15);
-		}
-		return arr2D;
-	}
-
-	//-------------------------------------------------------
-	
-	const cBoard = new CheckerBoard(document.createElement("div"), 0, 0, 13, 13);
-	cBoard.showCheckerBoard();
-	
-	//------------------------ renju json ---------------------------
-	/**
-	 * json: {defaultSettings: {}, puzles: [{puzzle1},{puzzle2}...]}
-	 * defaultSettings: {title, size, rule, mode, comment, level} 
-	 * puzzle: {stones, blackStones, whiteStones, side, ...}
-	 * * @stones		{strings}			黑白顺序棋子代码, 例: "H8I9I7" 代表浦月开局
-	 * * @blackStones	{string}			黑色棋子代码, 例: "H8I9I7" 代表三颗黑子在坐标上
-	 * * @whiteStones	{string}			白色棋子代码, 例: "H8I9I7" 代表三颗白子在坐标上
-	 * * @labels		{[code, label]...}  棋盘上面的文字标记, 例: ["E12,A","L12,B"] 
-	 * * @options		{string}			选择题答案, 例: "D9E10G9"
-	 * * @mark			{string}			选择题选中后显示的字符
-	 * * @size			{number}			棋盘的大小 6 - 15
-	 * * @side			1 | 2,				玩家棋子颜色, 1: 黑棋,2: 白棋
-	 * * @rule			0 | 2,				游戏规则, 0: 无禁, 2: 有禁
-	 * * @title 		{string}			题目标题
-	 * * @comment		{string}			题目注释
-	 * * @level 		{number}			难度 1 - 5
-	 * * @image			base64 image		封面插图
-	 * * @rotate		{number}			选转方向
-	 * * @randomRotate	true | false		出题时，是否随机翻转，有 rotate 时无效
-	 * * @mode			{number}			解题模式
-	 * * @delayHelp		{number}			延时显示AI帮助按钮，单位分钟
-	 * /
-	mode	模式
-	0		习题封面
-	32		VCF
-	64		VCT
-	67		三手胜
-	96		自由对弈
-	160		限珠题模式
-	163		三子五连模式
-	164		四子五连模式
-	165		五子五连模式
-	192		点点题模式
-	193		选择题
-	194		找活三点
-	195		找复活三点
-	196		找眠三点
-	197		找活四点
-	198		找冲四点
-	199		找禁手点
-	200		找三三禁点
-	201		找四四禁点
-	202		找长连点
-	203		找防冲四抓禁点
-	204		找做V点
-	205		找做43点
-	206		找做44点
-	207		找VCF防点
-	208		找VCF反防点
-	209		找狭义双杀点
-	210		找狭义双防点
-	211		找两手四三胜点
-	*/
-	
-	const DEFAULT_SETTINGS = {
-		title: "",
-		size: 15,
-		rule: 2,
-		mode: 3 << 5,
-		level: 3,
-		mark: "○",
-		comment: "",
- 		randomRotate: true,
- 		delayHelp: 30
-	}
-	const demoRenjuJSON = `{
+{
 		"defaultSettings": {
  			"title": "例题",
  			"size": 15,
  			"rule": 2,
  			"mode": 32,
  			"level": 3,
- 			"delayHelp": 0.25,
  			"comment": "",
+ 			"delayHelp": 0.25,
  			"randomRotate": true
  		},
  		"puzzles": [{
@@ -110,6 +16,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 0,
  			"level": 0,
+ 			"delayHelp": 0.25,
  			"title": "例题合集",
  			"comment": "本题集搜集了各种类型的五子棋残局和五子茶馆点点题的例题，可以帮助你快速熟悉这些解题模式。<br><br><br><a href = './renjueditor.html' target='_black'> 点击前往 制作你的题集 </a>"
  		},
@@ -121,6 +28,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 32,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题VCF"
  		},
  		{
@@ -131,6 +39,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 32,
  			"level": 2,
+ 			"delayHelp": 0.25,
  			"title": "例题VCF"
  		},
  		{
@@ -141,6 +50,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 67,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "例题三手胜"
  		},
  		{
@@ -151,6 +61,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 67,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "例题三手胜"
  		},
  		{
@@ -161,6 +72,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 64,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题VCT"
  		},
  		{
@@ -171,6 +83,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 64,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题VCT"
  		},
  		{
@@ -181,6 +94,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 96,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题对弈"
  		},
  		{
@@ -191,6 +105,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 96,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题对弈"
  		},
  		{
@@ -201,6 +116,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 164,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题四子五连"
  		},
  		{
@@ -211,6 +127,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 164,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题四子五连"
  		},
  		{
@@ -221,6 +138,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 165,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题五子五连"
  		},
  		{
@@ -231,6 +149,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 165,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题五子五连"
  		},
  		{
@@ -241,6 +160,7 @@ window.puzzleCoder = (() => {
  			"size": 6,
  			"mode": 32,
  			"level": 2,
+ 			"delayHelp": 0.25,
  			"title": "例题六路VCF"
  		},
  		{
@@ -251,6 +171,7 @@ window.puzzleCoder = (() => {
  			"size": 6,
  			"mode": 32,
  			"level": 2,
+ 			"delayHelp": 0.25,
  			"title": "例题六路VCF"
  		},
  		{
@@ -261,6 +182,7 @@ window.puzzleCoder = (() => {
  			"size": 6,
  			"mode": 64,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题六路VCT"
  		},
  		{
@@ -271,6 +193,7 @@ window.puzzleCoder = (() => {
  			"size": 6,
  			"mode": 64,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "例题六路VCT"
  		},
  		{
@@ -282,8 +205,9 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 193,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "一子三通点",
- 			"comment": "找全一子三通点\\r\\n一子三通，指一子落下能够形成活二或眠三的点，潜在冲四点形成的连接也算数，同时要考虑可能存在双防点"
+ 			"comment": "找全一子三通点\r\n一子三通，指一子落下能够形成活二或眠三的点，潜在冲四点形成的连接也算数，同时要考虑可能存在双防点"
  		},
  		{
  			"blackStones": "C13C12C8E13E10I10",
@@ -294,6 +218,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 193,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "特型三点",
  			"comment": "找全特型三点"
  		},
@@ -306,6 +231,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 193,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "一子双眠三点",
  			"comment": "找全一子双眠三点"
  		},
@@ -318,8 +244,9 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 193,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "一手胜型点",
- 			"comment": "找全一手胜型点\\r\\n一手胜形：指一子落下能够形成成立的基本胜形（活四，四三，四四，三三，抓禁），注意VCF算多手棋"
+ 			"comment": "找全一手胜型点\r\n一手胜形：指一子落下能够形成成立的基本胜形（活四，四三，四四，三三，抓禁），注意VCF算多手棋"
  		},
  		{
  			"blackStones": "B14D11E15E14E13G13H14I15",
@@ -330,8 +257,9 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 193,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "一手胜型点",
- 			"comment": "找全一手胜型点\\r\\n一手胜形：指一子落下能够形成成立的基本胜形（活四，四三，四四，三三，抓禁），注意VCF算多手棋"
+ 			"comment": "找全一手胜型点\r\n一手胜形：指一子落下能够形成成立的基本胜形（活四，四三，四四，三三，抓禁），注意VCF算多手棋"
  		},
  		{
  			"stones": "B5A0B4A0C14A0C12A0C6A0C5A0D15A0D14A0D13A0D10A0D4A0D3A0E13A0E4A0F12A0F4A0H3A0I9A0K12A0K3A0L3A0L2A0M13A0M7A0M5A0M2A0N14A0N12A0N4C13A0D6A0D5A0E14A0E3A0G11A0H4A0K2A0L4",
@@ -342,6 +270,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 193,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "三三禁手",
  			"comment": "ABCD选出三三禁手"
  		},
@@ -355,6 +284,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 193,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "复活三点",
  			"comment": "ABCD选出复活三点"
  		},
@@ -367,6 +297,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 211,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "两手43",
  			"comment": "下图字母是黑棋成立的两手43胜点的是"
  		},
@@ -379,6 +310,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 195,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "复活三点"
  		},
  		{
@@ -388,6 +320,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 196,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "眠三点"
  		},
  		{
@@ -398,6 +331,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 194,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "活三点"
  		},
  		{
@@ -407,6 +341,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 197,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "活四点"
  		},
  		{
@@ -417,6 +352,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 198,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "冲四点"
  		},
  		{
@@ -427,6 +363,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 198,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "冲四点"
  		},
  		{
@@ -437,6 +374,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 200,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "三三禁手"
  		},
  		{
@@ -447,6 +385,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 201,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "四四禁手"
  		},
  		{
@@ -456,6 +395,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 202,
  			"level": 1,
+ 			"delayHelp": 0.25,
  			"title": "长连禁手"
  		},
  		{
@@ -467,6 +407,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 203,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "防冲四抓禁手"
  		},
  		{
@@ -477,6 +418,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 205,
  			"level": 2,
+ 			"delayHelp": 0.25,
  			"title": "做43点"
  		},
  		{
@@ -487,6 +429,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 206,
  			"level": 2,
+ 			"delayHelp": 0.25,
  			"title": "做44点"
  		},
  		{
@@ -497,6 +440,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 204,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "做V点"
  		},
  		{
@@ -507,6 +451,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 204,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "做V点"
  		},
  		{
@@ -519,6 +464,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 207,
  			"level": 2,
+ 			"delayHelp": 0.25,
  			"title": "VCF防点"
  		},
  		{
@@ -531,6 +477,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 207,
  			"level": 2,
+ 			"delayHelp": 0.25,
  			"title": "VCF防点"
  		},
  		{
@@ -540,6 +487,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 209,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "双杀点"
  		},
  		{
@@ -549,6 +497,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 209,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "双杀点"
  		},
  		{
@@ -561,6 +510,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 210,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "双防点"
  		},
  		{
@@ -573,423 +523,7 @@ window.puzzleCoder = (() => {
  			"size": 15,
  			"mode": 210,
  			"level": 3,
+ 			"delayHelp": 0.25,
  			"title": "双防点"
  		}]
- 	}`;
-
-	/**
-	 * 找全一子双通点
-	 * 找全一子三通点
-	 * 找全活二点
-	 * 找全特型三点
-	 * 找全一子双眠三点
-	 * 找全一手胜型点
-	 * 找全白棋单冲四杀点
-	 * 找全夏止防点
-	 * 找全六腐防点
-	 * 
-	 * 找全活三点
-	 * 找全复活三点
-	 * 找全眠三点
-	 * 找全活四点
-	 * 找全冲四点
-	 * 找全禁手点
-	 * 找全三三禁手
-	 * 找全四四禁手 
-	 * 找全长连禁手
-	 * 防冲四抓禁手
-	 * 找全做43点
-	 * 找全做44点
-	 * 找全43杀防点
-	 * 找全做V点
-	 * 找全VCF防点
-	 * 找全VCF反防点
-	 * 找全双杀点
-	 * 找全双防点
-	 * 
-	 */
-	 
-	const MODE_VALUE_NAME_TITLE_COMMENT = {
-		COVER: { value: 0, name: "习题封面", title: "习题封面", comment: "这是封面，请跳到下一题再开始解题" },
-		
-		VCF: { value: 1 << 5, name: "VCF模式", title: "VCF", comment: "VCF，连续冲四进攻，直到取胜" },
-		VCT: { value: 2 << 5, name: "VCT模式", title: "VCT", comment: "利用活三，做43杀，做VCF，冲四等手段进攻取胜。" },
-		VCT3: { value: 2 << 5 | 3, name: "三手胜模式", title: "三手胜", comment: "三手胜，利用活三，做43杀，做VCF，冲四等手段进攻取胜。限定在三手内取胜，连续冲四算一手。" },
-		FREE: { value: 3 << 5, name: "自由对弈模式", title: "自由对弈", comment: "不限定手数，也不限定进攻手段。在游戏规则内取胜。" },
-		
-		STONES: { value: 5 << 5, name: "限珠题模式", title: "限珠题模式", comment: "出题者没有指定棋子数量" },
-		STONES3: { value: 5 << 5 | 3, name: "三子五连模式", title: "三子五连模式", comment: "玩家只剩下三颗棋子，必须在三颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
-		STONES4: { value: 5 << 5 | 4, name: "四子五连模式", title: "四子五连模式", comment: "玩家只剩下四颗棋子，必须在四颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
-		STONES5: { value: 5 << 5 | 5, name: "五子五连模式", title: "五子五连模式", comment: "玩家只剩下五颗棋子，必须在五颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
-		
-		BASE: { value: 6 << 5, name: "点点题模式", title: "点点题模式", comment: "出题者没有指定这题的点点题类型" },
-		BASE_OPTION: { value: 6 << 5 | 1, name: "点点题模式", title: "选择题", comment: "出题者忘记写下解题要求了" },
-		
-		BASE_FREE_THREE: { value: 6 << 5 | 2, name: "点点题模式", title: "找活三点", comment: "找全活三点（有活四点的三）" },
-		BASE_REVIVE_FREE_THREE: { value: 6 << 5 | 3, name: "点点题模式", title: "找复活三点", comment: "找全复活三点（这个点不是直接活三点，但是它可以让棋盘上面的某个禁手点变成活四点）" },
-		BASE_NOTFREE_THREE: { value: 6 << 5 | 4, name: "点点题模式", title: "找眠三点", comment: "找全眠三点（只有冲四点，没有活四点的三）" },
-		BASE_FREE_FOUR: { value: 6 << 5 | 5, name: "点点题模式", title: "找活四点", comment: "找全活四点（两边各有一个五连点的连四）" },
-		BASE_NOTFREE_FOUR: { value: 6 << 5 | 6, name: "点点题模式", title: "找冲四点", comment: "找全冲四点（有且只有一个五连点的四）" },
-		
-		BASE_FOUL: { value: 6 << 5 | 7, name: "点点题模式", title: "找禁手点", comment: "找全所有的禁手点" },
-		BASE_FOUL_33: { value: 6 << 5 | 8, name: "点点题模式", title: "找三三禁点", comment: "找全所有的三三禁手点\n注意：一个禁手点可能包括好几种禁手" },
-		BASE_FOUL_44: { value: 6 << 5 | 9, name: "点点题模式", title: "找四四禁点", comment: "找全所有的四四禁手点\n注意：一个禁手点可能包括好几种禁手" },
-		BASE_FOUL_6: { value: 6 << 5 | 10, name: "点点题模式", title: "找长连点", comment: "找全所有的长连禁手点\n注意：一个禁手点可能包括好几种禁手" },
-		BASE_BLOCK_CATCH_FOUL: { value: 6 << 5 | 11, name: "点点题模式", title: "找防冲四抓禁点", comment: "防冲四抓禁手\r\n白棋准备冲四抓禁手,黑棋找出所有让冲4抓禁不成立的点" },
-		
-		BASE_MAKE_VCF: { value: 6 << 5 | 12, name: "点点题模式", title: "找做V点", comment: "找全做V点\r\n做V点：做一手棋，如果对手不防，能够形成成立的VCF的点。茶馆点点题解题规则的VCF，必须要连续冲四两次以上，四三杀不算VCF" },
-		BASE_MAKE_VCF_43: { value: 6 << 5 | 13, name: "点点题模式", title: "找做43点", comment: "找全做43点\r\n做43点：做一手棋，如果对手不防，可以形成成立的四三杀的点" },
-		BASE_MAKE_VCF_44: { value: 6 << 5 | 14, name: "点点题模式", title: "找做44点", comment: "找全做44点，白棋做四四杀" },
-		BASE_BLOCK_VCF: { value: 6 << 5 | 15, name: "点点题模式", title: "找VCF防点", comment: "找全VCF防点" },
-		BASE_BLOCK_VCF_4: { value: 6 << 5 | 16, name: "点点题模式", title: "找VCF反防点", comment: "找全VCF反防点，在防点里面选出可以形成反四的防点" },
-		
-		BASE_DOUBLE_VCF: { value: 6 << 5 | 17, name: "点点题模式", title: "找狭义双杀点", comment: "一子双杀点， 指狭义的一子双杀， 即一子落下， 同时形成两个或以上的与冲四有关的杀（ 包括“ 做一步冲四杀” 和“ 做连续冲四杀， 即做V”）， 无论对手如何防守， 下一手都可冲四杀（ 特例： 复活三也视作“ 做冲四杀”； 白棋抓禁的情况， 看似做一个杀， 但无论如何防守， 依然还能冲四取胜）。\n常规可能有三种组合：\n（ 1） 做一步冲四杀 + 做一步冲四杀\n（ 2） 做一步冲四杀 + 做V\n（ 3） 做V + 做V" },
-		BASE_BLOCK_DOUBLE_VCF: { value: 6 << 5 | 18, name: "点点题模式", title: "找狭义双防点", comment: "双杀防点，可以是“一子双防”，也可以是“先手防”（如果是先手防，只标注第一手棋）" },
-		
-		BASE_DOUBLE_VCF_43: { value: 6 << 5 | 19, name: "点点题模式", title: "找两手四三胜点", comment: "玩家两颗棋子内形成成立的43杀，也就是四手五连" },
-	}
-	Object.freeze(MODE_VALUE_NAME_TITLE_COMMENT)
-	
-	const MODE = {}
-	const MODE_NAME = {}
-	const MODE_TITLE = {}
-	const MODE_COMMENT = {}
-	Object.keys(MODE_VALUE_NAME_TITLE_COMMENT).map(key => {
-		MODE[key] = MODE_VALUE_NAME_TITLE_COMMENT[key]["value"];
-		MODE_NAME[MODE[key]] = MODE_VALUE_NAME_TITLE_COMMENT[key]["name"];
-		MODE_TITLE[MODE[key]] = MODE_VALUE_NAME_TITLE_COMMENT[key]["title"];
-		MODE_COMMENT[MODE[key]] = MODE_VALUE_NAME_TITLE_COMMENT[key]["comment"];
-	})
-	Object.freeze(MODE)
-	Object.freeze(MODE_NAME)
-	Object.freeze(MODE_TITLE)
-	Object.freeze(MODE_COMMENT)
-	
-	/**
-	 * 输入 renjuJSON string 返回 Puzzles 对象
-	 * @json
- 	*/
-	function renjuJSON2Puzzles(json = "{}") {
-		const rt = {
-			_index: 0,
-			defaultSettings: {},
-			puzzles: [{
-				size: 15,
-				side: undefined,
-				rule: undefined,
-				mode: undefined,
-				level: undefined,
-				title: "文件错误",
-				comment: "JSON文件出错了"
-			}],
-			next() {
-				if (this._index < this.puzzles.length - 1) {
-					this._index++;
-					return true;
-				}
-				return false;
-			},
-			previous() {
-				if (this._index) {
-					this._index--;
-					return true;
-				}
-				return false;
-			},
-			setIndex(idx) {
-				if (idx > -1 && idx < this.puzzles.length) {
-					this._index = idx;
-				}
-				return this._index;
-			},
-			get index() { return this._index },
-			set index(i) { return this.setIndex(i) },
-			get length() { return this.puzzles.length },
-			get currentPuzzle() { 
-				const rt = {};
-				Object.assign(rt, this.defaultSettings);
-				Object.assign(rt, this.puzzles[this._index]);
-				rt.comment = rt.comment || MODE_COMMENT[rt.mode] || "";
-				return  rt;
-			},
-		}
-		let obj = {};
-		try{ obj = JSON.parse(json) }catch(e){console.error(e.stack)}
-		const { defaultSettings, puzzles } = obj;
-		Object.assign(rt.defaultSettings, DEFAULT_SETTINGS);
-		Object.assign(rt.defaultSettings, (defaultSettings || {}));
-		rt.puzzles = puzzles || rt.puzzles;
-		return rt;
-	}
-	
-	/**
-	 * 传入一个 Puzzles 对象，返回 renjuJSON string
-	 * @puzzles		Puzzles 对象
-	 * @callback	回调函数，输出进度	
- 	*/
-	async function puzzles2RenjuJSON(puzzles, callback = () => {}) {
-		const newPuzzles = {defaultSettings: {}, puzzles:[]};
-		Object.assign(newPuzzles.defaultSettings, puzzles.defaultSettings || {});
-		const _puzzles = puzzles.puzzles;
-		console.log(`callback: ${callback}`)
-		for (let i = 0; i < _puzzles.length; i++) {
-			const puzzle = _puzzles[i];
-			const keys = [
-				"stones",
-				"blackStones",
-				"whiteStones",
-				"labels",
-				"options",
-				"mark",
-				"size",
-				"side",
-				"rule",
-				"mode",
-				"title",
-				"comment",
-				"level",
-				"image",
-				"randomRotate"
-				];
-			const newPuzzle = {};
-			Object.keys(puzzle).map(key => {
-				if (keys.indexOf(key) + 1) {
-					newPuzzle[key] = puzzle[key];
-				}
-			})
-			newPuzzle["stones"] = puzzle["stones"] || undefined;
-			newPuzzle["blackStones"] = puzzle["blackStones"] || undefined;
-			newPuzzle["whiteStones"] = puzzle["whiteStones"] || undefined;
-			newPuzzle["title"] = puzzle["title"] || undefined;
-			newPuzzle["comment"] = puzzle["comment"] || undefined;
-			newPuzzle[`//第${("0000"+(i+1)).slice(-(_puzzles.length).toString().length)}题模式`] = MODE_TITLE[puzzle.mode];
-			newPuzzles.puzzles.push(newPuzzle);
-			await wait(0);
-			try{callback(i/_puzzles.length)}catch(e){console.error(e.stack)}
-		}
-		
-		const json = JSON.stringify(newPuzzles, null, 2);
-		const link = `"link": "https://lfz084.gitee.io/renju/puzzle.html",`;
-		const index = json.indexOf("{") + 1;
-		return json.slice(0, index) + link + json.slice(index);
-	}
-	
-	/**
-	 * 传入一个 kaibaoJSON string， 返回一个 Puzzles 对象
-	 * @json		kaibaoJSON string
-	 * @callback	回调函数，输出进度
- 	*/
-	async function kaibaoJSON2Puzzles(json, callback = () => {}) {
-		const games = await kaibaoJSON2Games(json, callback);
-		cBoard.setSize(15);
-		const puzzles = games.map(game => {
-			cBoard.unpackArray(game);
-			const codeArr = cBoard.getCode().split(/{|}/);
-			const stones = codeArr[0].split("\n").join("");
-			const blackStones = codeArr[1].split("\n").join("");
-			const whiteStones = codeArr[3].split("\n").join("");
-				
-			let numBlackStones = 0, numWhiteStones = 0;
-			game.map(v => { v == 1 && numBlackStones++; v == 2 && numWhiteStones++ });
-			const side = numBlackStones <= numWhiteStones ? 1 : 2;
-			return {
-				stones: stones || undefined,
-				blackStones: blackStones || undefined,
-				whiteStones: whiteStones || undefined,
-				side: side,
-				rule: 2,
-				size: 15,
-				mode: MODE.VCT,
-				randomRotate: true
-			}
-		})
-        const renjujson  = await puzzles2RenjuJSON({puzzles}, callback)
-		return renjuJSON2Puzzles(renjujson);
-	}
-	
-	/**
-	 * 传入一个 Puzzles 对象，返回一个 games
-	 * @puzzles		Puzzles 对象
- 	*/
-	function puzzles2Games(puzzles) {
-		const games = [];
-		cBoard.setSize(15);
-		puzzles.puzzles.map(puzzle => {
-			if (puzzle.mode) {
-				const code = `${puzzle.stones}{${puzzle.blackStones}}{${puzzle.whiteStones}}`;
-				cBoard.unpackCode(code, undefined, true);
-				games.push(cBoard.getArray())
-			}
-		})
-		return games;
-	}
-	
-	/**
-	 * 传入一个 renjuJSON string，返回一个 games
- 	*/
-	async function renjuJSON2Games(jsonText) {
-		const puzzles = renjuJSON2Puzzles(jsonText)
-		return puzzles2Games(puzzles);
-	}
-
-	//------------------------ kaibao json ---------------------------
-	/**
-	 * json: [["H8,1","H9,2"],[...]...]
-	 */
-	
-	/**
-	 * 把棋局转换成 对应的 kaibaoJSON string
- 	*/
-	function toKaiBaoCode() {
-		let code = [],
-			codeArray = cBoard.codeString2CodeArray(cBoard.getCodeType(TYPE_NUMBER)),
-			idx = -1,
-			len = codeArray.length;
-		while (++idx < len) {
-			code.push(`${codeArray[idx]},${(idx & 1) + 1}`)
-		}
-
-		codeArray = cBoard.codeString2CodeArray(cBoard.getCodeType(TYPE_BLACK));
-		idx = -1;
-		len = codeArray.length;
-		while (++idx < len) {
-			code.push(`${codeArray[idx]},1`)
-		}
-
-		codeArray = cBoard.codeString2CodeArray(cBoard.getCodeType(TYPE_WHITE));
-		idx = -1;
-		len = codeArray.length;
-		while (++idx < len) {
-			code.push(`${codeArray[idx]},2`)
-		}
-
-		return code;
-	}
-	
-	/**
-	 * 为了避开开宝的bug，自动旋转棋局，确保15行没有棋子
- 	*/
-	function autoRotate() {
-		let i = 0;
-		while (i++ < 4) {
-			let arr = cBoard.getArray();
-			if (arr.slice(0, 15).filter(v => v > 0).length)
-				cBoard.rotate90();
-			else
-				return true;
-		}
-		return false;
-	}
-	
-	/**
-	 * 传入一个 games，返回开宝 kaibaoJSON string
-	 * @games		是一个数组， 每个元素是一个 game
-	 *				game 是一个代表棋盘局面的数组， cBoard.unpackArray(game) 可以摆入棋盘
-	 * @callback	回调函数，输出进度
- 	*/
-	async function games2kaibaoJSON(games, callback = () => {}) {
-		try {
-			let codes = [];
-			let logStr = [`题在棋盘第15行上面有棋子，而且不能旋转调整。这题在开宝五子棋里面会缺少第15行的棋子（这是开宝五子棋的bug)`];
-			for (let j = 0; j < games.length; j++) {
-				await wait(0);
-				cBoard.unpackArray(games[j]);
-				if (autoRotate()) codes.push(toKaiBaoCode());
-				else logStr.splice(logStr.length - 1, 0, j + 1)
-				try{callback(j/games.length)}catch(e){console.error(e.stack)}
-			}
-			logStr.length > 1 && msgbox({ title: logStr.join(","), btnNum: 1 })
-			try{callback(1)}catch(e){console.error(e.stack)}
-			return JSON.stringify(codes);
-		} catch (e) { console.error(e.stack) }
-	}
-	
-	/**
-	 * 传入一个 JSON string，下载 JSON
-	 * @jsonText		JSON string
-	 * @filename		文件名
- 	*/
-	function downloadJSON(jsonText, filename = "新文件") {
-		const mark = jsonText.indexOf("puzzles") + 1 ? "_puzzle" : "_kaibao";
-		saveFile.save(jsonText, filename + mark + ".json");
-	}
-	
-	/**
-	 * 传入一个 JSON string，返回一个 games。
-	 * games 是一个数组，每个元素是一个 game
-	 * game 是一个代表棋盘局面的数组， cBoard.unpackArray(game) 可以摆入棋盘
-	 * @jsonText		JSON string
-	 * @callback		回调函数，输出进度
- 	*/
-	async function kaibaoJSON2Games(jsonText, callback = () => {}) {
-		const games = [];
-		const json = JSON.parse(jsonText);
-		for (let i = 0; i < json.length; i++) {
-			const game = new Array(226).fill(0);
-			const gameJSON = json[i];
-			game[225] = -1;
-			for (let j = 0; j < gameJSON.length; j++) {
-				const stone = gameJSON[j].toLowerCase().split(",");
-				const idx = code2Idx(stone[0]);
-				const color = stone[1] * 1;
-				game[idx] = color;
-			}
-			games.push(game);
-			try{callback(i/json.length)}catch(e){console.error(e.stack)}
-			await wait(0);
-		}
-		return games;
-	}
-	
-	/**
-	 * 传入一个 JSON 文件，返回一个 games。
-	 * games 是一个数组，每个元素是一个 game
-	 * game 是一个代表棋盘局面的数组， cBoard.unpackArray(game) 可以摆入棋盘
-	 * @file		file 对象
-	 * @callback	回调函数，输出进度
- 	*/ 
-	async function loadJSON2Games(file, callback = () => {}) {
-		const json = await file.text();
-		if (json.indexOf("puzzles") + 1) 
-			return renjuJSON2Games(json);
-		else
-			return kaibaoJSON2Games(json, callback);
-	}
-	
-	/**
-	 * 传入一个 file 对象 或者 JSONString，返回一个 Puzzles 对象
-	 * @fileOrJSONString		file 对象 || JSONString
-	 * @callback	回调函数，输出进度
-	 * @puzzleData	接收 puzzleData
- 	*/
-	async function loadJSON2Puzzles(fileOrJSONString, callback = () => {}, puzzleData = {}) {
-		let puzzles;
-		const json = "string" == typeof fileOrJSONString ? fileOrJSONString : await fileOrJSONString.text();
-		if (json.indexOf("puzzles") + 1)
-			puzzles  = renjuJSON2Puzzles(json);
-		else {
-			puzzles  = await kaibaoJSON2Puzzles(json, callback);
-		}
-		if ("string" != typeof fileOrJSONString) {
-			puzzles.defaultSettings = puzzles.defaultSettings || {};
-			puzzles.defaultSettings.title = puzzles.defaultSettings.title || fileOrJSONString.name.slice(0, fileOrJSONString.name.lastIndexOf("."));
-		}
-		return puzzles;
-	}
-	
-	const exports =  {
-		games2kaibaoJSON,
-		puzzles2RenjuJSON,
-		loadJSON2Games,
-		loadJSON2Puzzles,
-		renjuJSON2Puzzles,
-		downloadJSON,
-		wait,
-		MODE,
-		MODE_TITLE,
-		getModeName(mode) { return MODE_NAME[mode] },
-		get demoPuzzles() { return renjuJSON2Puzzles(demoRenjuJSON) }
-	}
-	Object.freeze(exports);
-	return exports;
-})()
+ 	}

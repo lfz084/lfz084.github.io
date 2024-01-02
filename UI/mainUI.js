@@ -488,6 +488,13 @@ window.mainUI = (function() {
 	}
 
 	//----------------------------- class ---------------------------------
+	
+	function removeChildsAndNode(node) {
+		[...node.children].map(child => removeChildsAndNode(child));
+		//console.log(`remove: ${node.innerHTML}`);
+		node.remove();
+	}
+	
 	//---------- viewElem ------------
 
 	class viewElem {
@@ -552,6 +559,7 @@ window.mainUI = (function() {
 	}
 	
 	viewElem.prototype.loadTheme = function(theme) {
+		//console.info(`loadTheme: ${this.constructor.name}`)
 		this.style(theme);
 	}
 
@@ -723,8 +731,88 @@ window.mainUI = (function() {
 		const textBox = newClass(param, TextBox);
 		return textBox;
 	}
+	
+	//---------------------- IndexBoard ------------------------
+	
+	class IndexBoard extends viewElem {
+		constructor(left = 0, top = 0, width = 500, height = 500, parent) {
+			const boardWidth = 5;
+			super(left, top, width - boardWidth * 2, height - boardWidth * 2, parent);
+			this._callback = () => {};
+			Object.assign(this.viewElem.style, {
+				display: "grid",
+				grid: `${buttonHeight}px / 1fr 1fr 1fr 1fr 1fr`,
+				overflowY: "auto"
+			})
+		}
+		get callback() { return this._callback }
+		set callback(fun) { return this._callback = fun }
+	}
+	
+	IndexBoard.prototype.createIndex = function(index, style = {}) {
+		const div = document.createElement("div");
+		div.innerHTML = index;
+		div.onclick = () => this._callback(index);
+		Object.assign(div.style, {
+			fontSize: `${buttonHeight*0.6}px`,
+			lineHeight: `${buttonHeight}px`, 
+			textAlign: "center"
+		})
+		Object.assign(div.style, style);
+		this.viewElem.appendChild(div);
+	}
+	
+	IndexBoard.prototype.createIndexes = function(indexCount, style = {}) {
+		for(let index = 1; index <= indexCount; index++) {
+			this.createIndex(index, callback, style);
+		}
+	}
+	
+	IndexBoard.prototype.removeIndexes = function() {
+		[...this.viewElem.children].map(child => removeChildsAndNode(child));
+	}
+	
+	function newIndexBoard(param = {}) {
+		const indexBoard = newClass(param, IndexBoard);
+		return indexBoard;
+	}
+	
+	//---------------------- ItemBoard --------------------------
+	class ItemBoard extends viewElem {
+		constructor(left = 0, top = 0, width = 500, height = 500, parent) {
+			const boardWidth = 5;
+			super(left, top, width - boardWidth * 2, height - boardWidth * 2, parent);
+			this.lis = [];
+			Object.assign(this.viewElem.style, {
+				overflowY: "auto"
+			})
+		}
+	}
+	
+	ItemBoard.prototype.addItem = function(callback = () => {}) {
+		const li = document.createElement("li");
+		li.style.listStyle = "none";
+		try{callback(li)}catch(e){console.error(e.stack)}
+		this.viewElem.appendChild(li);
+		this.lis.push(li);
+	}
+	
+	ItemBoard.prototype.removeItem = function(li, callback = () => {}) {
+		const index = this.lis.indexOf(li);
+		if (index + 1 && li.parentNode == this.viewElem) {
+			try{callback(li)}catch(e){console.error(e.stack)}
+			this.viewElem.removeChild(li);
+			this.lis.splice(index, 1);
+			removeChildsAndNode(li);
+		}
+	}
+	
+	function newItemBoard(param = {}) {
+		const itemBoard = newClass(param, ItemBoard);
+		return itemBoard;
+	}
 
-	//---------------------- themes ------------------------
+	//---------------------- themes -----------------------------
 
 	const themes = {"light":"light", "grey":"grey", "green":"green", "dark":"dark"};
 	const defaultTheme = "light";
@@ -743,12 +831,14 @@ window.mainUI = (function() {
 				case "Timer":
 				case "Comment":
 				case "TextBox":
-					child.loadTheme(theme["body"])
+				case "IndexBoard":
+				case "ItemBoard":
+					try{child.loadTheme(theme["body"])}catch(e){console.error(e.stack)}
 					break;
 				case "Board":
 				case "Button":
 				case "InputButton":
-					typeof child.loadTheme === "function" && child.loadTheme(theme[className])
+					try{typeof child.loadTheme === "function" && child.loadTheme(theme[className])}catch(e){console.error(e.stack)}
 			}
 		}
 		
@@ -762,19 +852,25 @@ window.mainUI = (function() {
 	}
 	
 	function setTheme(themeKey = defaultTheme, cancel) {
+		try{
 		themeKey = themes[themeKey] || defaultTheme;
 		localStorage.setItem("theme", themeKey);
 		_theme.call(this, themeKey, cancel);
+		}catch(e){console.error(e.stack)}
 	}
 	
 	function loadTheme(cancel) {
+		try{
 		const themeKey = localStorage.getItem("theme");
 		setTheme.call(this, themeKey, cancel);
 		bodyDiv.setAttribute("class", "showBody");
+		}catch(e){console.error(e.stack)}
 	}
 	
 	function getThemeName() {
+		try{
 		return localStorage.getItem("theme");
+		}catch(e){console.error(e.stack)}
 	}
 
 	//----------------------------- exports ------------------------------- 
@@ -826,6 +922,8 @@ window.mainUI = (function() {
 	Object.defineProperty(exports, "newTimer", { value: newTimer });
 	Object.defineProperty(exports, "newComment", { value: newComment });
 	Object.defineProperty(exports, "newTextBox", { value: newTextBox });
-
+	Object.defineProperty(exports, "newIndexBoard", { value: newIndexBoard });
+	Object.defineProperty(exports, "newItemBoard", { value: newItemBoard });
+6
 	return exports;
 })()

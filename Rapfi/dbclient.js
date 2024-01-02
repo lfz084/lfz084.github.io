@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient"] = "v2023.12";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient"] = "v2024.01";
 window.DBClient = (() => {
     "use strict";
     //console.log(exports);

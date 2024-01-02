@@ -36,7 +36,9 @@
 			progress: "99%",
 			type: "scriptAll",
 			isAsync: false,
-			sources: [[SOURCE_FILES["puzzleCoder"]],
+			sources: [[SOURCE_FILES["IndexedDB"]],
+				[SOURCE_FILES["puzzleData"]],
+                [SOURCE_FILES["puzzleCoder"]],
 				[SOURCE_FILES["puzzleAI"]],
 				[SOURCE_FILES["puzzleMain"]]]
         }

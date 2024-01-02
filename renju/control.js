@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2023.12";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2024.01";
 window.control = (() => {
 	try {
 		"use strict";
@@ -527,7 +527,6 @@ window.control = (() => {
 							return engine.createTreeThree({
 								arr: arr,
 								color: getRenjuSelColor(),
-								ftype: ONLY_NOFREE
 							})
 						},
 						10: async function() {
@@ -1681,7 +1680,6 @@ window.control = (() => {
         	return Math.max(0, index);
 		}
 		
-		
 		mainUI.viewport.resize();
 		
 		let p = { x: 0, y: 0 };
@@ -1694,7 +1692,7 @@ window.control = (() => {
 		const EX_WINDOW_HEIGHT = mainUI.cmdWidth - parseInt(cMoveL.top);
 		try {
 			window.exWindow.setStyle(EX_WINDOW_LEFT, EX_WINDOW_TOP, EX_WINDOW_WIDTH, EX_WINDOW_HEIGHT, FONT_SIZE, mainUI.bodyDiv);
-		} catch (e) { alert(e.stack) }
+		} catch (e) { console.error(e.stack) }
 		
 
 		RenjuLib.reset({
@@ -2327,5 +2325,5 @@ window.control = (() => {
 
 		return game;
 		
-	} catch (e) { alert(e.stack) }
+	} catch (e) { console.error(e.stack) }
 })();

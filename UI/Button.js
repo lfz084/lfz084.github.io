@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2023.12";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.01";
 (function(global, factory) {
 	(global = global || self, factory(global));
 }(this, (function(exports) {
@@ -720,8 +720,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2023.12";
 
 
 	//  移动和设置大小
-	Button.prototype.move = function(left, top, width, height, parentNode) {
-		parentNode && parentNode.appendChild(this.div)
+	Button.prototype.move = function(left, top, width, height, parentNode = this.parentNode) {
+		parentNode && parentNode.appendChild(this.div);
+		this.parentNode = parentNode;
 		let text = this.text;
 		this.left = left == null ? this.left : parseInt(left) + "px";
 		this.top = top == null ? this.top : parseInt(top) + "px";

@@ -1,5 +1,5 @@
 window.SCRIPT_VERSIONS = [];
-self.SCRIPT_VERSIONS["renju"] = "v2023.12";
+self.SCRIPT_VERSIONS["renju"] = "v2024.01";
 window.loadApp = (() => { // 按顺序加载应用
     "use strict";
     window.DEBUG = true;
@@ -270,14 +270,20 @@ window.loadApp = (() => { // 按顺序加载应用
         mlog("removeOldAppCache ......");
         await upData.removeOldAppCache();
         
-        mlog("registerServiceWorker ......");
-        await serviceWorker.registerServiceWorker();
-        mlog("postVersion ......");
-        await upData.postVersion();
-        
-        mlog("upData CacheFiles ......");
-        const urls = Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key])
-        isTopWindow && await upData.saveCacheFiles(urls, upData.currentVersion)
+        if (localStorage.getItem("debug") && window.location.href.indexOf("http://") > -1) {
+        	mlog("removeServiceWorker ......");
+        	await serviceWorker.removeServiceWorker();
+        }
+    	else {
+        	mlog("registerServiceWorker ......");
+        	await serviceWorker.registerServiceWorker();
+        	mlog("postVersion ......");
+        	await upData.postVersion();
+        	
+        	mlog("upData CacheFiles ......");
+        	const urls = Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key])
+    		isTopWindow && await upData.saveCacheFiles(urls, upData.currentVersion)
+    	}
         
         mlog(`loading ${fullscreenEnabled ? "fullscreenUI" : "mainUI"}......`);
         await loadSources(uiSources);

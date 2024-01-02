@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2023.12";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.01";
 (function(global, factory) {
 	(global = global || self, factory(global));
 }(this, (function(exports) {
@@ -54,11 +54,12 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2023.12";
 			
 			this._callback = () => {}
 			this.div.addEventListener("touchstart", () => { event.cancelBubble = true }, true)
-			this.button.addEventListener("click", () => { this.hide(); this._callback.call(this); })
+			this.button.addEventListener("click", () => { this.hide(); this._callback.call(this,this.value); })
 			this.input.addEventListener("click", () => this.input.scrollIntoView(false) )
 		}
 		get value() { return this.input.value }
 		set value(v) { return this.input.value = v }
+		get callback() { return this._callback }
 		set callback(fun) { return this._callback = fun }
 	}
 	

@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2023.12";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2024.01";
 window.engine = (function() {
             "use strict";
             const TEST_ENGINE = false;
@@ -227,35 +227,6 @@ window.engine = (function() {
             	await waitValue({get c() { return THREADS.find(thread => thread.isBusy) }}, "c", undefined, 0);
             	loopWaitThreadList()
             }
-            
-            /*
-            function cancel() {
-            	return new Promise(async (resolve) => {
-            		if (canceling) {
-            			await waitValue({get c() { return canceling}}, "c", false, 0);
-            			resolve();
-            		}
-            		else {
-            			THREADS.map(thread => thread.lock(LOCK2));
-            			reset()
-            				.then(() => {
-            					canceling = true;
-            					THREADS.map(thread => thread.unlock(LOCK2));
-            					let count = 0,
-            						timer = setInterval(() => {
-            							count = THREADS.find(thread => thread.isBusy) ? 0 : count + 1;
-            							if (count > 15) {
-            								clearInterval(timer);
-            								resolve();
-            								setTimeout(() => canceling = false, 1500)
-            								log("engine.cancel", "warn")
-            							}
-            						}, 100)
-            				})
-            		}
-            	})
-            }
-            */
 
             //------------------------ Evaluator -------------------
             const NEWLINE = String.fromCharCode(10);
@@ -371,15 +342,20 @@ window.engine = (function() {
             	return (mark & (1 << 2)) ? "V3" : (mark & (1 << 1)) ? "V4" : "VX";
             }
 
-            //return param
+            /**
+             * 浅拷贝一个param对象
+             */
             function copyParam(param) {
                 let nParam = {};
                 Object.keys(param).map(key => nParam[key] = param[key])
                 return nParam;
             }
 
-            //把棋局转成手顺，包含pass (idx = 225)
-            //return moves: [idx1, idx2, idx3...]
+            /**
+             * 把棋局转成黑、白轮流的手顺，棋子不够的中间用 pass 补上
+             * 返回手顺 moves，注意：最后一手不会是pass
+             * moves.length 单数代表黑棋为最后一手，双数代表白棋为最后一手
+             */
             function positionToMoves(position) {
                 let blackMoves = [],
                     whiteMoves = [],
@@ -418,13 +394,18 @@ window.engine = (function() {
                 return moves;
             }
 
-            //return first Node || undefined
+            /**
+             * 返回 path 手顺对应局面的节点 node， 失败返回 undefined
+             */
             function hasPosition(path, tree) {
                 let node = tree.getPositionNodes(path, 7, 1)[0];
                 return node;
             }
 
-            //return initMoves: [idx1, idx2, idx3...]
+            /**
+             * 从 tree 的 root 节点向下搜索子节点直到结束，返回最后一个节点的路径
+             * 如果最后一个节点是 pass 节点，返回的路径不会包括 pass 节点
+             */
             function getInitMoves(tree) {
                 let initMoves = [],
                     current = tree.root.down;
@@ -436,6 +417,14 @@ window.engine = (function() {
                 return initMoves;
             }
 
+            /**
+             * 对防点分类，返回一个对象，包含冲四防点，和其它防点
+             * fourPoints:		冲四防点
+             * elsePoints:		其它防点
+             * @bPoints:		待分类的防点
+             * @color:			防守方棋子颜色
+             * @arr:			当前局面
+             */
             function filterBlockPoints(bPoints, color, arr) {
                 let infoArr = new Array(226),
                     fourPoints = [],
@@ -448,9 +437,17 @@ window.engine = (function() {
                 }
                 return { fourPoints: fourPoints, elsePoints: elsePoints }
             }
-
-            //param: {arr, ?color}
-            //return object: { tree, positionMoves, isPushPass, current }
+            
+            /**
+             * 创建一颗搜索树，返回一个对象包括
+             * tree:			创建的搜索树
+             * current:			当前节点，保存后续计算结果
+             * positionMoves:	代表 current 的路径
+             * isPushPass:		current 是否 pass 节点
+             * @param:			包括 arr：局面，color：先手方棋子颜色
+             * @nextCllor:		先手方棋子颜色
+             * @isInitMove:		是否初始化当前局面路径
+             */
             function createTree(param, nextColor = param.color, isInitMove = true) {
                 let tree = new RenjuTree(undefined, undefined, { x: (cBoardSize + 1) / 2, y: (cBoardSize + 1) / 2 }),
                     positionMoves = positionToMoves(param.arr),
@@ -466,24 +463,33 @@ window.engine = (function() {
                 return { tree, positionMoves, isPushPass, current };
             }
 
-            //param: {arr, color}
-            //return infoArr[226]: info is Uint32
+            /**
+             * 返回一个Uint32数组，上面包括了当前局面所有空格的眠三以上的信息
+             * 尽量别用来判断禁手，禁手判断不完整
+             * @param {arr, color}
+             */
             function getTestThreeInfo(param) {
                 let infoArr = new Array(226);
                 testThree(param.arr, param.color, infoArr);
                 return infoArr;
             }
 
-            //param: {arr, color}
-            //return infoArr[226]: info is Uint32
+            /**
+             * 返回一个Uint32数组，上面包括了当前局面所有空格的冲四以上的信息
+             * 尽量别用来判断禁手，禁手判断不完整
+             * @param {arr, color}
+             */
             function getTestFourInfo(param) {
                 let infoArr = new Array(226);
                 testFour(param.arr, param.color, infoArr);
                 return infoArr;
             }
-
-            //return array[node1,node2,node3...], 
-            // node: {idx: idx, boardText: string, lineInfo: info}
+            
+            /**
+             * 创建并返回 node 对象的数组 
+             * node: {idx: idx, boardText: string, lineInfo: Uint32}
+             * @infoArr:	Uint32数组包括棋盘空格的信息
+             */
             function infoArrToNodes(infoArr) {
                 return infoArr.map((info, idx) => {
                     let isFoul = info & FOUL,
@@ -496,54 +502,71 @@ window.engine = (function() {
                         switch (foul_max_free) {
                             case FIVE:
                                 return { idx: idx, boardText: EMOJI_ROUND_FIVE, lineInfo: info }
-                                case FOUR_FREE:
-                                    return { idx: idx, boardText: EMOJI_ROUND_FOUR, lineInfo: info }
-                                    case FOUR_NOFREE:
-                                        return { idx: idx, boardText: "4", lineInfo: info }
-                                        case THREE_FREE:
-                                            return { idx: idx, boardText: EMOJI_ROUND_THREE, lineInfo: info }
-                                            case THREE_NOFREE:
-                                                return { idx: idx, boardText: "3", lineInfo: info }
+                            case FOUR_FREE:
+                                return { idx: idx, boardText: EMOJI_ROUND_FOUR, lineInfo: info }
+                            case FOUR_NOFREE:
+                                return { idx: idx, boardText: "4", lineInfo: info }
+                            case THREE_FREE:
+                                return { idx: idx, boardText: EMOJI_ROUND_THREE, lineInfo: info }
+                            case THREE_NOFREE:
+                                return { idx: idx, boardText: "3", lineInfo: info }
                         }
                     }
                 }).filter(node => !!node)
             }
 
-            //param: {arr, color}
-            //return array[node1,node2,node3...], 
-            // node: {idx: idx, boardText: string, info: Uint32}
+            /**
+             * 创建并筛选出 node 数组再返回
+             * node: {idx: idx, boardText: string, lineInfo: Uint32}
+             * @param:		{arr, color}
+             * @callback:	筛选node节点
+             */
             function getNodes(param, callback) {
                 let nodes = infoArrToNodes(getTestThreeInfo(param));
                 return nodes.filter(callback);
             }
 
-            //param: {arr, color, ftype}
-            //return array[node1,node2,node3...], 
-            // node: {idx: idx, boardText: string, lineInfo: info}
+            /**
+			 * 创建并筛选出 node 数组再返回, node 是活三或者眠三
+			 * node: {idx: idx, boardText: string, lineInfo: Uint32}
+			 * @param:		{arr, color, ftype}
+			 * @ftype:		全局变量 FIND_ALL | ONLY_FREE | ONLY_NOFREE
+			 */
             function getNodesThree(param) {
                 return getNodes(param, FILTER_THREE_NODE[param.ftype])
             }
 
-            //param: {arr, color, ftype}
-            //return array[node1,node2,node3...], 
-            // node: {idx: idx, boardText: string, lineInfo: info}
+            /**
+			 * 创建并筛选出 node 数组再返回, node 是冲四或者活四
+			 * node: {idx: idx, boardText: string, lineInfo: Uint32}
+			 * @param:		{arr, color, ftype}
+			 * @ftype:		全局变量 FIND_ALL | ONLY_FREE | ONLY_NOFREE
+			 */
             function getNodesFour(param, filterArr = new Array(225).fill(1)) {
                 return getNodes(param, FILTER_FOUR_NODE[param.ftype])
                     .filter(node => filterArr[node.idx])
             }
 
-            //param: {arr, color}
-            //return points: [idx1, idx2 idx3...]
+            /**
+             * 创建并筛选出符合条件的的点，以数组的方式返回 
+             * 返回	[idx1, idx2 idx3...]
+             * @param:		{arr, color}
+             * @callback:	筛选条件
+             */
             function getPoints(param, callback) {
                 let infoArr = getTestThreeInfo(param);
                 return infoArr.map(callback).filter(idx => idx != undefined);
             }
 
-            //param: {arr, color}
+            /**
+             * 创建搜索树，再添加符合条件的节点，眠三，活三，冲四，活四，五连...
+             * 返回	tree
+             * @param:		{arr, color}
+             * @callback:	筛选条件
+             */
 	        function createTreeNodes(param, callback = ()=>true) {
                 let { tree, positionMoves, isPushPass, current } = createTree(param),
                     nodes = getNodes(param, callback);
-
                 nodes.map(node => {
                     let nNode = tree.newNode();
                     nNode.idx = node.idx;
@@ -553,19 +576,30 @@ window.engine = (function() {
                 return tree;
             }
 
-            //param: {arr, color, ftype}
+            /**
+             * 以数组的形式返回活三、眠三点
+             * @param:		{arr, color, ftype}
+             * @ftype:		全局变量 FIND_ALL | ONLY_FREE | ONLY_NOFREE
+			 */
             function getPointsThree(param) {
                 return getPoints(param, FILTER_THREE[param.ftype])
             }
 
-            //param: {arr, color, ftype}
+            /**
+             * 以数组的形式返回活四、冲四点
+             * @param:		{arr, color, ftype}
+             * @ftype:		全局变量 FIND_ALL | ONLY_FREE | ONLY_NOFREE
+             */
             function getPointsFour(param) {
                 return getPoints(param, FILTER_FOUR[param.ftype])
             }
 
-            //param: {arr, color, maxVCF, maxDepth, maxNode}
-            //node: { idx: 0 - 224, lineInfo: Uint16, winMoves: [idx1,idx2,idx3...] }
-            //return Promise resolve: node || undefined
+            /**
+             * 返回一个 Promise 对象
+             * resolve: 如果 idx 点是活三级别 就返回node 对象, 否则返回 undefined
+             * node: { idx: 0 - 224, lineInfo: Uint16, winMoves: [idx1,idx2,idx3...] }
+             * @param: {arr, color, maxVCF, maxDepth, maxNode}
+             */
             async function getLevelThreeNode(idx, lineInfo, param) {
                 if (param.arr[idx] || THREE_FREE < (lineInfo & FOUL_MAX_FREE)) return;
                 let arr = param.arr.slice(0);
@@ -575,10 +609,16 @@ window.engine = (function() {
                 if (winMoves.length) return { idx: idx, lineInfo: lineInfo, winMoves: winMoves };
             }
 
-            //param: {arr, color, maxVCF, maxDepth, maxNode, ?nMaxDepth}
-            //node: { idx: 0 - 224, lineInfo: Uint16, winMoves: [idx1,idx2,idx3...] }
-            //return Promise resolve: nodes[node1,node2,node3...] || []
-            async function getLevelThreeNodes(param, filterArr) {
+            /**
+             * 返回一个 Promise 对象
+    		 * resolve: 如果有活三级别的点就返回 node 对象数组, 否则返回 []
+    		 * node: { idx: 0 - 224, lineInfo: Uint16, winMoves: [idx1,idx2,idx3...] }
+    		 * @param:		{arr, color, maxVCF, maxDepth, maxNode, ?radius, ?nMaxDepth} 
+    		 * radius		param的可选参数。 选点半径
+             * nMaxDepth	param的可选参数。对手VCF的计算深度
+    		 * @filterArr:	可选参数。一维数组，表示选点范围。
+             */
+            async function getLevelThreeNodes(param, filterArr = undefined) {
                 let infoArr = getTestThreeInfo(param),
                     sltArr = filterArr || await _selectPoints(param, BLOCK_MODE),
                     nodes = [],
@@ -594,15 +634,27 @@ window.engine = (function() {
                 await Promise.all(ps);
                 return nodes;
             }
-
-            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: points[idx1,idx2,idx3...] || []
+            /** 返回一个 Promise 对象
+             * resolve: 如果有活三级别的点就返回 idx 数组, 否则返回[] 
+             * @param:		{arr, color, maxVCF, maxDepth, maxNode, ?radius, ?nMaxDepth} 
+    		 * radius		param的可选参数。 选点半径
+             * nMaxDepth	param的可选参数。对手VCF的计算深度
+    		 * @filterArr:	可选参数。 一维数组， 表示选点范围。
+             */
             async function getLevelThreePoints(param, filterArr) {
                 return (await getLevelThreeNodes(param, filterArr)).map(node => node.idx);
             }
-
-            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ?nMaxDepth}
-            //return Promise resolve: {fourNodes, threeNodes, twoNodes}
+            /** 
+             * 返回一个 Promise 对象
+             * resolve: 根据当前局面找出下一手棋的可选范围，返回一个对象的数组
+             * fourNodes	活四，冲四点的 node 对象数组 || []
+             * threeNodes	活三级别点的 node 对象数组 || []
+             * twoNodes		活二级别点的 node 对象数组 || []
+             * elseNodes	其它选点的 node 对象数组 || []
+             * @param:		{arr, color, maxVCF, maxDepth, maxNode, ?radius, ?nMaxDepth} 
+    		 * radius		param的可选参数。 选点半径
+    		 * nMaxDepth	param的可选参数。 对手VCF的计算深度
+    		 */
             async function getContinueNodes(param) {
                 let filterArr = await _selectPoints(param, BLOCK_MODE),
                     fourNodes = getNodesFour({ arr: param.arr, color: param.color, ftype: FIND_ALL }, filterArr),
@@ -613,59 +665,25 @@ window.engine = (function() {
                 fourNodes.map(node => filterArr[node.idx] = 0);
                 threeNodes.map(node => filterArr[node.idx] = 0);
                 filterArr.map((v, idx) => {
-                    if (v) {
-                        if (radiusArr[idx]) twoNodes.push({ idx: idx })
-                        else elseNodes.push({ idx: idx })
+                	if (v && (gameRules != RENJU_RULES || param.color == 2 || !isFoul(idx, param.arr))) {
+                        twoNodes.push({ idx: idx })
+                        /*if (radiusArr[idx]) twoNodes.push({ idx: idx })
+                        else elseNodes.push({ idx: idx })*/
                     }
                 });
                 return { fourNodes, threeNodes, twoNodes, elseNodes };
             }
 
-            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ftype}
-            async function getPointsVCT(param) {
-                let nextMoves = [],
-                    sortArr = new Array(225).fill(0),
-                    fPoints = getPointsFour(param),
-                    tPoints;
-                param.color = INVERT_COLOR[param.color];
-                nextMoves = await _nextMoves(param);
-                param.color = INVERT_COLOR[param.color];
-
-                const filterArr = new Array(226);
-                nextMoves.map(idx => filterArr[idx] = 1)
-                tPoints = await getLevelThreePoints(param, filterArr);
-                nextMoves.map(idx => sortArr[idx] = 2)
-                fPoints.map(idx => sortArr[idx]++);
-                tPoints.map(idx => sortArr[idx]++);
-
-                return sortArr.map((v, idx) => v > 2 ? idx : undefined).filter(idx => idx != undefined);
-            }
-
-            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode}
-            async function _nextMoves(param) {
-                let infoArr = [],
-                    blkPoints = [],
-                    ps = [];
-
-                ps.push(getBlockPoints(param)
-                    .then(points => blkPoints = points))
-                param.color = INVERT_COLOR[param.color];
-                infoArr = getTestThreeInfo(param);
-                param.color = INVERT_COLOR[param.color];
-                await Promise.all(ps);
-
-                return blkPoints.filter(idx => !(infoArr[idx] & FOUL));
-            }
-
-            //------------------------- exports --------------------
-
+            //---------------------------------------------
+			
             async function _setGameRules(rules) {
                 setGameRules(rules);
                 THREADS.map(thread => thread.run({ cmd: "setGameRules", param: { rules: gameRules } }));
                 return gameRules;
             }
-
-            //return Promise resolve: isFinally
+            /**
+             * 返回一个 boolean，代表传入的 Promise 是否完成
+             */
             async function isFinally(promise) {
                 let isF = true,
                     t = {};
@@ -673,8 +691,9 @@ window.engine = (function() {
                     .then(v => v === t && (isF = false))
                 return isF;
             }
-
-            //loop promiseArray removeFinallyPromise
+			/**
+             * 移除掉 Promise 数组中已经完成的 Promise
+             */
             async function removeFinallyPromise(promiseArray) {
                 for (let j = promiseArray.length - 1; j >= 0; j--) {
                     if (await isFinally(promiseArray[j])) {
@@ -682,9 +701,13 @@ window.engine = (function() {
                     }
                 }
             }
-
-            //wait if obj[key] == value resolve
-            //return Promise resolve: obj[key]
+            /**
+             * 当对象属性与 value 想等时， resolve(obj[key])
+             * @obj			要判断的对象
+             * @key			要判断的属性名
+             * @value		要判断的值
+             * @timeout		循环的间隔时间
+             */
             async function waitValue(obj, key, value, timeout = 500) {
                 return new Promise((resolve) => {
                     let timer = setInterval(() => {
@@ -695,10 +718,14 @@ window.engine = (function() {
                     }, timeout)
                 })
             }
-
-            //wait if obj[key] != value resolve
-            //return Promise resolve: obj[key]
-            async function waitValueChange(obj, key, value, timeout = 500) {
+            /**
+             * 当对象属性与 value 不等时， resolve(obj[key])
+             * @obj			要判断的对象
+             * @key			要判断的属性名
+             * @value		要判断的值
+             * @timeout		循环的间隔时间
+             */
+             async function waitValueChange(obj, key, value, timeout = 500) {
                 return new Promise((resolve) => {
                     let timer = setInterval(() => {
                         if (obj[key] != value) {
@@ -708,14 +735,20 @@ window.engine = (function() {
                     }, timeout)
                 })
             }
-
-            //wait if node.score != oScore resolve
-            //return Promise resolve: node.score
+            /**
+             * 当 node 对象 score 属性与 oScore 不等时， resolve(node.score)
+             * @node		要判断的对象
+             * @oScore		要判断的值
+             * @timeout		循环的间隔时间
+             */
             async function waitNodeScore(node, oScore, timeout = 100) {
                 return waitValueChange(node, "score", oScore, timeout);
             }
-
-            //return Promise resolve: node
+            /**
+             * 返回一个 Promise， 如果当前局面在 tree 有对应的 node 节点就 resolve(node)，没有就 resolve(undefined)
+             * @arr			当前局面
+             * @tree		搜索树
+             */
             async function hasPositionNode(arr, tree) {
                 let path = positionToMoves(arr),
                     hasNode = hasPosition(path, tree),
@@ -726,66 +759,97 @@ window.engine = (function() {
                 }
                 return hasNode;
             }
-
-            //return Promise resolve: score
+            /**
+             * 返回一个 Promise， 如果当前局面在 tree 有对应的 node 节点就 resolve(node.score)，没有就 resolve(undefined)
+             * @arr			当前局面
+             * @tree		搜索树
+             */
             async function hasPositionScore(arr, tree) {
                 return await hasPositionNode(arr, tree).score;
             }
-
+            /** 等待 timeout 后 resolve
+             * @timeout		等待时间，毫秒
+             */
             async function wait(timeout) {
                 return new Promise(resolve => setTimeout(resolve, timeout))
             }
-
+			/** 落子
+			 * @idx			坐标
+			 * @waitTime	暂停时间，给浏览器渲染
+ 			*/
             async function putMove(idx, waitTime = 500) {
                 board.wNb(idx, "auto", true);
                 await wait(waitTime);
             }
-
+			/** 提子
+			 * @idx			坐标
+			 * @waitTime	暂停时间，给浏览器渲染
+ 			*/
             async function takeMove(idx, waitTime = 500) {
                 board.cleNb(idx, true);
                 await wait(waitTime);
             }
-
-            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ?nMaxDepth}
-            //mode: BLOCK_MODE || AROUND_MODE
-            //return Promise resolve: arr[225];
+            /**
+             * 返回一个 Promise
+             * resolve: 一个包含选点范围的数组,index 对应棋盘坐标，!!value 为 true 时选点
+             * @param:		{arr, color, maxVCF, maxDepth, maxNode, ?radius, ?nMaxDepth}
+             * radius		param的可选参数。 选点半径
+             * nMaxDepth	param的可选参数。 对手VCF的计算深度
+             * @mode:		BLOCK_MODE || AROUND_MODE
+             * BLOCK_MODE	选点要考虑对手进攻级别
+             * AROUND_MODE	选点只考虑圈数
+             */
             async function _selectPoints(param, mode = AROUND_MODE) {
                 return (await run(mode, param)) || new Array(225);
             }
-
-            //param: {arr, color, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: vcfWinMoves || []
+            /**
+             * 返回一个 Promise
+             * resolve: VCF手顺 || []
+             * @param:		{arr, color, maxVCF, maxDepth, maxNode}
+             */
             async function _findVCF(param) {
                 let vInfo = (await run("findVCF", param)) || { winMoves: [] };
                 return vInfo.winMoves[0] || [];
             }
-
-            //param: {arr, color, vcfMoves, includeFour}
-            //return Promise resolve: points[idx1, idx2, idx3...]
+            /**
+             * 返回一个Promise
+             * resolve: VCF防点数组 || []
+             * @param: {arr, color, vcfMoves, includeFour}
+             * vcfMoves			param参数, 一套VCF的手顺
+             * includeFour		param参数, 为false时忽略先手防
+             */
             async function _getBlockVCF(param) {
                 return await run("getBlockVCF", param) || [];
             }
-
-            //param: {arr, color, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: levelBInfo
+            /**
+             * 返回一个Promise
+             * resolve: levelBInfo 对象包含当前局面，指定颜色棋子的进攻级别信息
+             * @param: {arr, color, maxVCF, maxDepth, maxNode}
+             */
             async function _getLevelB(param) {
                 return await run("getLevelB", param) || levelBInfo;
             }
-            
-            //param: {arr, color, moves}
-            //return Promise resolve: isVCF
+            /**
+             * 返回一个Promise
+             * resolve: boolean值，moves手顺是成立的VCF时为true
+             * @param: {arr, color, moves}
+             */
             async function isVCF(param) {
                 return await run("isVCF", param);
             }
-
-            //param: {arr, color, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: vcfInfo
+            /**
+             * 返回一个Promise
+             * resolve: vcfInfo 对象包含VCF的搜索信息
+             * @param: {arr, color, maxVCF, maxDepth, maxNode}
+             */
             async function findVCF(param) {
                 return await run("findVCF", param) || vcfInfo;
             }
-
-            //param: {points, arr, color, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: points[idx1, idx2, idx3...]
+            /**
+             * 返回一个Promise
+             * resolve: points防点数组，已经排除掉不成立的防点
+             * @param: {points, arr, color, maxVCF, maxDepth, maxNode}
+             */
             async function _excludeBlockVCF(param) {
                 let i = param.points.length - 1,
                     ps = [],
@@ -801,17 +865,20 @@ window.engine = (function() {
                 await Promise.all(ps);
                 return result.filter(v => v != undefined);
             }
-
-
-            //param: {arr, color, vcfMoves, includeFour, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: points[idx1, idx2, idx3...]
+            /**
+             * 返回一个Promise
+             * resolve: points 数组 VCF 成立的防点
+             * @param: {arr, color, vcfMoves, includeFour, maxVCF, maxDepth, maxNode}
+             */
             async function excludeBlockVCF(param) {
                 param.points = await _getBlockVCF(param);
                 return _excludeBlockVCF(param);
             }
-
-            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: points[idx1, idx2, idx3...]
+            /**
+             * 返回一个Promise
+             * resolve: result 数组， 返回当前局面对家可选点范围
+             * @param: {arr, color, maxVCF, maxDepth, maxNode, ?radius, ?nMaxDepth}
+             */
             async function getBlockPoints(param) {
                 let levelBInfo = await _getLevelB(param),
                     levelInfo = levelBInfo.levelInfo,
@@ -842,11 +909,18 @@ window.engine = (function() {
                         param.color = INVERT_COLOR[param.color];
                         break;
                 }
+                if (INVERT_COLOR[param.color] == 1 && gameRules == RENJU_RULES) {
+                	for (let i = result.length - 1; i >= 0; i--) {
+            			isFoul(result[i], param.color) && result.splice(i,1)
+                	}
+                }
                 return result;
             }
-
-            //param: {arr, color, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: RenjuTree
+            /**
+             * 返回一个Promise
+             * resolve: tree， 如果有VCF保存分支
+             * @param:	{arr, color, maxVCF, maxDepth, maxNode}
+             */
             async function createTreeVCF(param) {
                 let wTree = await createTreeWin(param, LEVEL_NOFREEFOUR)
                 if (wTree) return wTree;
@@ -870,27 +944,35 @@ window.engine = (function() {
                 isPrintMoves = false;
                 return tree;
             }
-
-            //param: {arr, color}
-            //return Promise resolve: RenjuTree
+            /**
+             * 返回一个Promise
+             * resolve: tree， 如果有五连点，就保存
+             * @param:	{arr, color}
+             */
             function createTreeFive(param) {
                 return createTreeNodes(param, FILTER_FIVE_NODE)
             }
-
-            //param: {arr, color, ftype}
-            //return Promise resolve: RenjuTree
+            /**
+             * 返回一个Promise
+             * resolve: tree， 如果有活四，冲四点，就保存
+             * @param:	{arr, color, ftype}
+             */
             function createTreeFour(param) {
                 return createTreeNodes(param, FILTER_FOUL_FOUR_NODE[param.ftype])
             }
-
-            //param: {arr, color, ftype}
-            //return Promise resolve: RenjuTree
+            /**
+             * 返回一个Promise
+             * resolve: tree， 如果有活三，眠三点，就保存
+             * @param:	{arr, color, ftype}
+             */
             function createTreeThree(param) {
                 return createTreeNodes(param, FILTER_FOUL_THREE_NODE[param.ftype])
             }
-
-            //param: {arr, color, maxVCF, maxDepth, maxNode}
-            //return Promise resolve: RenjuTree | undefined
+            /**
+             * 返回一个Promise
+             * resolve: tree, 如果棋局分出胜负，保存有取胜分支
+             * @param: {arr, color, maxVCF, maxDepth, maxNode}
+             */
             async function createTreeWin(param, winLevel = LEVEL_VCF) {
                 let { tree, positionMoves, isPushPass, current } = createTree(param),
                     levelBInfo,
@@ -928,9 +1010,12 @@ window.engine = (function() {
                 }
                 return undefined;
             }
-
-            //param: {arr, color, maxVCF, maxDepth, maxNode, ftype}
-            //return Promise resolve: RenjuTree
+            /**
+             * 返回一个Promise
+             * resolve: tree，如果有活三级别进攻点，保存分支
+             * @param:			{arr, color, maxVCF, maxDepth, maxNode, ftype}
+             * @filterArr:		
+             */
             async function _createTreeLevelThree(param, filterArr) {
             	try{
                 const oldDepth = param.maxDepth;
@@ -1012,6 +1097,26 @@ window.engine = (function() {
 
             //------------------------ VCT ----------------------
 
+            //param: {arr, color, ?radius, maxVCF, maxDepth, maxNode, ftype}
+            async function getPointsVCT(param) {
+            	let nextMoves = [],
+            		sortArr = new Array(225).fill(0),
+            		fPoints = getPointsFour(param),
+            		tPoints;
+            	param.color = INVERT_COLOR[param.color];
+            	nextMoves = await getBlockPoints(param);
+            	param.color = INVERT_COLOR[param.color];
+            
+            	const filterArr = new Array(226);
+            	nextMoves.map(idx => filterArr[idx] = 1)
+            	tPoints = await getLevelThreePoints(param, filterArr);
+            	nextMoves.map(idx => sortArr[idx] = 2)
+            	fPoints.map(idx => sortArr[idx]++);
+            	tPoints.map(idx => sortArr[idx]++);
+            
+            	return sortArr.map((v, idx) => v > 2 ? idx : undefined).filter(idx => idx != undefined);
+            }
+            
             //param: {arr, color, maxVCF, maxDepth, maxNode}
             //return {blkPoints: [idx1, idx2, idx3...], bestMove: [idx1, idx2, idx3...]}
             async function _getBlockVCT(param, tree, vctRoot) {
@@ -1152,7 +1257,7 @@ window.engine = (function() {
             while (current) { // alpha-beta 估值
                 //count++;
                 if (moves.length < maxDepthVCT) {
-                    let points = moves.length & 1 ? await _nextMoves(param) : await getPointsVCT(param),
+                    let points = moves.length & 1 ? await getBlockPoints(param) : await getPointsVCT(param),
                         color = moves.length & 1 ? INVERT_COLOR[param.color] : param.color,
                         score = moves.length & 1 ? SCORE_MIN : SCORE_MAX;
                     for (let i = points.length - 1; i >= 0; i--) {
@@ -2293,7 +2398,6 @@ window.engine = (function() {
         isVCF: async (param) => exe(isVCF, copyParam(param)),
         findVCF: async (param) => exe(findVCF, copyParam(param)),
         getLevelB: async (param) => exe(_getLevelB, copyParam(param)),
-        getBlockPoints: async (param) => exe(getBlockPoints, copyParam(param)),
         createTreeVCF: async (param) => exe(createTreeVCF, param),
         createTreeNodes: async (param) => exe(createTreeNodes, param),
         createTreeFive: async (param) => exe(createTreeFive, param),
@@ -2318,7 +2422,6 @@ window.engine = (function() {
         createTreeVCT: createTreeVCT,
         getBlockVCF: _getBlockVCF,
         _findVCF: _findVCF,
-        _nextMoves: _nextMoves,
         _addBranchIsFoul: _addBranchIsFoul,
         getLevelThreeNodes: getLevelThreeNodes,
         getLevelThreePoints: getLevelThreePoints,

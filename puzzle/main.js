@@ -1,10 +1,11 @@
-(() => {
+(async () => {
 	try {
 		"use strict";
 		const d = document;
 		const dw = d.documentElement.clientWidth;
 		const dh = d.documentElement.clientHeight;
-
+		const CUR_PATH = document.currentScript.src.slice(0, document.currentScript.src.lastIndexOf("/") + 1);
+		
 		async function wait(timeout = 0) { return new Promise(resolve => setTimeout(resolve, timeout)) }
 
 		const gameButtonSettings = [
@@ -58,7 +59,7 @@
 		mainUI.newLabel({
 				varName: "indexLabel",
 				type: "div",
-				width: mainUI.buttonWidth * 2.33,
+				width: mainUI.buttonWidth,
 				height: mainUI.buttonHeight,
 				style: {
 					fontSize: `${mainUI.buttonHeight / 1.8}px`,
@@ -66,10 +67,23 @@
 					lineHeight: `${mainUI.buttonHeight}px`
 				},
 				click: function() {
-					inputButton.bindButton(indexLabel, mainUI.bodyScale);
-					inputButton.value = game.index;
+					openIndexBoard();
 				}
 			}),
+		mainUI.newLabel({
+			varName: "progressLabel",
+			type: "div",
+			width: mainUI.buttonWidth,
+			height: mainUI.buttonHeight,
+			style: {
+				fontSize: `${mainUI.buttonHeight / 1.8}px`,
+				textAlign: "center",
+				lineHeight: `${mainUI.buttonHeight}px`
+			},
+			click: function() {
+				openIndexBoard();
+			}
+		}),
 			{
 				varName: "btnPrevious",
 				type: "button",
@@ -86,19 +100,23 @@
 				varName: "btnOpenPuzzles",
 				type: "button",
 				text: "选择题集",
-				touchend: function() {}
+				touchend: function() {openItemBoard()}
 				},
 			{
 				varName: "btnReset",
 				type: "button",
 				text: "重新开始",
-				touchend: function() { game.reset() }
+				touchend: function() { game.reset(game.rotate) }
 				},
 			{
 				varName: "btnShareURL",
 				type: "button",
 				text: "求助好友",
-				touchend: function() {}
+				touchend: function() {
+					const puzzle = game.puzzle;
+					puzzle.rotate = game.rotate;
+					shareURL(puzzle);
+				}
 		},
 			{
 				varName: "btnAIHelp",
@@ -119,8 +137,7 @@
 				change: async function() {
     			try {
         			mainUI.viewport.resize();
-        			game.puzzles = await puzzleCoder.loadJSON2Puzzles(this.files[0], (progress) => outputInnerHTML({ indexLabel: `${(progress*100).toFixed(2)}%`, title: `${(progress*100).toFixed(2)}%` }) );
-        			game.reset();
+        			await game.openJSON(this.files[0]);
         		} catch (e) { console.error(e.stack) }
         		this.value = "";
 				}
@@ -131,7 +148,7 @@
 		gameButtonSettings.splice(5,0,null);
 		gameButtonSettings.splice(7,0,null);
 		gameButtonSettings.splice(8,0,null,null);
-		gameButtonSettings.splice(11,0,null);
+		//gameButtonSettings.splice(11,0,null);
 		gameButtonSettings.splice(12,0,null,null);
 		gameButtonSettings.splice(16,0,null,null);
 		gameButtonSettings.splice(20,0,null,null);
@@ -146,14 +163,210 @@
 			title,
 			sideLabel,
 			indexLabel,
+			progressLabel,
 			comment,
 			btnAIHelp
 		} = mainUI.getChildsForVarname();
 		
+		const boardWidth = 5;
+		const fontSize = mainUI.buttonHeight * 0.6;
+		const liHeight = mainUI.buttonHeight * 1.2;
+		function createItem(data) {
+			try{
+			const item = document.createElement("div");
+			const title = document.createElement("div");
+			const progress = document.createElement("div");
+			const close = document.createElement("div");
+			
+			Object.assign(item.style, {
+				overflow: "hidden",
+				fontSize: fontSize + "px",
+				height: liHeight + "px",
+				lineHeight: liHeight + "px"
+			})
+			Object.assign(title.style, {
+				overflow: "hidden",
+				textOverflow: "ellipsis",
+				position: "relative",
+				left: "0px",
+				top: "0px",
+				width: mainUI.cmdWidth * 0.75 + "px",
+				height: liHeight + "px"
+			})
+			Object.assign(progress.style, {
+				overflow: "hidden",
+				textOverflow: "ellipsis",
+				position: "relative",
+				left: parseInt(title.style.width) + "px",
+				top: -liHeight + "px",
+				width: mainUI.cmdWidth * 0.15 + "px",
+				height: liHeight + "px",
+				textAlign: "right"
+			})
+			Object.assign(close.style, {
+				overflow: "hidden",
+				textOverflow: "ellipsis",
+				position: "relative",
+				fontSize: fontSize * 1.5 + "px",
+				left: parseInt(progress.style.left) + parseInt(progress.style.width) + "px",
+				top: -liHeight * 2 + "px",
+				width: mainUI.cmdWidth * 0.1 + "px",
+				height: liHeight + "px",
+				textAlign: "center"
+			})
+			title.innerHTML = data.title;
+			progress.innerHTML = `${data.progress.filter(v => v).length}/${data.progress.length}`;
+			close.innerHTML = "✕";
+			title.onclick = async function(){
+				try{
+				event.cancelBubble = true;
+				const data = await puzzleData.getDataByIndex("time", item.parentNode.time);
+				await game.loadJSON(data.json);
+				}catch(e){console.error(e.stack)}
+			}
+			close.onclick = function(){
+				event.cancelBubble = true;
+				msgbox({
+					butNum: 2,
+					title: `确定删除《${title.innerHTML}》`,
+					enterFunction: () => itemBoard.removeItem(item.parentNode,(li) => puzzleData.deleteDataByIndex("time", li.time))
+				})
+			}
+			item.appendChild(title);
+			item.appendChild(progress);
+			game.defaultPuzzleTimes.indexOf(data.time) == -1 && item.appendChild(close);
+			item.childs = [title,progress,close];
+			return item;
+			}catch(e){console.error(e.stack)}
+		}
 		
+		async function openItemBoard() {
+			if (!itemBoard.viewElem.parentNode) {
+				itemBoard.show();
+				for (let i = 0; i < game.defaultPuzzleTimes.length; i++) {
+					const data = await puzzleData.getDataByIndex("time", game.defaultPuzzleTimes[i]);
+					data && itemBoard.addItem((li) => {
+						const item = createItem(data);
+						li.appendChild(item);
+						li.time = data.time;
+					})
+				}
+				puzzleData.openCursorByIndex("title", cursor => {
+					//console.log(`cursor: ${cursor && cursor.value && cursor.value.title}`)
+					const data = cursor && cursor.value;
+					data && game.defaultPuzzleTimes.indexOf(data.time) == -1 && itemBoard.addItem((li) => {
+						const item = createItem(data);
+						li.appendChild(item);
+						li.time = data.time;
+					})
+				})
+			}
+		}
+		
+		function closeItemBoard() {
+			itemBoard.hide();
+			for (let i = itemBoard.lis.length - 1; i >=0; i--){
+				itemBoard.removeItem(itemBoard.lis[i])
+			}
+		}
+		
+		function openIndexBoard() {
+			indexBoard.show();
+			indexBoard.removeIndexes();
+			for(let i = 0;  i < game.puzzles.length; i++) {
+				const style = {opacity: `${game.data && game.data.progress && game.data.progress[i] ? 1 : 0.5}`};
+				indexBoard.createIndex(i+1, style)
+			}
+			inputButton.bindButton(indexLabel, mainUI.bodyScale);
+			inputButton.value = game.index;
+		}
+	
+		function closeIndexBoard() {
+			indexBoard.hide();
+			indexBoard.removeIndexes();
+			inputButton.hide();
+		}
+		
+		function closeBoards() {
+			itemBoard.viewElem.parentNode && closeItemBoard();
+			indexBoard.viewElem.parentNode && closeIndexBoard();
+		}
+		
+		function shareURL(puzzle) {
+			const hash = `${puzzleData.puzzle2URL(puzzle)}`;
+			const url = window.location.href.split(/[?#]/)[0] + `#${hash}`;
+			window.location.hash = hash;
+			//log(`share URL: ${url}`);
+			if (navigator.canShare) {
+				navigator.share({
+					title: "连珠答题器",
+					text: "这道题我解不出来，可以教教我吗",
+					url: url
+				})
+			}
+			else {
+				msg({
+					title: url,
+					type: "input",
+					butNum: 1
+				})
+			}
+		}
+		
+		const itemBoard = mainUI.newItemBoard({
+			left: mainUI.gridPadding,
+			top: mainUI.gridPadding,
+			width: mainUI.cmdWidth,
+			height: mainUI.cmdWidth,
+			parent: mainUI.upDiv,
+			style: {
+				borderColor: "black",
+				background: "white",
+				borderStyle: "solid",
+				borderWidth: `${boardWidth}px`
+			}
+		})
+		itemBoard.hide();
+		mainUI.addChild({
+			variant: itemBoard,
+			type: itemBoard.constructor.name,
+			varName: "itemBoard"
+		});
+		
+		const indexBoard = mainUI.newIndexBoard({
+			left: mainUI.gridPadding,
+			top: mainUI.gridPadding,
+			width: mainUI.cmdWidth,
+			height: mainUI.cmdWidth,
+			parent: mainUI.upDiv,
+			style: {
+				borderColor: "black",
+				background: "white",
+				borderStyle: "solid",
+				borderWidth: `${boardWidth}px`
+			}
+		})
+		indexBoard.hide();
+		indexBoard.callback = function(index) { 
+			event.cancelBubble = true; 
+			game.index = parseInt(index);
+		};
+		mainUI.addChild({
+			variant: indexBoard,
+			type: indexBoard.constructor.name,
+			varName: "indexBoard"
+		});
+		
+		const lbTimer = mainUI.newTimer();
+		lbTimer.hide();
+		mainUI.addChild({
+			variant: lbTimer,
+			type: lbTimer.constructor.name,
+			varName: "lbTimer"
+		});
 		
 		const inputButton = new InputButton(document.body, 0, 0, indexLabel.with, indexLabel.height);
-		inputButton.callback = function() { game.index = parseInt(inputButton.value) }
+		inputButton.callback = indexBoard.callback;
 		mainUI.addChild({
 			variant: inputButton,
 			type: inputButton.constructor.name,
@@ -177,9 +390,24 @@
 				})()
 		}
 		
-		const delayAIHelp = createDelayCallback(() => btnAIHelp.enabled = true);
+		function hideAIHelp() {
+			lbTimer.move(parseInt(btnAIHelp.left), parseInt(btnAIHelp.top), undefined, undefined, btnAIHelp.parentNode);
+			lbTimer.reset();
+			lbTimer.start();
+			btnAIHelp.hide();
+		}
+		
+		function showAIHelp() {
+			btnAIHelp.show();
+			lbTimer.hide();
+			lbTimer.stop();
+		}
+		
+		const delayAIHelp = createDelayCallback(() => showAIHelp());
 		
 		const delayCheckWin = createDelayCallback(() => puzzleAI.checkWin(game));
+		
+		const delaySaveProgress = createDelayCallback(() => puzzleData.saveProgress(game))
 		
 		const game = {
 			STATE: {
@@ -196,13 +424,17 @@
 			residueStones: 0,
 			puzzles: puzzleCoder.demoPuzzles,
 			board: cBoard,
-			async reset() {
+			defaultPuzzleTimes: [],
+			rotate: 0,
+			async reset(rotate = this.puzzle.rotate) {
+				try{
 				await this.stopThinking();
 				inputButton.hide();
 				const isLocation = window.location.href.indexOf("http://") > -1;
-				const delay = isLocation ? 300 : 30 * 60 * 1000;
-				btnAIHelp.disabled = true;
+				const delay = isLocation ? 0 : this.puzzle.delayHelp * 60 * 1000;
+				hideAIHelp();
 				delayAIHelp(delay);
+				//!this.data && (this.data = {progress: new Array(this.puzzles.length).fill(0)});
 				this.board.canvas.width = this.board.canvas.height = this.board.width;
 				this.board.canvas.style.width = this.board.canvas.style.height = this.board.width + "px";
 				this.board.cle();
@@ -218,29 +450,34 @@
 				let html = "";
 				if (this.puzzle.mode == puzzleCoder.MODE.COVER) {
 					this.state = this.STATE.LOADING;
+					puzzleData.saveProgress(this);
 					outputInnerHTML({
 						sideLabel: "习题封面"
 					})
-					this.puzzle.image && this.board.loadImgURL(this.puzzle.image).then(() => this.board.putImg())
+					this.puzzle.image && this.board.loadImgURL(this.puzzle.image).then(() => this.board.putImg());
 				}
 				else {
 					this.state = this.STATE.PLAYING;
+					delaySaveProgress(5000);
 					outputInnerHTML({
 						sideLabel: "玩家走棋"
 					})
-					html += `难度: ${"★★★★★".slice(0, this.puzzle.level)}\n`
-					html += `玩家: ${[,"黑棋","白棋"][this.playerSide]}\n`
-					html += `规则: ${["无禁",,"禁手"][this.puzzle.rule]}\n`
-					html += `模式: ${puzzleCoder.getModeName(this.puzzle.mode)}\n\n`
-					this.puzzle.randomRotate && this.randomRotate();
+					html += `难度: ${"★★★★★".slice(0, this.puzzle.level)}\n`;
+					html += `玩家: ${[,"黑棋","白棋"][this.playerSide]}\n`;
+					html += `规则: ${["无禁",,"禁手"][this.puzzle.rule]}\n`;
+					html += `模式: ${puzzleCoder.getModeName(this.puzzle.mode)}\n\n`;
+					(this.puzzle.randomRotate || rotate != undefined) ? this.randomRotate(rotate) : (this.rotate = 0);
 					!isLocation && (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE &&  delayCheckWin(1800);
 				}
 				html += this.puzzle.comment || ""
 				outputInnerHTML({
 					title: this.puzzle.title,
-					indexLabel: `${("000000" + this.index).slice(-(this.length).toString().length)} / ${this.length} 页`,
+					indexLabel: `${this.data && this.data.progress && this.data.progress[this.puzzles.index] && "✔" || ""}  ${this.index}`,
+					progressLabel: `(${this.data && this.data.progress ? this.data.progress.filter(v => v).length + "/" : ""}${this.puzzles.length})`,
 					comment: html.split("\n").join("<br>")
 				})
+				closeBoards();
+				}catch(e){console.error(e.stack)}
 			},
 			unpackCode() {
 				this.board.unpackCode(`${this.puzzle.stones}{${this.puzzle.blackStones}}{${this.puzzle.whiteStones}}`)
@@ -252,6 +489,7 @@
 				})
 			},
 			printLabels() {
+				console.log(this.puzzle.labels)
 				this.puzzle.labels && this.puzzle.labels.length && this.puzzle.labels.map(str => {
 					const [code, char] = str.split(",");
 					const idx = this.board.moveCode2Points(code)[0];
@@ -265,6 +503,7 @@
 				})
 			},
 			randomRotate(n	= Math.floor(Math.random() * 7)) {
+				this.rotate = n;
 				if (n >>> 2) {
 					this.board.rotateY180();
 					this.board.rotateMovesY180(this.options || []);
@@ -321,6 +560,40 @@
 				await this.checkWin(idx);
 				this.state == this.STATE.PLAYING && this.think()
 			},
+			async openJSON(file) {
+				try{
+				const newData = await puzzleData.jsonFile2Data(file, (progress) => outputInnerHTML({ indexLabel: `${(progress*100).toFixed(2)}%`, title: `${(progress*100).toFixed(2)}%` }));
+				const oldData = await puzzleData.getDataByKey(newData.key) || {};
+				
+				if(Object.keys(oldData).length) {
+					warn("不用重复添加题集");
+				}
+				else puzzleData.addData(newData);
+				//IndexedDB.clearStore("puzzle")
+				await this.loadJSON(newData.json)
+				}catch(e){console.error(e.stack)}
+			},
+			async loadJSON(jsonString) {
+				this.puzzles = puzzleCoder.renjuJSON2Puzzles(jsonString);
+				this.data = await puzzleData.getDataByIndex("json", jsonString);
+				this.puzzles.index = this.data && this.data[puzzleData.INDEX.INDEX] || 0;
+				this.reset();
+			},
+			async addDefaultPuzzles(path) {
+				this.defaultPuzzleTimes = await puzzleData.addDefaultPuzzles(path);
+			},
+			async continuePlay() {
+				try{
+				const proge = await puzzleData.getProgress();
+				if (proge) {
+					const data = await puzzleData.getDataByIndex("time", proge.time);
+					if (data) {
+						await this.loadJSON(data.json)
+						return;
+					}
+				}
+				}catch(e){console.error(e.stack)}
+			},
 			get state() { return this._state },
 			set state(st) {
 				this._state = st;
@@ -360,6 +633,7 @@
 				if (output.state) {
 					game.state = output.state;
 					if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
+						game.state == game.STATE.WIN && puzzleData.saveProgress(game);
 						output.tree && game.board.addTree(output.tree);
 						output.options && (game.board.cleLb("all"), game.continuePutStone(output.options))
 						output.warn && warn(output.warn, 1500);
@@ -378,7 +652,7 @@
 		}
 
 		function outputInnerHTML(param) {
-			const labels = { title, indexLabel, sideLabel, comment };
+			const labels = { title, indexLabel, progressLabel, sideLabel, comment };
 			Object.keys(param).map(key => labels[key] && (console.warn(param[key]), labels[key].innerHTML = param[key]))
 		}
 
@@ -463,20 +737,33 @@
 
 		cBoard.stonechange = function() {
 			if (this.tree) {
-				this.showBranchs(iHTML => comment.innerHTML = iHTML.split("<br><br>").join(""));
-				const arr = this.getArray();
-				arr.map((v, idx) => {
-					this.P[idx].type == TYPE_EMPTY && isFoul(idx, arr) && this.wLb(idx, "❌", "red")
-				})
+				this.showBranchs(iHTML => comment.innerHTML = iHTML.split("<br><br>").join("") || "<br>1.点击棋子悔棋<br>2.双击棋子悔到双击的那一手");
+				if (this.MSindex % 2) {
+					const arr = this.getArray();
+					arr.map((v, idx) => {
+						(this.P[idx].type & TYPE_NUMBER) != TYPE_NUMBER && isFoul(idx, arr) && this.wLb(idx, "❌", "red")
+					})
+				}
 			}
 		}
 
 		addEvents();
 		mainUI.loadTheme();
 		mainUI.viewport.resize();
-		game.reset()
 		puzzleAI.processOutput = processOutput;
 		self.cBoard = cBoard;
-		window.setBlockUnload(true)
+		window.setBlockUnload(true);
+		
+		const path = CUR_PATH + "json/";
+		await waitValueChange({get v() {return window.puzzleData}}, "v", undefined)
+		
+		const jsonStr = puzzleData.loadURL2JSON(window.location.href);
+		if (jsonStr) await game.loadJSON(jsonStr)
+		else await game.continuePlay();
+		await game.addDefaultPuzzles(path);
+		if (!jsonStr && !game.data && game.defaultPuzzleTimes.length) {
+			const data = await puzzleData.getDataByIndex("time", game.defaultPuzzleTimes[0]);
+			game.loadJSON(data.json)
+		}
 	} catch (e) { console.error(e.stack) }
 })()
