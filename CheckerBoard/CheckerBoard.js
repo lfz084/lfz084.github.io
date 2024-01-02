@@ -1063,16 +1063,17 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.01";
 
     Board.prototype.getCodeURL = function() {
         let codeURL = this.getCodeType(TYPE_NUMBER);
-        codeURL += "%" + this.getCodeType(TYPE_BLACK);
-        codeURL += "%" + this.getCodeType(TYPE_WHITE);
-        codeURL += "%" + this.size;
-        codeURL += "%" + this.resetNum;
+        codeURL += "&" + this.getCodeType(TYPE_BLACK);
+        codeURL += "&" + this.getCodeType(TYPE_WHITE);
+        codeURL += "&" + this.size;
+        codeURL += "&" + this.resetNum;
         return codeURL;
     }
 
 
     Board.prototype.parserCodeURL = function(codeURL) {
-        let code = codeURL.split("%"),
+    	codeURL = codeURL.replaceAll("%","&"); //兼容旧版本
+        let code = codeURL.split("&"),
             moves = checkerCode(code[0]),
             blackMoves = checkerCode(code[1]),
             whiteMoves = checkerCode(code[2]),

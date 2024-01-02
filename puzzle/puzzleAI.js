@@ -42,7 +42,7 @@ window.puzzleAI = (() => {
 		}
 
 		function strength(min, max) {
-			return Math.floor(min) + Math.floor(Math.random() * (max - min))
+			return Math.min(100, Math.floor(min) + Math.floor(Math.random() * (max - min)))
 		}
 
 		function gomocalcOutput(output) {
@@ -558,7 +558,7 @@ window.puzzleAI = (() => {
 			return logStr;
 		}
 
-		function gomocalcThink(game, side, min = 30, max = 100) {
+		function gomocalcThink(game, side, min = 30, max = 150) {
 			aiState = aiState | STATE_GOMOCALC_THINKING;
 			gomocalc.sendCommand(`RELOADCONFIG config-220723.toml`);
 			gomocalc.sendCommand(`INFO HASH_SIZE 262144`);

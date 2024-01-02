@@ -171,8 +171,8 @@
 	}
 	
 	function loadURL2JSON(url) {
-		const hash = url.split(/#/)[1] || "";
-		const arr = hash.split("%");
+		const hash = (url.split(/#/)[1] || "").replaceAll("%","&");
+		const arr = hash.split("&");
 		if (arr.length < 11) return ""
 		const labels = [];
 		const tempArr = (arr[11] || "").split(",");
@@ -200,17 +200,17 @@
 	function puzzle2URL(puzzle) {
 		puzzle.labels && puzzle.labels.map((v,i) => puzzle.labels[i] = v.slice(0, v.indexOf(",") + 1) + String.fromCharCode(Math.min(255,v.charCodeAt(v.indexOf(",") + 1))));
 		let codeURL = (puzzle.stones || "");
-		codeURL += "%" + (puzzle.blackStones || "");
-		codeURL += "%" + (puzzle.whiteStones || "");
-		codeURL += "%" + puzzle.size;
-		codeURL += "%" + 0;
-		codeURL += "%" + puzzle.side;
-		codeURL += "%" + puzzle.rule;
-		codeURL += "%" + puzzle.mode;
-		codeURL += "%" + puzzle.rotate;
-		codeURL += "%" + puzzle.level;
-		codeURL += "%" + (puzzle.options || "");
-		codeURL += "%" + (puzzle.labels || "");
+		codeURL += "&" + (puzzle.blackStones || "");
+		codeURL += "&" + (puzzle.whiteStones || "");
+		codeURL += "&" + puzzle.size;
+		codeURL += "&" + 0;
+		codeURL += "&" + puzzle.side;
+		codeURL += "&" + puzzle.rule;
+		codeURL += "&" + puzzle.mode;
+		codeURL += "&" + puzzle.rotate;
+		codeURL += "&" + puzzle.level;
+		codeURL += "&" + (puzzle.options || "");
+		codeURL += "&" + (puzzle.labels || "");
 		return codeURL;
 	}
 	
