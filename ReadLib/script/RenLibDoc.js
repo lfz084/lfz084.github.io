@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2024.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2024.02";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -259,9 +259,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc"] = "v2024.01";
 
             strNew.push(buffer[1]);
         }
-        strNew.length > 3 ? strNew.length = 3 : strNew;
+        /*
+        const buf = strNew.toString();
+        const boardText = TextCoder.decode(new Uint8Array(strNew), "GBK");
+        post("pushBoardText", {boardText, buf});
+        */
+        strNew.length > 4 ? strNew.length = 4 : strNew;
         pStrBoardText[0] = TextCoder.decode(new Uint8Array(strNew), "GBK");
-        //post("log", strNew)
         //post("log", `${strNew[0].toString(16)}${strNew[1].toString(16)} => ${pStrBoardText[0].charCodeAt(0).toString(16)}`)
         //post("log", pStrBoardText[0])
 

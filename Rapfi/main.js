@@ -544,7 +544,7 @@
     		await DBClient.closeDatabass();
     		RenjuLib.closeLib();
     		if (type == "db") {
-    			(await oldOpenFile.call(this, fileInput)) > 0 && (this.mode = this.MODE.DATABASS);
+    			(await oldOpenFile.call(this, fileInput)) > 0 && (this.mode = this.MODE.DATABASS) && (await oldshowBranchNodes.call(this));
     			btnEncoding.enabled = true;
     		}
     		else {

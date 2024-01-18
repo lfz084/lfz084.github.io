@@ -103,24 +103,6 @@ function array2DToArray(arr2D) {
 	return array;
 }
 
-function changeCoordinate(arr, idx = 112) {
-	const nArr = getArr2D([]);
-	const x = idx % 15;
-	const y = ~~(idx / 15);
-	const l = 7 - x;
-	const t = 7 - y;
-	for (let i = 0; i < 15; i++) {
-		for (let j = 0; j < 15; j++) {
-			let x1 = i - l;
-			let y1 = j - t;
-			if (x1 >= 0 && x1 < 15 && y1 >= 0 && y1 < 15) {
-				if (arr[y1][x1]) nArr[j][i] = arr[y1][x1];
-			}
-		}
-	}
-	return nArr;
-}
-
 //-------------------  坐标原点转换 ---------------------------
 
 function coordinateMove(htmlElement) {

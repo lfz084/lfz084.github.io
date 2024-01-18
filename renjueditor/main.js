@@ -8,6 +8,16 @@
     
     function log1(text) {document.getElementById("log1").innerText = text}
     
+    function randomly(games, loop = 5) {
+    	const len = games.length;
+    	while (loop-- > 0) {
+    		for(let i = 0; i < len; i++) {
+    			const randomIdx = parseInt(Math.random() * (len-1));
+    			const game = games.splice(i,1)[0];
+    			games.splice(randomIdx, 0, game);
+    		}
+    	}
+    }
     //-----------------------------------------------------------------------
     const MANUAL = 0;
     const UNLOCK = 1;
@@ -15,11 +25,8 @@
 
     let warn = true;
     let status = MANUAL;
-    let logDiv = null;
-    let logDiv1 = null;
     let filename = "download";
     let gameIndex = -1;
-    const games = [];
     const buttons = [];
     const BTNMODE_SETTINGS = [
     	-0, "残局分类", "disabled", 0,
@@ -44,14 +51,14 @@
     	-26, "找VCF防点", "radio", puzzleCoder.MODE.BASE_BLOCK_VCF,
     	-27, "防冲四抓禁", "radio", puzzleCoder.MODE.BASE_BLOCK_CATCH_FOUL,
     	-28, "找禁手点", "radio", puzzleCoder.MODE.BASE_FOUL,
-    	-29, "找三三禁手", "radio", puzzleCoder.MODE.BASE_FOUL_33,
-    	-30, "找四四禁手", "radio", puzzleCoder.MODE.BASE_FOUL_44,
-    	-31, "找长连禁手", "radio", puzzleCoder.MODE.BASE_FOUL_6,
-    	-32, "找活三", "radio", puzzleCoder.MODE.BASE_FREE_THREE,
-    	-33, "找复活三", "radio", puzzleCoder.MODE.BASE_REVIVE_FREE_THREE,
-    	-34, "找眠三", "radio", puzzleCoder.MODE.BASE_NOTFREE_THREE,
-    	-35, "找活四", "radio", puzzleCoder.MODE.BASE_FREE_FOUR,
-    	-36, "找冲四", "radio", puzzleCoder.MODE.BASE_NOTFREE_FOUR];
+    	-29, "找三三禁手点", "radio", puzzleCoder.MODE.BASE_FOUL_33,
+    	-30, "找四四禁手点", "radio", puzzleCoder.MODE.BASE_FOUL_44,
+    	-31, "找长连禁手点", "radio", puzzleCoder.MODE.BASE_FOUL_6,
+    	-32, "找活三点", "radio", puzzleCoder.MODE.BASE_FREE_THREE,
+    	-33, "找复活三点", "radio", puzzleCoder.MODE.BASE_REVIVE_FREE_THREE,
+    	-34, "找眠三点", "radio", puzzleCoder.MODE.BASE_NOTFREE_THREE,
+    	-35, "找活四点", "radio", puzzleCoder.MODE.BASE_FREE_FOUR,
+    	-36, "找冲四点", "radio", puzzleCoder.MODE.BASE_NOTFREE_FOUR];
     const buttonSettings = [
         {
         	varName: "btnFile",
@@ -112,25 +119,13 @@
         	type: "button",
         	text: "加入题集",
         	touchend: function() {
-        		if (warn && (cBoard.SLTX < 15 || cBoard.SLTY < 15)) {
+        		if (warn && (cBoard.SLTX != miniBoard.size || cBoard.SLTY != miniBoard.size)) {
         			warn = false;
         			msgbox({ text: `长按图片天元点可对齐棋盘\n（鼠标可右键代替长按）`, btnNum: 1 });
         		}
         		const array = cBoard.getArray();
-        		array.find(v => v > 0) ? (pushGame(array), loadGame(gameIndex), window.setBlockUnload(true)) : window.warn("空棋盘");
+        		array.find(v => v > 0) ? (pushGame(createGame(array)), loadGame(gameIndex), window.setBlockUnload(true)) : window.warn("空棋盘");
         	}
-        },
-        {
-            varName: "btnBlack",
-            type: "radio",
-            text: "● 棋",
-            touchend: () => setColor(1)
-        },
-        {
-            varName: "btnWhite",
-            type: "radio",
-            text: "○ 棋",
-            touchend: () => setColor(2)
         },
         {
             type: "select",
@@ -172,7 +167,37 @@
 				option.li.click();
             }
         },
-        mainUI.createMiniBoard({varName: "miniBoard"}),
+        {
+            varName: "btnAuto",
+            type: "radio",
+            text: "◐ 棋",
+            group: "side1",
+			touchend: function() {}
+        },
+        {
+            varName: "btnBlack",
+            type: "radio",
+            text: "● 棋",
+            group: "side1",
+            touchend: function(){}
+        },
+        {
+            varName: "btnWhite",
+            type: "radio",
+            text: "○ 棋",
+            group: "side1",
+            touchend: function(){}
+        },
+        {
+            varName: "btnLabel",
+            type: "select",
+            text: "ABC...",
+            group: "side1",
+            mode: "radio",
+            options: [0, "ABC...", 1, "abc...", 2, "123..."],
+            touchend: function(){setcBoardClick()},
+            change: function(){setcBoardClick()}
+        },
         {
             type: "button",
             text: "上一题",
@@ -182,6 +207,84 @@
             type: "button",
             text: "下一题",
             touchend: () => nextGame()
+        },
+        mainUI.createMiniBoard({varName: "miniBoard"}),
+        mainUI.newTextBox({
+        	varName: "titleBox",
+        	width: (mainUI.buttonWidth * 2.33),
+        	height: mainUI.buttonHeight * 1,
+        	style: {
+        		fontSize: `${mainUI.buttonHeight / 1.8}px`,
+        		borderStyle: "solid",
+        		borderWidth: `${mainUI.buttonHeight / 1.8 / 20}px`,
+        		borderColor: "black",
+        		background: "white",
+        		padding: "0"
+        	},
+        	click: function() {
+        		this.viewElem.rows = 1;
+        	}
+        }),
+        mainUI.newTextBox({
+        	varName: "commentBox",
+        	width: (mainUI.buttonWidth * 2.33),
+        	height: mainUI.buttonHeight * 4,
+        	style: {
+        		fontSize: `${mainUI.buttonHeight / 1.8}px`,
+        		wordBreak: "break-all",
+        		overflowY: "auto",
+        		borderStyle: "solid",
+        		borderWidth: `${mainUI.buttonHeight / 1.8 / 20}px`,
+        		borderColor: "black",
+        		background: "white",
+        		padding: "0"
+        	},
+        	click: () => {
+        	
+        	}
+        }),
+        {
+            type: "btnRotate90",
+            text: "↗90°",
+            touchend: () => {
+    			miniBoard.rotate90(true)
+    			
+            }
+        },
+        {
+            type: "btnRotate180",
+            text: "↔180°",
+            touchend: () => {
+            	miniBoard.rotate180(true)
+            }
+        },
+        {
+            type: "btnUp",
+            text: "↑",
+            touchend: () => {
+            	miniBoard.translate(-1, 0)
+            }
+        },
+        {
+            type: "btnDown",
+            text: "↓",
+            touchend: () => {
+            	miniBoard.translate(1, 0)
+            }
+        },
+        {
+            type: "btnLeft",
+            text: "←",
+            touchend: () => {
+            	miniBoard.translate(0, -1)
+            }
+        },
+        {
+            type: "btnRight",
+            text: "→",
+            touchend: () => {
+            	miniBoard.translate(0, 1)
+            }
         },
         {
             type: "button",
@@ -246,7 +349,7 @@
 			change: function() {
 			},
 			reset: function() {
-				const option = this.getOption(null, "VCT");
+				const option = this.getOption(null, "自由对弈");
 				option.li.click();
 			},
 			onhidemenu: function() {}
@@ -292,39 +395,24 @@
                 }
                 setBusy(false);
             }
-        },
-        mainUI.newTextBox({
-        	varName: "commentBox",
-        	width: (mainUI.buttonWidth * 4.99),
-        	height: mainUI.buttonHeight * 2,
-        	style: {
-        		fontSize: `${mainUI.buttonHeight / 1.8}px`,
-        		wordBreak: "break-all",
-        		overflowY: "auto",
-        		borderStyle: "solid",
-        		borderWidth: `${mainUI.buttonHeight / 1.8 / 20}px`,
-        		borderColor: "black",
-        		background: "white",
-        		padding: "0"
-        	},
-        	click: () => {
-        	
-        	}
-        })
+        }
     ];
     
     buttonSettings.splice(0, 0, createLogDiv(), null,null,null);
-    buttonSettings.splice(12, 0, createLogDiv1(),null);
-    buttonSettings.splice(17, 0, null);
-    buttonSettings.splice(20, 0, null, null);
+    buttonSettings.splice(16, 0, createLogDiv1(),null);
+    buttonSettings.splice(21, 0, null);
+    buttonSettings.splice(23, 0, null);
     buttonSettings.splice(24, 0, null, null);
+    buttonSettings.splice(27, 0, null);
+    buttonSettings.splice(28, 0, null, null, null, null);
+    buttonSettings.splice(28, 0, null, null, null, null);
     buttonSettings.splice(28, 0, null, null);
-    buttonSettings.splice(32, 0, null, null);
     
     function createCmdDiv() {
         const cDiv = mainUI.createCmdDiv();
         buttons.push(...mainUI.createButtons(buttonSettings));
         mainUI.addButtons(buttons, cDiv, 3);
+        dw > dh && (cDiv.viewElem.style.overflowY = "auto");
         return cDiv;
     }
 
@@ -389,10 +477,13 @@
     	btnSize,
     	btnMode,
     	btnLock,
+    	btnAuto,
     	btnBlack,
     	btnWhite,
+    	btnLabel,
     	btnSave,
     	btnEdit,
+    	titleBox,
     	commentBox,
     	btnRandomRotate
     } = mainUI.getChildsForVarname();
@@ -413,6 +504,66 @@
     }
     
     //------------------------ GAMES ------------------------ 
+    const games = [];
+    
+    function mapLb(callback) {
+    	cBoard.map(p => {
+    		p.type != TYPE_NUMBER && callback(p);
+    	})
+    }
+    
+    function getMaxChar(startChar = "A") { // 搜索棋盘上最大的字母;
+    	let code = startChar.charCodeAt();
+    	mapLb(p => {
+    		if (p.text.length == 1) {
+    			let tcode = p.text.charCodeAt(0);
+    			if (tcode >= code && tcode <= (code + 25))
+    				code = tcode < (code + 25) ? tcode + 1 : tcode;
+    		}
+    	})
+    	return String.fromCharCode(code);
+    }
+    
+    function getMaxNum(minNum = 1, maxNum = 225) {
+    	let code = minNum;
+    	mapLb(p => {
+    		let tcode = p.text * 1;
+    		if (tcode >= code && tcode <= maxNum) {
+    			code = tcode < maxNum ? tcode + 1 : tcode;
+    		}
+    	})
+    	return code;
+    }
+
+    function wLb(board, idx, txt) {
+    	const type = board.P[idx] && board.P[idx].type;
+    	if (type == TYPE_EMPTY) {
+    		board.wLb(idx, txt, board.bNumColor)
+    	}
+    	else if((type & TYPE_NUMBER) == TYPE_NUMBER) {
+    		board.P[idx].text = txt;
+    		board._printPoint(idx, true);
+    	}
+    }
+    
+    function cleLb(board, idx) {
+    	const type = board.P[idx] && board.P[idx].type;
+    	if (type == TYPE_MARK) {
+    		board.cleLb(idx)
+    	}
+    	else if((type & TYPE_NUMBER) == TYPE_NUMBER) {
+    		board.P[idx].text = "";
+    		board._printPoint(idx, true);
+    	}
+    }
+    
+    function printLabels(board, labels = []) {
+    	labels.map(str => {
+    		const [code,label] = str.split(",");
+    		const idx = board.moveCode2Points(code)[0];
+    		wLb(board, idx, label);
+    	})
+    }
     
     function getArray(game) {
     	const size = getSize();
@@ -451,9 +602,39 @@
     	return btnSize.input.value * 1;
     }
     
+    function getTitle(gameIndex) {
+    	const game = games[gameIndex];
+    	return (game && game.title || "").split("\n").join("");
+    }
+    
     function getComment(gameIndex) {
     	const game = games[gameIndex];
-    	return game && game.comment && game.comment.split("\n").join("\\n").split("\t").join("\\t") || "";
+    	return game && game.comment || "";
+    }
+    
+    function getLabels(gameIndex) {
+    	const game = games[gameIndex];
+    	return game && game.labels;
+    }
+    
+    function setLabels(game, board = cBoard) {
+    	const labels = [];
+    	board.P.map((p, i) => {
+    		const type = p.type;
+    		p.type != TYPE_NUMBER && p.text && p.text != EMOJI_STAR_BLACK && labels.push(`${board.points2MoveCode([i])},${p.text}`)
+    	})
+    	labels.length && (game.labels = labels)
+    }
+    
+    function createGame(array) {
+    	if(cBoard.MS.length) {
+    		array.stones = cBoard.getCodeType(TYPE_NUMBER) || undefined;
+    		array.blackStones = cBoard.getCodeType(TYPE_BLACK) || undefined;
+    		array.whiteStones = cBoard.getCodeType(TYPE_WHITE) || undefined;
+    		array.sequence = cBoard.MSindex + 1;
+    	}
+    	setLabels(array);
+    	return array;
     }
     
     function getRandomRotate() {
@@ -477,8 +658,21 @@
     			rule: getRapfiRule(),
     			size: getSize(),
     			modes: getModes(),
+    			title: getTitle(i),
     			comment: getComment(i),
-    			randomRotate: getRandomRotate()
+    			labels: getLabels(i),
+    			randomRotate: getRandomRotate(),
+    			stones: game.stones,
+    			blackStones: game.blackStones,
+    			whiteStones: game.whiteStones,
+    			options: game.options,
+    			mark: game.mark,
+    			mode: game.mode,
+    			level: game.level,
+    			image: game.image,
+    			rotate: game.rotate,
+    			delayHelp: game.delayHelp,
+    			sequence: game.sequence
     		})
     	})
     	return puzzles;
@@ -502,10 +696,18 @@
     }
 
     function loadGame(idx) {
-        if (0 <= idx && idx < games.length) {
+    	if (0 <= idx && idx < games.length) {
             gameIndex = idx;
-            miniBoard.unpackArray(games[gameIndex]);
-            commentBox.value = games[gameIndex].comment || "";
+            const game = games[gameIndex];
+            (game.stones || game.blackStones || game.whiteStones) ? miniBoard.unpackCode(`${game.stones}{${game.blackStones}}{${game.whiteStones}}`, undefined, true) : miniBoard.unpackArray(game);
+            titleBox.value = game.title || "";
+            commentBox.value = game.comment || "";
+            log1(`第${gameIndex+1}题 / ${games.length}题`);
+            printLabels(miniBoard, game.labels);
+        }
+        else if(games.length == 0) {
+        	miniBoard.cle();
+        	titleBox.value = commentBox.value = "";
             log1(`第${gameIndex+1}题 / ${games.length}题`);
         }
     }
@@ -521,21 +723,13 @@
     
     //------------------------ 
 
-    function setColor(color) {
-        btnBlack.setChecked(color == 1);
-        btnWhite.setChecked(color == 2);
-    }
-
-    function getColor() {
-        return btnBlack.checked ? "black" : "white";
-    }
-
     async function lockArea() {
         if (status == UNLOCK) {
             setFirstArea();
             btnLock.setChecked(true);
             await cBoard.lockArea();
-            setColor(2);
+            btnWhite.defaultontouchend();
+            setcBoardClick();
             status = LOCK;
         }
     }
@@ -578,6 +772,114 @@
     
     //------------------------ Events ---------------------------
 
+    let cBoardClickLockMode = ()=>{};
+    let cBoardClickManualMode = ()=>{};
+    
+    function setcBoardClick() {
+    	if (btnAuto.checked) {
+    		cBoardClickLockMode = autoStoneLockMode;
+    		cBoardClickManualMode = autoStoneLockMode;
+    	}
+    	else if (btnBlack.checked) {
+    		cBoardClickLockMode = blackStoneLockMode;
+    		cBoardClickManualMode = blackStoneManualMode;
+    	}
+    	else if (btnWhite.checked) {
+    		cBoardClickLockMode = whiteStoneLockMode;
+    		cBoardClickManualMode = whiteStoneManualMode;
+    	}
+    	else {
+    		const getChar = [getMaxChar, () => getMaxChar("a"), getMaxNum][btnLabel.input.value];
+    		cBoardClickLockMode = (idx) => labelLockMode(idx, getChar());
+    		cBoardClickManualMode = (idx) => labelManualMode(idx, getChar());
+    	}
+    }
+    
+    function autoStoneLockMode(idx) {
+    	if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+    		cBoard.cleNb(idx, true);
+    	}
+    	else if (cBoard.P[idx].type == TYPE_EMPTY) {
+    		cBoard.wNb(idx, "auto", true);
+    	}
+    }
+    
+    function blackStoneLockMode(idx) {
+    	if (cBoard.P[idx].type == TYPE_NUMBER) {
+    		cBoard.cleNb(idx, true);
+    	}
+    	else if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+    		cBoard.P[idx].cle();
+    	}
+    	else if (cBoard.P[idx].type == TYPE_EMPTY) {
+    		cBoard.P[idx].printNb(EMOJI_STAR_BLACK, "black", cBoard.gW, cBoard.gH, cBoard.bNumColor);
+    	}
+    }
+    
+    function whiteStoneLockMode(idx) {
+    	if (cBoard.P[idx].type == TYPE_NUMBER) {
+    		cBoard.cleNb(idx, true);
+    	}
+    	else if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+    		cBoard.P[idx].cle();
+    	}
+    	else if (cBoard.P[idx].type == TYPE_EMPTY) {
+    		cBoard.P[idx].printNb(EMOJI_STAR_BLACK, "white", cBoard.gW, cBoard.gH, cBoard.wNumColor);
+    	}
+    }
+    
+    function blackStoneManualMode(idx) {
+    	if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+    		cBoard.cleNb(idx, true);
+    	}
+    	else if (cBoard.P[idx].type == TYPE_EMPTY) {
+    		cBoard.wNb(idx, "black", true)
+    	}
+    }
+    
+    function whiteStoneManualMode(idx) {
+    	if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+    		cBoard.cleNb(idx, true);
+    	}
+    	else if (cBoard.P[idx].type == TYPE_EMPTY) {
+    		cBoard.wNb(idx, "white", true)
+    	}
+    }
+    
+    function labelLockMode(idx, txt) {
+    	if (cBoard.P[idx].type == TYPE_NUMBER) return;
+    	const type = cBoard.P[idx].type;
+    	const color1 = cBoard.P[idx].color;
+    	const color = color1 == cBoard.bNumColor ? "black" : "white";
+    			
+    	if (cBoard.P[idx].text && cBoard.P[idx].text != EMOJI_STAR_BLACK) {
+    		if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+    			cBoard.P[idx].printNb("", color, cBoard.gW, cBoard.gH, color1);
+    			cBoard.P[idx].type = type;
+    		}
+    		else
+    			cleLb(cBoard, idx);
+    	}
+    	else {
+    		if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+    			cBoard.P[idx].printNb(txt, color, cBoard.gW, cBoard.gH, color1);
+    			cBoard.P[idx].type = type;
+    		}
+    		else
+    			wLb(cBoard, idx, txt);
+    	}
+    }
+    
+    function labelManualMode(idx, txt) {
+    	if (cBoard.P[idx].type == TYPE_NUMBER) return;
+    	if (cBoard.P[idx].text) {
+    		cleLb(cBoard, idx);
+    	}
+    	else {
+    		wLb(cBoard, idx, txt);
+    	}
+    }
+    
     function addEvents(cbd) {
         function ctnBack(idx) { // 触发快速悔棋
             if (idx + 1 && cbd.P[idx].type == TYPE_NUMBER) {
@@ -592,14 +894,8 @@
         bindEvent.addEventListener(cbd.viewBox, "click", (x, y) => {
             if (status == LOCK) {
                 const idx = cbd.getIndex(x, y);
-                if (idx < 0) return;
-                const color = getColor();
-                if (cbd.P[idx].type != TYPE_EMPTY) {
-                    cbd.P[idx].cle();
-                }
-                else {
-                    cbd.P[idx].printNb(EMOJI_STAR_BLACK, color, cbd.gW, cbd.gH, color == "white" ? cbd.wNumColor : cbd.bNumColor);
-                }
+    			if (idx < 0) return;
+    			cBoardClickLockMode(idx);
             }
             else if (status == UNLOCK) {
                 const p = { x: x, y: y };
@@ -610,13 +906,8 @@
             }
             else if (status == MANUAL) {
                 const idx = cbd.getIndex(x, y);
-                if (idx < 0) return;
-                if (cbd.P[idx].type != TYPE_EMPTY) {
-                    cbd.cleNb(idx, true);
-                }
-                else {
-                    cbd.wNb(idx, "auto", true);
-                }
+    			if (idx < 0) return;
+    			cBoardClickManualMode(idx)
             }
         })
         bindEvent.addEventListener(cbd.viewBox, "dblclick", (x, y) => {
@@ -631,10 +922,13 @@
         bindEvent.addEventListener(cbd.viewBox, "contextmenu", (x, y) => {
             if (status == UNLOCK) cbd.selectArea(x, y)
             else if (status == LOCK) {
-                const idx = cbd.getIndex(x, y);
+            	const idx = cbd.getIndex(x, y);
                 if (idx < 0) return;
-                const arr = array2DToArray(changeCoordinate(cbd.getArray2D(), idx));
-        		arr.find(v => v > 0) ? (pushGame(arr), loadGame(gameIndex), window.setBlockUnload(true)) : window.warn("空棋盘");
+                const moveX = ~~((miniBoard.size - 1) / 2) - (idx % 15);
+                const moveY = ~~((miniBoard.size - 1) / 2) - ~~(idx / 15);
+                cBoard.translate(moveY, moveX);
+        		const arr = cBoard.getArray();
+        		arr.find(v => v > 0) ? (pushGame(createGame(arr)), loadGame(gameIndex), window.setBlockUnload(true)) : window.warn("空棋盘");
             }
         })
         bindEvent.addEventListener(cbd.viewBox, "zoomstart", (x1, y1, x2, y2) => {
@@ -647,6 +941,7 @@
         bindEvent.addEventListener(miniBoard.viewBox, "contextmenu", (x, y) => {
 			miniBoard.setScale(miniBoard.scale != 1 ? 1 : 1.5, true);
 		})
+		titleBox.viewElem.addEventListener("input", () => games[gameIndex] && (games[gameIndex].title = titleBox.value))
 		commentBox.viewElem.addEventListener("input", () => games[gameIndex] && (games[gameIndex].comment = commentBox.value))
     }
 
@@ -667,6 +962,9 @@
 	
 	//------------------ load -----------------------------
 	
+	
+    btnAuto.defaultontouchend();
+    setcBoardClick();
     addEvents(cBoard);
     mainUI.loadTheme();
     mainUI.viewport.resize();

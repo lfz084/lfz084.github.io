@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.02";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -387,8 +387,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.01";
         let size;
         let temp;
         this.color = numColor;
-        this.type = TYPE_NUMBER;
         this.text = String(n);
+        this.type = color == "black" ? TYPE_BLACK : TYPE_WHITE;
         this.d.innerHTML = this.text;
         temp = (gW < gH) ? gW : gH;
         size = (color == "black" || color == "white") ? ~~(temp / 4 * 1.5) : ~~(temp / 4 * 3);
@@ -489,7 +489,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.01";
 
     function rotate90_MS() {
         transform_MS.call(this, (i, x, y) => {
-            let x1 =  this.SLTY - 1 - y,
+        	let x1 =  this.SLTY - 1 - y,
             	y1 =  x;
             this.MS[i] = y1 * 15 + x1;
         });
@@ -538,7 +538,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.01";
 
     function rotateY180_P() {
         transform_P.call(this, (x, y, arr2d) => {
-            let x1 = this.SLTX - 1 - x;
+        	let x1 = this.SLTX - 1 - x;
             this.P[y * 15 + x] = arr2d[y][x1];
         })
     }
@@ -1097,7 +1097,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.01";
     
     Board.prototype.showStone = function(idx, type = TYPE_NUMBER) {
     	this.stoneDiv.setAttribute("class", "stoneReady");
-    	this.stoneDiv.style.opacity = "0.8";
+    	this.stoneDiv.style.opacity = "0.6";
     	this.stoneDiv.style.transform = `scale(0.8)`;
     	putStone.call(this, idx, type) && (this.startIdx = idx);
     }
@@ -1209,7 +1209,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.01";
         let type = this.P[idx].type;
         if (type == TYPE_NUMBER || type == TYPE_WHITE || type == TYPE_BLACK) {
             if (showNum && this.P[idx].text) { // 显示数字
-                txt = this.P[idx].type == TYPE_NUMBER ? String(parseInt(this.P[idx].text) - this.resetNum) : this.P[idx].text;
+                txt = this.P[idx].type == TYPE_NUMBER && parseInt(this.P[idx].text) ? String(parseInt(this.P[idx].text) - this.resetNum) : this.P[idx].text;
                 txt = parseInt(txt) < 1 ? "" : txt;
             }
             pointInfo = {
@@ -1253,8 +1253,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.01";
                 }
             }
             else if (txt.length >= 3) {
-                fontSize = ~~(w * 2.7 / txt.split(".").join("").length);
-                radius = txt.length > 3 ? w * 1.18 : radius;
+            	const strLen = [...txt.split(".").join("")].reduce((a,c,i,arr) => {
+            		return a + (arr[i].charCodeAt(0) < 256 ? 1 : 1.39)
+            	},0)
+                fontSize = ~~(w * 3.3 / strLen);
+                radius = strLen > 3 ? w * 1.18 : radius;
             }
             pointInfo = {
                 circle: {

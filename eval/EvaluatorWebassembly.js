@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2024.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2024.02";
 
 function loadEvaluatorWebassembly() {
 

@@ -580,7 +580,7 @@ window.mainUI = (function() {
 			key = key.toLowerCase();
 			if (key.indexOf("on") == -1) key = "on" + key;
 			if (window.bindEvent)
-				bindEvent.addEventListener(this.viewElem, key.slice(2), event[key]);
+				bindEvent.addEventListener(this.viewElem, key.slice(2), event[key].bind(this));
 			else
 				this.viewElem[key] = event[key];
 		}

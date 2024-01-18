@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2024.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2024.02";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -210,7 +210,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenLibDoc_wasm"] = "v2024.01";
             strNew.push(buf[i]);
         }
         strNew = TextCoder.decode(new Uint8Array(strNew), "GBK");
-        return strNew.length > 3 ? strNew.slice(0, 3) : strNew;
+        strNew = strNew.length > 4 ? strNew.slice(0, 4) : strNew;
+        return strNew.split(" ").join("");
     }
 
     function getComment(pBuffer) {

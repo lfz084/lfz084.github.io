@@ -96,7 +96,7 @@
 		const puzzles = await puzzleCoder.loadJSON2Puzzles(fileOrJSONString, callback);
 		const key = isString ? fileOrJSONString : await fileOrJSONString.text();
 		const json = await puzzleCoder.puzzles2RenjuJSON(puzzles);
-		const title = puzzles.currentPuzzle.title;
+		const title = puzzles.defaultSettings.title || puzzles.currentPuzzle.title;
 		const progress = new Array(puzzles.length).fill(0);
 		const time = new Date().getTime();
 		const newData = {
@@ -116,8 +116,11 @@
 			"例题演示.json",
     		"一手の詰連珠HT_puzzle.json",
 			"ひとりでも楽しめる詰連珠の部屋_puzzle.json",
-    		"白先胜100题_puzzle.json",
+			"詰連珠・入門 ～5までの追詰め問題～_puzzle.json",
+			"珠々の詰連珠_puzzle.json",
+			"白先胜100题_puzzle.json",
     		"三手胜五子棋题解_puzzle.json",
+    		"黑先VCF_puzzle.json",
     		"白先VCF_puzzle.json",
     		"六路连珠习题1_puzzle.json",
     		"六路连珠习题2_puzzle.json",
@@ -127,11 +130,17 @@
     		"大道五目_puzzle.json",
     		"美味诘连珠.中村茂_puzzle.json",
     		"天狗道场_puzzle.json",
+    		"新图巧百番_puzzle.json",
     		"高村政则诘连珠_puzzle.json",
+    		"五子棋发阳论残本1.4_puzzle.json",
+    		"第一届画眉杯双杀赛_puzzle.json",
     		"解题大赛合集_01_(12,22,23)_puzzle.json",
     		"解题大赛合集_02_(25,28,31)_puzzle.json",
     		"解题大赛合集_03_(36,40,42,43)_puzzle.json",
-    		"解题大赛合集_04_(46,48,49,50)_puzzle.json"
+    		"解题大赛合集_04_(46,48,49,50)_puzzle.json",
+    		"解题大赛合集_05_(1~10)_puzzle.json",
+    		"解题大赛合集_06_(11~20)_puzzle.json",
+    		"解题大赛合集_07_(21~47)_puzzle.json"
 			];
 		for (let i = 0; i < fileNames.length; i++) {
 			const jsonString = await window.loadTxT(path + fileNames[i]);

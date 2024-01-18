@@ -7,7 +7,75 @@
 		const CUR_PATH = document.currentScript.src.slice(0, document.currentScript.src.lastIndexOf("/") + 1);
 		
 		async function wait(timeout = 0) { return new Promise(resolve => setTimeout(resolve, timeout)) }
-
+		
+		const menuSettings = [{
+				varName: "btnRule",
+				type: "select",
+				text: "有禁",
+				options: [
+					2, "有禁规则", "radio", 
+					0, "无禁规则", "radio"
+				],
+				onshowmenu: function() {
+					[...this.input].map(op => op.checked = op.value == game.puzzle.rule);
+				},
+				change: function() {
+					if (game.puzzle.rule == this.input.value) return
+					game.puzzle.rule = this.input.value;
+					game.reset(game.rotate, game.puzzle)
+				}
+			},
+			{
+				varName: "btnMode",
+				type: "select",
+				text: "VCT",
+				options: [
+					puzzleCoder.MODE.VCT, "VCT模式", "radio",
+					puzzleCoder.MODE.VCF, "VCF模式", "radio",
+					puzzleCoder.MODE.VCT3, "三手胜模式", "radio",
+					puzzleCoder.MODE.FREE, "自由对弈模式", "radio"
+				],
+				onshowmenu: function() {
+					[...this.input].map(op => op.checked = op.value == game.puzzle.mode);
+				},
+				change: function() {
+					if (game.puzzle.mode == this.input.value) return
+					game.puzzle.mode = this.input.value;
+					game.puzzle.comment = puzzleCoder.MODE_COMMENT[game.puzzle.mode];
+					game.reset(game.rotate, game.puzzle)
+				}
+			},
+			{
+				varName: "btnRotate",
+				type: "select",
+				text: "旋转",
+				options: [
+					0, "允许旋转棋局", "radio",
+					1, "禁止旋转棋局", "radio"
+				],
+				onshowmenu: function() {
+					[...this.input].map(op => op.checked = !!(op.value*1) == game.notRotate);
+				},
+				change: function() {
+					game.notRotate = !!(this.input.value*1)
+				}
+			},
+			{
+				varName: "btnStrength",
+				type: "select",
+				text: "随机",
+				options: [
+					30, "AI随机变招", "radio",
+					100, "AI最强招法", "radio"
+				],
+				onshowmenu: function() {
+					[...this.input].map(op => op.checked = op.value == game.strength);
+				},
+				change: function() {
+					game.strength = this.input.value;
+				}
+			}];
+				
 		const gameButtonSettings = [
 		mainUI.newLabel({
 				varName: "title",
@@ -20,14 +88,14 @@
 					lineHeight: `${mainUI.buttonHeight}px`
 				},
 				click: () => {
-
+					btnOpenPuzzles.touchend()
 				}
 			}),
 		mainUI.newComment({
 				varName: "comment",
 				type: "div",
 				width: (mainUI.buttonWidth * 4.99 - mainUI.buttonHeight / 1.8) / 2,
-				height: mainUI.buttonHeight * 8.5,
+				height: mainUI.buttonHeight * 11,
 				style: {
 					fontSize: `${mainUI.buttonHeight / 1.8}px`,
 					wordBreak: "break-all",
@@ -56,6 +124,62 @@
 
 				}
 			}),
+		mainUI.newLabel({
+				varName: "strengthLabel",
+				type: "div",
+				width: mainUI.buttonWidth,
+				height: mainUI.buttonHeight,
+				style: {
+					fontSize: `${mainUI.buttonHeight / 1.8}px`,
+					textAlign: "center",
+					lineHeight: `${mainUI.buttonHeight}px`
+				},
+				click: () => {
+					game.puzzle.mode != puzzleCoder.MODE.COVER && game.puzzle.mode < puzzleCoder.MODE.BASE && btnStrength.defaultontouchend()
+				}
+			}),
+		mainUI.newLabel({
+				varName: "rotateLabel",
+				type: "div",
+				width: mainUI.buttonWidth,
+				height: mainUI.buttonHeight,
+				style: {
+					fontSize: `${mainUI.buttonHeight / 1.8}px`,
+					textAlign: "center",
+					lineHeight: `${mainUI.buttonHeight}px`
+				},
+				click: () => {
+					btnRotate.defaultontouchend()
+				}
+			}),
+		mainUI.newLabel({
+			varName: "ruleLabel",
+			type: "div",
+			width: mainUI.buttonWidth,
+			height: mainUI.buttonHeight,
+			style: {
+				fontSize: `${mainUI.buttonHeight / 1.8}px`,
+				textAlign: "center",
+				lineHeight: `${mainUI.buttonHeight}px`
+			},
+			click: function() {
+				game.puzzle.mode != puzzleCoder.MODE.COVER && game.puzzle.mode < puzzleCoder.MODE.BASE && btnRule.defaultontouchend()
+			}
+		}),
+		mainUI.newLabel({
+			varName: "modeLabel",
+			type: "div",
+			width: mainUI.buttonWidth,
+			height: mainUI.buttonHeight,
+			style: {
+				fontSize: `${mainUI.buttonHeight / 1.8}px`,
+				textAlign: "center",
+				lineHeight: `${mainUI.buttonHeight}px`
+			},
+			click: function() {
+				game.puzzle.mode != puzzleCoder.MODE.COVER && game.puzzle.mode < puzzleCoder.MODE.BASE && btnMode.defaultontouchend()
+			}
+		}),
 		mainUI.newLabel({
 				varName: "indexLabel",
 				type: "div",
@@ -97,16 +221,16 @@
 				touchend: function() { game.next() }
 				},
 			{
-				varName: "btnOpenPuzzles",
+				varName: "btnShare",
 				type: "button",
-				text: "选择题集",
-				touchend: function() {openItemBoard()}
-				},
+				text: "分享图片",
+				touchend: function() { window.share(cBoard) }
+			},
 			{
 				varName: "btnReset",
 				type: "button",
 				text: "重新开始",
-				touchend: function() { game.reset(game.rotate) }
+				touchend: function() { game.reset(game.rotate, game.puzzle) }
 				},
 			{
 				varName: "btnShareURL",
@@ -125,11 +249,11 @@
 				touchend: function() { game.state == game.STATE.PLAYING && game.board.MSindex % 2 && puzzleAI.aiHelp(game) }
 		},
 			{
-				varName: "btnShare",
+				varName: "btnOpenPuzzles",
 				type: "button",
-				text: "分享图片",
-				touchend: function() { window.share(cBoard) }
-		},
+				text: "选择题集",
+				touchend: function() {openItemBoard()}
+			},
 			{
 				varName: "btnOpenJSON",
 				type: "file",
@@ -148,24 +272,36 @@
 		gameButtonSettings.splice(5,0,null);
 		gameButtonSettings.splice(7,0,null);
 		gameButtonSettings.splice(8,0,null,null);
-		//gameButtonSettings.splice(11,0,null);
 		gameButtonSettings.splice(12,0,null,null);
 		gameButtonSettings.splice(16,0,null,null);
 		gameButtonSettings.splice(20,0,null,null);
 		gameButtonSettings.splice(24,0,null,null);
-
-		const busyCmdDiv = mainUI.createCmdDiv();
+		gameButtonSettings.splice(28,0,null,null);
+		gameButtonSettings.splice(32,0,null,null);
+		
+		const hideCmdDiv = mainUI.createCmdDiv();
 		const renjuCmdDiv = mainUI.createCmdDiv();
 		const cBoard = mainUI.createCBoard();
+		hideCmdDiv.hide();
+		mainUI.addButtons(mainUI.createButtons(menuSettings), hideCmdDiv, 0);
 		mainUI.addButtons(mainUI.createButtons(gameButtonSettings), renjuCmdDiv, 1);
 
 		const {
 			title,
 			sideLabel,
+			ruleLabel,
+			modeLabel,
 			indexLabel,
+			strengthLabel,
+			rotateLabel,
 			progressLabel,
 			comment,
-			btnAIHelp
+			btnAIHelp,
+			btnRule,
+			btnMode,
+			btnRotate,
+			btnStrength,
+			btnOpenPuzzles
 		} = mainUI.getChildsForVarname();
 		
 		const boardWidth = 5;
@@ -240,38 +376,52 @@
 			}catch(e){console.error(e.stack)}
 		}
 		
-		async function openItemBoard() {
-			if (!itemBoard.viewElem.parentNode) {
-				itemBoard.show();
-				for (let i = 0; i < game.defaultPuzzleTimes.length; i++) {
-					const data = await puzzleData.getDataByIndex("time", game.defaultPuzzleTimes[i]);
-					data && itemBoard.addItem((li) => {
-						const item = createItem(data);
-						li.appendChild(item);
-						li.time = data.time;
-					})
-				}
-				puzzleData.openCursorByIndex("title", cursor => {
-					//console.log(`cursor: ${cursor && cursor.value && cursor.value.title}`)
-					const data = cursor && cursor.value;
-					data && game.defaultPuzzleTimes.indexOf(data.time) == -1 && itemBoard.addItem((li) => {
-						const item = createItem(data);
-						li.appendChild(item);
-						li.time = data.time;
-					})
+		async function loadDeafultItems() {
+			for (let i = 0; i < game.defaultPuzzleTimes.length; i++) {
+				const data = await puzzleData.getDataByIndex("time", game.defaultPuzzleTimes[i]);
+				data && itemBoard.addItem((li) => {
+					const item = createItem(data);
+					li.appendChild(item);
+					li.time = data.time;
 				})
 			}
 		}
 		
-		function closeItemBoard() {
-			itemBoard.hide();
+		async function loadUserAddedItems() {
+			puzzleData.openCursorByIndex("title", cursor => {
+				//console.log(`cursor: ${cursor && cursor.value && cursor.value.title}`)
+				const data = cursor && cursor.value;
+				data && game.defaultPuzzleTimes.indexOf(data.time) == -1 && itemBoard.addItem((li) => {
+					const item = createItem(data);
+					li.appendChild(item);
+					li.time = data.time;
+				})
+			})
+		}
+		
+		async function openItemBoard() {
+			if (!itemBoard.viewElem.parentNode) {
+				itemBoard.show();
+				mainUI.viewport.resize();
+				await loadDeafultItems();
+				await loadUserAddedItems();
+			}
+		}
+		
+		function removeItemAll() {
 			for (let i = itemBoard.lis.length - 1; i >=0; i--){
 				itemBoard.removeItem(itemBoard.lis[i])
 			}
 		}
 		
+		function closeItemBoard() {
+			itemBoard.hide();
+			removeItemAll();
+		}
+		
 		function openIndexBoard() {
 			indexBoard.show();
+			mainUI.viewport.resize();
 			indexBoard.removeIndexes();
 			for(let i = 0;  i < game.puzzles.length; i++) {
 				const style = {opacity: `${game.data && game.data.progress && game.data.progress[i] ? 1 : 0.5}`};
@@ -313,6 +463,41 @@
 			}
 		}
 		
+		
+		const itemButWidth = mainUI.cmdWidth / 2;
+		const itemButHeight = mainUI.buttonHeight;
+		const itemButStyle = {
+			position: "absolute",
+			left: "0px",
+			top: "0px",
+			width: itemButWidth + "px",
+			height: itemButHeight + "px",
+			fontSize: ~~(itemButHeight * 0.75) + "px",
+			textAlign: "center",
+			lineHeight: itemButHeight + "px"
+		}
+		
+		const btnDefault = document.createElement("div");
+		btnDefault.innerHTML = "默认题集";
+		Object.assign(btnDefault.style, itemButStyle);
+		btnDefault.onclick = () => {removeItemAll(); loadDeafultItems()}
+		
+		const btnUserAdded = document.createElement("div");
+		btnUserAdded.innerHTML = "用户添加";
+		itemButStyle.left = itemButWidth * 1 + "px";
+		Object.assign(btnUserAdded.style, itemButStyle);
+		btnUserAdded.onclick = () => {removeItemAll(); loadUserAddedItems()}
+		
+		const buttons = document.createElement("div");
+		buttons.appendChild(btnDefault)
+		buttons.appendChild(btnUserAdded)
+		Object.assign(buttons.style, {
+			borderColor: "black",
+			borderStyle: "solid",
+			borderWidth: `${1}px`,
+			height: mainUI.buttonHeight + "px"
+		})
+		
 		const itemBoard = mainUI.newItemBoard({
 			left: mainUI.gridPadding,
 			top: mainUI.gridPadding,
@@ -326,6 +511,7 @@
 				borderWidth: `${boardWidth}px`
 			}
 		})
+		itemBoard.viewElem.appendChild(buttons)
 		itemBoard.hide();
 		mainUI.addChild({
 			variant: itemBoard,
@@ -350,6 +536,7 @@
 		indexBoard.callback = function(index) { 
 			event.cancelBubble = true; 
 			game.index = parseInt(index);
+			closeBoards();
 		};
 		mainUI.addChild({
 			variant: indexBoard,
@@ -420,15 +607,22 @@
 				READ: 2 << 4 | 8,
 			},
 			_state: 0,
+			_strength: 30,
+			_notRotate: false,
 			options: undefined,
 			residueStones: 0,
+			puzzle: null,
 			puzzles: puzzleCoder.demoPuzzles,
 			board: cBoard,
 			defaultPuzzleTimes: [],
 			rotate: 0,
-			async reset(rotate = this.puzzle.rotate) {
+			async reset(rotate, puzzle) {
 				try{
+				this.puzzle = typeof puzzle === "object" ? puzzle : this.puzzles.currentPuzzle;
+				rotate == undefined && (rotate = this.puzzle.rotate)
 				await this.stopThinking();
+				this.strength = this._strength;
+				this.notRotate = this._notRotate;
 				inputButton.hide();
 				const isLocation = window.location.href.indexOf("http://") > -1;
 				const delay = isLocation ? 0 : this.puzzle.delayHelp * 60 * 1000;
@@ -442,12 +636,13 @@
 				this.board.setSize(this.puzzle.size);
 				this.unpackCode();
 				this.printLabels();
-				this.board.resetNum = 0;
 				this.playerSide = this.puzzle.side;
 				this.residueStones = this.puzzle.mode & 0x1F;
 				this.options = !this.puzzle.options ? undefined : this.board.moveCode2Points(this.puzzle.options);
 
 				let html = "";
+				const ruleStr = ["无禁",,"有禁"][this.puzzle.rule];
+				const modeStr = puzzleCoder.MODE_NAME[this.puzzle.mode];
 				if (this.puzzle.mode == puzzleCoder.MODE.COVER) {
 					this.state = this.STATE.LOADING;
 					puzzleData.saveProgress(this);
@@ -463,15 +658,17 @@
 						sideLabel: "玩家走棋"
 					})
 					html += `难度: ${"★★★★★".slice(0, this.puzzle.level)}\n`;
-					html += `玩家: ${[,"黑棋","白棋"][this.playerSide]}\n`;
-					html += `规则: ${["无禁",,"禁手"][this.puzzle.rule]}\n`;
-					html += `模式: ${puzzleCoder.getModeName(this.puzzle.mode)}\n\n`;
-					(this.puzzle.randomRotate || rotate != undefined) ? this.randomRotate(rotate) : (this.rotate = 0);
+					html += `玩家: ${[,"● 棋","○ 棋"][this.playerSide]}\n`;
+					html += `规则: ${ruleStr}\n`;
+					html += `模式: ${modeStr}\n\n`;
+					(this.puzzle.randomRotate || rotate != undefined) && !this.notRotate ? this.randomRotate(rotate) : (this.rotate = 0);
 					!isLocation && (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE &&  delayCheckWin(1800);
 				}
 				html += this.puzzle.comment || ""
 				outputInnerHTML({
 					title: this.puzzle.title,
+					ruleLabel: ruleStr,
+					modeLabel: modeStr.replaceAll("模式",""),
 					indexLabel: `${this.data && this.data.progress && this.data.progress[this.puzzles.index] && "✔" || ""}  ${this.index}`,
 					progressLabel: `(${this.data && this.data.progress ? this.data.progress.filter(v => v).length + "/" : ""}${this.puzzles.length})`,
 					comment: html.split("\n").join("<br>")
@@ -482,11 +679,23 @@
 			unpackCode() {
 				this.board.unpackCode(`${this.puzzle.stones}{${this.puzzle.blackStones}}{${this.puzzle.whiteStones}}`)
 				const arr = this.board.getArray();
-				this.board.cle();
-				arr.map((side, idx) => {
-					side == 1 && this.board.wNb(idx, "black", true);
-					side == 2 && this.board.wNb(idx, "white", true);
-				})
+				if (this.puzzle.sequence == 0) {
+					this.board.resetNum = 0;
+					this.board.cle();
+					arr.map((side, idx) => {
+						side == 1 && this.board.wNb(idx, "black", true);
+						side == 2 && this.board.wNb(idx, "white", true);
+					})
+				}
+				else {
+					this.board.resetNum = -this.puzzle.sequence;
+					this.board.MS.length = 0;
+					this.board.MSindex = -1;
+					arr.map((v, i) => {
+						v == 1 && (this.board.P[i].type = TYPE_BLACK);
+						v == 2 && (this.board.P[i].type = TYPE_WHITE);
+					})
+				}
 			},
 			printLabels() {
 				console.log(this.puzzle.labels)
@@ -602,7 +811,16 @@
 				else if ((this._state & 0xF0) == this.STATE.GAMEOVER)(canvasClick = canvasClick_gameover, canvasDblClick = canvasDblClick_gameover)
 				return this._state;
 			},
-			get puzzle() { return this.puzzles.currentPuzzle },
+			get strength() { return this._strength },
+			set strength(s) {
+				this._strength = s; 
+				outputInnerHTML({strengthLabel: this._strength < 100 ? "随机" : "最强" })
+			},
+			get notRotate() { return this._notRotate },
+			set notRotate(b) {
+				this._notRotate = b; 
+				outputInnerHTML({ rotateLabel: this._notRotate  ? "固定" : "旋转" })
+			},
 			get playerSide() { return this.board.firstColor == "black" ? 1 : 2 },
 			set playerSide(side) { this.board.firstColor = [, "black", "white"][side]; return this.playerSide },
 			get aiSide() { return 3 - this.playerSide },
@@ -637,6 +855,7 @@
 						output.tree && game.board.addTree(output.tree);
 						output.options && (game.board.cleLb("all"), game.continuePutStone(output.options))
 						output.warn && warn(output.warn, 1500);
+						output.comment && (output.comment += `\n\n\n解题结束\n开始复盘\n1.点击空格落子\n2.点击棋子悔棋`)
 						output.errorPoints && game.continuePutStone(output.errorPoints, "✕", game.board.bNumColor)
 					}
 					outputInnerHTML(output);
@@ -652,8 +871,8 @@
 		}
 
 		function outputInnerHTML(param) {
-			const labels = { title, indexLabel, progressLabel, sideLabel, comment };
-			Object.keys(param).map(key => labels[key] && (console.warn(param[key]), labels[key].innerHTML = param[key]))
+			const labels = { title, indexLabel, strengthLabel, rotateLabel, progressLabel, sideLabel, ruleLabel, modeLabel, comment };
+			Object.keys(param).map(key => labels[key] && (console.warn(param[key]), labels[key].innerHTML = param[key].replaceAll("\n", "<br>")))
 		}
 
 		function playerTryPutStone(idx) {
@@ -678,8 +897,8 @@
 			bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale, mainUI.upDiv);
 			bindEvent.addEventListener(cBoard.viewBox, "click", click);
 			bindEvent.addEventListener(cBoard.viewBox, "dblclick", doubleClick);
-			bindEvent.addEventListener(cBoard.viewBox, "dbltouchstart", back);
-			bindEvent.addEventListener(cBoard.viewBox, "contextmenu", back);
+			bindEvent.addEventListener(cBoard.viewBox, "dbltouchstart", continueBack);
+			bindEvent.addEventListener(cBoard.viewBox, "contextmenu", continueBack);
 			/*bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => cBoard.zoomStart(x1, y1, x2, y2))*/
 			function click(x, y) { canvasClick(x, y) }
 
@@ -714,7 +933,7 @@
 			if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
 				if (game.puzzle.mode < puzzleCoder.MODE.BASE) {
 					((cBoard.P[idx].type & 0xF0) == TYPE_MARK || cBoard.P[idx].type == TYPE_EMPTY) && game.putStone(idx);
-					((cBoard.P[idx].type & 0xF0) == TYPE_NUMBER && cBoard.MSindex >= cBoard.resetNum) && cBoard.toPrevious(true);
+					((cBoard.P[idx].type & 0xF0) == TYPE_NUMBER && cBoard.MSindex >= 0) && cBoard.toPrevious(true);
 				}
 				else {
 					cBoard.P[idx].type == TYPE_EMPTY && game.putStone(idx);
@@ -725,11 +944,11 @@
 
 		function canvasDblClick_gameover(x, y) {}
 
-		function back(x, y) {
+		function continueBack(x, y) {
 			if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
 				const idx = cBoard.getIndex(x, y);
 				while ((cBoard.P[idx].type & 0xF0) == TYPE_NUMBER && cBoard.MSindex > -1) {
-					if (cBoard.MSindex < cBoard.resetNum || cBoard.MS[cBoard.MSindex] == idx) return;
+					if (cBoard.MSindex < 0 || cBoard.MS[cBoard.MSindex] == idx) return;
 					cBoard.toPrevious(true)
 				}
 			}

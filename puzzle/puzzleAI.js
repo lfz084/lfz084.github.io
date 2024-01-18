@@ -70,33 +70,46 @@ window.puzzleAI = (() => {
 		}
 
 		//------------------------- CheckMove -----------------------------------
-
+		const CHECKMOVE_OUTPUT = {
+			"-1": {
+				warn: "没有冲四",
+				comment: "没有冲四，不符合VCF解题规则"
+			},
+			"-2": {
+				warn: "进攻级别不够",
+				comment: "进攻级别不到活三级别，不符合VCT解题规则"
+			},
+			"-3": {
+				warn: "超出手数",
+				comment: "超出规定手数，不符合解题规则"
+			}
+		}
 		const filterCheckMove = {};
 		filterCheckMove[puzzleCoder.MODE.VCF] = async function(game, idx) {
 			const level = getLevel(game.board.getArray(), game.playerSide) & 0xff;
-			return level < LEVEL_NOFREEFOUR ? -5 : 0;
+			return level < LEVEL_NOFREEFOUR ? -1 : 0;
 		}
 		filterCheckMove[puzzleCoder.MODE.VCT] = async function(game, idx) {
 			const level = (await getLevelB(game.board.getArray(), game.playerSide, 1, 180, 1000000)) & 0xff;
-			return level < LEVEL_FREETHREE ? -5 : 0;
+			return level < LEVEL_FREETHREE ? -2 : 0;
 		}
 		filterCheckMove[puzzleCoder.MODE.VCT3] = async function(game, idx) {
 			const position = game.board.getArray();
 			const level = (await getLevelB(position, game.playerSide, 1, 180, 1000000)) & 0xff;
-			if (level < LEVEL_FREETHREE) return -5;
+			if (level < LEVEL_FREETHREE) return -2;
 
 			if (game.residueStones > 1 || game.residueStones == 1 && level == LEVEL_FREETHREE) {
 				position[game.board.MS[game.board.MSindex]] = 0;
 				LEVEL_NOFREEFOUR > (getLevel(position, game.aiSide) & 0xff) && game.residueStones--
 			}
-			return game.residueStones == 0 ? -5 : 0;
+			return game.residueStones == 0 ? -3 : 0;
 		}
 		filterCheckMove[puzzleCoder.MODE.FREE] = async function(game, idx) {
 
 		}
 		filterCheckMove[puzzleCoder.MODE.STONES3] = filterCheckMove[puzzleCoder.MODE.STONES4] = filterCheckMove[puzzleCoder.MODE.STONES5] = async function(game) {
 			--game.residueStones;
-			return game.residueStones == 0 ? -5 : 0;
+			return game.residueStones == 0 ? -3 : 0;
 		}
 
 		//------------------------- Think -----------------------------------
@@ -481,10 +494,11 @@ window.puzzleAI = (() => {
 			engine.board = undefined;
 			if (game.board.getArray()[idx] != game.playerSide) return;
 			const state = await (filterCheckMove[game.puzzle.mode] || function() {})(game, idx)
-			const GAME_STATE = {"0": game.STATE.PLAYING, "1": game.STATE.WIN, "-1": game.STATE.LOST, "-2": game.STATE.LOST, "-5": game.STATE.LOST}
-			const COMMENT = {"-5": "不符合解题规则"}
-			const WARN = {"-5": "不合规则"}
-			state && processOutput({ state: GAME_STATE[state], sideLabel: "棋局结束", comment: COMMENT[state], warn: WARN[state]});
+			if (state < 0) {
+				const warn = CHECKMOVE_OUTPUT[state].warn;
+				const comment = "失败原因：\n" + CHECKMOVE_OUTPUT[state].comment;
+				processOutput({ state: game.STATE.LOST, sideLabel: "解题失败", comment, warn });
+			}
 		}
 		
 		/**
@@ -548,17 +562,51 @@ window.puzzleAI = (() => {
 				board.unpackArray(puzzle.arr);
 				const rt = await autoSetMode(puzzle, board);
 				const codeArr = board.getCode().split(/{|}/);
-				puzzle.stones = codeArr[0].split("\n").join("");
-				puzzle.blackStones =  codeArr[1].split("\n").join("");
-				puzzle.whiteStones = codeArr[3].split("\n").join("");
+				if (!puzzle.stones && !puzzle.blackStones && !puzzle.whiteStones) {
+					puzzle.stones = codeArr[0].split("\n").join("");
+					puzzle.blackStones =  codeArr[1].split("\n").join("");
+					puzzle.whiteStones = codeArr[3].split("\n").join("");
+				}
 				logStr += `第${i + 1}题测试：${rt ? "通过" : "失败"}\n  解题模式: ${puzzleCoder.MODE_TITLE[puzzle.mode]}\n  玩家: ${[,"黑棋","白棋"][puzzle.side]}\n  规则: ${puzzle.rule==2 ? "有禁" : "无禁"}\n  棋盘: ${puzzle.size}路\n`;
 				try{callback(i/puzzles.length)}catch(e){console.error(e.stack)}
 			}
 			console.log(logStr)
 			return logStr;
 		}
+		
+		function getPositionString(game, side) {
+			let cmd = "";
+			const bStones = [];
+			const wStones = [];
+			const arr = [];
+			game.board.P.map((p, i) => arr[i] = p.type == TYPE_BLACK ? 1 : p.type == TYPE_WHITE ? 2 : 0);
+			for (let x = 0; x < game.board.size; x++) {
+				for (let y = 0; y < game.board.size; y++) {
+					const idx = y * 15 + x;
+					if (arr[idx] == 1) bStones.push(`${x},${y},${side}`)
+					else if (arr[idx] == 2) wStones.push(`${x},${y},${3 - side}`)
+				}
+			}
+			game.board.MS.map((idx, i) => {
+				const x = idx % 15;
+				const y = ~~(idx / 15);
+				game.board.firstColor != "black" && i++
+				if (i % 2 == 0) bStones.push(`${x},${y},${side}`)
+				else wStones.push(`${x},${y},${3 - side}`)
+			})
+			while (bStones.length - wStones.length < side - 1) {
+				bStones.push(`-1,-1,${side}`)
+			}
+			while (bStones.length - wStones.length > side - 1) {
+				wStones.push(`-1,-1,${3 - side}`)
+			}
+			bStones.map((v, i) => {
+				cmd += v + " " + (wStones[i] ? wStones[i] + " " : "")
+			})
+			return cmd;
+		}
 
-		function gomocalcThink(game, side, min = 30, max = 150) {
+		function gomocalcThink(game, side, min = game.strength || 30, max = 150) {
 			aiState = aiState | STATE_GOMOCALC_THINKING;
 			gomocalc.sendCommand(`RELOADCONFIG config-220723.toml`);
 			gomocalc.sendCommand(`INFO HASH_SIZE 262144`);
@@ -620,38 +668,6 @@ window.puzzleAI = (() => {
 			processOutput({ sideLabel: "stopthinking" })
 			await waitValue({ get v() { return aiState } }, "v", STATE_AI_READY, 50);
 			processOutput({ sideLabel: "ready" })
-		}
-
-		function getPositionString(game, side) {
-			let cmd = "";
-			const bStones = [];
-			const wStones = [];
-			const arr = [];
-			game.board.P.map((p, i) => arr[i] = p.type == TYPE_BLACK ? 1 : p.type == TYPE_WHITE ? 2 : 0);
-			for (let x = 0; x < game.board.size; x++) {
-				for (let y = 0; y < game.board.size; y++) {
-					const idx = y * 15 + x;
-					if (arr[idx] == 1) bStones.push(`${x},${y},${side}`)
-					else if (arr[idx] == 2) wStones.push(`${x},${y},${3 - side}`)
-				}
-			}
-			game.board.MS.map((idx, i) => {
-				const x = idx % 15;
-				const y = ~~(idx / 15);
-				game.board.firstColor != "black" && i++
-				if (i % 2 == 0) bStones.push(`${x},${y},${side}`)
-				else wStones.push(`${x},${y},${3 - side}`)
-			})
-			while (bStones.length - wStones.length < side - 1) {
-				bStones.push(`-1,-1,${side}`)
-			}
-			while (bStones.length - wStones.length > side - 1) {
-				wStones.push(`-1,-1,${3 - side}`)
-			}
-			bStones.map((v, i) => {
-				cmd += v + " " + (wStones[i] ? wStones[i] + " " : "")
-			})
-			return cmd;
 		}
 
 		return {

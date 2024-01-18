@@ -8,4 +8,10 @@
 	upData 
 	serviceWorker.onmessage change to addEventListener
 	
+	bug 例题(10届，14题）
+	先手防抓禁分类，
+	先手冲四解决禁手：逼白落禁手，冲四后用黑子解禁手，冲四后用白子解禁手
+	先手增加防点
 	
+	VCT进攻级别判断bug
+	挡对手冲四时会忽略原来的V，出现进攻级别不够的误判

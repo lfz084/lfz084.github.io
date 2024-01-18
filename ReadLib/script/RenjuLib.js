@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2024.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2024.02";
 window.RenjuLib = (() => {
     "use strict";
     //console.log(exports);
@@ -38,7 +38,7 @@ window.RenjuLib = (() => {
             alert(msg);
         },
         log: function(msg) {
-            log(msg, "log");
+        	log(msg, "log");
         },
         warn: function(msg) {
             log(msg, "warn");
@@ -53,9 +53,17 @@ window.RenjuLib = (() => {
             showBranchs(data);
         },
         autoMove: function(data) {
+        	//msg({"title": JSON.stringify(boardTextArray,null,2),type:"input"})
             autoMove(data);
+        },
+        /*
+        pushBoardText: function(data) {
+        	boardTextArray.push(data);
+        	console.log(data)
         }
+        */
     };
+    let boardTextArray = [];
 
     function setBufferScale(scl = 5) {
         buffer_scale = scl;

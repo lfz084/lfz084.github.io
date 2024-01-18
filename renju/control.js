@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2024.01";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2024.02";
 window.control = (() => {
 	try {
 		"use strict";
@@ -828,7 +828,7 @@ window.control = (() => {
 				onshowmenu: function(but) {
 					[...this.input].map(op => op.checked = op.value == cBoard.SLTX);
 				},
-				touchend: function(but) {
+				change: function(but) {
 					cBoard.SLTX = but.input.value;
 					cBoard.resetP();
 					if (!cLockImg.checked) {
