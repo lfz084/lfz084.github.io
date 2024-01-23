@@ -1,5 +1,5 @@
 "use strict"
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2024.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2024.03";
 
 if ("importScripts" in self) {
     self.importScripts(

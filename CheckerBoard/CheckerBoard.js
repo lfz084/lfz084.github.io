@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.03";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -1072,7 +1072,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.02";
 
 
     Board.prototype.parserCodeURL = function(codeURL) {
-    	codeURL = codeURL.replaceAll("%","&"); //兼容旧版本
+    	codeURL = replaceAll(codeURL,"%","&"); //兼容旧版本
         let code = codeURL.split("&"),
             moves = checkerCode(code[0]),
             blackMoves = checkerCode(code[1]),

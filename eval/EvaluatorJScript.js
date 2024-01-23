@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2024.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorJScript"] = "v2024.03";
 
 function loadEvaluatorJScript() {
     (function(global, factory) {
@@ -1813,6 +1813,7 @@ function loadEvaluatorJScript() {
                 moves = new Array(0),
                 stackIdx = [-1, -1, 225, 225],
                 sum = 0,
+                sum1 = 0,
                 done = false,
                 pushMoveCount = 0,
                 pushPositionCount = 0,
@@ -1836,7 +1837,7 @@ function loadEvaluatorJScript() {
                         moves.push(nColorIdx);
                         continueInfo[3][nColorIdx] |= continueInfo[INVERT_COLOR[color]][nColorIdx] = INVERT_COLOR[color];
                         centerIdx = colorIdx;
-                        sum += colorIdx;
+                        colorIdx & 1 ? sum += colorIdx : sum1 += colorIdx;
                         stackIdx.push(-1, -1);
                         //console.log(`[${movesToName(moves, 500)}]\n [${stackIdx}]\n ${colorIdx}`);
                         //console.warn(`${idxToName(vcfNodes[pCurrentNode])}`)
@@ -1848,7 +1849,7 @@ function loadEvaluatorJScript() {
                     }*/
 
                     //console.info(`${idxToName(vcfNodes[vcfNodes[pCurrentNode + 2]])}`)
-                    if (transTableHas(vcfHashTable, moves.length, sum, moves, arr)) {
+                    if (transTableHas(vcfHashTable, moves.length, sum, sum1, moves, arr)) {
                         hasCount++;
                         //console.error(`[${movesToName(moves, 500)}]`);
                     }
@@ -1901,7 +1902,7 @@ function loadEvaluatorJScript() {
                                     isConcat = false;
                                     vcfInfo.vcfCount++;
                                     maxVCF > 1 && "post" in self && post({ cmd: "vcfInfo", param: { vcfInfo: vcfInfo } });
-                                    transTablePush(vcfHashTable, moves.length, sum, moves, arr);
+                                    transTablePush(vcfHashTable, moves.length, sum, sum1, moves, arr);
                                     if (vcfInfo.vcfCount == 0x3FF || vcfWinMoves.length == maxVCF) {
                                         for (let j = moves.length - 1; j >= 0; j--) {
                                             stackIdx.push(-1);
@@ -1962,14 +1963,14 @@ function loadEvaluatorJScript() {
                         pushMoveCount++;
                     else
                         pushPositionCount++;
-                    transTablePush(vcfHashTable, moves.length, sum, moves, arr);
+                    transTablePush(vcfHashTable, moves.length, sum, sum1, moves, arr);
 
                     if (moves.length) {
                         let idx = moves.pop();
                         arr[idx] = 0;
                         idx = moves.pop();
                         arr[idx] = 0;
-                        sum -= idx;
+                        idx & 1 ? sum -= idx : sum1 -= idx;
                     }
                     else {
                         done = true;

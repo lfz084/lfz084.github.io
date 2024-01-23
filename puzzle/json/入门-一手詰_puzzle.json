@@ -1,6 +1,6 @@
 {"link": "https://lfz084.gitee.io/renju/puzzle.html",
   "defaultSettings": {
-    "title": "入门 一手詰",
+    "title": "入门题黑先一手詰",
     "level": 1
   },
   "puzzles": [
@@ -8,7 +8,7 @@
       "side": 1,
       "rule": 2,
       "size": 15,
-      "stones": "H8I9C7D8G7E7D6F7F6E6",
+      "stones": "H8H9H7G7F6I7G5G6H5I5",
       "comment": "超简单连珠入门题集<br>题目出处<br><a href='http://haisaresu.blog.fc2.com/' target='_blank'>連珠あれこれ(主に詰め連珠)</a>",
       "mode": 0
     },

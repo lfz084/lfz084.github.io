@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["TypeBuffer"] = "v2024.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["TypeBuffer"] = "v2024.03";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {

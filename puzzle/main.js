@@ -620,14 +620,14 @@
 				try{
 				this.puzzle = typeof puzzle === "object" ? puzzle : this.puzzles.currentPuzzle;
 				rotate == undefined && (rotate = this.puzzle.rotate)
+				
+				const isLocation = window.location.href.indexOf("http://") > -1;
+				const delay = isLocation ? 5000 : this.puzzle.delayHelp * 60 * 1000;
+				puzzle == undefined && (hideAIHelp(),delayAIHelp(delay));
+				
 				await this.stopThinking();
 				this.strength = this._strength;
 				this.notRotate = this._notRotate;
-				inputButton.hide();
-				const isLocation = window.location.href.indexOf("http://") > -1;
-				const delay = isLocation ? 0 : this.puzzle.delayHelp * 60 * 1000;
-				hideAIHelp();
-				delayAIHelp(delay);
 				//!this.data && (this.data = {progress: new Array(this.puzzles.length).fill(0)});
 				this.board.canvas.width = this.board.canvas.height = this.board.width;
 				this.board.canvas.style.width = this.board.canvas.style.height = this.board.width + "px";
@@ -658,7 +658,7 @@
 						sideLabel: "玩家走棋"
 					})
 					html += `难度: ${"★★★★★".slice(0, this.puzzle.level)}\n`;
-					html += `玩家: ${[,"● 棋","○ 棋"][this.playerSide]}\n`;
+					html += `玩家: ${[,"● 黑棋","○ 白棋"][this.playerSide]}\n`;
 					html += `规则: ${ruleStr}\n`;
 					html += `模式: ${modeStr}\n\n`;
 					(this.puzzle.randomRotate || rotate != undefined) && !this.notRotate ? this.randomRotate(rotate) : (this.rotate = 0);
@@ -668,7 +668,7 @@
 				outputInnerHTML({
 					title: this.puzzle.title,
 					ruleLabel: ruleStr,
-					modeLabel: modeStr.replaceAll("模式",""),
+					modeLabel: modeStr.replace("模式",""),
 					indexLabel: `${this.data && this.data.progress && this.data.progress[this.puzzles.index] && "✔" || ""}  ${this.index}`,
 					progressLabel: `(${this.data && this.data.progress ? this.data.progress.filter(v => v).length + "/" : ""}${this.puzzles.length})`,
 					comment: html.split("\n").join("<br>")
@@ -788,8 +788,9 @@
 				this.puzzles.index = this.data && this.data[puzzleData.INDEX.INDEX] || 0;
 				this.reset();
 			},
-			async addDefaultPuzzles(path) {
-				this.defaultPuzzleTimes = await puzzleData.addDefaultPuzzles(path);
+			async addDefaultPuzzles(path, callback) {
+				this.defaultPuzzleTimes.length = 0;
+				await puzzleData.addDefaultPuzzles(path, this.defaultPuzzleTimes, callback);
 			},
 			async continuePlay() {
 				try{
@@ -872,7 +873,7 @@
 
 		function outputInnerHTML(param) {
 			const labels = { title, indexLabel, strengthLabel, rotateLabel, progressLabel, sideLabel, ruleLabel, modeLabel, comment };
-			Object.keys(param).map(key => labels[key] && (console.warn(param[key]), labels[key].innerHTML = param[key].replaceAll("\n", "<br>")))
+			Object.keys(param).map(key => labels[key] && (console.warn(param[key]), labels[key].innerHTML = replaceAll(param[key], "\n", "<br>")))
 		}
 
 		function playerTryPutStone(idx) {
@@ -979,10 +980,11 @@
 		const jsonStr = puzzleData.loadURL2JSON(window.location.href);
 		if (jsonStr) await game.loadJSON(jsonStr)
 		else await game.continuePlay();
-		await game.addDefaultPuzzles(path);
-		if (!jsonStr && !game.data && game.defaultPuzzleTimes.length) {
-			const data = await puzzleData.getDataByIndex("time", game.defaultPuzzleTimes[0]);
-			game.loadJSON(data.json)
-		}
-	} catch (e) { console.error(e.stack) }
+		
+		await game.addDefaultPuzzles(path, (json) => {
+			if (!jsonStr && !game.data) {
+				game.loadJSON(json)
+			}
+		});
+	} catch (e) { alert(e.stack) }
 })()

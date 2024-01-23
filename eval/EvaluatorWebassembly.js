@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2024.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2024.03";
 
 function loadEvaluatorWebassembly() {
 
@@ -302,6 +302,7 @@ function loadEvaluatorWebassembly() {
                         moves = new Array(0),
                         stackIdx = [-1, -1, 225, 225],
                         sum = 0,
+                        sum1 = 0,
                         done = false,
                         pushMoveCount = 0,
                         pushPositionCount = 0,
@@ -323,11 +324,11 @@ function loadEvaluatorWebassembly() {
                                 moves.push(nColorIdx);
                                 continueInfo[3][nColorIdx] |= continueInfo[INVERT_COLOR[color]][nColorIdx] = INVERT_COLOR[color];
                                 centerIdx = colorIdx;
-                                sum += colorIdx;
+                                colorIdx & 1 ? sum += colorIdx : sum1 += colorIdx;
                                 stackIdx.push(-1, -1);
                             }
                             
-                            if (transTableHas(vcfHashTable, moves.length, sum, moves, int8Arr)) {
+                            if (transTableHas(vcfHashTable, moves.length, sum, sum1, moves, int8Arr)) {
                                 hasCount++;
                             }
                             else {
@@ -383,7 +384,7 @@ function loadEvaluatorWebassembly() {
                                             isConcat = false;
                                             vcfInfo.vcfCount++;
                                             maxVCF > 1 && "post" in self && post({ cmd: "vcfInfo", param: { vcfInfo: vcfInfo } });
-                                            transTablePush(vcfHashTable, moves.length, sum, moves, int8Arr);
+                                            transTablePush(vcfHashTable, moves.length, sum, sum1, moves, int8Arr);
                                             
                                             if (vcfInfo.vcfCount == 0x3FF || vcfWinMoves.length == maxVCF) {
                                                 for (let j = moves.length - 1; j >= 0; j--) {
@@ -442,14 +443,14 @@ function loadEvaluatorWebassembly() {
                                 pushMoveCount++;
                             else
                                 pushPositionCount++;
-                            transTablePush(vcfHashTable, moves.length, sum, moves, int8Arr);
+                            transTablePush(vcfHashTable, moves.length, sum, sum1, moves, int8Arr);
 
                             if (moves.length) {
                                 let idx = moves.pop();
                                 int8Arr[idx] = 0;
                                 idx = moves.pop();
                                 int8Arr[idx] = 0;
-                                sum -= idx;
+                                idx & 1 ? sum -= idx : sum1 -= idx;
                             }
                             else {
                                 done = true;

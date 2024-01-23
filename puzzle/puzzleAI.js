@@ -90,12 +90,12 @@ window.puzzleAI = (() => {
 			return level < LEVEL_NOFREEFOUR ? -1 : 0;
 		}
 		filterCheckMove[puzzleCoder.MODE.VCT] = async function(game, idx) {
-			const level = (await getLevelB(game.board.getArray(), game.playerSide, 1, 180, 1000000)) & 0xff;
+			const level = (await getLevelB(game.board.getArray(), game.playerSide, 1, 180, 2560000)) & 0xff;
 			return level < LEVEL_FREETHREE ? -2 : 0;
 		}
 		filterCheckMove[puzzleCoder.MODE.VCT3] = async function(game, idx) {
 			const position = game.board.getArray();
-			const level = (await getLevelB(position, game.playerSide, 1, 180, 1000000)) & 0xff;
+			const level = (await getLevelB(position, game.playerSide, 1, 180, 2560000)) & 0xff;
 			if (level < LEVEL_FREETHREE) return -2;
 
 			if (game.residueStones > 1 || game.residueStones == 1 && level == LEVEL_FREETHREE) {
@@ -133,7 +133,7 @@ window.puzzleAI = (() => {
 				color: game.playerSide,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000
+				maxNode: 2560000
 			}
 			const levelInfo = getLevel(param.arr, param.color);
 			if(levelInfo >= LEVEL_NOFREEFOUR) {
@@ -157,10 +157,10 @@ window.puzzleAI = (() => {
 				color: game.playerSide,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000,
+				maxNode: 2560000,
 				maxVCT: 1,
 				maxDepthVCT: (game.residueStones + 1) * 2 - 3,
-				maxNodeVCT: 1000000
+				maxNodeVCT: 2560000
 			}
 			const { tree, positionMoves, isPushPass, current } = engine.createTree(param);
 			await engine.addBranchSimpleWin(param, tree, current);
@@ -176,7 +176,7 @@ window.puzzleAI = (() => {
 				color: game.playerSide,
 				maxVCF: 1,
 				maxDepth: game.residueStones * 2 - 3,
-				maxNode: 1000000,
+				maxNode: 2560000,
 				nMaxDepth: 180
 			}
 			const { tree, positionMoves, isPushPass, current } = engine.createTree(param);
@@ -336,7 +336,7 @@ window.puzzleAI = (() => {
 				color,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000
+				maxNode: 2560000
 			})
 		}
 		
@@ -357,10 +357,10 @@ window.puzzleAI = (() => {
 				color,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000,
+				maxNode: 2560000,
 				maxVCT: 1,
 				maxDepthVCT: 4 * 2 - 3,
-				maxNodeVCT: 1000000
+				maxNodeVCT: 2560000
 			})
 		}
 		
@@ -384,7 +384,7 @@ window.puzzleAI = (() => {
 				color: 1,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000
+				maxNode: 2560000
 			});
 		}
 		
@@ -395,7 +395,7 @@ window.puzzleAI = (() => {
 				ftype: FIND_ALL,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000
+				maxNode: 2560000
 			})
 		}
 		
@@ -405,7 +405,7 @@ window.puzzleAI = (() => {
 				color,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000,
+				maxNode: 2560000,
 				blkDepth: 1
 			});
 		}
@@ -416,7 +416,7 @@ window.puzzleAI = (() => {
 				color,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000
+				maxNode: 2560000
 			});
 		}
 		
@@ -426,7 +426,7 @@ window.puzzleAI = (() => {
 				color,
 				maxVCF: 1,
 				maxDepth: 4 * 2 - 3,
-				maxNode: 1000000,
+				maxNode: 2560000,
 				nMaxDepth: 180
 			});
 		}
@@ -437,7 +437,7 @@ window.puzzleAI = (() => {
 				color,
 				maxVCF: 1,
 				maxDepth: 180,
-				maxNode: 1000000,
+				maxNode: 2560000,
 				blkDepth: 2
 			});
 		}

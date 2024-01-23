@@ -109,17 +109,25 @@
 		return newData;
 	}
 	
-	async function addDefaultPuzzles(_path) {
-		const rt = [];
+	async function addDefaultPuzzles(_path, defaultPuzzleTimes = [], callback = () => {}) {
+		const rt = defaultPuzzleTimes;
 		const path = _path || document.currentScript.src.slice(0, document.currentScript.src.lastIndexOf("/") + 1) + "json/";
 		const fileNames = [
 			"例题演示.json",
+    		"入门-一手詰_puzzle.json",
+    		"入门-三手詰_puzzle.json",
+    		"入门-五手詰_puzzle.json",
+    		"入门-四追い_puzzle.json",
+    		"入门-白先三手詰_puzzle.json",
     		"一手の詰連珠HT_puzzle.json",
 			"ひとりでも楽しめる詰連珠の部屋_puzzle.json",
 			"詰連珠・入門 ～5までの追詰め問題～_puzzle.json",
 			"珠々の詰連珠_puzzle.json",
+    		"異着・正着詰連珠_puzzle.json",
+    		"黑先胜100题_puzzle.json",
 			"白先胜100题_puzzle.json",
     		"三手胜五子棋题解_puzzle.json",
+    		"冈部宽连珠习题_puzzle.json",
     		"黑先VCF_puzzle.json",
     		"白先VCF_puzzle.json",
     		"六路连珠习题1_puzzle.json",
@@ -147,11 +155,13 @@
 			const oldData = await this.getDataByKey(jsonString);
 			if (oldData) {
 				rt.push(oldData.time);
+				i == 0 && callback(oldData.json)
 			}
 			else {
 				const data  = await this.jsonFile2Data(jsonString);
 				this.addData(data);
 				rt.push(data.time);
+				i == 0 && callback(data.json)
 			}
 		}
 		return rt;
@@ -180,7 +190,7 @@
 	}
 	
 	function loadURL2JSON(url) {
-		const hash = (url.split(/#/)[1] || "").replaceAll("%","&");
+		const hash = replaceAll(url.split(/#/)[1] || "", "%", "&");
 		const arr = hash.split("&");
 		if (arr.length < 11) return ""
 		const labels = [];

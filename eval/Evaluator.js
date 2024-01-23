@@ -1,5 +1,5 @@
 "use strict";
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2024.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2024.03";
 const DIRECTIONS = [0, 1, 2, 3] //[→, ↓, ↘, ↗]; // 米字线
 const FIND_ALL = 0;
 const ONLY_FREE = 1; // 只找活3，活4
@@ -344,21 +344,159 @@ function movesToName(moves, maxLength) {
 	return name;
 }
 
+//----------------------- xxh32 -----------------------------
+/*
+const xxh32 = self.xxh32 || (() => {
+	// Simple hash function, from: http://burtleburtle.net/bob/hash/integer.html.
+    // Chosen because it doesn't use multiply and achieves full avalanche.
+
+    // Reads a 32-bit little-endian integer from an array.
+    function readU32(b, n) {
+        var x = 0;
+        x |= b[n++] << 0;
+        x |= b[n++] << 8;
+        x |= b[n++] << 16;
+        x |= b[n++] << 24;
+        return x;
+    }
+
+    // Multiplies two numbers using 32-bit integer multiplication.
+    // Algorithm from Emscripten.
+    function imul(a, b) {
+        var ah = a >>> 16;
+        var al = a & 65535;
+        var bh = b >>> 16;
+        var bl = b & 65535;
+
+        return al * bl + (ah * bl + al * bh << 16) | 0;
+    }
+
+    // xxh32.js - implementation of xxhash32 in plain JavaScript
+    
+    // xxhash32 primes
+    var prime1 = 0x9e3779b1;
+    var prime2 = 0x85ebca77;
+    var prime3 = 0xc2b2ae3d;
+    var prime4 = 0x27d4eb2f;
+    var prime5 = 0x165667b1;
+
+    // Utility functions/primitives
+    // --
+
+    function rotl32(x, r) {
+        x = x | 0;
+        r = r | 0;
+
+        return x >>> (32 - r | 0) | x << r | 0;
+    }
+
+    function rotmul32(h, r, m) {
+        h = h | 0;
+        r = r | 0;
+        m = m | 0;
+
+        return imul(h >>> (32 - r | 0) | h << r, m) | 0;
+    }
+
+    function shiftxor32(h, s) {
+        h = h | 0;
+        s = s | 0;
+
+        return h >>> s ^ h | 0;
+    }
+
+    // Implementation
+    // --
+
+    function xxhapply(h, src, m0, s, m1) {
+        return rotmul32(imul(src, m0) + h, s, m1);
+    }
+
+    function xxh1(h, src, index) {
+        return rotmul32((h + imul(src[index], prime5)), 11, prime1);
+    }
+
+    function xxh4(h, src, index) {
+        return xxhapply(h, readU32(src, index), prime3, 17, prime4);
+    }
+
+    function xxh16(h, src, index) {
+        return [
+    xxhapply(h[0], readU32(src, index + 0), prime2, 13, prime1),
+    xxhapply(h[1], readU32(src, index + 4), prime2, 13, prime1),
+    xxhapply(h[2], readU32(src, index + 8), prime2, 13, prime1),
+    xxhapply(h[3], readU32(src, index + 12), prime2, 13, prime1)
+  ];
+    }
+
+    function xxh32(seed, src, index, len) {
+        var h, l;
+        l = len;
+        if (len >= 16) {
+            h = [
+      seed + prime1 + prime2,
+      seed + prime2,
+      seed,
+      seed - prime1
+    ];
+    let s = "";
+    s += `${h.length} : ${h.map(v => v.toString(10))}\n`
+
+            while (len >= 16) {
+                h = xxh16(h, src, index);
+                s += `${h.length} : ${h.map(v => v.toString(10))}\n`
+                index += 16;
+                len -= 16;
+            }
+
+            h = rotl32(h[0], 1) + rotl32(h[1], 7) + rotl32(h[2], 12) + rotl32(h[3], 18) + l;
+        } else {
+            h = (seed + prime5 + len) >>> 0;
+        }
+
+        while (len >= 4) {
+            h = xxh4(h, src, index);
+
+            index += 4;
+            len -= 4;
+        }
+
+        while (len > 0) {
+            h = xxh1(h, src, index);
+
+            index++;
+            len--;
+        }
+
+        h = shiftxor32(imul(shiftxor32(imul(shiftxor32(h, 15), prime2), 13), prime3), 16);
+
+        return h >>> 0;
+    }
+    return xxh32;
+})()
+*/
+
 //--------------------- moves HashTable ------------------------
 
 let HASHTABLE_MAX_MOVESLEN = 225;
-
-function isChildMove(parentMove, childMove) {
-	let position = new Array(225);
-	for (let j = childMove.length - 1; j >= 0; j--) position[childMove[j]] = (j & 1) + 1;
-	for (let k = parentMove.length - 1; k >= 0; k--) {
-		if (position[parentMove[k]] != (k & 1) + 1) return false;
+/**
+ * lMove.length == rMove.length 时判断两个手顺个是否相等
+ * lMove.length < rMove.length 时判断 rMove 是否为 lMove 分支手顺
+ * position rMove 对应的 position
+ */
+function isChildMove(lMove, rMove, position) {
+	if (!position) {
+		position = new Array(225);
+		for (let j = rMove.length - 1; j >= 0; j--) position[rMove[j]] = (j & 1) + 1;
+	}
+	for (let k = lMove.length - 1; k >= 0; k--) {
+		if (position[lMove[k]] != (k & 1) + 1) return false;
 	}
 	return true;
 }
 
-function isRepeatMove(newMove, oldMove) {
-	return isChildMove(newMove, oldMove);
+function isRepeatMove(oldMove, newMove, position) {
+	return isChildMove(oldMove, newMove, position);
 }
 
 // 添加一个VCF
@@ -396,20 +534,26 @@ function resetHashTable(hashTable) {
 	for (let i = 0; i < 225; i++) { hashTable[i] = {}; }
 }
 
-function movesPush(hashTable, keyLen, keySum, moves) {
+function movesPush(hashTable, keyLen, keySum, keySum1, moves) {
 	let mv = moves.slice(0);
-	if (hashTable[keyLen][keySum] == null) {
-		hashTable[keyLen][keySum] = [];
+	if (!hashTable[keyLen][keySum]) {
+		hashTable[keyLen][keySum] = {};
 	}
-	hashTable[keyLen][keySum].push(mv); // 保存失败分支   
+	if (!hashTable[keyLen][keySum][keySum1]) {
+		hashTable[keyLen][keySum][keySum1] = [];
+	}
+	hashTable[keyLen][keySum][keySum1].push(mv); // 保存已搜索分支   
+	vcfInfo.maxHashCollision = Math.max(vcfInfo.maxHashCollision, hashTable[keyLen][keySum][keySum1].length)
 }
 
-function movesHas(hashTable, keyLen, keySum, moves) {
+function movesHas(hashTable, keyLen, keySum, keySum1, moves) {
 	let i;
-	if (hashTable[keyLen][keySum] == null) return false;
-	const FAILMOVES_MOVES_LEN = hashTable[keyLen][keySum].length;
+	if (!hashTable[keyLen][keySum] || !hashTable[keyLen][keySum][keySum1]) return false;
+	const FAILMOVES_MOVES_LEN = hashTable[keyLen][keySum][keySum1].length;
+	const position = new Array(225);
+	for (let j = moves.length - 1; j >= 0; j--) position[moves[j]] = (j & 1) + 1;
 	for (i = FAILMOVES_MOVES_LEN - 1; i >= 0; i--) {
-		if (isRepeatMove(moves, hashTable[keyLen][keySum][i])) break;
+		if (isRepeatMove(hashTable[keyLen][keySum][keySum1][i], moves, position)) break;
 	}
 	return i >= 0;
 }
@@ -437,25 +581,68 @@ function positionHas(hashTable, keyLen, keySum, position) {
 	return false;
 }
 
-function transTablePush(hashTable, keyLen, keySum, moves, position) {
+function transTablePush(hashTable, keyLen, keySum, keySum1, moves, position) {
 	if (keyLen < HASHTABLE_MAX_MOVESLEN)
-		movesPush(hashTable, keyLen, keySum, moves);
-	//vcfMovesPush(keyLen, keySum, moves);
+		movesPush(hashTable, keyLen, keySum, keySum1, moves);
 	else
 		positionPush(hashTable, keyLen, keySum, position);
 }
 
-function transTableHas(hashTable, keyLen, keySum, moves, position) {
+function transTableHas(hashTable, keyLen, keySum, keySum1, moves, position) {
 	if (keyLen < HASHTABLE_MAX_MOVESLEN)
-		return movesHas(hashTable, keyLen, keySum, moves);
-	//return vcfMovesHas(keyLen, keySum, moves);
+		return movesHas(hashTable, keyLen, keySum, keySum1, moves);
 	else
 		return positionHas(hashTable, keyLen, keySum, position);
 }
 
+/*
+function getStones(moves) {
+	const position = new Array(225);
+	const blackStones = [];
+	const whiteStones = [];
+	for (let i = 0; i < moves.length; i++) {
+		position[moves[i]] = (i & 1) + 1;
+	}
+	for (let i = 0; i < 225; i++) {
+		position[i] == 1 && blackStones.push(i);
+		position[i] == 2 && whiteStones.push(i);
+	}
+	return blackStones.concat(whiteStones);
+}
+
+function constructaHashKey(stones) {
+	const key = xxh32(0, stones, 0, stones.length);
+	return key & 0x7fffff;
+}
+
+
+function transTablePush(hashTable, keyLen, keySum, moves, position) {
+	const stones = getStones(moves);
+	const key = constructaHashKey(stones);
+	const list = hashTable[keyLen][key];
+	if (!list) hashTable[keyLen][key] = [stones];
+	else hashTable[keyLen][key].push(stones);
+}
+
+function transTableHas(hashTable, keyLen, keySum, moves, position) {
+	const stones = getStones(moves);
+	const key = constructaHashKey(stones);
+	const list = hashTable[keyLen][key];
+	if (hashTable[keyLen][key]) {
+		for (let i = 0; i < hashTable[keyLen][key].length; i++) {
+			const st = hashTable[keyLen][key][i];
+			let j = stones.length - 1;
+			for(; j >=0; j--) {
+				if (stones[j] != st[j]) break;
+			}
+			if (j < 0) return true;
+		}
+	}
+	return false;
+}
+*/
 //--------------------- VCF ------------------------
 
-const VCF_HASHTABLE_LEN = 5880420 + 4800000 + 104000000; //((135+224)*45)*91*4 + 80*60000 + 232*450000,
 let vcfHashTable = [],
 	vcfHashNextValue = 0,
 	vcfWinMoves = [],
@@ -472,6 +659,7 @@ let vcfInfo = {
 		hasCount: 0,
 		nodeCount: 0,
 		winMoves: vcfWinMoves,
+		maxHashCollision: 1,
 		continueInfo: [new Array(225), new Array(225), new Array(225), new Array(225)]
 	},
 	levelBInfo = {
@@ -490,60 +678,11 @@ function resetVCF(arr, color, maxVCF, maxDepth, maxNode) {
 	vcfInfo.pushPositionCount = 0;
 	vcfInfo.hasCount = 0;
 	vcfInfo.nodeCount = 0;
-	vcfInfo.continueInfo = [new Array(225), new Array(225), new Array(225), new Array(225)];
-
+	vcfInfo.maxHashCollision = 1;
 	vcfWinMoves.length = 0;
+	vcfInfo.continueInfo = [new Array(225), new Array(225), new Array(225), new Array(225)];
 	resetHashTable(vcfHashTable);
 }
-
-/*
-// 会改变moves
-// 添加失败分支
-function vcfMovesPush(keyLen, keySum, move) {
-    if (vcfHashNextValue >= VCF_HASHTABLE_LEN) {
-        return 0;
-    }
-
-    let movesByte = ((keyLen >>> 2) + 1) << 2,
-        pNext = ((keyLen >>> 1) * 16155 + keySum) << 2,
-        pMoves = new Uint32Array(vcfHashTable, pNext, 1);
-    while (pMoves[0]) {
-        pNext = pMoves[0] + movesByte;
-        //post("vConsole", `pNext: ${pNext}\n pMoves[0]: ${pMoves[0]}\n movesByte: ${movesByte}`)
-        pMoves = new Uint32Array(vcfHashTable, pNext, 1);
-    }
-
-    pMoves[0] = vcfHashNextValue;
-
-    let newMoves = new Uint8Array(vcfHashTable, pMoves[0], movesByte);
-    newMoves[0] = keyLen;
-    for (let i = 0; i < keyLen; i++) {
-        newMoves[1 + i] = move[i];
-    }
-
-    pNext = pMoves[0] + movesByte;
-    //post("vConsole", `pNext: ${pNext}\n pMoves[0]: ${pMoves[0]}\n movesByte: ${movesByte}`)
-    pMoves = new Uint32Array(vcfHashTable, pNext, 1);
-    pMoves[0] = 0;
-    vcfHashNextValue = pNext + 4;
-
-    return vcfHashNextValue;
-}
-
-// 对比VCF手顺是否相等
-function vcfMovesHas(keyLen, keySum, move) {
-    let movesByte = ((keyLen >>> 2) + 1) << 2,
-        pNext = ((keyLen >>> 1) * 16155 + keySum) << 2,
-        pMoves = new Uint32Array(vcfHashTable, pNext, 1);
-    while (pMoves[0]) {
-        if (isRepeatMove(move, new Uint8Array(vcfHashTable, pMoves[0] + 1, keyLen))) return true;
-        pNext = pMoves[0] + movesByte;
-        //post("vConsole", `pNext: ${pNext}\n pMoves[0]: ${pMoves[0]}\n movesByte: ${movesByte}`)
-        pMoves = new Uint32Array(vcfHashTable, pNext, 1);
-    }
-    return false;
-}
-*/
 
 //---------------------- VCT ----------------------------
 

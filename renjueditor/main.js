@@ -78,6 +78,7 @@
         			}
         			log(file.name);
 					window.setBlockUnload(true);
+					cBoard.cle();
         		} catch (e) { console.error(e.stack) }
         		this.value = "";
         	}
@@ -124,7 +125,7 @@
         			msgbox({ text: `长按图片天元点可对齐棋盘\n（鼠标可右键代替长按）`, btnNum: 1 });
         		}
         		const array = cBoard.getArray();
-        		array.find(v => v > 0) ? (pushGame(createGame(array)), loadGame(gameIndex), window.setBlockUnload(true)) : window.warn("空棋盘");
+        		array.find(v => v > 0) ? (pushGame(createGame(array, cBoard)), loadGame(gameIndex), window.setBlockUnload(true)) : window.warn("空棋盘");
         	}
         },
         {
@@ -247,43 +248,48 @@
             type: "btnRotate90",
             text: "↗90°",
             touchend: () => {
-    			miniBoard.rotate90(true)
-    			
+    			miniBoard.rotate90(true);
+    			changeGame();
             }
         },
         {
             type: "btnRotate180",
             text: "↔180°",
             touchend: () => {
-            	miniBoard.rotate180(true)
+            	miniBoard.rotateY180(true);
+            	changeGame();
             }
         },
         {
             type: "btnUp",
             text: "↑",
             touchend: () => {
-            	miniBoard.translate(-1, 0)
+            	miniBoard.translate(-1, 0);
+            	changeGame();
             }
         },
         {
             type: "btnDown",
             text: "↓",
             touchend: () => {
-            	miniBoard.translate(1, 0)
+            	miniBoard.translate(1, 0);
+            	changeGame();
             }
         },
         {
             type: "btnLeft",
             text: "←",
             touchend: () => {
-            	miniBoard.translate(0, -1)
+            	miniBoard.translate(0, -1);
+            	changeGame();
             }
         },
         {
             type: "btnRight",
             text: "→",
             touchend: () => {
-            	miniBoard.translate(0, 1)
+            	miniBoard.translate(0, 1);
+            	changeGame();
             }
         },
         {
@@ -617,7 +623,7 @@
     	return game && game.labels;
     }
     
-    function setLabels(game, board = cBoard) {
+    function setLabels(game, board) {
     	const labels = [];
     	board.P.map((p, i) => {
     		const type = p.type;
@@ -626,15 +632,24 @@
     	labels.length && (game.labels = labels)
     }
     
-    function createGame(array) {
-    	if(cBoard.MS.length) {
-    		array.stones = cBoard.getCodeType(TYPE_NUMBER) || undefined;
-    		array.blackStones = cBoard.getCodeType(TYPE_BLACK) || undefined;
-    		array.whiteStones = cBoard.getCodeType(TYPE_WHITE) || undefined;
-    		array.sequence = cBoard.MSindex + 1;
-    	}
-    	setLabels(array);
+    function setStones(game, board) {
+    	game.stones = board.getCodeType(TYPE_NUMBER) || undefined;
+    	game.blackStones = board.getCodeType(TYPE_BLACK) || undefined;
+    	game.whiteStones = board.getCodeType(TYPE_WHITE) || undefined;
+    	game.sequence = board.MSindex + 1;
+    }
+    
+    function createGame(array, board) {
+    	board.getCodeType(TYPE_NUMBER) && setStones(array, board);
+    	setLabels(array, board);
     	return array;
+    }
+    
+    function changeGame() {
+    	const array = miniBoard.getArray();
+    	games[gameIndex].sequence && setStones(array, miniBoard);
+    	setLabels(array, miniBoard);
+    	Object.assign(games[gameIndex], array);
     }
     
     function getRandomRotate() {
@@ -699,11 +714,16 @@
     	if (0 <= idx && idx < games.length) {
             gameIndex = idx;
             const game = games[gameIndex];
-            (game.stones || game.blackStones || game.whiteStones) ? miniBoard.unpackCode(`${game.stones}{${game.blackStones}}{${game.whiteStones}}`, undefined, true) : miniBoard.unpackArray(game);
+            if (game.stones || game.blackStones || game.whiteStones) {
+            	miniBoard.unpackCode(`${game.stones}{${game.blackStones}}{${game.whiteStones}}`, undefined, true)
+            }
+            else {
+            	miniBoard.unpackArray(game);
+            }
+            printLabels(miniBoard, game.labels);
             titleBox.value = game.title || "";
             commentBox.value = game.comment || "";
             log1(`第${gameIndex+1}题 / ${games.length}题`);
-            printLabels(miniBoard, game.labels);
         }
         else if(games.length == 0) {
         	miniBoard.cle();
@@ -926,9 +946,8 @@
                 if (idx < 0) return;
                 const moveX = ~~((miniBoard.size - 1) / 2) - (idx % 15);
                 const moveY = ~~((miniBoard.size - 1) / 2) - ~~(idx / 15);
-                cBoard.translate(moveY, moveX);
-        		const arr = cBoard.getArray();
-        		arr.find(v => v > 0) ? (pushGame(createGame(arr)), loadGame(gameIndex), window.setBlockUnload(true)) : window.warn("空棋盘");
+                const arr = cBoard.getArray();
+        		arr.find(v => v > 0) ? (pushGame(createGame(arr, cBoard)), loadGame(gameIndex), miniBoard.translate(moveY, moveX), changeGame(), window.setBlockUnload(true)) : window.warn("空棋盘");
             }
         })
         bindEvent.addEventListener(cbd.viewBox, "zoomstart", (x1, y1, x2, y2) => {
@@ -944,7 +963,7 @@
 		titleBox.viewElem.addEventListener("input", () => games[gameIndex] && (games[gameIndex].title = titleBox.value))
 		commentBox.viewElem.addEventListener("input", () => games[gameIndex] && (games[gameIndex].comment = commentBox.value))
     }
-
+    
     async function onloadPage(pageIndex, numPages, url) {
         const {scale, scrollLeft, scrollTop, left, top} = getFirstArea();
         canSetFirstArea = true;

@@ -233,3 +233,31 @@ try{
 	}
 })
 }catch(e){alert(e.stack)}
+
+
+self.cBoard = fullscreenUI.contentWindow.cBoard
+self.findVCF = fullscreenUI.contentWindow.findVCF
+self.engine = fullscreenUI.contentWindow.engine
+engine.board = cBoard;
+try{
+(async ()=>{
+	console.log(1)
+	console.log(await engine.findVCF({
+	arr: cBoard.getArray(),
+	color: 1,
+	maxVCF: 1,
+	maxDepth: 180,
+	maxNode: 2560000
+	}))
+	console.log(2)
+})()
+}catch(e){console.error(e.stack)}
+try{
+	findVCF(cBoard.getArray(),1,1,180,1000000)
+}catch(e){console.error(e.stack)}
+
+let s = 1;
+for(let i = 1; i < 226; i++) {
+	s *= i;
+}
+console.log(s)

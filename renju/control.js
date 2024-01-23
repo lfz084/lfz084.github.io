@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2024.02";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2024.03";
 window.control = (() => {
 	try {
 		"use strict";
@@ -493,7 +493,7 @@ window.control = (() => {
 								ftype: ONLY_VCF,
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000000
+								maxNode: 2560000
 							})
 						},
 						3: async function() {
@@ -503,7 +503,7 @@ window.control = (() => {
 								ftype: ONLY_SIMPLE_WIN,
 								maxVCF: 1,
 								maxDepth: 3,
-								maxNode: 1000000
+								maxNode: 2560000
 							})
 						},
 						4: async function() {
@@ -513,7 +513,7 @@ window.control = (() => {
 								ftype: FIND_ALL,
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000000
+								maxNode: 2560000
 							})
 						},
 						5: async function() {
@@ -592,7 +592,7 @@ window.control = (() => {
 								color: getRenjuSelColor(),
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000000
+								maxNode: 2560000
 							})
 						},
 						2: async function() {
@@ -601,7 +601,7 @@ window.control = (() => {
 								color: getRenjuSelColor(),
 								maxVCF: 255,
 								maxDepth: 180,
-								maxNode: 1000000
+								maxNode: 2560000
 							})
 						},
 						3: async function() {
@@ -610,7 +610,7 @@ window.control = (() => {
 								color: getRenjuSelColor(),
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000000
+								maxNode: 2560000
 							});
 						},
 						4: async function() {
@@ -619,10 +619,10 @@ window.control = (() => {
 								color: getRenjuSelColor(),
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000000,
+								maxNode: 2560000,
 								maxVCT: 1,
 								maxDepthVCT: 4 * 2 - 3,
-								maxNodeVCT: 1000000
+								maxNodeVCT: 2560000
 							})
 						},
 						5: async function() {
@@ -631,7 +631,7 @@ window.control = (() => {
 								color: getRenjuSelColor(),
 								maxVCF: 1,
 								maxDepth: 4 * 2 - 3,
-								maxNode: 1000000,
+								maxNode: 2560000,
 								nMaxDepth: 180
 							});
 						},
@@ -641,7 +641,7 @@ window.control = (() => {
 								color: getRenjuSelColor(),
 								maxVCF: 1,
 								maxDepth: 5 * 2 - 3,
-								maxNode: 1000000,
+								maxNode: 2560000,
 								nMaxDepth: 180
 							});
 						},
@@ -657,7 +657,7 @@ window.control = (() => {
 								color: 1,
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000000
+								maxNode: 2560000
 							});
 						},
 						9: async function() {
@@ -672,7 +672,7 @@ window.control = (() => {
 								color: getRenjuSelColor(),
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000000,
+								maxNode: 2560000,
 								blkDepth: 1
 							});
 						},
@@ -682,7 +682,7 @@ window.control = (() => {
 								color: getRenjuSelColor(),
 								maxVCF: 1,
 								maxDepth: 180,
-								maxNode: 1000000,
+								maxNode: 2560000,
 								blkDepth: 2
 							});
 						},

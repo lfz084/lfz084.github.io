@@ -226,3 +226,12 @@ function base64StringToBuffer(str) {
 	let asciiString = atob(str);
 	return new Uint8Array([...asciiString].map(char => char.charCodeAt(0))).buffer;
 }
+
+function replaceAll(str, pattern, replacement) {
+	if (str.replaceAll) return str.replaceAll(pattern, replacement);
+	let loopCount = str.length
+	while(str.indexOf(pattern) + 1 && loopCount-- > 0) {
+		str = str.replace(pattern, replacement);
+	}
+	return str;
+}

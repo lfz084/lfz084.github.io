@@ -418,7 +418,7 @@ window.makeVCF = (function() {
 			param.color = color;
 			param.maxVCF = 1;
 			param.maxDepth = 180;
-			param.maxNode = 1000000;
+			param.maxNode = 2560000;
 		}
 		return !!gameCode;
 	}
@@ -507,7 +507,7 @@ window.makeVCF = (function() {
 		const param = {
 			maxVCF: 2,
 			maxDepth: 180,
-			maxNode: 1000000
+			maxNode: 2560000
 		}
 		for (let i = 0; i < games.length; i++) {
 			param.arr = games[i];
