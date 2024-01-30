@@ -15,3 +15,12 @@
 	
 	VCT进攻级别判断bug
 	挡对手冲四时会忽略原来的V，出现进攻级别不够的误判
+	
+	
+	IOS桌面图标启动
+通过桌面图标启动后，navigator.standalone会等于true，只要判断这个变量就够了。
+
+安卓桌面图标启动
+通过桌面图标启动后，CSS的媒体查询是能够探测到的，换而用js写，下面的结果为True。
+
+window.matchMedia('(display-mode: standalone)').matches

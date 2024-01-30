@@ -1,6 +1,7 @@
 (async () => {
 	try {
 		"use strict";
+		let iswarn = true;
 		const d = document;
 		const dw = d.documentElement.clientWidth;
 		const dh = d.documentElement.clientHeight;
@@ -73,6 +74,29 @@
 				},
 				change: function() {
 					game.strength = this.input.value;
+				}
+			},
+			{
+				varName: "btnFile",
+				type: "file"
+			},
+			{
+				varName: "btnFileMenu",
+				type: "select",
+				options: [
+					0, "打开图片",
+					1, "导入JSON"
+				],
+				change:  function() {
+    				if (this.input.value == 0) {
+    					btnFile.input.onchange = openImg;
+    					btnFile.input.accept = "image/*";
+    				}
+    				else if(this.input.value == 1) {
+    					btnFile.input.onchange = openJSON;
+    					btnFile.input.accept = ".json";
+    				}
+    				btnFile.input.click();
 				}
 			}];
 				
@@ -255,15 +279,11 @@
 				touchend: function() {openItemBoard()}
 			},
 			{
-				varName: "btnOpenJSON",
-				type: "file",
-				text: "导入JSON",
-				change: async function() {
-    			try {
-        			mainUI.viewport.resize();
-        			await game.openJSON(this.files[0]);
-        		} catch (e) { console.error(e.stack) }
-        		this.value = "";
+				varName: "btnOpenFile",
+				type: "button",
+				text: "打开文件",
+				touchend: function() {
+					btnFileMenu.defaultontouchend()
 				}
 		}
 		];
@@ -279,13 +299,174 @@
 		gameButtonSettings.splice(28,0,null,null);
 		gameButtonSettings.splice(32,0,null,null);
 		
+		const imgButtonSettings = [
+        {
+            varName: "btnLock",
+            type: "checkbox",
+            text: "选定棋盘",
+            touchend: async function() {
+            	if (btnLock.checked) await lockArea();
+                else unlockArea();
+            }
+        },
+        {
+            type: "button",
+            text: "自动识别",
+            touchend: async function() {
+                if (!btnLock.checked) await lockArea();
+                cBoard.autoPut();
+            }
+        },
+        {
+            varName: "btnBlack",
+            type: "radio",
+            text: "● 棋",
+            group: "side1"
+        },
+        {
+            varName: "btnWhite",
+            type: "radio",
+            text: "○ 棋",
+            group: "side1"
+        },
+        mainUI.createMiniBoard({varName: "miniBoard"}),
+        null,
+        {
+        	type: "button",
+        	text: "摆入棋盘",
+        	touchend: function() {
+        		const array = cBoard.getArray();
+        		if (array.find(v => v > 0)) {
+        			putMiniBoard();
+        		}
+        		else window.warn("空棋盘");
+        	}
+        },
+        {
+            varName: "btnAuto",
+            type: "radio",
+            text: "◐ 棋",
+            group: "side1"
+        },
+        null,
+        null,
+        {
+            varName: "btnSLY",
+            type: "select",
+            text: "15 行",
+            options: [15, "15 行", "radio", 14, "14 行", "radio", 13, "13 行", "radio", 12, "12 行", "radio", 11, "11 行", "radio", 10, "10 行", "radio", 9, "9 行", "radio", 8, "8 行", "radio", 7, "7 行", "radio", 6, "6 行", "radio"],
+			change: function() {
+                cBoard.SLTY = this.input.value;
+                cBoard.resetP(cBoard.cutDiv);
+                if (!btnLock.checked) {
+                    cBoard.cleBorder();
+                    cBoard.printBorder();
+                }
+                else {
+                    unlockArea();
+                }
+            },
+            reset: function() {
+				const option = this.getOption(15);
+				option.li.click();
+            }
+        },
+        {
+            varName: "btnSLX",
+            type: "select",
+            text: "15 列",
+            options: [15, "15 列", "radio", 14, "14 列", "radio", 13, "13 列", "radio", 12, "12 列", "radio", 11, "11 列", "radio", 10, "10 列", "radio", 9, "9 列", "radio", 8, "8 列", "radio", 7, "7 列", "radio", 6, "6 列", "radio"],
+			change: function() {
+                cBoard.SLTX = this.input.value;
+                cBoard.resetP(cBoard.cutDiv);
+                if (!btnLock.checked) {
+                    cBoard.cleBorder();
+                    cBoard.printBorder();
+                }
+                else {
+                    unlockArea();
+                }
+            },
+            reset: function() {
+				const option = this.getOption(15);
+				option.li.click();
+            }
+        },
+        null,
+        null,
+        {
+            type: "btnUp",
+            text: "↑",
+            touchend: () => {
+            	miniBoard.translate(-1, 0);
+				changeGame();
+            }
+        },
+        {
+            type: "btnDown",
+            text: "↓",
+            touchend: () => {
+            	miniBoard.translate(1, 0);
+				changeGame();
+            }
+        },
+        null,
+        null,
+        {
+            type: "btnLeft",
+            text: "←",
+            touchend: () => {
+            	miniBoard.translate(0, -1);
+				changeGame();
+            }
+        },
+        {
+            type: "btnRight",
+            text: "→",
+            touchend: () => {
+            	miniBoard.translate(0, 1);
+				changeGame();
+            }
+        },
+        null,
+        null,
+        {
+			varName: "btnSize",
+			type: "select",
+			text: "15 路",
+			options: [15, "15 路", "radio", 14, "14 路", "radio", 13, "13 路", "radio", 12, "12 路", "radio", 11, "11 路", "radio", 10, "10 路", "radio", 9, "9 路", "radio", 8, "8 路", "radio", 7, "7 路", "radio", 6, "6 路", "radio"],
+			change: function() {
+				miniBoard.setSize(this.input.value);
+			},
+			reset: function() {
+				const option = this.getOption(15);
+				option.li.click();
+			},
+			onhidemenu: function() {}
+	    },
+        {
+        	type: "button",
+        	text: "开始解题",
+        	touchend: async function() {
+        		const array = miniBoard.getArray();
+        		if (array.find(v => v > 0)) {
+        			loadMiniBoardPuzzle()
+        		}
+        		else window.warn("小棋盘没有棋子");
+        	}
+        },
+		];
+    
+		
 		const hideCmdDiv = mainUI.createCmdDiv();
 		const renjuCmdDiv = mainUI.createCmdDiv();
+		const imgCmdDiv = mainUI.createCmdDiv();
 		const cBoard = mainUI.createCBoard();
 		hideCmdDiv.hide();
+		imgCmdDiv.hide();
 		mainUI.addButtons(mainUI.createButtons(menuSettings), hideCmdDiv, 0);
 		mainUI.addButtons(mainUI.createButtons(gameButtonSettings), renjuCmdDiv, 1);
-
+		mainUI.addButtons(mainUI.createButtons(imgButtonSettings), imgCmdDiv, 0);
 		const {
 			title,
 			sideLabel,
@@ -301,9 +482,19 @@
 			btnMode,
 			btnRotate,
 			btnStrength,
-			btnOpenPuzzles
+			btnOpenPuzzles,
+			btnOpenFile,
+			btnFileMenu,
+			btnFile,
+			btnLock,
+			btnBlack,
+			btnWhite,
+			btnAuto,
+			btnSLY,
+			btnSLX,
+			btnSize,
+			miniBoard
 		} = mainUI.getChildsForVarname();
-		
 		const boardWidth = 5;
 		const fontSize = mainUI.buttonHeight * 0.6;
 		const liHeight = mainUI.buttonHeight * 1.2;
@@ -424,7 +615,9 @@
 			mainUI.viewport.resize();
 			indexBoard.removeIndexes();
 			for(let i = 0;  i < game.puzzles.length; i++) {
-				const style = {opacity: `${game.data && game.data.progress && game.data.progress[i] ? 1 : 0.5}`};
+				const style = {
+					opacity: `${game.data && game.data.progress && game.data.progress[i] ? 1 : 0.5}`
+				};
 				indexBoard.createIndex(i+1, style)
 			}
 			inputButton.bindButton(indexLabel, mainUI.bodyScale);
@@ -598,6 +791,7 @@
 		
 		const game = {
 			STATE: {
+				IMAGELOADIMG: -1,
 				LOADING: 0,
 				PLAYING: 1 << 4,
 				GAMEOVER: 2 << 4,
@@ -622,17 +816,18 @@
 				rotate == undefined && (rotate = this.puzzle.rotate)
 				
 				const isLocation = window.location.href.indexOf("http://") > -1;
-				const delay = isLocation ? 5000 : this.puzzle.delayHelp * 60 * 1000;
+				const delay = isLocation ? 1000 : this.puzzle.delayHelp * 60 * 1000;
 				puzzle == undefined && (hideAIHelp(),delayAIHelp(delay));
 				
 				await this.stopThinking();
 				this.strength = this._strength;
 				this.notRotate = this._notRotate;
-				//!this.data && (this.data = {progress: new Array(this.puzzles.length).fill(0)});
 				this.board.canvas.width = this.board.canvas.height = this.board.width;
 				this.board.canvas.style.width = this.board.canvas.style.height = this.board.width + "px";
 				this.board.cle();
 				this.board.removeTree();
+				this.board.resetCBoardCoordinate();
+				this.board.printEmptyCBoard();
 				this.board.setSize(this.puzzle.size);
 				this.unpackCode();
 				this.printLabels();
@@ -664,7 +859,8 @@
 					(this.puzzle.randomRotate || rotate != undefined) && !this.notRotate ? this.randomRotate(rotate) : (this.rotate = 0);
 					!isLocation && (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE &&  delayCheckWin(1800);
 				}
-				html += this.puzzle.comment || ""
+				html += this.puzzle.comment || "";
+				html += this.state == this.STATE.PLAYING ? "\n\n开始解题......\n单击：两次确认落子\n双击：直接落子" : "";
 				outputInnerHTML({
 					title: this.puzzle.title,
 					ruleLabel: ruleStr,
@@ -717,7 +913,7 @@
 					this.board.rotateY180();
 					this.board.rotateMovesY180(this.options || []);
 				}
-				for(let i = n % 4; i >= 0; i--) {
+				for(let i = n % 4; i > 0; i--) {
 					this.board.rotate90();
 					this.board.rotateMoves90(this.options || []);
 				}
@@ -775,7 +971,7 @@
 				const oldData = await puzzleData.getDataByKey(newData.key) || {};
 				
 				if(Object.keys(oldData).length) {
-					warn("不用重复添加题集");
+					window.warn("不用重复添加题集");
 				}
 				else puzzleData.addData(newData);
 				//IndexedDB.clearStore("puzzle")
@@ -807,9 +1003,27 @@
 			get state() { return this._state },
 			set state(st) {
 				this._state = st;
-				if (this._state == this.STATE.LOADING)(canvasClick = canvasDblClick = () => {})
-				else if (this._state == this.STATE.PLAYING)(canvasClick = canvasClick_playing, canvasDblClick = canvasDblClick_playing)
-				else if ((this._state & 0xF0) == this.STATE.GAMEOVER)(canvasClick = canvasClick_gameover, canvasDblClick = canvasDblClick_gameover)
+				if (this._state == this.STATE.IMAGELOADIMG) {
+					canvasClick = canvasClick_imageLoading;
+					canvasDblClick = canvasDblClick_imageLoading;
+					canvasDblTouchStart = canvasDblTouchStart_imageLoading;
+					canvasContextMenu = canvasContextMenu_imageLoading;
+				}
+				else if (this._state == this.STATE.LOADING) {
+					canvasClick = canvasDblClick = canvasDblTouchStart = canvasContextMenu = () => {};
+				}
+				else if (this._state == this.STATE.PLAYING) {
+					canvasClick = canvasClick_playing;
+					canvasDblClick = canvasDblClick_playing;
+					canvasDblTouchStart = canvasDblTouchStart_playing;
+					canvasContextMenu = canvasContextMenu_playing;
+				}
+				else if ((this._state & 0xF0) == this.STATE.GAMEOVER) {
+					canvasClick = canvasClick_gameover;
+					canvasDblClick = canvasDblClick_gameover;
+					canvasDblTouchStart = canvasDblTouchStart_gameover;
+					canvasContextMenu = canvasContextMenu_gameover;
+				}
 				return this._state;
 			},
 			get strength() { return this._strength },
@@ -855,8 +1069,8 @@
 						game.state == game.STATE.WIN && puzzleData.saveProgress(game);
 						output.tree && game.board.addTree(output.tree);
 						output.options && (game.board.cleLb("all"), game.continuePutStone(output.options))
-						output.warn && warn(output.warn, 1500);
-						output.comment && (output.comment += `\n\n\n解题结束\n开始复盘\n1.点击空格落子\n2.点击棋子悔棋`)
+						output.warn && window.warn(output.warn, 1500);
+						output.comment && (output.comment += `\n\n\n解题结束\n开始复盘......\n1.点击空格落子\n2.点击棋子悔棋`)
 						output.errorPoints && game.continuePutStone(output.errorPoints, "✕", game.board.bNumColor)
 					}
 					outputInnerHTML(output);
@@ -891,21 +1105,253 @@
 				cBoard.showStone(idx, TYPE_NUMBER);
 			}
 		}
+		
+		async function unlockArea() {
+			btnLock.setChecked(false);
+			await cBoard.unlockArea();
+			mainUI.viewport.userScalable();
+		}
+		
+		async function lockArea() {
+			btnLock.setChecked(true);
+			await cBoard.lockArea();
+			mainUI.viewport.resize();
+		}
+		
+		function newGame() {
+			closeBoards();
+			btnLock.checked && unlockArea();
+			btnBlack.defaultontouchend();
+			btnSLX.input.value = btnSLY.input.value = btnSize.input.value = 15;
+			cBoard.setSize(15);
+			cBoard.cle();
+			cBoard.setScale(1, false);
+			cBoard.resetCBoardCoordinate();
+			cBoard.printEmptyCBoard();
+			cBoard.resetNum = 0;
+			cBoard.firstColor = "black";
+			miniBoard.setSize(15);
+			miniBoard.cle();
+			miniBoard.setScale(1, false);
+			miniBoard.game = undefined;
+		}
+		
+		function imageMode() {
+			newGame();
+			game.state = game.STATE.IMAGELOADIMG;
+			cBoard.resetCutDiv();
+			renjuCmdDiv.hide();
+			imgCmdDiv.show();
+			[btnSLX, btnSLY, btnSize].map(btn => {
+				const option = btn.getOption(15);
+				option.li.click();
+			})
+		}
+		
+		function puzzleMode() {
+			newGame();
+			game.state = game.STATE.LOADIMG;
+			cBoard.hideCutDiv();
+			renjuCmdDiv.show();
+			imgCmdDiv.hide();
+		}
+		
+		async function openImg() {
+			try {
+				imageMode();
+				await cBoard.loadImgFile(this.files[0]);
+				cBoard.putImg(cBoard.bakImg, cBoard.canvas, cBoard.width / 13);
+			} catch (e) { console.error(e.stack) }
+			this.value = "";
+		}
+		
+		async function openJSON() {
+			try {
+				mainUI.viewport.resize();
+				await game.openJSON(this.files[0]);
+			} catch (e) { console.error(e.stack) }
+			this.value = "";
+		}
+		
+		function getArray(game) {
+			const size = miniBoard.size;
+    		const arr = game || new Array(226).fill(0);
+    		for (let x = 0; x < 15; x++) {
+    			for (let y = 0; y < 15; y++) {
+    				const idx = y * 15 + x;
+    				if (arr[idx] < 1) {
+    					arr[idx] = x < size && y < size ? 0 : -1;
+    				}
+    			}
+    		}
+    		return arr;
+    	}
+    
+    	function getSide(game) {
+    		const arr = getArray(game);
+    		let numBlackStones = 0, numWhiteStones = 0;
+    		arr.map(v => { v == 1 && numBlackStones++; v == 2 && numWhiteStones++ })
+    		return numWhiteStones < numBlackStones ? 2 : 1;
+    	}
+		
+		function setStones(game, board) {
+			game.stones = board.getCodeType(TYPE_NUMBER) || undefined;
+			game.blackStones = board.getCodeType(TYPE_BLACK) || undefined;
+			game.whiteStones = board.getCodeType(TYPE_WHITE) || undefined;			game.sequence = board.MSindex + 1;
+		}
+		
+		function createGame(array, board) {
+			board.getCodeType(TYPE_NUMBER) && setStones(array, board);
+			return array;
+		}
+		
+		function changeGame() {
+			const array = miniBoard.getArray();
+			miniBoard.game.sequence && setStones(array, miniBoard);
+			Object.assign(miniBoard.game, array);
+		}
+		
+		function createPuzzle(game) {
+			return {
+				arr: getArray(game),
+				side: getSide(game),
+				rule: 2,
+				size: miniBoard.size,
+				mode: 96,
+				randomRotate: false,
+				stones: game.stones,
+				blackStones: game.blackStones,
+				whiteStones: game.whiteStones,
+				sequence: game.sequence
+			}
+		}
+		
+		function loadGame(game) {
+			if (game.stones || game.blackStones || game.whiteStones) {
+				miniBoard.unpackCode(`${game.stones}{${game.blackStones}}{${game.whiteStones}}`, undefined, true);
+			}
+			else {
+				miniBoard.unpackArray(game);
+			}
+		}
+		
+		function putMiniBoard() {
+        	if (iswarn && (cBoard.SLTX != miniBoard.size || cBoard.SLTY != miniBoard.size)) {
+        		iswarn = false;
+        		msgbox({ text: `长按图片天元点可对齐棋盘\n（鼠标可右键代替长按）`, btnNum: 1 });
+        	}
+			const game = createGame(cBoard.getArray(), cBoard);
+			miniBoard.game = game;
+			loadGame(game);
+			if (cBoard.SLTX == miniBoard.size && cBoard.SLTY == miniBoard.size) {
+				loadMiniBoardPuzzle();
+			}
+		}
+		
+		async function createJSON() {
+			const puzzles = [createPuzzle(miniBoard.game)];
+			const logStr = await puzzleAI.checkPuzzles(puzzles, miniBoard, ()=>{});
+            const json = await puzzleCoder.puzzles2RenjuJSON({puzzles}, ()=>{});
+        	return json;
+		}
+		
+		async function loadMiniBoardPuzzle() {
+			try{
+			const jsonStr = await createJSON();
+			puzzleMode();
+			await game.loadJSON(jsonStr);
+			}catch(e){console.error(e.stack)}
+		}
 
-		let canvasClick, canvasDblClick;
+		let canvasClick, canvasDblClick, canvasDblTouchStart, canvasContextMenu;
 
 		function addEvents() {
 			bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale, mainUI.upDiv);
 			bindEvent.addEventListener(cBoard.viewBox, "click", click);
 			bindEvent.addEventListener(cBoard.viewBox, "dblclick", doubleClick);
-			bindEvent.addEventListener(cBoard.viewBox, "dbltouchstart", continueBack);
-			bindEvent.addEventListener(cBoard.viewBox, "contextmenu", continueBack);
-			/*bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => cBoard.zoomStart(x1, y1, x2, y2))*/
+        	bindEvent.addEventListener(cBoard.viewBox, "dbltouchstart", dbltouchstart);
+        	bindEvent.addEventListener(cBoard.viewBox, "contextmenu", contextmenu);
+        	/*bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => cBoard.zoomStart(x1, y1, x2, y2))*/
 			function click(x, y) { canvasClick(x, y) }
-
 			function doubleClick(x, y) { canvasDblClick(x, y) }
+			function dbltouchstart(x, y) { canvasDblTouchStart(x, y) }
+			function contextmenu(x, y) { canvasContextMenu(x, y) }
 		}
-
+		
+		function autoStoneLockMode(idx) {
+			if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+				cBoard.cleNb(idx, true);
+			}
+			else if (cBoard.P[idx].type == TYPE_EMPTY) {
+				cBoard.wNb(idx, "auto", true);
+			}
+		}
+		
+		function blackStoneLockMode(idx) {
+			if (cBoard.P[idx].type == TYPE_NUMBER) {
+				cBoard.cleNb(idx, true);
+			}
+			else if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+				cBoard.P[idx].cle();
+			}
+			else if (cBoard.P[idx].type == TYPE_EMPTY) {
+				cBoard.P[idx].printNb(EMOJI_STAR_BLACK, "black", cBoard.gW, cBoard.gH, cBoard.bNumColor);
+			}
+		}
+		
+		function whiteStoneLockMode(idx) {
+			if (cBoard.P[idx].type == TYPE_NUMBER) {
+				cBoard.cleNb(idx, true);
+			}
+			else if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
+				cBoard.P[idx].cle();
+			}
+			else if (cBoard.P[idx].type == TYPE_EMPTY) {
+				cBoard.P[idx].printNb(EMOJI_STAR_BLACK, "white", cBoard.gW, cBoard.gH, cBoard.wNumColor);
+			}
+		}
+		
+		function canvasClick_imageLoading(x, y) {
+			if (btnLock.checked) {
+				const idx = cBoard.getIndex(x, y);
+				if (btnAuto.checked) autoStoneLockMode(idx);
+				else if (btnBlack.checked) blackStoneLockMode(idx);
+				else if (btnWhite.checked) whiteStoneLockMode(idx);
+			}
+			else {
+				const p = { x: x, y: y };
+                cBoard.setxy(p, event && event.type == "click" ? 2 : 1);
+                cBoard.setCutDiv(p.x, p.y, true);
+                cBoard.resetP();
+                cBoard.printBorder();
+			}
+		}
+		
+		function canvasDblClick_imageLoading(x, y) {}
+		
+		function canvasDblTouchStart_imageLoading(x, y) {
+			if (!btnLock.checked) cBoard.selectArea(x, y)
+		}
+		
+		function canvasContextMenu_imageLoading(x, y) {
+			if (btnLock.checked) {
+				const idx = cBoard.getIndex(x, y);
+				if (idx < 0) return;
+				const moveX = ~~((miniBoard.size - 1) / 2) - (idx % 15);
+				const moveY = ~~((miniBoard.size - 1) / 2) - ~~(idx / 15);
+				const arr = cBoard.getArray();
+				if (arr.find(v => v > 0)) {
+					putMiniBoard();
+					miniBoard.translate(moveY, moveX);
+					changeGame();
+				}
+				else window.warn("空棋盘");
+			}
+			else {
+				cBoard.selectArea(x, y)
+			}
+		}
+		
 		function canvasClick_playing(x, y) {
 			const idx = cBoard.getIndex(x, y);
 			if (game.state == game.STATE.PLAYING) {
@@ -928,6 +1374,11 @@
 				playerTryPutStone(idx);
 			}
 		}
+		
+		function canvasDblTouchStart_playing(x, y) {}
+		
+		function canvasContextMenu_playing(x, y) {}
+		
 
 		function canvasClick_gameover(x, y) {
 			const idx = cBoard.getIndex(x, y);
@@ -945,7 +1396,7 @@
 
 		function canvasDblClick_gameover(x, y) {}
 
-		function continueBack(x, y) {
+		function canvasDblTouchStart_gameover(x, y) {
 			if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
 				const idx = cBoard.getIndex(x, y);
 				while ((cBoard.P[idx].type & 0xF0) == TYPE_NUMBER && cBoard.MSindex > -1) {
@@ -954,6 +1405,8 @@
 				}
 			}
 		}
+		
+		const canvasContextMenu_gameover = canvasDblTouchStart_gameover;
 
 		cBoard.stonechange = function() {
 			if (this.tree) {
@@ -986,5 +1439,6 @@
 				game.loadJSON(json)
 			}
 		});
+		
 	} catch (e) { alert(e.stack) }
 })()

@@ -39,7 +39,7 @@ window.fullscreenUI = (() => {
 		const numButtons = 4;
 		const btnTag = "div";
 
-		const butWidth = ~~(boardH * 98 / gridWidth);
+		const butWidth = ~~(boardH * 108 / gridWidth);
 		const imgWidth = butWidth / 1.8;
 		const butPadding = (butWidth - imgWidth) / 2;
 

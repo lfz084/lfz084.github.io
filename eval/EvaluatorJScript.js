@@ -1824,7 +1824,7 @@ function loadEvaluatorJScript() {
             //console.warn(`color: ${color}, maxVCF: ${maxVCF}, maxDepth: ${maxDepth}\n maxNode: ${maxNode}`);
             //post("vConsole", `color: ${color}, maxVCF: ${maxVCF}, maxDepth: ${maxDepth}\n maxNode: ${maxNode}`);
             while (!done) {
-                if (!(loopCount & 0xffff) && typeof post == "function") post({ cmd: "moves", param: { moves: moves, firstColor: color } });
+                if (!(loopCount & 0x3FFFF) && typeof post == "function") post({ cmd: "moves", param: { moves: moves, firstColor: color } });
                 nColorIdx = stackIdx.pop();
                 colorIdx = stackIdx.pop();
 

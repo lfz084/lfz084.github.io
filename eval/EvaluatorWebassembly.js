@@ -303,6 +303,7 @@ function loadEvaluatorWebassembly() {
                         stackIdx = [-1, -1, 225, 225],
                         sum = 0,
                         sum1 = 0,
+                        position = new Uint8Array(225),
                         done = false,
                         pushMoveCount = 0,
                         pushPositionCount = 0,
@@ -311,14 +312,16 @@ function loadEvaluatorWebassembly() {
                         continueInfo = vcfInfo.continueInfo;
 
                     while (!done) {
-                        if (!(loopCount & 0xffff) && typeof post == "function") post({ cmd: "moves", param: { moves: moves, firstColor: color } });
+                        if (!(loopCount & 0x3FFFF) && typeof post == "function") post({ cmd: "moves", param: { moves: moves, firstColor: color } });
                         nColorIdx = stackIdx.pop();
                         colorIdx = stackIdx.pop();
 
                         if (colorIdx > -1) {
                             if (colorIdx < 225) {
-                                int8Arr[colorIdx] = color;
+                                int8Arr[colorIdx]  = color;
                                 int8Arr[nColorIdx] = INVERT_COLOR[color];
+                                position[colorIdx] = 1;
+                                position[nColorIdx] = 2;
                                 moves.push(colorIdx);
                                 continueInfo[3][colorIdx] |= continueInfo[color][colorIdx] = color;
                                 moves.push(nColorIdx);
@@ -328,7 +331,7 @@ function loadEvaluatorWebassembly() {
                                 stackIdx.push(-1, -1);
                             }
                             
-                            if (transTableHas(vcfHashTable, moves.length, sum, sum1, moves, int8Arr)) {
+                            if (transTableHas(vcfHashTable, moves.length, sum, sum1, moves, position)) {
                                 hasCount++;
                             }
                             else {
@@ -384,7 +387,7 @@ function loadEvaluatorWebassembly() {
                                             isConcat = false;
                                             vcfInfo.vcfCount++;
                                             maxVCF > 1 && "post" in self && post({ cmd: "vcfInfo", param: { vcfInfo: vcfInfo } });
-                                            transTablePush(vcfHashTable, moves.length, sum, sum1, moves, int8Arr);
+                                            transTablePush(vcfHashTable, moves.length, sum, sum1, moves, position);
                                             
                                             if (vcfInfo.vcfCount == 0x3FF || vcfWinMoves.length == maxVCF) {
                                                 for (let j = moves.length - 1; j >= 0; j--) {
@@ -443,13 +446,13 @@ function loadEvaluatorWebassembly() {
                                 pushMoveCount++;
                             else
                                 pushPositionCount++;
-                            transTablePush(vcfHashTable, moves.length, sum, sum1, moves, int8Arr);
+                            transTablePush(vcfHashTable, moves.length, sum, sum1, moves, position);
 
                             if (moves.length) {
                                 let idx = moves.pop();
-                                int8Arr[idx] = 0;
+                                int8Arr[idx] = position[idx] = 0;
                                 idx = moves.pop();
-                                int8Arr[idx] = 0;
+                                int8Arr[idx] = position[idx] = 0;
                                 idx & 1 ? sum -= idx : sum1 -= idx;
                             }
                             else {

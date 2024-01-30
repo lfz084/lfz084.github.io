@@ -87,7 +87,7 @@ Promise.all(ps).then(()=>{console.log(5)})
 
 selectPoint(cBoard.getArray(), 1, 2, 1, 180, 100000).map((v, idx) => v > 0 && cBoard.wLb(idx, "a", "black"))
 
-{arr: cBoard.getArray(), color: 1, radius: 2, maxVCF: 1, maxDepth: 180, maxNode: 10000, ftype: 0}
+{arr: cBoard.getArray(), color: 1, radius: 2, maxVCF: 1, maxDepth: 225, maxNode: 10000, ftype: 0}
 
 let ps = [new Promise((resolve,reject)=>{setTimeout(resolve, 1000)}),
 new Promise((resolve,reject)=>{setTimeout(resolve, 2000)}),
@@ -234,20 +234,24 @@ try{
 })
 }catch(e){alert(e.stack)}
 
+loadScript("debug/debugModule.js")
 
 self.cBoard = fullscreenUI.contentWindow.cBoard
 self.findVCF = fullscreenUI.contentWindow.findVCF
 self.engine = fullscreenUI.contentWindow.engine
 engine.board = cBoard;
+
+try{findVCF(cBoard.getArray(),1,1,180,2560000)}catch(e){console.error(e.stack)}
+
 try{
 (async ()=>{
 	console.log(1)
 	console.log(await engine.findVCF({
 	arr: cBoard.getArray(),
 	color: 1,
-	maxVCF: 1,
-	maxDepth: 180,
-	maxNode: 2560000
+	maxVCF: 256,
+	maxDepth: 225,
+	maxNode: 7680000
 	}))
 	console.log(2)
 })()

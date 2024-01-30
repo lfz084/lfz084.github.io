@@ -132,7 +132,7 @@ window.puzzleAI = (() => {
 				arr: game.board.getArray(),
 				color: game.playerSide,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000
 			}
 			const levelInfo = getLevel(param.arr, param.color);
@@ -156,7 +156,7 @@ window.puzzleAI = (() => {
 				arr: game.board.getArray(),
 				color: game.playerSide,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000,
 				maxVCT: 1,
 				maxDepthVCT: (game.residueStones + 1) * 2 - 3,
@@ -335,7 +335,7 @@ window.puzzleAI = (() => {
 				arr,
 				color,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000
 			})
 		}
@@ -346,7 +346,7 @@ window.puzzleAI = (() => {
 				arr: arr,
 				ftype: FIND_ALL,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 1000
 			})
 		}
@@ -356,7 +356,7 @@ window.puzzleAI = (() => {
 				arr,
 				color,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000,
 				maxVCT: 1,
 				maxDepthVCT: 4 * 2 - 3,
@@ -383,7 +383,7 @@ window.puzzleAI = (() => {
 				arr,
 				color: 1,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000
 			});
 		}
@@ -394,7 +394,7 @@ window.puzzleAI = (() => {
 				color,
 				ftype: FIND_ALL,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000
 			})
 		}
@@ -404,7 +404,7 @@ window.puzzleAI = (() => {
 				arr,
 				color,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000,
 				blkDepth: 1
 			});
@@ -415,7 +415,7 @@ window.puzzleAI = (() => {
 				arr,
 				color,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000
 			});
 		}
@@ -436,7 +436,7 @@ window.puzzleAI = (() => {
 				arr,
 				color,
 				maxVCF: 1,
-				maxDepth: 180,
+				maxDepth: 225,
 				maxNode: 2560000,
 				blkDepth: 2
 			});
@@ -558,7 +558,7 @@ window.puzzleAI = (() => {
 			let logStr = "";
 			for(let i = 0; i < puzzles.length; i++) {
 				const puzzle = puzzles[i];
-				board.setSize = puzzle.size;
+				board.setSize(puzzle.size);
 				board.unpackArray(puzzle.arr);
 				const rt = await autoSetMode(puzzle, board);
 				const codeArr = board.getCode().split(/{|}/);

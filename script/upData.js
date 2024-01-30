@@ -376,10 +376,10 @@ window.upData = (function() {
     	const response = await loadCache(cache, url);
     	if (response) {
     		DEBUG_UPDATA && console.info(`upData.js: saveCacheFile loaded "${url}" in cache ${version}`)
-    		return true;
+    		return 2;
     	}
     	else {
-    		return !!await downloadToCache(url, cache);
+    		return !!await downloadToCache(url, cache) ? 1 : 0;
     	}
     }
     
@@ -397,8 +397,9 @@ window.upData = (function() {
     	
     	const funPromise = async () => { 
     			const url = urls.shift();
-    			!(await saveCacheFile(url, cache)) && errUrls.push(url);
-    			window.loadAnimation && loadAnimation.text(`下载资源 ${++countFiles} / ${numFiles}`)
+    			const rt = await saveCacheFile(url, cache);
+    			rt == 0 && errUrls.push(url);
+    			rt === 1 && window.loadAnimation && loadAnimation.text(`下载离线资源<br> ${++countFiles} / ${numFiles}`)
     		}
     		
     	while (urls.length) {

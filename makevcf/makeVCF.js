@@ -506,7 +506,7 @@ window.makeVCF = (function() {
 		const warn = [];
 		const param = {
 			maxVCF: 2,
-			maxDepth: 180,
+			maxDepth: 225,
 			maxNode: 2560000
 		}
 		for (let i = 0; i < games.length; i++) {

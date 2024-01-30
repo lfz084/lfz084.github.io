@@ -482,7 +482,7 @@ window.control = (() => {
 								arr: arr,
 								ftype: FIND_ALL,
 								maxVCF: 1,
-								maxDepth: 180,
+								maxDepth: 225,
 								maxNode: 1000
 							})
 						},
@@ -492,7 +492,7 @@ window.control = (() => {
 								arr: arr,
 								ftype: ONLY_VCF,
 								maxVCF: 1,
-								maxDepth: 180,
+								maxDepth: 225,
 								maxNode: 2560000
 							})
 						},
@@ -512,7 +512,7 @@ window.control = (() => {
 								arr: arr,
 								ftype: FIND_ALL,
 								maxVCF: 1,
-								maxDepth: 180,
+								maxDepth: 225,
 								maxNode: 2560000
 							})
 						},
@@ -591,8 +591,8 @@ window.control = (() => {
 								arr: arr,
 								color: getRenjuSelColor(),
 								maxVCF: 1,
-								maxDepth: 180,
-								maxNode: 2560000
+								maxDepth: 225,
+								maxNode: 5120000
 							})
 						},
 						2: async function() {
@@ -600,8 +600,8 @@ window.control = (() => {
 								arr: arr,
 								color: getRenjuSelColor(),
 								maxVCF: 255,
-								maxDepth: 180,
-								maxNode: 2560000
+								maxDepth: 225,
+								maxNode: 5120000
 							})
 						},
 						3: async function() {
@@ -609,7 +609,7 @@ window.control = (() => {
 								arr: arr,
 								color: getRenjuSelColor(),
 								maxVCF: 1,
-								maxDepth: 180,
+								maxDepth: 225,
 								maxNode: 2560000
 							});
 						},
@@ -618,7 +618,7 @@ window.control = (() => {
 								arr: arr,
 								color: getRenjuSelColor(),
 								maxVCF: 1,
-								maxDepth: 180,
+								maxDepth: 225,
 								maxNode: 2560000,
 								maxVCT: 1,
 								maxDepthVCT: 4 * 2 - 3,
@@ -656,7 +656,7 @@ window.control = (() => {
 								arr: arr,
 								color: 1,
 								maxVCF: 1,
-								maxDepth: 180,
+								maxDepth: 225,
 								maxNode: 2560000
 							});
 						},
@@ -671,7 +671,7 @@ window.control = (() => {
 								arr: arr,
 								color: getRenjuSelColor(),
 								maxVCF: 1,
-								maxDepth: 180,
+								maxDepth: 225,
 								maxNode: 2560000,
 								blkDepth: 1
 							});
@@ -681,7 +681,7 @@ window.control = (() => {
 								arr: arr,
 								color: getRenjuSelColor(),
 								maxVCF: 1,
-								maxDepth: 180,
+								maxDepth: 225,
 								maxNode: 2560000,
 								blkDepth: 2
 							});

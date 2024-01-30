@@ -741,7 +741,7 @@ window.mainUI = (function() {
 			this._callback = () => {};
 			Object.assign(this.viewElem.style, {
 				display: "grid",
-				grid: `${buttonHeight}px / 1fr 1fr 1fr 1fr 1fr`,
+				grid: `auto-flow ${buttonWidth*0.75}px / 1fr 1fr 1fr 1fr 1fr`,
 				overflowY: "auto"
 			})
 		}
@@ -755,8 +755,9 @@ window.mainUI = (function() {
 		div.onclick = () => this._callback(index);
 		Object.assign(div.style, {
 			fontSize: `${buttonHeight*0.6}px`,
-			lineHeight: `${buttonHeight}px`, 
-			textAlign: "center"
+			lineHeight: `${buttonWidth*0.75}px`, 
+			textAlign: "center",
+			border: "1px solid black"
 		})
 		Object.assign(div.style, style);
 		this.viewElem.appendChild(div);

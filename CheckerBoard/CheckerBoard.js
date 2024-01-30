@@ -1725,6 +1725,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.03";
     Board.prototype.setSize = function(size = 15) {
         size = parseInt(size);
         size = size < 6 ? 6 : size > 15 ? 15 : size;
+        if (this.size == size) return;
         this.size = size;
         this.resetCBoardCoordinate();
         this.refreshCheckerBoard();

@@ -345,8 +345,8 @@ function movesToName(moves, maxLength) {
 }
 
 //----------------------- xxh32 -----------------------------
-/*
-const xxh32 = self.xxh32 || (() => {
+
+const { xxh4, xxh32 } = (() => {
 	// Simple hash function, from: http://burtleburtle.net/bob/hash/integer.html.
     // Chosen because it doesn't use multiply and achieves full avalanche.
 
@@ -472,9 +472,8 @@ const xxh32 = self.xxh32 || (() => {
 
         return h >>> 0;
     }
-    return xxh32;
+    return { xxh4, xxh32 };
 })()
-*/
 
 //--------------------- moves HashTable ------------------------
 
@@ -530,123 +529,69 @@ function pushWinMoves(winMoves, move) {
 }
 
 function resetHashTable(hashTable) {
-	hashTable.length = 0;
-	for (let i = 0; i < 225; i++) { hashTable[i] = {}; }
+	let mapCount = 0,
+		hashcollision = 0,
+		hashcollision1 = 0,
+		hashcollision2 = 0;
+	for (let i = 0; i < 225; i++) { 
+		if(hashTable[i]) {
+			hashTable[i].forEach(map => {
+				map.forEach(arr => {
+					hashcollision2 = Math.max(hashcollision2, arr.length);
+					arr.length = 0;
+				});
+				hashcollision1 = Math.max(hashcollision1, map.size);
+				map.clear();
+				mapCount++;
+			} )
+			hashcollision = Math.max(hashcollision, hashTable[i].size);
+			hashTable[i].clear();
+			mapCount++;
+		}
+		else hashTable[i] = new Map();
+	}
+	Object.assign(vcfInfo, { mapCount, hashcollision, hashcollision1, hashcollision2 })
 }
-
 function movesPush(hashTable, keyLen, keySum, keySum1, moves) {
-	let mv = moves.slice(0);
-	if (!hashTable[keyLen][keySum]) {
-		hashTable[keyLen][keySum] = {};
+	const mv = moves.slice(0);
+	let vKeySum = hashTable[keyLen].get(keySum);
+	if (!vKeySum) {
+		vKeySum = new Map();
+		hashTable[keyLen].set(keySum, vKeySum);
 	}
-	if (!hashTable[keyLen][keySum][keySum1]) {
-		hashTable[keyLen][keySum][keySum1] = [];
+	let vkeySum1 = vKeySum.get(keySum1)
+	if (!vkeySum1) {
+		vkeySum1 = [];
+		vKeySum.set(keySum1, vkeySum1);
 	}
-	hashTable[keyLen][keySum][keySum1].push(mv); // 保存已搜索分支   
-	vcfInfo.maxHashCollision = Math.max(vcfInfo.maxHashCollision, hashTable[keyLen][keySum][keySum1].length)
+	vkeySum1.push(mv); // 保存已搜索分支
 }
 
-function movesHas(hashTable, keyLen, keySum, keySum1, moves) {
+function movesHas(hashTable, keyLen, keySum, keySum1, moves, position) {
 	let i;
-	if (!hashTable[keyLen][keySum] || !hashTable[keyLen][keySum][keySum1]) return false;
-	const FAILMOVES_MOVES_LEN = hashTable[keyLen][keySum][keySum1].length;
-	const position = new Array(225);
-	for (let j = moves.length - 1; j >= 0; j--) position[moves[j]] = (j & 1) + 1;
+	const vKeySum = hashTable[keyLen].get(keySum);
+	if (!vKeySum) return;
+	const vkeySum1 = vKeySum.get(keySum1);
+	if (!vkeySum1) return;
+	const FAILMOVES_MOVES_LEN = vkeySum1.length;
 	for (i = FAILMOVES_MOVES_LEN - 1; i >= 0; i--) {
-		if (isRepeatMove(hashTable[keyLen][keySum][keySum1][i], moves, position)) break;
+		if (isRepeatMove(vkeySum1[i], moves, position)) break;
 	}
 	return i >= 0;
 }
 
-function positionPush(hashTable, keyLen, keySum, position) {
-	let mv = position.slice(0);
-	if (hashTable[keyLen][keySum] == null) hashTable[keyLen][keySum] = [];
-	hashTable[keyLen][keySum].push(mv);
-}
-
-function positionHas(hashTable, keyLen, keySum, position) {
-	if (hashTable[keyLen][keySum] == null) return false;
-	const FAILMOVES_MOVES_LEN = hashTable[keyLen][keySum].length;
-	for (let i = FAILMOVES_MOVES_LEN - 1; i >= 0; i--) {
-		let isEqual = true,
-			psTion = hashTable[keyLen][keySum][i];
-		for (let i = 0; i < 225; i++) {
-			if (psTion[i] != position[i]) {
-				isEqual = false;
-				break;
-			}
-		}
-		if (isEqual) return true;
-	}
-	return false;
-}
-
 function transTablePush(hashTable, keyLen, keySum, keySum1, moves, position) {
-	if (keyLen < HASHTABLE_MAX_MOVESLEN)
-		movesPush(hashTable, keyLen, keySum, keySum1, moves);
-	else
-		positionPush(hashTable, keyLen, keySum, position);
+	movesPush(hashTable, keyLen, keySum, keySum1, moves, position);
 }
 
 function transTableHas(hashTable, keyLen, keySum, keySum1, moves, position) {
-	if (keyLen < HASHTABLE_MAX_MOVESLEN)
-		return movesHas(hashTable, keyLen, keySum, keySum1, moves);
-	else
-		return positionHas(hashTable, keyLen, keySum, position);
+	return movesHas(hashTable, keyLen, keySum, keySum1, moves, position);
 }
 
-/*
-function getStones(moves) {
-	const position = new Array(225);
-	const blackStones = [];
-	const whiteStones = [];
-	for (let i = 0; i < moves.length; i++) {
-		position[moves[i]] = (i & 1) + 1;
-	}
-	for (let i = 0; i < 225; i++) {
-		position[i] == 1 && blackStones.push(i);
-		position[i] == 2 && whiteStones.push(i);
-	}
-	return blackStones.concat(whiteStones);
-}
-
-function constructaHashKey(stones) {
-	const key = xxh32(0, stones, 0, stones.length);
-	return key & 0x7fffff;
-}
-
-
-function transTablePush(hashTable, keyLen, keySum, moves, position) {
-	const stones = getStones(moves);
-	const key = constructaHashKey(stones);
-	const list = hashTable[keyLen][key];
-	if (!list) hashTable[keyLen][key] = [stones];
-	else hashTable[keyLen][key].push(stones);
-}
-
-function transTableHas(hashTable, keyLen, keySum, moves, position) {
-	const stones = getStones(moves);
-	const key = constructaHashKey(stones);
-	const list = hashTable[keyLen][key];
-	if (hashTable[keyLen][key]) {
-		for (let i = 0; i < hashTable[keyLen][key].length; i++) {
-			const st = hashTable[keyLen][key][i];
-			let j = stones.length - 1;
-			for(; j >=0; j--) {
-				if (stones[j] != st[j]) break;
-			}
-			if (j < 0) return true;
-		}
-	}
-	return false;
-}
-*/
 //--------------------- VCF ------------------------
 
 let vcfHashTable = [],
-	vcfHashNextValue = 0,
-	vcfWinMoves = [],
-	vcfWinMovesNext = 0;
+	vcfWinMoves = [];
 let vcfInfo = {
 		initArr: new Array(226),
 		color: 0,
@@ -659,7 +604,6 @@ let vcfInfo = {
 		hasCount: 0,
 		nodeCount: 0,
 		winMoves: vcfWinMoves,
-		maxHashCollision: 1,
 		continueInfo: [new Array(225), new Array(225), new Array(225), new Array(225)]
 	},
 	levelBInfo = {
@@ -678,7 +622,6 @@ function resetVCF(arr, color, maxVCF, maxDepth, maxNode) {
 	vcfInfo.pushPositionCount = 0;
 	vcfInfo.hasCount = 0;
 	vcfInfo.nodeCount = 0;
-	vcfInfo.maxHashCollision = 1;
 	vcfWinMoves.length = 0;
 	vcfInfo.continueInfo = [new Array(225), new Array(225), new Array(225), new Array(225)];
 	resetHashTable(vcfHashTable);

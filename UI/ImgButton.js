@@ -190,13 +190,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.03";
 			Object.assign(this.topBoard.style, butBoardStyle)
 			
 			this.leftButtons = new Array(numButtons).fill(0).map((_null, i) => {
-				return new ImgButton(this.leftBoard, width * (i + 1), 0, width * 28 / 30, width * 28 / 30);
+				return new ImgButton(this.leftBoard, width * (i + 1), 0, width * 29 / 30, width * 29 / 30);
 			})
 			this.rightButtons = new Array(numButtons).fill(0).map((_null, i) => {
-				return new ImgButton(this.rightBoard, width * (i + 1), 0, width * 28 / 30, width * 28 / 30);
+				return new ImgButton(this.rightBoard, width * (i + 1), 0, width * 29 / 30, width * 29 / 30);
 			})
 			this.topButtons = new Array(1).fill(0).map((_null, i) => {
-				return new ImgButton(this.topBoard, width * i, 0, width * 28 / 30, width * 28 / 30);
+				return new ImgButton(this.topBoard, width * i, 0, width * 29 / 30, width * 29 / 30);
 			})
 			
 			Object.assign(this.leftBoard.style, {
