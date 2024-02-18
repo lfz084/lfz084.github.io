@@ -285,7 +285,16 @@
 				touchend: function() {
 					btnFileMenu.defaultontouchend()
 				}
-		}
+			},
+			{
+				varName: "btnCommit",
+				type: "button",
+				text: "提交答案",
+				touchend: function() {
+					this.hide();
+					puzzleAI.checkWinBASE(game);
+				}
+			}
 		];
 		
 		gameButtonSettings.splice(1,0,null,null,null);
@@ -478,6 +487,8 @@
 			progressLabel,
 			comment,
 			btnAIHelp,
+			btnReset,
+			btnCommit,
 			btnRule,
 			btnMode,
 			btnRotate,
@@ -495,6 +506,7 @@
 			btnSize,
 			miniBoard
 		} = mainUI.getChildsForVarname();
+		btnCommit.move(btnReset.left, btnReset.top);
 		const boardWidth = 5;
 		const fontSize = mainUI.buttonHeight * 0.6;
 		const liHeight = mainUI.buttonHeight * 1.2;
@@ -785,7 +797,7 @@
 		
 		const delayAIHelp = createDelayCallback(() => showAIHelp());
 		
-		const delayCheckWin = createDelayCallback(() => puzzleAI.checkWin(game));
+		const delayCheckWinBASE = createDelayCallback(() => puzzleAI.checkWinBASE(game));
 		
 		const delaySaveProgress = createDelayCallback(() => puzzleData.saveProgress(game))
 		
@@ -857,10 +869,11 @@
 					html += `规则: ${ruleStr}\n`;
 					html += `模式: ${modeStr}\n\n`;
 					(this.puzzle.randomRotate || rotate != undefined) && !this.notRotate ? this.randomRotate(rotate) : (this.rotate = 0);
-					!isLocation && (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE &&  delayCheckWin(1800);
+					!isLocation && (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE &&  delayCheckWinBASE(1800);
 				}
+				(this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE ? btnCommit.show() : btnCommit.hide();
 				html += this.puzzle.comment || "";
-				html += this.state == this.STATE.PLAYING ? "\n\n开始解题......\n单击：两次确认落子\n双击：直接落子" : "";
+				html += this.state == this.STATE.PLAYING ? (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE ? "\n\n开始答题......\n点击空格：标记选点\n点击标记：删除选点\n答题结束后提交答案" : "\n\n开始解题......\n单击：两次确认落子\n双击：直接落子" : "";
 				outputInnerHTML({
 					title: this.puzzle.title,
 					ruleLabel: ruleStr,
@@ -1066,6 +1079,7 @@
 				if (output.state) {
 					game.state = output.state;
 					if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
+						btnCommit.hide();
 						game.state == game.STATE.WIN && puzzleData.saveProgress(game);
 						output.tree && game.board.addTree(output.tree);
 						output.options && (game.board.cleLb("all"), game.continuePutStone(output.options))
@@ -1197,7 +1211,8 @@
 		function setStones(game, board) {
 			game.stones = board.getCodeType(TYPE_NUMBER) || undefined;
 			game.blackStones = board.getCodeType(TYPE_BLACK) || undefined;
-			game.whiteStones = board.getCodeType(TYPE_WHITE) || undefined;			game.sequence = board.MSindex + 1;
+			game.whiteStones = board.getCodeType(TYPE_WHITE) || undefined;
+			game.sequence = board.MSindex + 1;
 		}
 		
 		function createGame(array, board) {
@@ -1359,7 +1374,31 @@
 					playerTryPutStone(idx);
 				}
 				else {
-					playerTryPutStone(idx);
+					if ((cBoard.P[idx].type & 0xF0) == TYPE_MARK && cBoard.P[idx].text == game.puzzle.mark) {
+						game.board.cleLb(idx);
+						if (game.puzzle.labels && game.puzzle.labels.length) {
+							const charArr = [];
+							const points = [];
+							game.puzzle.labels.map(str => {
+								const [code, char] = str.split(",");
+								const _idx = game.board.moveCode2Points(code)[0];
+								charArr.push(char);
+								points.push(_idx);
+							})
+							if (game.rotate >>> 2) {
+								game.board.rotateMovesY180(points);
+							}
+							for (let i = game.rotate % 4; i > 0; i--) {
+								game.board.rotateMoves90(points);
+							}
+							
+							const char = charArr[points.indexOf(idx)];
+							char && game.board.wLb(idx, char, game.board.bNumColor);
+						}
+					}
+					else if (cBoard.P[idx].type == TYPE_EMPTY || (cBoard.P[idx].type & 0xF0) == TYPE_MARK && cBoard.P[idx].text != game.puzzle.mark) {
+						game.board.wLb(idx, game.puzzle.mark, game.board.bNumColor);
+					}
 				}
 			}
 		}
@@ -1371,7 +1410,6 @@
 				playerTryPutStone(idx);
 			}
 			else {
-				playerTryPutStone(idx);
 			}
 		}
 		
@@ -1379,17 +1417,70 @@
 		
 		function canvasContextMenu_playing(x, y) {}
 		
+		function toPrevious(isShowNum, timeout = 0) {
+			if (cBoard.tree && cBoard.MSindex <= cBoard.tree.init.MSindex) return false;
+			cBoard.toPrevious(isShowNum, timeout);
+			cBoard.MS[cBoard.MSindex] == 225 && cBoard.toPrevious(isShowNum, timeout);
+			return true;
+		}
+		
+		function selectBranch(point) {
+			let obj = point.branchs;
+			return new Promise((resolve, reject) => {
+				try {
+					if (obj) {
+						let i = obj.branchsInfo + 1 & 1;
+						if (obj.branchsInfo == 3) {
+							msgbox({
+								title: `请选择黑棋,白棋分支`,
+								enterTXT: "黑棋",
+								cancelTXT: "白棋",
+								butNum: 2,
+								enterFunction: () => resolve({ path: obj.branchs[0].path, nMatch: obj.branchs[0].nMatch }),
+								cancelFunction: () => resolve({ path: obj.branchs[1].path, nMatch: obj.branchs[1].nMatch })
+							})
+						}
+						else {
+							resolve({ path: obj.branchs[i].path, nMatch: obj.branchs[i].nMatch });
+						}
+					}
+					else {
+						resolve({ path: undefined, nMatch: 0 });
+					}
+				}
+				catch (err) {
+					reject(err);
+					console.error(err);
+				}
+			});
+		}
 
 		function canvasClick_gameover(x, y) {
 			const idx = cBoard.getIndex(x, y);
 			if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
 				if (game.puzzle.mode < puzzleCoder.MODE.BASE) {
-					((cBoard.P[idx].type & 0xF0) == TYPE_MARK || cBoard.P[idx].type == TYPE_EMPTY) && game.putStone(idx);
-					((cBoard.P[idx].type & 0xF0) == TYPE_NUMBER && cBoard.MSindex >= 0) && cBoard.toPrevious(true);
+					if ((cBoard.P[idx].type & 0xF0) == TYPE_NUMBER && cBoard.MSindex >= 0) {
+						toPrevious(true);
+					}
+					else if(cBoard.P[idx].type == TYPE_EMPTY) {
+						cBoard.wNb(idx, "auto", true);
+					}
+					else if((cBoard.P[idx].type & 0xF0) == TYPE_MARK) {
+						selectBranch(cBoard.P[idx])
+						.then(({ path, nMatch }) => {
+							if (path && path.length) {
+								(path.indexOf(idx) & 1) == (cBoard.MSindex & 1) && cBoard.wNb(225, "auto", true, undefined, undefined, 100);
+								cBoard.wNb(idx, "auto", true);
+							}
+							else {
+								cBoard.wNb(idx, "auto", true);
+							}
+						})
+					}
 				}
 				else {
-					cBoard.P[idx].type == TYPE_EMPTY && game.putStone(idx);
-					(cBoard.P[idx].type & 0xF0) == TYPE_MARK && game.board.cleLb(idx);
+					if ((cBoard.P[idx].type & 0xF0) == TYPE_MARK) game.board.cleLb(idx);
+					else if (cBoard.P[idx].type == TYPE_EMPTY) game.board.wLb(idx, game.puzzle.mark, game.board.bNumColor);
 				}
 			}
 		}
@@ -1401,7 +1492,7 @@
 				const idx = cBoard.getIndex(x, y);
 				while ((cBoard.P[idx].type & 0xF0) == TYPE_NUMBER && cBoard.MSindex > -1) {
 					if (cBoard.MSindex < 0 || cBoard.MS[cBoard.MSindex] == idx) return;
-					cBoard.toPrevious(true)
+					if(!toPrevious(true, 100)) break;
 				}
 			}
 		}

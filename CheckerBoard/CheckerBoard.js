@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.06";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -620,6 +620,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.03";
     	this.P[idx].type = type;
     	const { x, y, radius, color, lineWidth } = this.getBoardPointInfo(idx, false).circle;
     	this.P[idx].type = oldType;
+    	console.log(`${this.firstColor}\n${this.MS.slice(0,this.MSindex+1)}\n${this.MS.slice(0)}`)
     	const fill =[this.bNumColor, this.wNumColor][(this.MSindex + (this.firstColor=="black"?1:2)) % 2]
     	Object.assign(this.stoneDiv.style, {
     		position: "absolute",

@@ -135,6 +135,9 @@ window.puzzleAI = (() => {
 				maxDepth: 225,
 				maxNode: 2560000
 			}
+			const tree = await engine.createTreeVCF(param);
+			processOutput({ state: game.STATE.READ, sideLabel: "参考答案", tree: tree });
+			/*
 			const levelInfo = getLevel(param.arr, param.color);
 			if(levelInfo >= LEVEL_NOFREEFOUR) {
 				processOutput({ pos: idx2Pos(levelInfo >> 8 & 0xFF) })
@@ -143,6 +146,7 @@ window.puzzleAI = (() => {
 				const vcfMoves = (await engine.findVCF(param)).winMoves[0];
 				processOutput({ pos: idx2Pos(vcfMoves[0] || -1) })
 			}
+			*/
 			aiState = aiState & ~STATE_RENJU_THINKING;
 		}
 
@@ -447,7 +451,7 @@ window.puzzleAI = (() => {
 		async function checkWin(game, idx) {
 			engine.board = undefined;
 			if ((game.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE) {
-				checkWinBASE(game);
+				//checkWinBASE(game);
 			}
 			else {
 				const side = game.board.getArray()[idx];
@@ -458,11 +462,12 @@ window.puzzleAI = (() => {
 				const GAME_STATE = {"0": game.STATE.PLAYING, "1": game.STATE.WIN, "-1": game.STATE.LOST, "-2": game.STATE.LOST, "-5": game.STATE.LOST}
 				const COMMENT = {"1": "你赢了", "-1": "你输了", "-2": "你禁手犯规，输了"}
 				const WARN = {"1": "你赢了", "-1": "你输了", "-2": "禁手犯规"}
-				state && processOutput({ state: GAME_STATE[state], sideLabel: "棋局结束", comment: COMMENT[state], warn: WARN[state]});
+				state && processOutput({ state: GAME_STATE[state], sideLabel: "棋局结束", comment: COMMENT[state]});
 			}
 		}
 		
 		async function checkWinBASE(game) {
+			engine.board = undefined;
 			aiState = aiState | STATE_RENJU_THINKING;
 			processOutput({ sideLabel: "计算中..." })
 			const options = game.options  = game.options || await getOptions(game);
@@ -470,22 +475,17 @@ window.puzzleAI = (() => {
 				if (p.type == TYPE_MARK && p.text == game.puzzle.mark) return idx;
 				else return undefined;
 			}).filter(v => v!==undefined);
-			//const errCount = selectPoints.map(v => options.indexOf(v) + 1).filter(v => v == 0).length;
-			//const lastCount = options.length - selectPoints.length + errCount;
-			const over = 0 == options.map(idx => selectPoints.indexOf(idx)).filter(index => index < 0).length;
-			if (over) {
-				if (selectPoints.length) {
-					if (options.length == selectPoints.length) {
-						processOutput({ state: game.STATE.WIN, sideLabel: "答题结束", warn: "回答正确"})
-					}
-					else {
-						const errorPoints = selectPoints.filter(idx => options.indexOf(idx) == -1)
-						processOutput({ state: game.STATE.LOST, sideLabel: "答题结束", warn: `${errorPoints.length}处错误`, errorPoints: errorPoints})
-					}
-				}
+			const errCount = selectPoints.map(v => options.indexOf(v) + 1).filter(v => v == 0).length;
+			const lastCount = options.length - selectPoints.length + errCount;
+			const isRight = selectPoints.length == options.length &&  0 == options.map(idx => selectPoints.indexOf(idx)).filter(index => index < 0).length;
+			if (isRight) {
+				const comment = "回答正确";
+				processOutput({ state: game.STATE.WIN, sideLabel: "回答正确", comment})
 			}
 			else {
-				processOutput({ sideLabel: "继续答题" })
+				const errorPoints = selectPoints.filter(idx => options.indexOf(idx) == -1);
+				const comment = `解题失败\n${errorPoints.length && errorPoints.length + "处错误\n" || ""}${lastCount && lastCount + "处漏选\n" || ""}`;
+				processOutput({ state: game.STATE.LOST, sideLabel: "解题失败", comment, errorPoints: errorPoints})
 			}
 			aiState = aiState & ~STATE_RENJU_THINKING;
 		}
@@ -497,7 +497,7 @@ window.puzzleAI = (() => {
 			if (state < 0) {
 				const warn = CHECKMOVE_OUTPUT[state].warn;
 				const comment = "失败原因：\n" + CHECKMOVE_OUTPUT[state].comment;
-				processOutput({ state: game.STATE.LOST, sideLabel: "解题失败", comment, warn });
+				processOutput({ state: game.STATE.LOST, sideLabel: "解题失败", comment });
 			}
 		}
 		
@@ -675,6 +675,7 @@ window.puzzleAI = (() => {
 			aiHelp,
 			stopThinking,
 			checkWin,
+			checkWinBASE,
 			checkMove,
 			checkPuzzles,
 			set processOutput(output) { processOutput = output }

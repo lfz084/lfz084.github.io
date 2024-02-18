@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.06";
 (function(global, factory) {
 	(global = global || self, factory(global));
 }(this, (function(exports) {
@@ -127,7 +127,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.03";
 					li.addEventListener("click", () => { event.cancelBubble = true }, true);
 				}
 				else {
-					li.addEventListener("click", function() {
+					li.onclick = function() {
 						if (isCancelMenuClick()) return;
 						if (event) event.cancelBubble = true;
 						input.selectedIndex = i; // input.onchange();
@@ -141,7 +141,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.03";
 						else if (type.indexOf("checked") + 1) {
 							input[i].checked = !input[i].checked;
 						}
-					}.bind(this))
+					}.bind(this)
 				}
 				i < input.length - 1 && menu.appendChild(get_hr());
 			}

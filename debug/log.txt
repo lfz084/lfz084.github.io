@@ -24,3 +24,8 @@
 通过桌面图标启动后，CSS的媒体查询是能够探测到的，换而用js写，下面的结果为True。
 
 window.matchMedia('(display-mode: standalone)').matches
+
+点点题bug
+01~10：25，66，90，113，130
+11~20：5, 32？, 74，75，76，94，150
+2@~47：58，83,

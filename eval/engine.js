@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2024.03";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2024.06";
 window.engine = (function() {
             "use strict";
             const TEST_ENGINE = false;
@@ -1393,7 +1393,7 @@ window.engine = (function() {
                     if (wNode) count++
                     else {
                         done = true;
-                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>[${idxToName(idx)}]<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepthVCT / 2)} 手内取胜<br>`;
+                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>[${idxToName(idx)}]<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepthVCT / 2 + 1)} 手内取胜<br>`;
                     }
                 })
             )
