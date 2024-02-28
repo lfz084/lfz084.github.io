@@ -643,27 +643,37 @@ window.mainUI = (function() {
 		}
 	}
 	
-	Timer.prototype.reset = function() {
-		this.startTime = new Date().getTime();
+	Timer.prototype.printTimer = function() {
+		let t = new Date().getTime();
+		t -= this.startTime;
+		let h = ~~(t / 3600000);
+		h = h < 10 ? "0" + h : h;
+		let m = ~~((t % 3600000) / 60000);
+		m = m < 10 ? "0" + m : m;
+		let s = ~~((t % 60000) / 1000);
+		s = s < 10 ? "0" + s : s;
+		this.viewElem.innerHTML = `${h}:${m}:${s}`;
+	}
+	
+	Timer.prototype.reset = function(timer = 0) {
+		this.startTime = new Date().getTime() - timer;
+		this.printTimer();
 	}
 	
 	Timer.prototype.start = function() {
 		this.stop();
 		this.timer = setInterval(() => {
-			let t = new Date().getTime();
-			t -= this.startTime;
-			let h = ~~(t / 3600000);
-			h = h < 10 ? "0" + h : h;
-			let m = ~~((t % 3600000) / 60000);
-			m = m < 10 ? "0" + m : m;
-			let s = ~~((t % 60000) / 1000);
-			s = s < 10 ? "0" + s : s;
-			this.viewElem.innerHTML = `${h}:${m}:${s}`;
+			this.printTimer();
 		}, 1000);
 	}
 	
 	Timer.prototype.stop = function() {
 		clearInterval(this.timer);
+		this.timer = null;
+	}
+	
+	Timer.prototype.getTimer = function() {
+		return !this.timer ? 0 : new Date().getTime() - this.startTime;
 	}
 	
 	function newTimer(param = {}) {
@@ -793,6 +803,7 @@ window.mainUI = (function() {
 	ItemBoard.prototype.addItem = function(callback = () => {}) {
 		const li = document.createElement("li");
 		li.style.listStyle = "none";
+		li.style.border = "1px solid black";
 		try{callback(li)}catch(e){console.error(e.stack)}
 		this.viewElem.appendChild(li);
 		this.lis.push(li);

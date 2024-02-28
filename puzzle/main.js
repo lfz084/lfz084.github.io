@@ -88,12 +88,14 @@
 					1, "导入JSON"
 				],
 				change:  function() {
-    				if (this.input.value == 0) {
-    					btnFile.input.onchange = openImg;
+					if (this.input.value == 0) {
+						btnFile.input.removeEventListener("change", openJSON, true);
+						btnFile.input.addEventListener("change", openImg, true);
     					btnFile.input.accept = "image/*";
     				}
     				else if(this.input.value == 1) {
-    					btnFile.input.onchange = openJSON;
+    					btnFile.input.removeEventListener("change", openImg, true);
+						btnFile.input.addEventListener("change", openJSON, true);
     					btnFile.input.accept = ".json";
     				}
     				btnFile.input.click();
@@ -262,7 +264,6 @@
 				text: "求助好友",
 				touchend: function() {
 					const puzzle = game.puzzle;
-					puzzle.rotate = game.rotate;
 					shareURL(puzzle);
 				}
 		},
@@ -270,7 +271,7 @@
 				varName: "btnAIHelp",
 				type: "button",
 				text: "求助 AI",
-				touchend: function() { game.state == game.STATE.PLAYING && game.board.MSindex % 2 && puzzleAI.aiHelp(game) }
+				touchend: function() { this.enabled = false; game.state == game.STATE.PLAYING && game.board.MSindex % 2 && puzzleAI.aiHelp(game); }
 		},
 			{
 				varName: "btnOpenPuzzles",
@@ -516,6 +517,7 @@
 			const title = document.createElement("div");
 			const progress = document.createElement("div");
 			const close = document.createElement("div");
+			const innerWidth = mainUI.cmdWidth - boardWidth * 2;
 			
 			Object.assign(item.style, {
 				overflow: "hidden",
@@ -527,9 +529,9 @@
 				overflow: "hidden",
 				textOverflow: "ellipsis",
 				position: "relative",
-				left: "0px",
+				left: innerWidth * 0.03  + "px",
 				top: "0px",
-				width: mainUI.cmdWidth * 0.75 + "px",
+				width: innerWidth * 0.75 + "px",
 				height: liHeight + "px"
 			})
 			Object.assign(progress.style, {
@@ -538,7 +540,7 @@
 				position: "relative",
 				left: parseInt(title.style.width) + "px",
 				top: -liHeight + "px",
-				width: mainUI.cmdWidth * 0.15 + "px",
+				width: innerWidth * 0.15 + "px",
 				height: liHeight + "px",
 				textAlign: "right"
 			})
@@ -547,16 +549,16 @@
 				textOverflow: "ellipsis",
 				position: "relative",
 				fontSize: fontSize * 1.5 + "px",
-				left: parseInt(progress.style.left) + parseInt(progress.style.width) + "px",
+				left: innerWidth * 0.9 + "px",
 				top: -liHeight * 2 + "px",
-				width: mainUI.cmdWidth * 0.1 + "px",
+				width: innerWidth * 0.1 + "px",
 				height: liHeight + "px",
 				textAlign: "center"
 			})
 			title.innerHTML = data.title;
 			progress.innerHTML = `${data.progress.filter(v => v).length}/${data.progress.length}`;
 			close.innerHTML = "✕";
-			title.onclick = async function(){
+			title.onclick = progress.onclick = async function(){
 				try{
 				event.cancelBubble = true;
 				const data = await puzzleData.getDataByIndex("time", item.parentNode.time);
@@ -579,26 +581,24 @@
 			}catch(e){console.error(e.stack)}
 		}
 		
-		async function loadDeafultItems() {
+		const addItemCallBack = function(data, li) {
+			const item = createItem(data);
+			li.appendChild(item);
+			li.time = data.time;
+			game.data && game.data.time == data.time && (li.style.borderWidth = "5px");
+		}
+		
+		async function loadDeafultItems(filter = () => true) {
 			for (let i = 0; i < game.defaultPuzzleTimes.length; i++) {
 				const data = await puzzleData.getDataByIndex("time", game.defaultPuzzleTimes[i]);
-				data && itemBoard.addItem((li) => {
-					const item = createItem(data);
-					li.appendChild(item);
-					li.time = data.time;
-				})
+				data && filter(data) && itemBoard.addItem(li => addItemCallBack(data, li));
 			}
 		}
 		
 		async function loadUserAddedItems() {
-			puzzleData.openCursorByIndex("title", cursor => {
-				//console.log(`cursor: ${cursor && cursor.value && cursor.value.title}`)
+			puzzleData.openCursorByIndex("time", cursor => {
 				const data = cursor && cursor.value;
-				data && game.defaultPuzzleTimes.indexOf(data.time) == -1 && itemBoard.addItem((li) => {
-					const item = createItem(data);
-					li.appendChild(item);
-					li.time = data.time;
-				})
+				data && game.defaultPuzzleTimes.indexOf(data.time) == -1 && itemBoard.addItem(li => addItemCallBack(data, li));
 			})
 		}
 		
@@ -669,7 +669,7 @@
 		}
 		
 		
-		const itemButWidth = mainUI.cmdWidth / 2;
+		const itemButWidth = (mainUI.cmdWidth - boardWidth * 2 - 2) / 3;
 		const itemButHeight = mainUI.buttonHeight;
 		const itemButStyle = {
 			position: "absolute",
@@ -682,18 +682,25 @@
 			lineHeight: itemButHeight + "px"
 		}
 		
+		const btnDailyPuzzles = document.createElement("div");
+		btnDailyPuzzles.innerHTML = "每日题集";
+		Object.assign(btnDailyPuzzles.style, itemButStyle);
+		btnDailyPuzzles.onclick = () => { event.cancelBubble = true; removeItemAll(); loadDeafultItems(data => data.title.indexOf("每日") + 1 || data.title.indexOf("错题") + 1)}
+		
 		const btnDefault = document.createElement("div");
 		btnDefault.innerHTML = "默认题集";
+		itemButStyle.left = itemButWidth * 1 + "px";
 		Object.assign(btnDefault.style, itemButStyle);
-		btnDefault.onclick = () => {removeItemAll(); loadDeafultItems()}
+		btnDefault.onclick = () => { event.cancelBubble = true; removeItemAll(); loadDeafultItems(data => -1 == data.title.indexOf("每日") && -1 == data.title.indexOf("错题"))}
 		
 		const btnUserAdded = document.createElement("div");
-		btnUserAdded.innerHTML = "用户添加";
-		itemButStyle.left = itemButWidth * 1 + "px";
+		btnUserAdded.innerHTML = "你的题集";
+		itemButStyle.left = itemButWidth * 2 + "px";
 		Object.assign(btnUserAdded.style, itemButStyle);
-		btnUserAdded.onclick = () => {removeItemAll(); loadUserAddedItems()}
+		btnUserAdded.onclick = () => { event.cancelBubble = true; removeItemAll(); loadUserAddedItems()}
 		
 		const buttons = document.createElement("div");
+		buttons.appendChild(btnDailyPuzzles)
 		buttons.appendChild(btnDefault)
 		buttons.appendChild(btnUserAdded)
 		Object.assign(buttons.style, {
@@ -750,6 +757,30 @@
 		});
 		
 		const lbTimer = mainUI.newTimer();
+		lbTimer.printTimer = function() {
+			const now = new Date().getTime();
+			const k = now - (this.lastTime || now);
+			this.backTimer = (this.backTimer || 0) + (k > 6000 ? k : 0);
+			this.lastTime = now;
+			let t = Math.max(0, game.puzzle.delayHelp * 60 * 1000 + this.backTimer - this.getTimer());
+			let h = ~~(t / 3600000);
+			h = h < 10 ? "0" + h : h;
+			let m = ~~((t % 3600000) / 60000);
+			m = m < 10 ? "0" + m : m;
+			let s = ~~((t % 60000) / 1000);
+			s = s < 10 ? "0" + s : s;
+			this.viewElem.innerHTML = `${h}:${m}:${s}`;
+			if (t==0) {
+				game.timer = lbTimer.getTimer();
+				puzzleData.saveProgress(game);
+				showAIHelp();
+			}
+		}
+		lbTimer.stop = function() {
+			this.backTimer = this.lastTime = undefined;
+			clearInterval(this.timer);
+			this.timer = null;
+		}
 		lbTimer.hide();
 		mainUI.addChild({
 			variant: lbTimer,
@@ -770,12 +801,13 @@
 				let timer;
 				let end = 0;
 				return (timeout) => {
+					timer && clearInterval(timer);
 					end = new Date().getTime() + timeout;
-					if (!timer) timer = setInterval(() => {
+					timer = setInterval(() => {
 						if (new Date().getTime() > end) {
-							try{ callback() }catch(e){ console.error(e.stack) }
 							clearInterval(timer);
 							timer = null;
+							try{ callback() }catch(e){ console.error(e.stack) }
 						}
 					}, Math.min(60 * 1000, timeout))
 				}
@@ -784,7 +816,8 @@
 		
 		function hideAIHelp() {
 			lbTimer.move(parseInt(btnAIHelp.left), parseInt(btnAIHelp.top), undefined, undefined, btnAIHelp.parentNode);
-			lbTimer.reset();
+			const timer = game.data && game.data[puzzleData.INDEX.TIMERS] && game.data[puzzleData.INDEX.TIMERS][game.puzzles.index] || 0;
+			lbTimer.reset(timer);
 			lbTimer.start();
 			btnAIHelp.hide();
 		}
@@ -793,14 +826,18 @@
 			btnAIHelp.show();
 			lbTimer.hide();
 			lbTimer.stop();
+			//console.log("stop")
 		}
 		
 		const delayAIHelp = createDelayCallback(() => showAIHelp());
 		
 		const delayCheckWinBASE = createDelayCallback(() => puzzleAI.checkWinBASE(game));
 		
-		const delaySaveProgress = createDelayCallback(() => puzzleData.saveProgress(game))
-		
+		const delaySaveProgress = createDelayCallback(() => {
+			game.timer = lbTimer.getTimer();
+			puzzleData.saveProgress(game);
+			lbTimer.viewElem.parentNode && delaySaveProgress(60*1000);
+		})
 		const game = {
 			STATE: {
 				IMAGELOADIMG: -1,
@@ -827,10 +864,13 @@
 				this.puzzle = typeof puzzle === "object" ? puzzle : this.puzzles.currentPuzzle;
 				rotate == undefined && (rotate = this.puzzle.rotate)
 				
-				const isLocation = window.location.href.indexOf("http://") > -1;
-				const delay = isLocation ? 1000 : this.puzzle.delayHelp * 60 * 1000;
-				puzzle == undefined && (hideAIHelp(),delayAIHelp(delay));
-				
+				const isLocation = 0 && window.location.href.indexOf("http://") > -1;
+				const completed = this.data && this.data.progress && this.data.progress[this.puzzles.index];
+				const delay = this.puzzle.delayHelp * 60 * 1000;
+				const isTimeout = (this.data && this.data[puzzleData.INDEX.TIMERS] && this.data[puzzleData.INDEX.TIMERS][this.puzzles.index] || 0) > delay;
+				if(puzzle == undefined) {
+					(isLocation || completed || isTimeout) ? showAIHelp() : hideAIHelp();
+				}
 				await this.stopThinking();
 				this.strength = this._strength;
 				this.notRotate = this._notRotate;
@@ -856,6 +896,10 @@
 					outputInnerHTML({
 						sideLabel: "习题封面"
 					})
+					html += `这是封面，请跳到下一题再开始解题\n\n`,
+					this.puzzle.title = this.puzzle.title + "（封面）" ;
+					btnAIHelp.enabled = false;
+					this.board.setCoordinate(0);
 					this.puzzle.image && this.board.loadImgURL(this.puzzle.image).then(() => this.board.putImg());
 				}
 				else {
@@ -868,17 +912,21 @@
 					html += `玩家: ${[,"● 黑棋","○ 白棋"][this.playerSide]}\n`;
 					html += `规则: ${ruleStr}\n`;
 					html += `模式: ${modeStr}\n\n`;
+					this.board.setCoordinate(1);
 					(this.puzzle.randomRotate || rotate != undefined) && !this.notRotate ? this.randomRotate(rotate) : (this.rotate = 0);
-					!isLocation && (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE &&  delayCheckWinBASE(1800);
+					this.puzzle.rotate = this.rotate;
+					btnAIHelp.enabled = true;
+					//!isLocation && (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE &&  delayCheckWinBASE(1800);
 				}
 				(this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE ? btnCommit.show() : btnCommit.hide();
 				html += this.puzzle.comment || "";
 				html += this.state == this.STATE.PLAYING ? (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE ? "\n\n开始答题......\n点击空格：标记选点\n点击标记：删除选点\n答题结束后提交答案" : "\n\n开始解题......\n单击：两次确认落子\n双击：直接落子" : "";
+				html += this.state == this.STATE.PLAYING && lbTimer.viewElem.parentNode ? `\n\n坚持答题${this.puzzle.delayHelp}分钟后......\n解锁"求助AI"按钮` : "";
 				outputInnerHTML({
 					title: this.puzzle.title,
 					ruleLabel: ruleStr,
 					modeLabel: modeStr.replace("模式",""),
-					indexLabel: `${this.data && this.data.progress && this.data.progress[this.puzzles.index] && "✔" || ""}  ${this.index}`,
+					indexLabel: `${completed && "✔" || ""}  ${this.index}`,
 					progressLabel: `(${this.data && this.data.progress ? this.data.progress.filter(v => v).length + "/" : ""}${this.puzzles.length})`,
 					comment: html.split("\n").join("<br>")
 				})
@@ -907,7 +955,7 @@
 				}
 			},
 			printLabels() {
-				console.log(this.puzzle.labels)
+				//console.log(this.puzzle.labels)
 				this.puzzle.labels && this.puzzle.labels.length && this.puzzle.labels.map(str => {
 					const [code, char] = str.split(",");
 					const idx = this.board.moveCode2Points(code)[0];
@@ -954,6 +1002,7 @@
 				this.board.putStone(idx, TYPE_NUMBER);
 				await wait(timeout);
 				this.board.hideStone();
+				if ((this.board.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) return;
 				if (game.puzzle.mode < puzzleCoder.MODE.BASE) this.board.wNb(idx, "auto", true);
 				else this.board.wLb(idx, markChar || this.puzzle.mark, markColor || this.board.bNumColor)
 			},
@@ -971,6 +1020,7 @@
 				if ((this.state & this.STATE.GAMEOVER) == this.STATE.GAMEOVER) return;
 				await this.putStone(idx);
 				await this.checkWin(idx);
+				btnAIHelp.enabled = true;
 			},
 			async playerPutStone(idx) {
 				if ((this.state & this.STATE.GAMEOVER) == this.STATE.GAMEOVER) return;
@@ -1023,7 +1073,22 @@
 					canvasContextMenu = canvasContextMenu_imageLoading;
 				}
 				else if (this._state == this.STATE.LOADING) {
-					canvasClick = canvasDblClick = canvasDblTouchStart = canvasContextMenu = () => {};
+					canvasClick = canvasDblClick = canvasDblTouchStart = canvasContextMenu = () => {
+						if (this.puzzle.mode == puzzleCoder.MODE.COVER) msgbox({ 
+							text: "跳过封面开始做题", 
+							btnNum: 1,
+							enterFunction: () => {
+								let i=0;
+								while(i++ < game.puzzles.length) {
+									game.puzzles.next();
+									if (game.puzzles.currentPuzzle.mode) {
+										game.reset();
+										return;
+									}
+								}
+							}
+						});
+					};
 				}
 				else if (this._state == this.STATE.PLAYING) {
 					canvasClick = canvasClick_playing;
@@ -1080,12 +1145,22 @@
 					game.state = output.state;
 					if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
 						btnCommit.hide();
-						game.state == game.STATE.WIN && puzzleData.saveProgress(game);
+						if (game.state == game.STATE.LOST) {
+							game.data.title != "错题复习" && puzzleData.addErrorPuzzle(game);
+						}
+						if (game.state == game.STATE.WIN) {
+							showAIHelp();
+							puzzleData.saveProgress(game);
+						}
 						output.tree && game.board.addTree(output.tree);
 						output.options && (game.board.cleLb("all"), game.continuePutStone(output.options))
 						output.warn && window.warn(output.warn, 1500);
 						output.comment && (output.comment += `\n\n\n解题结束\n开始复盘......\n1.点击空格落子\n2.点击棋子悔棋`)
 						output.errorPoints && game.continuePutStone(output.errorPoints, "✕", game.board.bNumColor)
+						outputInnerHTML({
+							indexLabel: `${game.data && game.data.progress && game.data.progress[game.puzzles.index] && "✔" || ""}  ${game.index}`,
+							progressLabel: `(${game.data && game.data.progress ? game.data.progress.filter(v => v).length + "/" : ""}${game.puzzles.length})`
+						})
 					}
 					outputInnerHTML(output);
 					return;
@@ -1106,8 +1181,6 @@
 
 		function playerTryPutStone(idx) {
 			if (idx < 0 || (cBoard.MSindex + 1 + (cBoard.firstColor == "black" ? 0 : 1)) % 2 + 1 == game.aiSide || game.state != game.STATE.PLAYING) return;
-			const startColor = cBoard.wNumColor;
-			const borderColor = cBoard.bNumColor;
 			if ((cBoard.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) {
 				cBoard.hideStone();
 			}
@@ -1368,6 +1441,7 @@
 		}
 		
 		function canvasClick_playing(x, y) {
+			console.log("canvasClick_playing")
 			const idx = cBoard.getIndex(x, y);
 			if (game.state == game.STATE.PLAYING) {
 				if (game.puzzle.mode < puzzleCoder.MODE.BASE) {
@@ -1404,10 +1478,13 @@
 		}
 
 		function canvasDblClick_playing(x, y) {
+			console.log("canvasDblClick_playing")
 			const idx = cBoard.getIndex(x, y);
-			if (idx < 0 || cBoard.MS.length % 2 || game.state != game.STATE.PLAYING) return;
+			if (idx < 0 || (cBoard.MSindex + 1 + (cBoard.firstColor == "black" ? 0 : 1)) % 2 + 1 == game.aiSide || game.state != game.STATE.PLAYING) return;
 			if (game.puzzle.mode < puzzleCoder.MODE.BASE) {
 				playerTryPutStone(idx);
+				//cBoard.hideStone();
+				//cBoard.P[idx].type == TYPE_EMPTY && game.playerPutStone(idx);
 			}
 			else {
 			}
@@ -1485,19 +1562,19 @@
 			}
 		}
 
-		function canvasDblClick_gameover(x, y) {}
-
-		function canvasDblTouchStart_gameover(x, y) {
+		function canvasDblClick_gameover(x, y) {
 			if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
 				const idx = cBoard.getIndex(x, y);
 				while ((cBoard.P[idx].type & 0xF0) == TYPE_NUMBER && cBoard.MSindex > -1) {
 					if (cBoard.MSindex < 0 || cBoard.MS[cBoard.MSindex] == idx) return;
-					if(!toPrevious(true, 100)) break;
+					if (!toPrevious(true, 100)) return;
 				}
 			}
 		}
+
+		function canvasDblTouchStart_gameover(x, y) {}
 		
-		const canvasContextMenu_gameover = canvasDblTouchStart_gameover;
+		const canvasContextMenu_gameover = canvasDblClick_gameover;
 
 		cBoard.stonechange = function() {
 			if (this.tree) {
@@ -1530,6 +1607,11 @@
 				game.loadJSON(json)
 			}
 		});
+		
+		setTimeout(async () => {
+			await puzzleData.removeErrorPuzzle();
+			await puzzleData.createRandomPuzzles();
+		},10000)
 		
 	} catch (e) { alert(e.stack) }
 })()

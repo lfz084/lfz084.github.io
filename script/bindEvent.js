@@ -181,8 +181,8 @@ window.bindEvent = (function() {
 	}
 
 	function bodyDblClick(x, y) {
-		x = event && event.type == "click" ? event.pageX : x;
-		y = event && event.type == "click" ? event.pageY : y;
+		x = event && event.type == "dblclick" ? event.pageX : x;
+		y = event && event.type == "dblclick" ? event.pageY : y;
 		//log(`bodyDblClick x = ${x}, y = ${y}`)
 		loopEvents("dblclick", true, x, y);
 	}

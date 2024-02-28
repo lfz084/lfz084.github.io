@@ -534,7 +534,6 @@ window.puzzleAI = (() => {
 		 * 
  		*/
 		async function autoSetMode(puzzle, board) {
-			console.log()
 			for (let i = 0; i < 32; i+=8) {
 				const mode = (puzzle.modes >>> i) & 0xFF;
 				if (mode == 0) break;

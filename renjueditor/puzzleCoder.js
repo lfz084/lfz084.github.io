@@ -634,17 +634,17 @@ window.puzzleCoder = (() => {
 	 */
 	 
 	const MODE_VALUE_NAME_TITLE_COMMENT = {
-		COVER: { value: 0, name: "习题封面", title: "习题封面", comment: "这是封面，请跳到下一题再开始解题" },
+		COVER: { value: 0, name: "习题封面", title: "习题封面", comment: "习题封面" },
 		
 		VCF: { value: 1 << 5, name: "VCF模式", title: "VCF", comment: "VCF，连续冲四进攻，直到取胜" },
 		VCT: { value: 2 << 5, name: "VCT模式", title: "VCT", comment: "利用活三，做43杀，做VCF，冲四等手段进攻取胜。" },
 		VCT3: { value: 2 << 5 | 3, name: "三手胜模式", title: "三手胜", comment: "三手胜，利用活三，做43杀，做VCF，冲四等手段进攻取胜。限定在三手内取胜，连续冲四算一手。" },
 		FREE: { value: 3 << 5, name: "自由对弈模式", title: "自由对弈", comment: "不限定手数，也不限定进攻手段。在游戏规则内取胜。" },
 		
-		STONES: { value: 5 << 5, name: "限珠题模式", title: "限珠题模式", comment: "出题者没有指定棋子数量" },
-		STONES3: { value: 5 << 5 | 3, name: "三子五连模式", title: "三子五连模式", comment: "玩家只剩下三颗棋子，必须在三颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
-		STONES4: { value: 5 << 5 | 4, name: "四子五连模式", title: "四子五连模式", comment: "玩家只剩下四颗棋子，必须在四颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
-		STONES5: { value: 5 << 5 | 5, name: "五子五连模式", title: "五子五连模式", comment: "玩家只剩下五颗棋子，必须在五颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
+		STONES: { value: 5 << 5, name: "限珠题模式", title: "限珠题", comment: "出题者没有指定棋子数量" },
+		STONES3: { value: 5 << 5 | 3, name: "三子五连模式", title: "三子五连", comment: "玩家只剩下三颗棋子，必须在三颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
+		STONES4: { value: 5 << 5 | 4, name: "四子五连模式", title: "四子五连", comment: "玩家只剩下四颗棋子，必须在四颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
+		STONES5: { value: 5 << 5 | 5, name: "五子五连模式", title: "五子五连", comment: "玩家只剩下五颗棋子，必须在五颗棋子内取胜。判断取胜的标准：1.玩家五连,2.对手（黑棋）禁手。" },
 		
 		BASE: { value: 6 << 5, name: "点点题模式", title: "点点题模式", comment: "出题者没有指定这题的点点题类型" },
 		BASE_OPTION: { value: 6 << 5 | 1, name: "点点题模式", title: "选择题", comment: "出题者忘记写下解题要求了" },
@@ -667,8 +667,8 @@ window.puzzleCoder = (() => {
 		BASE_BLOCK_VCF: { value: 6 << 5 | 15, name: "点点题模式", title: "找VCF防点", comment: "找全VCF防点" },
 		BASE_BLOCK_VCF_4: { value: 6 << 5 | 16, name: "点点题模式", title: "找VCF反防点", comment: "找全VCF反防点，在防点里面选出可以形成反四的防点" },
 		
-		BASE_DOUBLE_VCF: { value: 6 << 5 | 17, name: "点点题模式", title: "找狭义双杀点", comment: "一子双杀点， 指狭义的一子双杀， 即一子落下， 同时形成两个或以上的与冲四有关的杀（ 包括“ 做一步冲四杀” 和“ 做连续冲四杀， 即做V”）， 无论对手如何防守， 下一手都可冲四杀（ 特例： 复活三也视作“ 做冲四杀”； 白棋抓禁的情况， 看似做一个杀， 但无论如何防守， 依然还能冲四取胜）。\n常规可能有三种组合：\n（ 1） 做一步冲四杀 + 做一步冲四杀\n（ 2） 做一步冲四杀 + 做V\n（ 3） 做V + 做V" },
-		BASE_BLOCK_DOUBLE_VCF: { value: 6 << 5 | 18, name: "点点题模式", title: "找狭义双防点", comment: "双杀防点，可以是“一子双防”，也可以是“先手防”（如果是先手防，只标注第一手棋）" },
+		BASE_DOUBLE_VCF: { value: 6 << 5 | 17, name: "点点题模式", title: "找狭义双杀点", comment: "找全做一子双杀点\r\n一子双杀点， 指狭义的一子双杀， 即一子落下， 同时形成两个或以上的与冲四有关的杀（ 包括“ 做一步冲四杀” 和“ 做连续冲四杀， 即做V”）， 无论对手如何防守， 下一手都可冲四杀（ 特例： 复活三也视作“ 做冲四杀”； 白棋抓禁的情况， 看似做一个杀， 但无论如何防守， 依然还能冲四取胜）。\n常规可能有三种组合：\n（ 1） 做一步冲四杀 + 做一步冲四杀\n（ 2） 做一步冲四杀 + 做V\n（ 3） 做V + 做V" },
+		BASE_BLOCK_DOUBLE_VCF: { value: 6 << 5 | 18, name: "点点题模式", title: "找狭义双防点", comment: "找全双杀防点\r\n双杀防点，可以是“一子双防”，也可以是“先手防”（如果是先手防，只标注第一手棋）" },
 		
 		BASE_DOUBLE_VCF_43: { value: 6 << 5 | 19, name: "点点题模式", title: "找两手四三胜点", comment: "玩家两颗棋子内形成成立的43杀，也就是四手五连" },
 	}
