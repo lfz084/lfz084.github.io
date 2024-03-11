@@ -578,6 +578,7 @@ window.puzzleAI = (() => {
 			const bStones = [];
 			const wStones = [];
 			const arr = [];
+			const arr1 = [];
 			game.board.P.map((p, i) => arr[i] = p.type == TYPE_BLACK ? 1 : p.type == TYPE_WHITE ? 2 : 0);
 			for (let x = 0; x < game.board.size; x++) {
 				for (let y = 0; y < game.board.size; y++) {
@@ -586,13 +587,14 @@ window.puzzleAI = (() => {
 					else if (arr[idx] == 2) wStones.push(`${x},${y},${3 - side}`)
 				}
 			}
-			game.board.MS.map((idx, i) => {
+			game.board.MS.slice(0, game.board.MSindex + 1).map((idx, i) => {
 				const x = idx % 15;
 				const y = ~~(idx / 15);
 				game.board.firstColor != "black" && i++
 				if (i % 2 == 0) bStones.push(`${x},${y},${side}`)
 				else wStones.push(`${x},${y},${3 - side}`)
 			})
+			
 			while (bStones.length - wStones.length < side - 1) {
 				bStones.push(`-1,-1,${side}`)
 			}
@@ -668,7 +670,7 @@ window.puzzleAI = (() => {
 			await waitValue({ get v() { return aiState } }, "v", STATE_AI_READY, 50);
 			processOutput({ sideLabel: "ready" })
 		}
-
+		
 		return {
 			think,
 			aiHelp,
@@ -677,6 +679,7 @@ window.puzzleAI = (() => {
 			checkWinBASE,
 			checkMove,
 			checkPuzzles,
+			get ready() { return aiState == STATE_AI_READY },
 			set processOutput(output) { processOutput = output }
 		}
 	} catch (e) { console.error(e.stack) }

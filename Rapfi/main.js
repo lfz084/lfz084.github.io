@@ -5,12 +5,13 @@
     const dh = d.documentElement.clientHeight;
 
     const DBREAD_HELP = `DB阅读器使用技巧<br>1.点击棋子悔棋<br>2.双击棋子悔到双击的那一手<br>3.长按棋盘放大、缩小棋盘<br>4.棋谱注解乱码可以选择gbk以外的编码<br>5.棋谱规则和棋盘大小需要设置正确才能正常显示`
-
+	
     //-----------------------------------------------------------------------
 
     const buttons = [];
     const buttonSettings = [
         {
+        	varName: "btnStart",
             type: "button",
             text: "‖<<",
             touchend: async function() {
@@ -18,6 +19,7 @@
             }
         },
         {
+            varName: "btnPrevious",
             type: "button",
             text: "<<",
             touchend: async function() {
@@ -25,6 +27,7 @@
             }
         },
         {
+            varName: "btnNext",
             type: "button",
             text: ">>",
             touchend: async function() {
@@ -32,6 +35,7 @@
             }
         },
         {
+            varName: "btnEnd",
             type: "button",
             text: ">>‖",
             touchend: async function() {
@@ -39,6 +43,7 @@
             }
         },
         {
+            varName: "btnRotateY180",
             type: "button",
             text: "↔180°",
             touchend: async function() {
@@ -46,6 +51,7 @@
             }
         },
         {
+            varName: "btnRotate90",
             type: "button",
             text: " ↗90°",
             touchend: async function() {
@@ -65,24 +71,18 @@
         },
         {
             type: "button",
-            text: "保存图片",
-            touchend: async function() {
-                game.saveAsImage();
-            }
-        },
-        {
-            type: "button",
             text: "清空标记",
             touchend: async function() {
                 game.cleLabel();
             }
         },
         {
-            type: "button",
-            text: "分享图片",
-            touchend: async function() {
-                share(cBoard);
-            }
+        	varName: "btnAIPlay",
+        	type: "button",
+        	text: "AI选点",
+        	touchend: async function() {
+        		game.think();
+        	}
         },
         {
             type: "button",
@@ -92,20 +92,56 @@
             }
         },
         {
+            varName: "btnRandomPlay",
             type: "button",
-            text: "输出代码",
+            text: "随机出题",
             touchend: async function() {
-                try {
-                    game.outputCode();
-                } catch (e) { console.error(e.stack) }
+            	game.randomPlay();
             }
         },
-
         {
             type: "button",
             text: "重置手数",
             touchend: async function() {
                 game.resetNum(0);
+            }
+        },
+        {
+        	varName: "btnPlay",
+        	type: "checkbox",
+        	text: "对弈模式",
+        	touchend:  function() {
+        		if(this.checked) {
+        			this.MS = cBoard.MS.slice(0);
+        			this.MSindex = cBoard.MSindex;
+        			btnAIPlay.enabled = false;
+        			btnRandomPlay.enabled = false;
+        		}
+        		else {
+                	game.toStart(true);
+        			cBoard.MS = this.MS.slice(0);
+        			while(cBoard.MSindex < this.MSindex && cBoard.MSindex < cBoard.MS.length - 1) {
+        				game.toNext(true);
+        			}
+        			btnAIPlay.enabled = true;
+        			btnRandomPlay.enabled = true;
+        		}
+        	}
+        },
+        {
+            type: "select",
+            text: "15 路",
+            options: [15, "15 路", 14, "14 路", 13, "13 路", 12, "12 路", 11, "11 路", 10, "10 路", 9, "9 路", 8, "8 路", 7, "7 路", 6, "6 路"],
+            change: function() {
+                game.boardSize = this.input.value;
+                game.showBranchNodes();
+            }
+        },
+        {
+            type: "button",
+            text: "分享图片",
+            touchend: async function() {
+                share(cBoard);
             }
         },
         {
@@ -119,12 +155,12 @@
             }
         },
         {
-            type: "select",
-            text: "15 路",
-            options: [15, "15 路", 14, "14 路", 13, "13 路", 12, "12 路", 11, "11 路", 10, "10 路", 9, "9 路", 8, "8 路", 7, "7 路", 6, "6 路"],
-            change: function() {
-                game.boardSize = this.input.value;
-                game.showBranchNodes();
+            type: "button",
+            text: "输出代码",
+            touchend: async function() {
+                try {
+                    game.outputCode();
+                } catch (e) { console.error(e.stack) }
             }
         },
         {
@@ -137,7 +173,7 @@
                 textDecoder = new TextDecoder(encoding[this.input.value]);
                 game.showBranchNodes();
             }
-        }
+        },
     ];
 
     buttonSettings.splice(0, 0, createLogDiv(), null, null, null);
@@ -148,6 +184,7 @@
     buttonSettings.splice(24, 0, null, null);
     buttonSettings.splice(28, 0, null, null);
     buttonSettings.splice(32, 0, null, null);
+    buttonSettings.splice(36, 0, null, null);
     //dw > dh && buttonSettings.splice(0, 0, null, null, null, null);
 
     function $(id) { return document.getElementById(id) };
@@ -174,7 +211,7 @@
             id: "comment",
             type: "div",
             width: mainUI.buttonWidth * 2.33,
-            height: mainUI.buttonHeight * 8.5,
+            height: mainUI.buttonHeight * 9.5,
             style: {
             	position: "absolute",
         		fontSize: `${fontSize}px`,
@@ -198,7 +235,19 @@
 
     const cBoard = mainUI.createCBoard();
     const cmdDiv = createCmdDiv();
-    const { btnRule, btnEncoding } = mainUI.getChildsForVarname();
+    const { 
+    	btnStart,
+    	btnPrevious,
+    	btnNext,
+    	btnEnd,
+    	btnRotate90,
+    	btnRotateY180,
+    	btnRule, 
+    	btnEncoding,
+    	btnAIPlay,
+    	btnPlay,
+    	btnRandomPlay,
+    } = mainUI.getChildsForVarname();
 
     function getFileName(path) {
         let temp = path.split(".");
@@ -323,23 +372,29 @@
         cBoard: cBoard,
 
         toStart: function(isShowNum) {
+        	this.stopThinking();
             cBoard.toStart(isShowNum);
         },
         toPrevious: function(isShowNum, timeout = 0) {
+        	this.stopThinking();
             cBoard.toPrevious(isShowNum, timeout);
             cBoard.MS[cBoard.MSindex] == 225 && cBoard.toPrevious(isShowNum, timeout);
         },
         toNext: function(isShowNum, timeout = 0) {
+        	this.stopThinking();
             cBoard.toNext(isShowNum, timeout);
             cBoard.MS[cBoard.MSindex] == 225 && cBoard.toNext(isShowNum, timeout);
         },
         toEnd: function(isShowNum) {
+        	this.stopThinking();
             cBoard.toEnd(isShowNum);
         },
         rotate90: function(isShowNum) {
+        	this.stopThinking();
             cBoard.rotate90();
         },
         rotateY180: function(isShowNum) {
+        	this.stopThinking();
             cBoard.rotateY180();
         },
         cleLabel: function() {
@@ -363,7 +418,7 @@
         ctnBack: function(idx) { // 触发快速悔棋
             if (idx + 1 && cBoard.P[idx].type == TYPE_NUMBER) {
                 if (idx != cBoard.MS[cBoard.MSindex]) {
-                    while (cBoard.MS[cBoard.MSindex] != idx) {
+                    while (cBoard.MS[cBoard.MSindex] != idx && cBoard.MSindex > - 1) {
                         cBoard.cleNb(cBoard.MS[cBoard.MSindex], true);
                     }
                 }
@@ -401,7 +456,7 @@
             return ratio;
         },
         showBranchNodes: async function() {
-            try {
+            if (this.mode == this.MODE.DATABASS) {
                 const info = await DBClient.getBranchNodes({
                     rule: game.rule,
                     boardWidth: game.boardWidth,
@@ -429,9 +484,123 @@
                     }
                 })
                 //inputText(output);
-            } catch (e) { console.error(e.stack) }
+                return info;
+            }
         },
-
+        think: async function() {
+        	cBoard.cleLb("all");
+        	await waitAIReady();
+        	puzzleAI.aiHelp(createGame());
+        },
+        checkWin: async function (position, idx) {
+        	if (btnPlay.checked) {
+        		const side = position[idx];
+        		let state = getGameOver(position, side, idx);
+        		if (state) {
+        			const COLOR = []
+        			let msg = "";
+        			msgbox("棋局已经结束")
+        		}
+        	}
+        },
+        lockBoard: () => {
+        	bindEvent.enabled = false;
+    		btnStart.enabled = false;
+    		btnPrevious.enabled = false;
+    		btnNext.enabled = false;
+    		btnEnd.enabled = false;
+    		btnRotate90.enabled = false;
+    		btnRotateY180.enabled = false;
+        },
+        unlockBoard: () => {
+        	bindEvent.enabled = true;
+    		btnStart.enabled = true;
+    		btnPrevious.enabled = true;
+    		btnNext.enabled = true;
+    		btnEnd.enabled = true;
+    		btnRotate90.enabled = true;
+    		btnRotateY180.enabled = true;
+        },
+        forEveryPosition: async function(param) {
+        try{
+        	function compareValue(x, y, node) {
+        		const x1 = node.idx % 15;
+        		const y1 = ~~(node.idx / 15);
+        		const distance = Math.max(Math.abs(x1 - x), Math.abs(y1 - y));
+        		const head = ["a","W"].indexOf(node.label[0]) + 1 ? 0 : ["c","L"].indexOf(node.label[0]) + 1 ? 1 : 2;
+        		const step = parseInt(node.label.replace(/[^\d]/g, ""));
+        		const stepCode = head == 1 ? 255 - (step || 0) : step || 255;
+        		return (head << 16 | stepCode << 8 | distance);
+        	}
+        	
+        	function sortNodes(nodes) {
+        		const lastIdx = cBoard.MSindex > -1 ? cBoard.MS[cBoard.MSindex] : (cBoard.size >> 1) * 16;
+        		const x = lastIdx % 15;
+        		const y = ~~(lastIdx / 15);
+        		nodes.sort((lNode, rNode) => {
+        			return compareValue(x, y, lNode) - compareValue(x, y, rNode);
+        		})
+        	}
+        	
+        	this.lockBoard();
+        	const stack = [];
+        	let depth = 0;
+        	do {
+        		let nodes = [];
+        		let node = null;
+        		const rt = await game.showBranchNodes();
+        		rt && rt.nodes && rt.nodes.map(node => nodes.push({idx: node.idx, label: node.txt}));
+        		rt && rt.records && rt.records.map(record => nodes.push({idx: record.idx, label: readLabel(record.buffer)}));
+        		if (nodes.length) {
+        			sortNodes(nodes);
+        			nodes = await param.filterNodes(nodes);
+        			stack.push(nodes);
+        			depth++;
+        			node = nodes.pop();
+        		}
+        		else {
+        			cBoard.toPrevious(true);
+        			while (stack.length && stack[stack.length-1].length == 0) {
+        				stack.pop();
+        				depth--;
+        				cBoard.toPrevious(true);
+        			}
+        			if (stack.length) node = stack[stack.length-1].pop();
+        		}
+        		if (!node) break;
+        		cBoard.wNb(node.idx, "auto", true);
+        		await param.callback();
+        	} while(param.condition())
+        	this.unlockBoard();
+        }catch(e){
+        	console.log(e.stack);
+        	this.unlockBoard();
+        }
+        },
+        randomPlay: async function() {
+        	let MS = [];
+        	btnPlay.checked = false;
+        	btnPlay.touchend();
+        	await this.forEveryPosition({
+        		filterNodes: nodes => {
+        			const node = nodes[parseInt(Math.min(8, nodes.length) * Math.random())];
+        			nodes.length = 0;
+        			nodes.push(node);
+        			return nodes;
+        		},
+    			callback: () => { MS = cBoard.MS.slice(0, cBoard.MSindex)},
+        		condition: () => btnPlay.checked
+        	});
+        	cBoard.toStart(true);
+        	cBoard.MS = MS;
+        	while (cBoard.MSindex < cBoard.MS.length - 1) {
+        		cBoard.toNext(true, 100);
+        	}
+        },
+		stopThinking: async function() {
+    		cBoard.hideStone();
+			await puzzleAI.stopThinking();
+		},
         get boardWidth() {
             return cBoard.SLTX;
         },
@@ -469,7 +638,6 @@
         }
         return true;
     }
-
     //------------------------ 
 
     function getButton(type, text) {
@@ -478,7 +646,14 @@
 
     //------------------------ Events ---------------------------
 
-    game.cBoard.stonechange = function() { game.showBranchNodes() };
+    game.cBoard.stonechange = function() { 
+    	if (btnPlay.checked) {
+    		cBoard.cleLb("all");
+    	}
+    	else {
+    		game.showBranchNodes();
+    	}
+    };
 
     function addEvents() {
         bindEvent.setBodyDiv(mainUI.bodyDiv, mainUI.bodyScale, mainUI.upDiv);
@@ -489,6 +664,8 @@
             }
             else if (game.cBoard.P[idx].type == TYPE_EMPTY || game.cBoard.P[idx].type == TYPE_MARK) {
                 game.cBoard.wNb(idx, "auto", true); // 添加棋子
+                btnPlay.checked && game.checkWin(cBoard.getArray(), idx);
+                btnPlay.checked && game.think();
             }
         })
         bindEvent.addEventListener(game.cBoard.viewBox, "dblclick", (x, y) => {
@@ -557,9 +734,9 @@
     		fileInput.value = "";
     	},
     	showBranchNodes: async function() {
-    		if (this.mode == this.MODE.DATABASS) oldshowBranchNodes.call(this);
+    		if (this.mode == this.MODE.DATABASS) return oldshowBranchNodes.call(this);
     		else if (this.mode == this.MODE.RENLIB) {
-    			RenjuLib.showBranchs({ 
+    			return RenjuLib.showBranchs({ 
     				path: cBoard.MS.slice(0, cBoard.MSindex + 1),
     				position: cBoard.getArray2D(),
     				callback:() => game.rule == Rule.RENJU && game.sideToMove == 0 && cBoard.getArray().map((color, idx, arr) => {
@@ -578,5 +755,54 @@
 			RenjuLib.getAutoMove();
     	}
     });
+    
+    //------------------------ support puzzleAI  ------------------------ 
+    
+    function outputInnerHTML(){}
+    
+    async function waitAIReady() {
+    	if (!puzzleAI.ready) {
+    		await puzzleAI.stopThinking()
+    	}
+    	cBoard.hideStone();
+    }
+    
+    function checkAI() {
+    	if (!window.puzzleAI) {
+    		msgbox({
+    			"title": "gomocalc 引擎异常，请尝试刷新页面"
+    		})
+    	}
+    }
+    
+    function processOutput(output) {
+    	try {
+    		console.log(output)
+    		if (output.realtime && output.realtime.pos) {
+    			const idx = output.realtime.pos[1] * 15 + output.realtime.pos[0];
+    			cBoard.showStone(idx, TYPE_NUMBER);
+    		}
+    		if (output.pos) {
+    			const idx = output.pos[1] * 15 + output.pos[0];
+    			cBoard.hideStone();
+    			cBoard.wNb(idx, "auto", true);
+    			game.checkWin(cBoard.getArray(), idx);
+    		}
+    	} catch (e) { console.error(e.stack) }
+    }
+    
+    function createGame() {
+    	return {
+    		board: cBoard,
+    		playerSide: 3 - (Math.abs(cBoard.MSindex % 2) + 1),
+    		puzzle: {
+    			rule: game.rule,
+    			mode: 96,
+    			size: cBoard.size
+    		}
+    	}
+    }
+    checkAI();
+	puzzleAI.processOutput = processOutput;
     
 })()

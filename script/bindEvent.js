@@ -4,6 +4,7 @@ window.bindEvent = (function() {
 	//---------------------- Event Area --------------------
 	
 	let eventArea;
+	let enabled = true;
 	
 	function isOutArea(x, y) {
 		return eventArea && isOut(x, y, eventArea);
@@ -44,6 +45,7 @@ window.bindEvent = (function() {
 
 	//处理触摸开始事件
 	function bodyTouchStart(event) {
+		if (!enabled) return;
 		let touches = event.changedTouches; // touchstart  事件里面 event.changedTouches.length === 1
 		moveX = touches[0].pageX;
 		moveY = touches[0].pageY;
@@ -88,6 +90,7 @@ window.bindEvent = (function() {
 
 	//处理触摸移动事件
 	function bodyTouchMove(event) {
+		if (!enabled) return;
 		let touches = event.changedTouches;
 		moveX = touches[0].pageX;
 		moveY = touches[0].pageY;
@@ -106,6 +109,7 @@ window.bindEvent = (function() {
 
 	//处理触摸结束事件
 	function bodyTouchEnd(event) {
+		if (!enabled) return;
 		let cancelClick = false;
 		let touches = event.changedTouches;
 		let idx = onTouchesIndex(touches[0].identifier, bodyStartTouches);
@@ -163,6 +167,7 @@ window.bindEvent = (function() {
 	//处理触摸对出事件
 	function bodyTouchCancel(event) {
 		//log(`touchCancel`)
+		if (!enabled) return;
 		let touches = event.changedTouches;
 		if (timerContextMenu) { // 取消长按事件
 			clearTimeout(timerContextMenu);
@@ -174,6 +179,7 @@ window.bindEvent = (function() {
 	}
 
 	function bodyClick(x, y) {
+		if (!enabled) return;
 		x = event && event.type == "click" ? event.pageX : x;
 		y = event && event.type == "click" ? event.pageY : y;
 		//log(`bodyClick x = ${x}, y = ${y}`)
@@ -181,6 +187,7 @@ window.bindEvent = (function() {
 	}
 
 	function bodyDblClick(x, y) {
+		if (!enabled) return;
 		x = event && event.type == "dblclick" ? event.pageX : x;
 		y = event && event.type == "dblclick" ? event.pageY : y;
 		//log(`bodyDblClick x = ${x}, y = ${y}`)
@@ -190,6 +197,7 @@ window.bindEvent = (function() {
 	let cancelContextmenu = false;
 
 	function bodyContextMenu() {
+		if (!enabled) return;
 		if (cancelContextmenu) return;
 		if (timerContextMenu) {
 			clearTimeout(timerContextMenu);
@@ -406,6 +414,8 @@ window.bindEvent = (function() {
 	return {
 		setBodyDiv: setBodyDiv,
 		addEventListener: addEventListener,
-		removeEventListener: removeEventListener
+		removeEventListener: removeEventListener,
+		get enabled() { return enabled },
+		set enabled(b) { enabled = !!b },
 	}
 })()

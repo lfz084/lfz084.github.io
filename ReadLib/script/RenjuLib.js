@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2024.11";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["RenjuLib"] = "v2024.12";
 window.RenjuLib = (() => {
     "use strict";
     //console.log(exports);
@@ -271,9 +271,9 @@ window.RenjuLib = (() => {
             enable = false;
         },
         timerShowBranchs: null,
-        showBranchs: function(param) {
+        showBranchs: async function(param) {
             if (enable) {
-                if (wk.isBusy) {
+            	if (wk.isBusy) {
                     if (this.timerShowBranchs) {
                         clearTimeout(this.timerShowBranchs);
                         this.timerShowBranchs = null;
@@ -283,7 +283,7 @@ window.RenjuLib = (() => {
                     }, 1000);
                 }
                 else {
-                    wk.promiseMessage({ 
+                    return wk.promiseMessage({ 
                     	cmd: "setCenterPos", 
                     	parameter: centerPos 
                     })

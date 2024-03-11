@@ -1,11 +1,12 @@
 window.gomocalc = (() => {
+try{
 	const EngineTypeEnum = {
 		WebAssembly: 0,
 		WebAssemblyWorker: 1,
 	}
-	const currentPath = document.currentScript.src.slice(0, document.currentScript.src.lastIndexOf("/"))
-	const MTEngineURL = currentPath + '/rapfi-multi.js'
-	const STEngineURL = currentPath + '/rapfi-single.js'
+	const currentPath = document.currentScript.src.slice(0, document.currentScript.src.lastIndexOf("/"));
+	const MTEngineURL = currentPath + '/rapfi-multi.js';
+	const STEngineURL = currentPath + '/rapfi-single.js';
 	const EngineType = EngineTypeEnum.WebAssemblyWorker;
 	var callback, engineInstance
 
@@ -127,4 +128,5 @@ window.gomocalc = (() => {
 	}
 
 	return { init, sendCommand, stopThinking }
+}catch(e){console.error(e.stack)}
 })()

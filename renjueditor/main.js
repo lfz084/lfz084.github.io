@@ -24,6 +24,7 @@
     const LOCK = 2;
 
     let warn = true;
+    let checkStones = true;
     let status = MANUAL;
     let filename = "download";
     let gameIndex = -1;
@@ -84,11 +85,28 @@
         	}
         },
         {
+            varName: "btnAutoPut",
             type: "button",
             text: "自动识别",
             touchend: async function() {
                 if (!btnLock.checked) await lockArea();
                 cBoard.autoPut();
+                if (checkStones) {
+                	let numBlackStones = 0;
+                	let numWhiteStones = 0;
+                	cBoard.getArray().map(v => (v == 1 && numBlackStones++, v == 2 && numWhiteStones++ ));
+                	if ((numBlackStones - numWhiteStones) & 0xFE) {
+                		msgbox({
+                			title: `棋子数量不对, 黑减白 = ${numBlackStones - numWhiteStones}`,
+                			enterTXT:  "我知道了",
+							cancelTXT: "不再提醒",
+							cancelFunction: () => checkStones=false,
+							butNum: 2
+						});
+						return false;
+                	}
+                }
+                return true;
             }
         },
         {
@@ -96,15 +114,16 @@
         	text: "上一页",
         	touchend: async function() {
         		await unlockArea();
-        		await renjuEditor.prePage();
+        		return await renjuEditor.prePage();
         	}
         },
         {
+            varName: "btnNextPage",
             type: "button",
             text: "下一页",
             touchend: async function() {
                 await unlockArea();
-                await renjuEditor.nextPage();
+                return await renjuEditor.nextPage();
             }
         },
         {
@@ -117,6 +136,7 @@
             }
         },
         {
+        	varName: "btnPushGame",
         	type: "button",
         	text: "加入题集",
         	touchend: function() {
@@ -491,7 +511,10 @@
     	btnEdit,
     	titleBox,
     	commentBox,
-    	btnRandomRotate
+    	btnRandomRotate,
+    	btnAutoPut,
+    	btnPushGame,
+    	btnNextPage
     } = mainUI.getChildsForVarname();
     
     function setBusy(isBusy) {
@@ -748,7 +771,7 @@
             setFirstArea();
             btnLock.setChecked(true);
             await cBoard.lockArea();
-            btnWhite.defaultontouchend();
+            btnAuto.checked && btnWhite.defaultontouchend();
             setcBoardClick();
             status = LOCK;
         }
@@ -760,6 +783,27 @@
             cBoard.unlockArea();
             status = UNLOCK;
         }
+    }
+    
+    let autoPushing = false;
+    async function autoPushGame() {
+    	if (autoPushing) return autoPushing = false;
+    	const { butCode } = await msgbox({
+    		title: `是否开启自动扫描模式?\n1.确保已经打开文件\n2.确保每页图片坐标大小一致\n3.选定棋盘`,
+    		butNum: 2
+    	})
+    	if (butCode == 1 && renjuEditor.numPages) {
+    		autoPushing = true;
+    		do {
+    			await puzzleCoder.wait(500);
+    			if (!(await btnAutoPut.touchend())) break;
+    			await puzzleCoder.wait(100);
+    			await btnPushGame.touchend();
+    			await puzzleCoder.wait(100);
+    			if (!(await btnNextPage.touchend())) break;
+    		} while(autoPushing);
+    		autoPushing = false;
+    	}
     }
 
     //------------------------ firstArea -----------------------
@@ -954,6 +998,9 @@
             cbd.zoomStart(x1, y1, x2, y2)
         })
         
+        bindEvent.addEventListener(miniBoard.viewBox, "click", (x, y) => {
+        	autoPushGame();
+        })
         bindEvent.addEventListener(miniBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
         	miniBoard.zoomStart(x1, y1, x2, y2)
         })

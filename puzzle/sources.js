@@ -22,12 +22,16 @@
 			isAsync: false,
 			sources: [[SOURCE_FILES["TypeBuffer"]],
 				[SOURCE_FILES["TextCoder"]],
-				[SOURCE_FILES["RenjuTree"]],
-				[SOURCE_FILES["EvaluatorWebassembly"]],
-				[SOURCE_FILES["EvaluatorJScript"]],
-			    [SOURCE_FILES["Evaluator"]],
-			    [SOURCE_FILES["engine"]]]
+				[SOURCE_FILES["RenjuTree"]]]
 		}, {
+			progress: "60%",
+			type: "scriptAll",
+			isAsync: false,
+			sources: [[SOURCE_FILES["EvaluatorWebassembly"]],
+				[SOURCE_FILES["EvaluatorJScript"]],
+				[SOURCE_FILES["Evaluator"]],
+				[SOURCE_FILES["engine"]]]
+		},{
 			progress: "80%",
 			type: "scriptAll",
 			isAsync: false,
@@ -37,6 +41,7 @@
 			type: "scriptAll",
 			isAsync: false,
 			sources: [[SOURCE_FILES["IndexedDB"]],
+				[SOURCE_FILES["saveFile_js"]],
 				[SOURCE_FILES["puzzleData"]],
                 [SOURCE_FILES["puzzleCoder"]],
 				[SOURCE_FILES["puzzleAI"]],

@@ -1,5 +1,5 @@
 "use strict"
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["work_ReadLib"] = "v2024.11";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["work_ReadLib"] = "v2024.12";
 
 if ("importScripts" in self) {
     self.importScripts(
@@ -94,7 +94,7 @@ function showBranchs(param) {
     let rt = renLibDoc.getBranchNodes(param.path);
     rt.position = param.position;
     post("showBranchs", rt);
-    post("resolve");
+    post("resolve", rt);
 }
 
 function setCenterPos(point) {

@@ -144,6 +144,8 @@
 			"白先胜100题_puzzle.json",
     		"三手胜五子棋题解_puzzle.json",
     		"冈部宽连珠习题_puzzle.json",
+    		"趣味连珠习题_puzzle.json",
+    		"实战VCF.json",
     		"黑先VCF_puzzle.json",
     		"白先VCF_puzzle.json",
     		"六路连珠习题1_puzzle.json",
@@ -160,6 +162,7 @@
     		"坂田吾郎九段连珠教室_puzzle.json",
     		"高村政则诘连珠_puzzle.json",
     		"五子棋发阳论残本1.4_puzzle.json",
+    		"五子茶馆小题目大全.json",
     		"第一届画眉杯双杀赛_puzzle.json",
     		"解题大赛合集_01_(12,22,23)_puzzle.json",
     		"解题大赛合集_02_(25,28,31)_puzzle.json",
@@ -285,13 +288,21 @@
 		if (data) {
 			const puzzles = JSON.parse(data.json);
 			const index = puzzleIndex(puzzles.puzzles, newPuzzle);
-			if (-1 == index) {
-				puzzles.puzzles.push(newPuzzle);
-				data.json = JSON.stringify(puzzles);
-				data.progress.push(0);
-				data[INDEX.TIMERS].push(0);
-				await putData(data);
+			if (index + 1) {
+				puzzles.puzzles.splice(index, 1);
+				data.progress.splice(index, 1);
+				data[INDEX.TIMERS].splice(index, 1);
 			}
+			puzzles.puzzles.push(newPuzzle);
+			data.progress.push(0);
+			data[INDEX.TIMERS].push(0);
+			if (puzzles.puzzles.length > 200) {
+				puzzles.puzzles.splice(0, puzzles.puzzles.length - 200);
+				data.progress.splice(0, puzzles.puzzles.length - 200);
+				data[INDEX.TIMERS].splice(0, puzzles.puzzles.length - 200);
+			}
+			data.json = JSON.stringify(puzzles);
+			await putData(data);
 		}
 	}catch(e){console.error(e.stack)}
 	}
@@ -355,12 +366,12 @@
 	async function createRandomPuzzles() {
 		try{
 		function pushPuzzle(key, puzzles, puzzle, maxLevel) {
-			if (puzzles[key].length < 20) {
+			if (puzzles[key].length < 200) {
 				puzzle = copyPuzzle(puzzle);
 				puzzle.level <= maxLevel ? puzzles[key].splice(0, 0, puzzle) : puzzles[key].push(puzzle);
 			}
 		}
-		//console.log(new Date().getTime())
+		console.log(new Date().getTime())
 		const times = [];
 		let donePuzzlesCount = 0;
 		await puzzleData.openCursorByIndex("time", cursor => {
@@ -370,9 +381,9 @@
 				donePuzzlesCount += data.progress.filter(v => v).length;
 			}
 		})
-		const maxLevel = Math.min(5, 1 + parseInt(5 * donePuzzlesCount / 2000));
+		const maxLevel = Math.min(5, 3 + parseInt(5 * donePuzzlesCount / 5000));
 		randomArray(times, 31);
-		//console.log(`maxLevel: ${maxLevel}`)
+		console.log(`maxLevel: ${maxLevel}`)
 		
 		const newPuzzlesLower = {
 			32: [],
@@ -382,7 +393,6 @@
 			160: [],
 			192: [],
 			193: [],
-			194: [],
 			203: [],
 			204: [],
 			205: [],
@@ -397,7 +407,6 @@
 			160: [],
 			192: [],
 			193: [],
-			194: [],
 			203: [],
 			204: [],
 			205: [],
@@ -412,7 +421,6 @@
 			160: [],
 			192: [],
 			193: [],
-			194: [],
 			203: [],
 			204: [],
 			205: [],
@@ -422,7 +430,7 @@
 		const ramdomPuzzles = [
 			{
 				title: "每日练习",
-				modes: [67, 67, 64, 64, 32, 32,	160,192,193,194,203,205,204,209,210]
+				modes: [67, 67, 64, 64, 32, 32,	160,193,192,192,203,205,204,209,210]
 			},
 			{
 				title: "每日残局",
@@ -447,7 +455,7 @@
 			},
 			{
 				title: "每日点点题",
-				modes: new Array(15).fill(1).map(() => [192, 193, 194][parseInt(3 * Math.random())])
+				modes: new Array(15).fill(1).map(() => [192, 193, 192][parseInt(3 * Math.random())])
 			},
 			{
 				title: "每日做43杀",
@@ -487,6 +495,7 @@
 				
 				const sPuzzles = data.progress[indexs[j]] == 0 ? puzzle.level <= maxLevel ? newPuzzlesLower : newPuzzlesUp : donePuzzles;
 				if (newPuzzlesLower[puzzle.mode]) {
+					
 					pushPuzzle(puzzle.mode, sPuzzles, puzzle, maxLevel);
 				}
 				else if ((puzzle.mode & 0xE0) == 160 || (puzzle.mode & 0xE0) == 192) {
@@ -494,7 +503,15 @@
 				}
 			}
 		}
-		Object.keys(newPuzzlesLower).map(key => newPuzzlesLower[key] = newPuzzlesLower[key].concat(newPuzzlesUp[key], donePuzzles[key]));
+		Object.keys(newPuzzlesLower).map(key => {
+			randomArray(newPuzzlesLower[key], 31);
+			//newPuzzlesLower[key].sort((a, b) => a.level-b.level);
+			randomArray(newPuzzlesUp[key], 31);
+			//newPuzzlesUp[key].sort((a, b) => a.level-b.level);
+			randomArray(donePuzzles[key], 31);
+			//donePuzzles[key].sort((a, b) => a.level-b.level);
+			newPuzzlesLower[key] = newPuzzlesLower[key].concat(newPuzzlesUp[key], donePuzzles[key]);
+		});
 		console.log(newPuzzlesLower);
 		//console.log(newPuzzlesUp);
 		//console.log(donePuzzles);
@@ -502,7 +519,7 @@
 		for (let i = 0; i < ramdomPuzzles.length; i++) {
 			await saveRandomPuzzlesJSON(newPuzzlesLower, ramdomPuzzles[i]);
 		}
-		//console.log(new Date().getTime())
+		console.log(new Date().getTime())
 		}catch(e){console.error(e.stack)}
 	}
 	

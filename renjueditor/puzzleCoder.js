@@ -919,7 +919,7 @@ window.puzzleCoder = (() => {
 	 * @filename		文件名
  	*/
 	function downloadJSON(jsonText, filename = "新文件") {
-		const mark = jsonText.indexOf("puzzles") + 1 ? "_puzzle" : "_kaibao";
+		const mark = jsonText.indexOf("puzzles") + 1 ? "_puzzle" : "";
 		saveFile.save(jsonText, filename + mark + ".json");
 	}
 	

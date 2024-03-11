@@ -89,13 +89,11 @@
 				],
 				change:  function() {
 					if (this.input.value == 0) {
-						btnFile.input.removeEventListener("change", openJSON, true);
 						btnFile.input.addEventListener("change", openImg, true);
     					btnFile.input.accept = "image/*";
     				}
     				else if(this.input.value == 1) {
-    					btnFile.input.removeEventListener("change", openImg, true);
-						btnFile.input.addEventListener("change", openJSON, true);
+    					btnFile.input.addEventListener("change", openJSON, true);
     					btnFile.input.accept = ".json";
     				}
     				btnFile.input.click();
@@ -511,6 +509,80 @@
 		const boardWidth = 5;
 		const fontSize = mainUI.buttonHeight * 0.6;
 		const liHeight = mainUI.buttonHeight * 1.2;
+		
+		async function outputProgress() {
+			const json = [];
+			await puzzleData.openCursorByIndex("time", cursor => {
+				const data = cursor && cursor.value;
+				if (data) {
+					if (data.title.indexOf("错题") + 1 || data.title.indexOf("每日") + 1) return;
+					json.push({
+						"title": data.title,
+						"progress": data.progress
+					})
+				}
+			})
+			const jsonString = JSON.stringify(json);
+			puzzleCoder.downloadJSON(jsonString, `解题进度_${new Date().toDateString()}`);
+		}
+		
+		async function inputProgress() {
+			btnFile.input.removeEventListener("change", inputProgress, true);
+			const jsonString = await this.files[0].text();
+			const progressData = JSON.parse(jsonString);
+			for (let i = 0; i < progressData.length; i++) {
+				if (progressData[i].title && progressData[i].progress) {
+					const data = await puzzleData.getDataByIndex("title", progressData[i].title);
+					if (data && data.progress && data.progress.length == progressData[i].progress.length) {
+						if (data.title.indexOf("错题") + 1 || data.title.indexOf("每日") + 1) continue;
+						data.progress.map((v,index) => data.progress[index] = v || progressData[i].progress[index]);
+						await puzzleData.putData(data);
+					}
+				}
+			}
+			msgbox({
+				title: `导入进度完成`,
+				butNum: 1
+			})
+		}
+		
+		function createIOBtns() {
+			let item = document.createElement("div");
+			Object.assign(item.style, {
+				overflow: "hidden",
+				fontSize: fontSize + "px",
+				height: liHeight + "px",
+				lineHeight: liHeight + "px",
+				textAlign: "center"
+			})
+			item.innerHTML = "导出解题进度";
+			item.onclick = function(){
+				event.cancelBubble = true;
+				outputProgress();
+				closeItemBoard();
+			}
+			itemBoard.addItem(li => li.appendChild(item));
+			
+			item = document.createElement("div");
+			Object.assign(item.style, {
+				overflow: "hidden",
+				fontSize: fontSize + "px",
+				height: liHeight + "px",
+				lineHeight: liHeight + "px",
+				textAlign: "center"
+			})
+			item.innerHTML = "导入解题进度";
+			item.onclick = function(){
+				event.cancelBubble = true;
+				btnFile.input.addEventListener("change", inputProgress, true);
+				btnFile.input.accept = ".json";
+				btnFile.input.click();
+				closeItemBoard();
+			}
+			itemBoard.addItem(li => li.appendChild(item));
+			
+		}
+		
 		function createItem(data) {
 			try{
 			const item = document.createElement("div");
@@ -555,7 +627,17 @@
 				height: liHeight + "px",
 				textAlign: "center"
 			})
-			title.innerHTML = data.title;
+			let dateMark = "";
+			if (data[puzzleData.INDEX.DATE]) {
+				const date1 = new Date(data[puzzleData.INDEX.DATE]);
+				const date2 = new Date(new Date().toDateString());
+				const days = parseInt((date1-date2)/3600000/24);
+				if (days == 0) dateMark = `(已更新)`;
+				else if(days < 0) dateMark = `(${-days}天前)`;
+				else dateMark = `(${days}天后)`;
+				days && delayRefreshPuzzles(5000);
+			}
+			title.innerHTML = data.title + dateMark;
 			progress.innerHTML = `${data.progress.filter(v => v).length}/${data.progress.length}`;
 			close.innerHTML = "✕";
 			title.onclick = progress.onclick = async function(){
@@ -596,7 +678,7 @@
 		}
 		
 		async function loadUserAddedItems() {
-			puzzleData.openCursorByIndex("time", cursor => {
+			await puzzleData.openCursorByIndex("time", cursor => {
 				const data = cursor && cursor.value;
 				data && game.defaultPuzzleTimes.indexOf(data.time) == -1 && itemBoard.addItem(li => addItemCallBack(data, li));
 			})
@@ -608,6 +690,7 @@
 				mainUI.viewport.resize();
 				await loadDeafultItems();
 				await loadUserAddedItems();
+				createIOBtns();
 			}
 		}
 		
@@ -630,6 +713,7 @@
 				const style = {
 					opacity: `${game.data && game.data.progress && game.data.progress[i] ? 1 : 0.5}`
 				};
+				i + 1 == game.index && (style.borderWidth = "5px");
 				indexBoard.createIndex(i+1, style)
 			}
 			inputButton.bindButton(indexLabel, mainUI.bodyScale);
@@ -685,19 +769,19 @@
 		const btnDailyPuzzles = document.createElement("div");
 		btnDailyPuzzles.innerHTML = "每日题集";
 		Object.assign(btnDailyPuzzles.style, itemButStyle);
-		btnDailyPuzzles.onclick = () => { event.cancelBubble = true; removeItemAll(); loadDeafultItems(data => data.title.indexOf("每日") + 1 || data.title.indexOf("错题") + 1)}
+		btnDailyPuzzles.onclick = async () => { event.cancelBubble = true; removeItemAll(); await loadDeafultItems(data => data.title.indexOf("每日") + 1 || data.title.indexOf("错题") + 1); createIOBtns()}
 		
 		const btnDefault = document.createElement("div");
 		btnDefault.innerHTML = "默认题集";
 		itemButStyle.left = itemButWidth * 1 + "px";
 		Object.assign(btnDefault.style, itemButStyle);
-		btnDefault.onclick = () => { event.cancelBubble = true; removeItemAll(); loadDeafultItems(data => -1 == data.title.indexOf("每日") && -1 == data.title.indexOf("错题"))}
+		btnDefault.onclick = async () => { event.cancelBubble = true; removeItemAll(); await loadDeafultItems(data => -1 == data.title.indexOf("每日") && -1 == data.title.indexOf("错题")); createIOBtns()}
 		
 		const btnUserAdded = document.createElement("div");
 		btnUserAdded.innerHTML = "你的题集";
 		itemButStyle.left = itemButWidth * 2 + "px";
 		Object.assign(btnUserAdded.style, itemButStyle);
-		btnUserAdded.onclick = () => { event.cancelBubble = true; removeItemAll(); loadUserAddedItems()}
+		btnUserAdded.onclick = async () => { event.cancelBubble = true; removeItemAll(); await loadUserAddedItems(); createIOBtns()}
 		
 		const buttons = document.createElement("div");
 		buttons.appendChild(btnDailyPuzzles)
@@ -838,6 +922,10 @@
 			puzzleData.saveProgress(game);
 			lbTimer.viewElem.parentNode && delaySaveProgress(60*1000);
 		})
+		const delayRefreshPuzzles = createDelayCallback(async() => {
+			await puzzleData.removeErrorPuzzle();
+			await puzzleData.createRandomPuzzles();
+		})
 		const game = {
 			STATE: {
 				IMAGELOADIMG: -1,
@@ -916,6 +1004,7 @@
 					(this.puzzle.randomRotate || rotate != undefined) && !this.notRotate ? this.randomRotate(rotate) : (this.rotate = 0);
 					this.puzzle.rotate = this.rotate;
 					btnAIHelp.enabled = true;
+					//this.board.printSide(this.playerSide);
 					//!isLocation && (this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE &&  delayCheckWinBASE(1800);
 				}
 				(this.puzzle.mode & puzzleCoder.MODE.BASE) == puzzleCoder.MODE.BASE ? btnCommit.show() : btnCommit.hide();
@@ -1003,8 +1092,8 @@
 				await wait(timeout);
 				this.board.hideStone();
 				if ((this.board.P[idx].type & TYPE_NUMBER) == TYPE_NUMBER) return;
-				if (game.puzzle.mode < puzzleCoder.MODE.BASE) this.board.wNb(idx, "auto", true);
-				else this.board.wLb(idx, markChar || this.puzzle.mark, markColor || this.board.bNumColor)
+				if (this.puzzle.mode < puzzleCoder.MODE.BASE) this.board.wNb(idx, "auto", true);
+				else this.board.wLb(idx, markChar || this.puzzle.mark, markColor || this.board.bNumColor);
 			},
 			async continuePutStone(moves, markChar, markColor, timeout) {
 				while(moves.length) {
@@ -1046,6 +1135,12 @@
 				this.data = await puzzleData.getDataByIndex("json", jsonString);
 				this.puzzles.index = this.data && this.data[puzzleData.INDEX.INDEX] || 0;
 				this.reset();
+				if (this.data && this.data.title.indexOf("每日") + 1 && this.data[puzzleData.INDEX.DATE] != new Date().toDateString()) {
+					msgbox({
+						butNum: 1,
+						title: `习题未更新，打开旧的每日习题`
+					})
+				}
 			},
 			async addDefaultPuzzles(path, callback) {
 				this.defaultPuzzleTimes.length = 0;
@@ -1102,6 +1197,7 @@
 					canvasDblTouchStart = canvasDblTouchStart_gameover;
 					canvasContextMenu = canvasContextMenu_gameover;
 				}
+				this.board.hideStone();
 				return this._state;
 			},
 			get strength() { return this._strength },
@@ -1113,6 +1209,10 @@
 			set notRotate(b) {
 				this._notRotate = b; 
 				outputInnerHTML({ rotateLabel: this._notRotate  ? "固定" : "旋转" })
+			},
+			get side() {
+				if (this.puzzle.mode < puzzleCoder.MODE.BASE) return this.board.MSindex % 2 ? this.playerSide : this.aiSide;
+				else return this.playerSide;
 			},
 			get playerSide() { return this.board.firstColor == "black" ? 1 : 2 },
 			set playerSide(side) { this.board.firstColor = [, "black", "white"][side]; return this.playerSide },
@@ -1146,7 +1246,7 @@
 					if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
 						btnCommit.hide();
 						if (game.state == game.STATE.LOST) {
-							game.data.title != "错题复习" && puzzleData.addErrorPuzzle(game);
+							game.data && game.data.title != "错题复习" && puzzleData.addErrorPuzzle(game);
 						}
 						if (game.state == game.STATE.WIN) {
 							showAIHelp();
@@ -1245,6 +1345,7 @@
 		
 		async function openImg() {
 			try {
+				btnFile.input.removeEventListener("change", openImg, true);
 				imageMode();
 				await cBoard.loadImgFile(this.files[0]);
 				cBoard.putImg(cBoard.bakImg, cBoard.canvas, cBoard.width / 13);
@@ -1254,6 +1355,7 @@
 		
 		async function openJSON() {
 			try {
+				btnFile.input.removeEventListener("change", openJSON, true);
 				mainUI.viewport.resize();
 				await game.openJSON(this.files[0]);
 			} catch (e) { console.error(e.stack) }
@@ -1586,6 +1688,7 @@
 					})
 				}
 			}
+			//game.board.printSide(game.side);
 		}
 
 		addEvents();
@@ -1608,10 +1711,7 @@
 			}
 		});
 		
-		setTimeout(async () => {
-			await puzzleData.removeErrorPuzzle();
-			await puzzleData.createRandomPuzzles();
-		},10000)
+		delayRefreshPuzzles(10000);
 		
 	} catch (e) { alert(e.stack) }
 })()

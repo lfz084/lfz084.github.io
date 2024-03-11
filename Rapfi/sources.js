@@ -11,6 +11,7 @@
 			sources: [[SOURCE_FILES["msgbox"]],
 				[SOURCE_FILES["share"]],
 				[SOURCE_FILES["CheckerBoard"]],
+                [SOURCE_FILES["markLine"]],
 				[SOURCE_FILES["saveFile"]]]
          },{
 			progress: "60%",
@@ -27,17 +28,32 @@
 		        [SOURCE_FILES["Stack"]],
 		        [SOURCE_FILES["RenjuLib"]]]
 		}, {
+			progress: "70%",
+			type: "scriptAll",
+			isAsync: false,
+			sources: [[SOURCE_FILES["TypeBuffer"]],
+				[SOURCE_FILES["RenjuTree"]]]
+		}, {
 			progress: "80%",
 			type: "scriptAll",
 			isAsync: false,
 			sources: [[SOURCE_FILES["EvaluatorWebassembly"]],
                 [SOURCE_FILES["EvaluatorJScript"]],
-                [SOURCE_FILES["Evaluator"]]]
+                [SOURCE_FILES["Evaluator"]],
+                [SOURCE_FILES["engine"]]]
+        }, {
+        	progress: "80%",
+        	type: "scriptAll",
+        	isAsync: false,
+        	sources: [[SOURCE_FILES["gomocalc"]]]
         }, {
 			progress: "99%",
 			type: "scriptAll",
 			isAsync: false,
-			sources: [[SOURCE_FILES["dbreadMain"]]]
+			sources: [[SOURCE_FILES["saveFile_js"]],
+                [SOURCE_FILES["puzzleCoder"]],
+                [SOURCE_FILES["puzzleAI"]],
+				[SOURCE_FILES["dbreadMain"]]]
         }
      ];
 })()

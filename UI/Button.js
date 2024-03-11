@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.11";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.12";
 (function(global, factory) {
 	(global = global || self, factory(global));
 }(this, (function(exports) {
@@ -795,7 +795,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.11";
 				if (but.disabled) return;
 				log(`new setonchange......`)
 				if (event) event.cancelBubble = true;
-				if (but.defaultonchange()) callback.call(this, but)
+				if (but.defaultonchange()) return callback.call(this, but)
 			} catch (e) { console.error(e.stack) }
 		}
 		this.input.removeEventListener("change", fun, true);
@@ -813,7 +813,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.11";
 				if (but.disabled) return;
 				log(`new touchstart......`)
 				if (event) event.cancelBubble = true;
-				if (but.defaultontouchstart()) callback.call(this, but);
+				if (but.defaultontouchstart()) return callback.call(this, but);
 			} catch (e) { console.error(e.stack) }
 		}
 		const key = (this.type == "select" || this.type == "file") ? "div" : "input";
@@ -836,7 +836,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.11";
 					if (button.disabled) return;
 					log(`new touchend......`)
 					if (event) event.cancelBubble = true;
-					if (button.defaultontouchend()) callback.call(button, button);
+					if (button.defaultontouchend()) return callback.call(button, button);
 				} catch (e) { console.error(e.stack) }
 			}
 			button[key].removeEventListener("touchend", fun, true);

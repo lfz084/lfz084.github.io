@@ -50,7 +50,7 @@ window.myPDFJS = (( )=> {
                 }
                 await page.render(renderContext).promise;
                 pageIndex = pageNum;
-                setTimeout(onloadPage, 0, pageIndex, pdfDocument.numPages, canvas.toDataURL("image/png"));
+                await onloadPage(pageIndex, pdfDocument.numPages, canvas.toDataURL("image/png"));
                 return pageIndex;
             } catch (e) { alert(e.stack); return 0}
         }

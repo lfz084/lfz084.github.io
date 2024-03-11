@@ -1,5 +1,5 @@
 "use strict"
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2024.11";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient_worker"] = "v2024.12";
 
 if ("importScripts" in self) {
     self.importScripts(
@@ -54,13 +54,28 @@ var recordDB = {
     }
 };
 
-function forEveryEmpty(position, callback) {
-    for (let i = 0; i < 225; i++) {
-        if (0 == position[i]) callback(i);
+function forEveryEmpty(position, sideToMove, callback, maxDepth = 1, depth = 0) {
+    const records = [];
+    depth++;
+    for (let idx = 0; idx < 225; idx++) {
+        if (0 == position[idx]) {
+        	const record = callback(idx, sideToMove);
+        	if (record) {
+            	records.push(record);
+            }
+            else if(depth < maxDepth) {
+            	position[idx] = sideToMove + 1;
+            	if (0 < forEveryEmpty(position, sideToMove ^ 1, callback, maxDepth, depth).length) {
+            		records.push({idx: idx, buffer: [255,0,0,0,0]});
+            	}
+            	position[idx] = 0;
+            }
+        }
     }
+    return records;
 }
 
-function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, position}) {
+function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, position, maxDepth }) {
     let comment = new Uint8Array();
     let records = [];
     const sKey = constructDBKey(rule, boardWidth, boardHeight, sideToMove, position);
@@ -70,8 +85,8 @@ function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, position}) {
         comment = record.text;
         //alert(comment)
     }
-
-    forEveryEmpty(position, function(idx) {
+    
+    records = forEveryEmpty(position, sideToMove, function(idx, sideToMove) {
         const nPosition = position.slice(0);
         nPosition[idx] = sideToMove + 1;
         /*
@@ -85,9 +100,10 @@ function getBranchNodes({rule, boardWidth, boardHeight, sideToMove, position}) {
         const recordBuffer = recordDB.get(sKey);
         if (recordBuffer) {
             const record = {idx: idx, buffer: recordBuffer};
-            records.push(record);
+            return record;
         }
-    })
+        return null;
+    }, maxDepth)
     return {
         comment: comment,
         records: records

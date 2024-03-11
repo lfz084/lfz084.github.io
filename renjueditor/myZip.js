@@ -55,8 +55,10 @@ window.myZip = (() => {
     async function loadPage(numPage) {
         if (numPage > 0 && numPage <= files.length) {
             pageIndex = numPage;
-            setTimeout(onloadPage, 0, numPage, files.length, await getBase64Img(numPage - 1));
+            await onloadPage(numPage, files.length, await getBase64Img(numPage - 1));
+            return pageIndex;
         }
+        return 0;
     }
 
     async function openZIP(file) {
@@ -67,7 +69,7 @@ window.myZip = (() => {
             let path = relativePath,
                 temp = relativePath.split("\/"),
                 name = temp.pop() || temp.pop();
-            if (!file.dir && /\.jpg$|\.png$/.exec(name)) {
+            if (!file.dir && /\.jpg$|\.jpeg$|\.png$/.exec(name)) {
                 files.push({ path: path, name: name })
                 log(`push file: "${name}"`)
             }
@@ -79,7 +81,7 @@ window.myZip = (() => {
         if (pageIndex < files.length) {
             return await loadPage(++pageIndex)
         }
-        else return 0
+        else return 0;
     }
 
     async function prePage() {

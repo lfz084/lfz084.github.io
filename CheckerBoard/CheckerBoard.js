@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.11";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.12";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -1559,7 +1559,24 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.11";
             this.wLb(moves[i], i + 1, fontColor, color, false);
         }
     }
-
+    
+    Board.prototype.printSide = function(side) {
+    	const idx = (this.size - 1) * 15;
+    	const w = Math.min(this.gW, this.gH) / 2 * 0.85;
+    	const pointInfo = {
+    		circle: {
+    			x: this.P[idx].x - this.gW,
+    			y: this.P[idx].y + this.gH,
+    			radius: w,
+    			color: "black",
+    			lineWidth: this.lineStyle == "heavy" ? w / 9 : this.lineStyle == "bold" ? w / 15 : 1,
+    			fill: side == 1 ? this.bNumColor : this.wNumColor
+    		}
+    	};
+    	let ctx = this.canvas.getContext("2d");
+        this.printCircle(pointInfo.circle, ctx);
+    	ctx = null;
+    }
 
     Board.prototype.printNb = function(idx, showNum) {
         let ctx = this.canvas.getContext("2d"),
