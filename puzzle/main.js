@@ -229,7 +229,7 @@
 				lineHeight: `${mainUI.buttonHeight}px`
 			},
 			click: function() {
-				openIndexBoard();
+				closeBoards();
 			}
 		}),
 			{
@@ -1246,7 +1246,7 @@
 					if ((game.state & game.STATE.GAMEOVER) == game.STATE.GAMEOVER) {
 						btnCommit.hide();
 						if (game.state == game.STATE.LOST) {
-							game.data && game.data.title != "错题复习" && puzzleData.addErrorPuzzle(game);
+							!(game.data && game.data.title == "错题复习") && puzzleData.addErrorPuzzle(game);
 						}
 						if (game.state == game.STATE.WIN) {
 							showAIHelp();
@@ -1711,7 +1711,7 @@
 			}
 		});
 		
-		delayRefreshPuzzles(10000);
+		delayRefreshPuzzles(100);
 		
 	} catch (e) { alert(e.stack) }
 })()

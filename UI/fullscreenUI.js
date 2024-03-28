@@ -406,8 +406,7 @@ window.fullscreenUI = (() => {
 		const themes = { "light": "light", "grey": "grey", "green": "green", "dark": "dark" };
 		const defaultTheme = "light";
 
-		async function _theme(themeKey, cancel) {
-			const theme = await loadJSON(`UI/theme/${themeKey}/theme.json`);
+		async function refreshTheme(theme, themeKey, cancel) {
 			Object.assign(document.body.style, theme["body"]);
 			Object.assign(bodyDiv.style, theme["body"]);
 			Object.assign(fullscreenDiv.style, theme["body"]);
@@ -427,10 +426,12 @@ window.fullscreenUI = (() => {
 			if (!cancel && IFRAME.contentWindow.mainUI && (typeof IFRAME.contentWindow.mainUI.loadTheme === "function")) IFRAME.contentWindow.mainUI.loadTheme(true)
 		}
 
-		function setTheme(themeKey = defaultTheme, cancel) {
+		async function setTheme(themeKey = defaultTheme, cancel) {
 			themeKey = themes[themeKey] || defaultTheme;
 			localStorage.setItem("theme", themeKey);
-			_theme.call(this, themeKey, cancel);
+			const data = window.settingData && ( await settingData.getDataByKey("themes"));
+			const theme = data && data.themes[themeKey] || ( await loadJSON(`UI/theme/${themeKey}/theme.json`));
+			refreshTheme.call(this, theme, themeKey, cancel);
 		}
 
 		function loadTheme(cancel) {
@@ -445,6 +446,7 @@ window.fullscreenUI = (() => {
 		//----------------------------------------------------------------------------------
 
 		return {
+			get refreshTheme() { return refreshTheme },
 			get loadTheme() { return loadTheme },
 			get iframe() { return IFRAME },
 			get contentWindow() { return IFRAME.contentWindow },

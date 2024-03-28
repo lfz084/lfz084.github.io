@@ -1,6 +1,9 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.15";
 
-(function(global, factory) {
+if (window.top.IndexedDB) {
+	window.IndexedDB = window.top.IndexedDB;
+}
+else (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
     'use strict';
@@ -264,7 +267,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
                 if (false == await add(store, dataList[i]), key) {
                     return false;
                 }
-                console.log(`addData ${i+1}/${dataList.length}`)
+                console.log(`${IndexedDB.name} -> ${storeName} -> addData ${i+1}/${dataList.length}`)
             }
             return true;
         } catch (e) { console.error(e.stack); return false }
@@ -284,7 +287,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
                 if (false == await put(store, dataList[i], key)) {
                     return false;
                 }
-                console.log(`putData ${i+1}/${dataList.length}`)
+                console.log(`${IndexedDB.name} -> ${storeName} -> putData ${i+1}/${dataList.length}`)
             }
             return true;
         } catch (e) { console.error(e.stack); return false }
@@ -296,6 +299,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
     	return new Promise((resolve) => {
     		try{
     			const objectStore = this.getStore(storeName, mode);
+                console.log(`${IndexedDB.name} -> ${storeName} -> openCursorByKey`)
     			objectStore.openCursor().onsuccess = function(event) {
     				try{
     					const cursor = event.target.result;
@@ -316,6 +320,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
     	return new Promise((resolve) => {
     		try{
     			const objectStore = this.getIndex(storeName, indexName, mode);
+    			console.log(`${IndexedDB.name} -> ${storeName} -> openCursorByIndex ${indexName}`)
     			objectStore.openCursor().onsuccess = function(event) {
     				try{
     					const cursor = event.target.result;
@@ -363,7 +368,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
     async function deleteDataByKey(storeName, value) {
         try {
             let store = this.getStore(storeName, "readwrite");
-            return await del(store, value);
+            if (false == await del(store, value)) {
+            	return false;
+            }
+            console.log(`${IndexedDB.name} -> ${storeName} -> deleteDataByKey ${value}`)
         } catch (e) { console.error(e.stack); return false }
     }
     /**
@@ -376,9 +384,13 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
     async function deleteDataByIndex(storeName, indexName, value) {
     	try {
      		const data = await this.getDataByIndex(storeName, indexName, value);
-     		console.log(`data: ${JSON.stringify(data)}`)
-     		const store = this.getStore(storeName, "readwrite");
-     		return await del(store, data.id);
+     		if (data) {
+     			const store = this.getStore(storeName, "readwrite");
+     			if (false == await del(store, data.id)) {
+     				return false;
+     			}
+     			console.log(`${IndexedDB.name} -> ${storeName} -> deleteDataByIndex ${data.id}`)
+     		}
     	} catch (e) { console.error(e.stack); return false }
     }
 
@@ -407,7 +419,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
     exports.IndexedDB = IndexedDB;
 
     /*------------------- test code ------------------------*/
-
+	/*
     async function test() {
     	let oldDatabass = IndexedDB.database ? {name:IndexedDB.name , version:IndexedDB.version} : undefined;
     	
@@ -421,11 +433,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
         	objectStore.createIndex("age", "age", { unique: false, multiEntry: false });
         	objectStore.createIndex("name", "name", { unique: false, multiEntry: false });
         	console.log([...db.objectStoreNames])
-        	/*
         	if (db.objectStoreNames.contains("testStore")) {
-            	db.deleteObjectStore("testStore");
+            	//db.deleteObjectStore("testStore");
         	}
-        	*/
         	}catch(e){console.error(e.stack)}
         })
         console.log(`IndexedDB.open: ${out}`)
@@ -495,6 +505,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.12";
     }
 
     IndexedDB.test = test;
+    */
     /*
     self.IndexedDB = fullscreenUI.contentWindow.IndexedDB
     self.IndexedDB.test()

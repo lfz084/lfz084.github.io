@@ -1,4 +1,4 @@
-window.serviceWorker = (() => {
+window.serviceWorker = window.top.serviceWorker || (() => {
     "use strict";
 
     const TEST_SERVER_WORKER = false;

@@ -2,51 +2,20 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <!--
-    <meta http-equiv=X-UA-Compatible content="IE=edge">
-    <meta http-equiv=Cache-Control content=no-siteapp>
-    -->
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-    <meta name=mobile-web-app-capable content=yes>
-    <meta name=apple-mobile-web-app-capable content=yes>
-    <meta name=apple-mobile-web-app-status-bar-style content=default>
-    <meta name=apple-mobile-web-app-title content=摆棋小工具>
-    <meta name=x5-page-mode content=app>
-    <link rel="shortcut icon" sizes=128x128 href=./icon(192x192).png>
-    <link rel=apple-touch-icon href=./icon(192x192).png>
-    <link rel=icon href=./icon.ico>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-touch-fullscreen" content="yes" /> 
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="摆棋小工具" />
+    <meta name="x5-page-mode" content="app" />
+    <link rel="shortcut icon" sizes="192x192" href="icon(192x192).png" type="image/png" />
+    <link rel="icon" href="icon(128x128).ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" sizes="57x57" href="icon(57x57).png" type="image/png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="icon(72x72).png" type="image/png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="icon(114x114).png" type="image/png" />
     <title>五子棋小工具</title>
-    
-    <link href="./style/main.css" rel="stylesheet" type="text/css">
-    <style type="text/css">
-        a {
-            text-decoration: none;
-            font-family: 黑体;
-            font-weight: bold;
-            font-size: 25px;
-            line-Height: 3;
-            color: black;
-            -webkit-user-select: none;
-            /* Chrome/Safari/Opera */
-        }
-
-        h1 {
-            text-align: left
-        }
-
-        h2 {
-            text-align: center
-        }
-
-        div {
-            position: absolute;
-            left: 60px;
-            top: 100px;
-            width: 360px;
-            border: none;
-        }
-    </style>
 </head>
 
 <body>
@@ -59,24 +28,13 @@
 			s.parentNode.insertBefore(hm, s);
 		})();
 	</script>
-    <script>
-    	let scale = window.screen.width / 480;
-        //console.log("scale=" + scale);
-        let viewport = document.createElement("meta");
-        viewport.setAttribute("name", "viewport");
-        document.head.appendChild(viewport);
-        viewport.setAttribute("content", `width=480, initial-scale=${scale}, minimum-scale=${scale}, maximum-scale =${scale}, user-scalable=no`);
-    </script>
-    <div class="main">
-        <h1> <a href="./renju.html" style="color:black">摆棋小工具 </a></h1>
-        <h1> <a href="./dbread.html" style="color:black">DB阅读器</a></h1>
-        <h1> <a href="./puzzle.html" style="color:black">连珠答题器</a></h1>
-        <h1> <a href="./renjueditor.html" style="color:black"> 习题编辑器</a></h1>
-        <h1> <a href="./makevcf.html" style="color:black">制作VCF </a></h1>
-        <h1> <a href="./tuya.html" style="color:black"> 棋盘图片标记 </a></h1>
-        <h1> <a href="./lib2sgf.html" style="color:black">LIB转SGF </a></h1>
-    </div>
+    <version v="v2024.15"></version>
+    <script src="script/loadFile.js"></script>
+    <script src="home/sources.js"></script>
+    <script src="script/loadApp.js"></script>
 </body>
 
 </html>
+
+
 

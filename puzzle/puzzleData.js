@@ -4,9 +4,7 @@
 }(this, (async function(exports) {
 	try{
 	'use strict';
-	const DATABASS_NAME = "lfz084";
 	const STORE_NAME = "puzzle";
-	const KEY = "key";
 	const INDEXNAMES = ["title","progress","json","time","index01","index02","index03","index04","index05","index06","index07","index08","index09","index"];
 	const INDEX = {
 		TITLE: INDEXNAMES[0],
@@ -17,76 +15,17 @@
 		INDEX: INDEXNAMES[5],
 		DATE: INDEXNAMES[6]
 	}
-	await IndexedDB.open(DATABASS_NAME, 1, (db) => {
-		try {
-			if (!db.objectStoreNames.contains(STORE_NAME)) {
-				const objectStore = db.createObjectStore(STORE_NAME, {
-					keyPath: KEY,
-					autoIncrement: false
-				});
-				INDEXNAMES.map(indexName => {
-					objectStore.createIndex(indexName, indexName, { unique: false, multiEntry: false });
-				})
-				console.log(`indexNames: ${[...objectStore.indexNames]}`)
-			}
-			/*
-			if (db.objectStoreNames.contains(STORE_NAME)) {
-				db.deleteObjectStore(STORE_NAME);
-			}
-			*/
-		} catch (e) { console.error(e.stack)}
-	})
 	
-	async function getDataByKey(key) {
-		try{
-			const data = await IndexedDB.getDataByKey(STORE_NAME, key);
-			return data;
-		}catch(e){console.error(e.stack)}
-	}
-	
-	async function getDataByIndex(indexName, value) {
-		try {
-			const data = await IndexedDB.getDataByIndex(STORE_NAME, indexName, value);
-			return data;
-		} catch (e) { console.error(e.stack) }
-	}
-	
-	async function addData(obj) {
-		try {
-			return await IndexedDB.addData(STORE_NAME, obj)
-		} catch (e) { console.error(e.stack) }
-	}
-	
-	async function putData(obj) {
-		try {
-			return await IndexedDB.putData(STORE_NAME, obj)
-		} catch (e) { console.error(e.stack) }
-	}
-	
-	async function deleteDataByKey(key) {
-		try {
-			return await IndexedDB.deleteDataByKey(STORE_NAME, key)
-		} catch (e) { console.error(e.stack) }
-	}
-	
-	async function deleteDataByIndex(indexName, value) {
-		try {
-			const data = await this.getDataByIndex(indexName, value);
-			return await this.deleteDataByKey(data.key);
-		} catch (e) { console.error(e.stack) }
-	}
-	
-	async function openCursorByKey(callback) {
-		try {
-			return await IndexedDB.openCursorByKey(STORE_NAME, undefined, callback)
-		} catch (e) { console.error(e.stack) }
-	}
-	
-	async function openCursorByIndex(indexName, callback) {
-		try {
-			return await IndexedDB.openCursorByIndex(STORE_NAME, indexName, undefined, callback)
-		} catch (e) { console.error(e.stack) }
-	}
+	let {
+		addData,
+		putData,
+		getDataByKey,
+		getDataByIndex,
+		deleteDataByKey,
+		deleteDataByIndex,
+		openCursorByKey,
+		openCursorByIndex
+	} = settingData;
 	
 	/**
 	 * 返回一个Promise
@@ -112,7 +51,12 @@
 	}
 	
 	async function addDefaultPuzzles(_path, defaultPuzzleTimes = [], callback = () => {}) {
-		const rt = defaultPuzzleTimes;
+		const dataDefaultPuzzleTimes = await puzzleData.getDataByKey("defaultPuzzleTimes") || { key: "defaultPuzzleTimes" };
+		if (dataDefaultPuzzleTimes[INDEX.TIMERS]) {
+			defaultPuzzleTimes.length = 0;
+			dataDefaultPuzzleTimes[INDEX.TIMERS].map((time) => defaultPuzzleTimes.push(time))
+		}
+		const rt = [];
 		const path = _path || document.currentScript.src.slice(0, document.currentScript.src.lastIndexOf("/") + 1) + "json/";
 		const fileNames = [
 			"例题演示.json",
@@ -145,6 +89,7 @@
     		"三手胜五子棋题解_puzzle.json",
     		"冈部宽连珠习题_puzzle.json",
     		"趣味连珠习题_puzzle.json",
+    		"高飞习题_puzzle.json",
     		"实战VCF.json",
     		"黑先VCF_puzzle.json",
     		"白先VCF_puzzle.json",
@@ -174,18 +119,22 @@
 			];
 		for (let i = 0; i < fileNames.length; i++) {
 			const jsonString = await window.loadTxT(path + fileNames[i]);
-			const oldData = await this.getDataByKey(jsonString);
+			const oldData = await puzzleData.getDataByKey(jsonString);
 			if (oldData) {
 				rt.push(oldData.time);
 				i == 0 && callback(oldData.json)
 			}
 			else {
-				const data  = await this.jsonFile2Data(jsonString);
-				this.addData(data);
+				const data  = await puzzleData.jsonFile2Data(jsonString);
+				puzzleData.addData(data);
 				rt.push(data.time);
 				i == 0 && callback(data.json)
 			}
 		}
+		defaultPuzzleTimes.length = 0;
+		rt.map((time) => defaultPuzzleTimes.push(time));
+		dataDefaultPuzzleTimes[INDEX.TIMERS] = rt;
+		await puzzleData.putData(dataDefaultPuzzleTimes);
 		return rt;
 	}
 	
@@ -197,10 +146,10 @@
 		if (game.state == game.STATE.WIN || game.puzzle.mode == puzzleCoder.MODE.COVER) {
 			game.data.progress[game.puzzles.index] = 1;
 			if (game.puzzle.progress) { // 找到原题集，更新解题进度
-				const sourceData = await getDataByIndex("time", game.puzzle.progress.time);
+				const sourceData = await puzzleData.getDataByIndex("time", game.puzzle.progress.time);
 				if (sourceData && sourceData.progress && sourceData.progress[game.puzzle.progress.index] == 0) {
 					sourceData.progress[game.puzzle.progress.index] = 1;
-					await putData(sourceData);
+					await puzzleData.putData(sourceData);
 				}
 			}
 		}
@@ -208,10 +157,10 @@
 		if (game.timer > 0) game.data[INDEX.TIMERS][game.puzzles.index] = Math.max(game.timer, game.data[INDEX.TIMERS][game.puzzles.index] || 0);
 		game.data[INDEX.INDEX] = game.puzzles.index;
 		if (game.data[INDEX.DATE]) { //  判断是否退出保存每日练习进度
-			const data = await getDataByIndex("time", game.data.time);
-			if(data && data[INDEX.DATE] != new Date().toDateString()) return;
+			const data = await puzzleData.getDataByIndex("time", game.data.time);
+			if(data && data[INDEX.DATE] != game.data[INDEX.DATE]) return;
 		}
-		await putData(game.data);
+		await puzzleData.putData(game.data);
 		}catch(e){console.error(e.stack)}
 	}
 	
@@ -248,7 +197,7 @@
 	}
 	
 	async function getErrorPuzzlesData() {
-		return getDataByIndex("title", "错题复习")
+		return puzzleData.getDataByIndex("title", "错题复习")
 	}
 	
 	function equalPuzzle(puzzle1, puzzle2) {
@@ -302,7 +251,7 @@
 				data[INDEX.TIMERS].splice(0, puzzles.puzzles.length - 200);
 			}
 			data.json = JSON.stringify(puzzles);
-			await putData(data);
+			await puzzleData.putData(data);
 		}
 	}catch(e){console.error(e.stack)}
 	}
@@ -318,7 +267,7 @@
 					data[INDEX.TIMERS].splice(i, 1);
 				}
 				data.json = JSON.stringify(puzzles);
-				await putData(data);
+				await puzzleData.putData(data);
 			}
 		}
 	}
@@ -334,11 +283,11 @@
 		}
 	}
 	
-	async function saveRandomPuzzlesJSON(newPuzzlesLower, randomInfo) {
+	async function saveRandomPuzzlesJSON(newPuzzlesLower, randomInfo, sortPuzzles) {
 		const title = randomInfo.title;
 		const mode = randomInfo.mode;
 		const modes = randomInfo.modes;
-		const data = await getDataByIndex("title", title);
+		const data = await puzzleData.getDataByIndex("title", title);
 		if (!data) {
 			console.log(`没有找到${title}`);
 		}
@@ -353,12 +302,13 @@
 				mode && (puzzle.mode = mode, puzzle.comment = puzzle.title = undefined);
 				puzzles.puzzles.push(puzzle);
 			}
+			sortPuzzles && puzzles.puzzles.sort((a, b) => a.level - b.level);
 			data.json = JSON.stringify(puzzles);
 			data.progress = new Array(puzzles.puzzles.length).fill(0);
 			data[INDEX.TIMERS] = new Array(puzzles.puzzles.length).fill(0);
 			data[INDEX.INDEX] = 0;
 			data[INDEX.DATE] = new Date().toDateString();
-			await putData(data);
+			await puzzleData.putData(data);
 			console.log(`成功生成${title}`);
 		}
 	}
@@ -477,7 +427,7 @@
 		const puzzleInfo = {"总题数": 0};
 		
 		for (let i = 0; i < times.length; i++) {
-			const data = await getDataByIndex("time", times[i]);
+			const data = await puzzleData.getDataByIndex("time", times[i]);
 			const puzzles = puzzleCoder.renjuJSON2Puzzles(data.json);
 			const indexs = new Array(puzzles.length).fill(0).map((v,i) => i);
 			if (data.title.indexOf("每日") + 1 || data.title == "错题复习") continue;
@@ -505,11 +455,8 @@
 		}
 		Object.keys(newPuzzlesLower).map(key => {
 			randomArray(newPuzzlesLower[key], 31);
-			//newPuzzlesLower[key].sort((a, b) => a.level-b.level);
 			randomArray(newPuzzlesUp[key], 31);
-			//newPuzzlesUp[key].sort((a, b) => a.level-b.level);
 			randomArray(donePuzzles[key], 31);
-			//donePuzzles[key].sort((a, b) => a.level-b.level);
 			newPuzzlesLower[key] = newPuzzlesLower[key].concat(newPuzzlesUp[key], donePuzzles[key]);
 		});
 		console.log(newPuzzlesLower);
@@ -517,7 +464,7 @@
 		//console.log(donePuzzles);
 		console.log(puzzleInfo);
 		for (let i = 0; i < ramdomPuzzles.length; i++) {
-			await saveRandomPuzzlesJSON(newPuzzlesLower, ramdomPuzzles[i]);
+			await saveRandomPuzzlesJSON(newPuzzlesLower, ramdomPuzzles[i], i);
 		}
 		console.log(new Date().getTime())
 		}catch(e){console.error(e.stack)}
@@ -569,6 +516,7 @@
 	
 	exports.puzzleData = {
 		INDEX,
+		STORE_NAME,
 		addData,
 		putData,
 		getDataByKey,

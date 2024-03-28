@@ -235,6 +235,36 @@ window.mainUI = (function() {
 			}
 		}
 		settings.push({ buttonSettings: buttonSettings3, marktopSetting: marktopSetting3 });
+		
+		const buttonSettings4 = [];
+		const marktopSetting4 = {};
+		for (let i = 0; i < 15; i++) { // set positions
+			if (i === 0) {
+				if (dw < dh) {
+					t = buttonHeight * 0;
+					const p = { x: 0, y: - gridPadding };
+					marktopSetting4.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
+				}
+				else {
+					t = buttonHeight * 0;
+					const p = { x: 0, y: 0 };
+					marktopSetting4.top = xyObjToPage(p, upDiv).y * dw / bodyWidth;
+				}
+			}
+			else {
+				t += buttonHeight * 1.5;
+			}
+			for (let j = 0; j < 4; j++) {
+				buttonSettings4.push({
+					left: ~~(cmdPadding + buttonWidth * j * 1.33),
+					top: ~~t,
+					width: ~~buttonWidth,
+					height: ~~buttonHeight
+				});
+			}
+		}
+		settings.push({ buttonSettings: buttonSettings4, marktopSetting: marktopSetting4 });
+		
 
 	}
 
@@ -829,8 +859,7 @@ window.mainUI = (function() {
 	const themes = {"light":"light", "grey":"grey", "green":"green", "dark":"dark"};
 	const defaultTheme = "light";
 	
-	async function _theme(themeKey, cancel) {
-		let theme = await loadJSON(`UI/theme/${themeKey}/theme.json`);
+	async function refreshTheme(theme, themeKey, cancel) {
 		Object.assign(document.body.style, theme["body"]);
 		
 		const childs = this.getChilds();
@@ -860,14 +889,16 @@ window.mainUI = (function() {
 			"Button": theme["Button"]
 		});
 		self["share"] && share.loadTheme(theme["share"]);
-		if (!cancel && window.top.fullscreenUI && (typeof window.top.fullscreenUI.loadTheme === "function")) window.top.fullscreenUI.loadTheme(true)
+		if (!cancel && window.top.fullscreenUI && (typeof window.top.fullscreenUI.refreshTheme === "function")) window.top.fullscreenUI.refreshTheme(theme, themeKey, true);
 	}
 	
-	function setTheme(themeKey = defaultTheme, cancel) {
+	async function setTheme(themeKey = defaultTheme, cancel) {
 		try{
 		themeKey = themes[themeKey] || defaultTheme;
 		localStorage.setItem("theme", themeKey);
-		_theme.call(this, themeKey, cancel);
+		const data = window.settingData && ( await settingData.getDataByKey("themes"));
+		const theme = data && data.themes[themeKey] || ( await loadJSON(`UI/theme/${themeKey}/theme.json`));
+		refreshTheme.call(this, theme, themeKey, cancel);
 		}catch(e){console.error(e.stack)}
 	}
 	
@@ -925,6 +956,7 @@ window.mainUI = (function() {
 	Object.defineProperty(exports, "createLogDiv", { value: createLogDiv });
 	Object.defineProperty(exports, "createCmdDiv", { value: createCmdDiv });
 	Object.defineProperty(exports, "createContextMenu", { value: createContextMenu });
+	Object.defineProperty(exports, "refreshTheme", { value: refreshTheme });
 	Object.defineProperty(exports, "setTheme", { value: setTheme });
 	Object.defineProperty(exports, "loadTheme", { value: loadTheme });
 	Object.defineProperty(exports, "getThemeName", { value: getThemeName });
@@ -936,6 +968,6 @@ window.mainUI = (function() {
 	Object.defineProperty(exports, "newTextBox", { value: newTextBox });
 	Object.defineProperty(exports, "newIndexBoard", { value: newIndexBoard });
 	Object.defineProperty(exports, "newItemBoard", { value: newItemBoard });
-6
+
 	return exports;
 })()

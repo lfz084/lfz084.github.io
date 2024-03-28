@@ -1,5 +1,5 @@
 // import removeServiceWorker form "serviceWorker.js"
-window.upData = (function() {
+window.upData = window.top.upData || (function() {
     'use strict';
 	const DEBUG_UPDATA = false;
     const mlog = self["mlog"] || console.warn;

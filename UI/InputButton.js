@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.12";
+if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.15";
 (function(global, factory) {
 	(global = global || self, factory(global));
 }(this, (function(exports) {
@@ -127,9 +127,9 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["button"] = "v2024.12";
 	 * 与btn在页面上左上角对齐
  	*/
 	InputButton.prototype.bindButton = function(btn, scale = 1) {
-		let p = xyObjToPage({x:btn.left, y:btn.top}, btn.parent);
+		let p = xyObjToPage({x:parseInt(btn.left), y:parseInt(btn.top)}, btn.parent || btn.parentNode );
 		p = xyPageToObj(p, this.parentNode);
-		this.move(p.x * scale, p.y * scale, btn.width, btn.height);
+		this.move(p.x * scale, p.y * scale, parseInt(btn.width), parseInt(btn.height));
 		Object.assign(this.div.style, {
 			transformOrigin: "0px 0px",
 			transform: `scale(${scale})`

@@ -24,6 +24,8 @@
     "help_css": "help/help.css",
     "help": "help/help.js",
     "appData": "historyGames/appData.js",
+    "homeMain": "home/main.js",
+    "homeSources": "home/sources.js",
     "IndexedDB": "IndexedDB/IndexedDB.js",
     "mylz4": "lz4/mylz4.js",
     
@@ -109,6 +111,7 @@
     "連珠苦楽部詰連珠": "puzzle/json/連珠苦楽部詰連珠_puzzle.json",
     "错题复习": "puzzle/json/错题复习.json",
     "高村政则诘连珠": "puzzle/json/高村政则诘连珠_puzzle.json",
+    "高飞习题": "puzzle/json/高飞习题_puzzle.json",
     "黑先VCF": "puzzle/json/黑先VCF_puzzle.json",
     "黑先胜100题": "puzzle/json/黑先胜100题_puzzle.json",
     
@@ -154,10 +157,14 @@
     "RenjuTree": "script/RenjuTree.js",
     "saveFile_js": "script/saveFile.js",
     "serviceWorker": "script/serviceWorker.js",
+    "settingData": "script/settingData.js",
     "TextCoder": "script/TextCoder.js",
     "upData": "script/upData.js",
     "utils": "script/utils.js",
     "maxBufferwasm": "script/maxBuffer.wasm",
+    
+    "setThemeMain": "setTheme/main.js",
+    "setThemeSources": "setTheme/sources.js",
     
     "loaders": "style/loaders.css",
     "main": "style/main.css",
@@ -293,5 +300,7 @@
     "renju_html": "renju.html",
     "renjueditor_html": "renjueditor.html",
     "reset_html": "reset.html",
+    "setTheme_html": "setTheme.html",
+    "icon_settings": "settings.png",
     "tuya_html": "tuya.html"
 }

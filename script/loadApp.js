@@ -1,5 +1,5 @@
 window.SCRIPT_VERSIONS = [];
-self.SCRIPT_VERSIONS["renju"] = "v2024.12";
+self.SCRIPT_VERSIONS["renju"] = "v2024.15";
 window.loadApp = (() => { // 按顺序加载应用
     "use strict";
     window.DEBUG = true;
@@ -222,6 +222,8 @@ window.loadApp = (() => { // 按顺序加载应用
 				isAsync: false,
 				sources:[[SOURCE_FILES["Button"]],
 				[SOURCE_FILES["ImgButton"]],
+				[SOURCE_FILES["IndexedDB"]],
+				[SOURCE_FILES["settingData"]],
 				[SOURCE_FILES["fullscreenUI"]]]
 			}] || 
 			[{
@@ -249,6 +251,8 @@ window.loadApp = (() => { // 按顺序加载应用
 				type: "scriptAll",
 				isAsync: false,
 				sources:[[SOURCE_FILES["emoji"]],
+				[SOURCE_FILES["IndexedDB"]],
+				[SOURCE_FILES["settingData"]],
 				[SOURCE_FILES["utils"]],
                 [SOURCE_FILES["bindevent"]],
                 [SOURCE_FILES["Button"]],

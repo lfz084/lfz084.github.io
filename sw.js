@@ -1,4 +1,4 @@
-    var VERSION = "v2024.12";
+    var VERSION = "v2024.15";
     var myInit = {
         cache: "no-store", //不使用缓存
         mode: 'cors' //支持跨域访问

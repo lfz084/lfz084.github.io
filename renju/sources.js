@@ -46,12 +46,10 @@
 			progress: "63%",
 			type: "scriptAll",
 			isAsync: true,
-			sources: [[SOURCE_FILES["IndexedDB"]],
-				[SOURCE_FILES["TextCoder"]],
+			sources: [[SOURCE_FILES["TextCoder"]],
                 [SOURCE_FILES["MoveList"]],
                 [SOURCE_FILES["Stack"]],
                 [SOURCE_FILES["RenjuLib"]],
-                [SOURCE_FILES["IndexedDB"]],
                 [SOURCE_FILES["gif"]],
                 [SOURCE_FILES["gifFile"]],
                 [SOURCE_FILES["CheckerBoardGIF"]]]
