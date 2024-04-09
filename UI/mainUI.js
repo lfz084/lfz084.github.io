@@ -44,7 +44,7 @@ window.mainUI = (function() {
 	 * @varName 变量名
 	 */
 	const childs = [];
-
+	
 	const bodyDiv = d.createElement("div");
 	d.body.appendChild(bodyDiv);
 	bodyDiv.style.position = "absolute";
@@ -264,8 +264,6 @@ window.mainUI = (function() {
 			}
 		}
 		settings.push({ buttonSettings: buttonSettings4, marktopSetting: marktopSetting4 });
-		
-
 	}
 
 	//----------------------- CheckerBoard  -------------------------------------------------
@@ -625,6 +623,7 @@ window.mainUI = (function() {
 		vElem.event(param.event);
 		vElem.move();
 		vElem.show();
+		typeof param.reset == "function" && param.reset.call(vElem);
 		return vElem;
 	}
 
@@ -781,9 +780,9 @@ window.mainUI = (function() {
 			this._callback = () => {};
 			Object.assign(this.viewElem.style, {
 				display: "grid",
-				grid: `auto-flow ${buttonWidth*0.75}px / 1fr 1fr 1fr 1fr 1fr`,
-				overflowY: "auto"
-			})
+				grid: `auto-flow ${buttonWidth*0.75}px / 1fr 1fr 1fr 1fr 1fr`
+			});
+			this.viewElem.setAttribute("class", "viewBox");
 		}
 		get callback() { return this._callback }
 		set callback(fun) { return this._callback = fun }
@@ -824,9 +823,7 @@ window.mainUI = (function() {
 			const boardWidth = 5;
 			super(left, top, width - boardWidth * 2, height - boardWidth * 2, parent);
 			this.lis = [];
-			Object.assign(this.viewElem.style, {
-				overflowY: "auto"
-			})
+			this.viewElem.setAttribute("class", "viewBox");
 		}
 	}
 	
@@ -861,7 +858,17 @@ window.mainUI = (function() {
 	
 	async function refreshTheme(theme, themeKey, cancel) {
 		Object.assign(document.body.style, theme["body"]);
-		
+		if (theme["a"] && document.styleSheets) for (let i = 0; i < document.styleSheets.length; i++) {
+			const sheet = document.styleSheets[i];
+			if ("CSSStyleSheet" == sheet.constructor.name && (sheet.href || "").indexOf("main.css") + 1 && sheet.cssRules) for (let index = 0; index < sheet.cssRules.length; index++) {
+				let cssText = sheet.cssRules[index].cssText;
+				if ((/^(a \{)|(a:link \{)|(a:visited \{)|(a:hover \{)|(a:active \{)/).test(cssText)) {
+					sheet.deleteRule(index);
+					//sheet.insertRule(cssText.replace(/((?<=color:[\s]*)((rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*)|([a-zA-z]+[\s]*)))(?=;)/, theme["a"]["color"]), index);
+					sheet.insertRule(cssText.replace(/(color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(color:[\s]*[a-zA-z]+[\s]*;)/, `color: ${theme["a"]["color"]};`), index);
+				}
+			}
+		}
 		const childs = this.getChilds();
 		for (let index in childs) {
 			const child = childs[index];
@@ -879,7 +886,8 @@ window.mainUI = (function() {
 				case "Board":
 				case "Button":
 				case "InputButton":
-					try{typeof child.loadTheme === "function" && child.loadTheme(theme[className])}catch(e){console.error(e.stack)}
+					try{typeof child.loadTheme === "function" && child.loadTheme(theme[className])}catch(e){console.error(e.stack)};
+					break;
 			}
 		}
 		
@@ -889,23 +897,24 @@ window.mainUI = (function() {
 			"Button": theme["Button"]
 		});
 		self["share"] && share.loadTheme(theme["share"]);
-		if (!cancel && window.top.fullscreenUI && (typeof window.top.fullscreenUI.refreshTheme === "function")) window.top.fullscreenUI.refreshTheme(theme, themeKey, true);
+		if (!cancel && window.top.fullscreenUI && (typeof window.top.fullscreenUI.refreshTheme === "function")) (await window.top.fullscreenUI.refreshTheme(theme, themeKey, true));
 	}
 	
 	async function setTheme(themeKey = defaultTheme, cancel) {
-		try{
 		themeKey = themes[themeKey] || defaultTheme;
 		localStorage.setItem("theme", themeKey);
 		const data = window.settingData && ( await settingData.getDataByKey("themes"));
 		const theme = data && data.themes[themeKey] || ( await loadJSON(`UI/theme/${themeKey}/theme.json`));
-		refreshTheme.call(this, theme, themeKey, cancel);
-		}catch(e){console.error(e.stack)}
+		await refreshTheme.call(this, theme, themeKey, cancel);
+		const preTheme = {};
+		preTheme[themeKey] = theme;
+		localStorage.setItem("themes", preTheme);
 	}
 	
-	function loadTheme(cancel) {
+	async function loadTheme(cancel) {
 		try{
 		const themeKey = localStorage.getItem("theme");
-		setTheme.call(this, themeKey, cancel);
+		await setTheme.call(this, themeKey, cancel);
 		bodyDiv.setAttribute("class", "showBody");
 		}catch(e){console.error(e.stack)}
 	}
@@ -971,3 +980,12 @@ window.mainUI = (function() {
 
 	return exports;
 })()
+
+// 百度统计
+var _hmt = _hmt || [];
+window.location.href.indexOf("http://") == -1 && (function() {
+	var hm = document.createElement("script");
+	hm.src = "https://hm.baidu.com/hm.js?c17b8a02edb4aff101e8b42ed01aca1b";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+})();

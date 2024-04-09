@@ -26,7 +26,7 @@
         let self = this;
         width = width || self.width;
         scalable = scalable || self.scale;
-        SCALABLE && self.viewport.setAttribute("content", `initial-scale=${scalable+0.01} `);
+        SCALABLE && self.viewport.setAttribute("content", `initial-scale=${scalable+0.01}`);
         SCALABLE && self.viewport.setAttribute("content", `width=${width}, initial-scale=${scalable}, minimum-scale=${scalable}, maximum-scale =${localhost ? scalable * 5 : scalable}, user-scalable=${localhost ? "no" : "no"}`);
         self.scrollTop();
     };
@@ -35,7 +35,7 @@
         let self = this;
         width = width || self.width;
         scalable = scalable || self.scale;
-        SCALABLE && self.viewport.setAttribute("content", `initial-scale=${scalable+0.01} `);
+        SCALABLE && self.viewport.setAttribute("content", `initial-scale=${scalable+0.01}`);
         SCALABLE && self.viewport.setAttribute("content", `width=${width}, initial-scale=${scalable}, minimum-scale=${scalable}, maximum-scale =${scalable * 5}, user-scalable=yes`);
         self.scrollTop();
     };

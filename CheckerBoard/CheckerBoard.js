@@ -353,8 +353,8 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.15";
         this.d.style.position = "absolute";
         this.d.style.width = size + "px";
         this.d.style.height = size + "px";
-        this.d.style.left = this.x - (size / 2) + "px";
-        this.d.style.top = this.y - (size / 2) + "px";
+        this.d.style.left = this.x - (size / 2) - Math.max(size/10, 1) + "px";
+        this.d.style.top = this.y - (size / 2) - Math.max(size/10, 1) + "px";
         this.d.style.border = `${Math.max(size/10, 1)}px dashed red`;
         this.d.style.zIndex = 0;
     }
@@ -696,6 +696,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.15";
             this.viewBox.style.left = this.left + "px";
             this.viewBox.style.top = this.top + "px";
             this.viewBox.setAttribute("id", "viewBox");
+            this.viewBox.setAttribute("class", "viewBox");
             this.parentNode.appendChild(this.viewBox);
 
             this.bodyScale = 1;

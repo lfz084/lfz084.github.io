@@ -222,7 +222,10 @@
             	borderColor: "black",
             	background: "white",
             	padding: `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`
-            }
+            },
+			reset: function() {
+    			this.viewElem.setAttribute("class", "textarea");
+			}
         })
     }
 
@@ -691,8 +694,7 @@
     //------------------------ load ------------------------ 
     
 	addEvents();
-    mainUI.loadTheme();
-    mainUI.viewport.resize();
+    mainUI.loadTheme().then(() => mainUI.viewport.resize());
     log("你可以打开Rapfi保存的db棋谱") 
     $("comment").innerHTML = DBREAD_HELP;
     //------------------------ support Renlib  ------------------------ 

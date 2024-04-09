@@ -384,6 +384,13 @@ function colorName2colorCode(name) {
 		Yellow: "#FFFF00",
 		YellowGreen: "#9ACD32"
 	}
-	
-	return name[0] == "#" ? name : list[name];
+	if (name[0] == "#") {
+		const reg3 = /^#[A-Fa-f0-9]{3}$/;
+		const reg6 = /^#[A-Fa-f0-9]{6}$/;
+		if (reg6.test(name)) return name;
+		if (reg3.test(name)) return name[0] + name[1] + name[1] + name[2] + name[2] + name[3] + name[3];
+	}
+	for (const color in list) {
+		if (color.toUpperCase() == name.toUpperCase()) return list[color];
+	}
 }

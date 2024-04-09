@@ -2,7 +2,7 @@
     "use strict";
     let busy = false;
     const dw = document.documentElement.clientWidth;
-    const dh = document.documentElement.clientHeight;
+	const dh = document.documentElement.clientHeight;
     const gridWidth = 980;
     const tempWidth = gridWidth * (dw > dh ? 2 : 1);
     const scale = dw / (dw / dh > 2 ? dw / dh * gridWidth : tempWidth);
@@ -62,13 +62,25 @@
         //log(`IFRAME_DIV setScrollY, ${top}`)
         IFRAME_DIV.scrollTop = top;
     }
+    
+    function refreshTheme() {
+        const theme = { body: { color: document.body.style.color, backgroundColor: document.body.style.backgroundColor}};
+        FULL_DIV.style.backgroundColor = theme.body.backgroundColor;
+        WIN_DIV.style.backgroundColor = theme.body.backgroundColor;
+        IFRAME_DIV.style.backgroundColor = theme.body.backgroundColor;
+        IFRAME.style.backgroundColor = theme.body.backgroundColor;
+        ICO_BACK.style.backgroundColor = theme.body.backgroundColor;
+        ICO_BACK.style.borderColor = theme.body.color;
+        ICO_CLOSE.style.backgroundColor = theme.body.backgroundColor;
+        ICO_CLOSE.style.borderColor = theme.body.color;
+    }
 
     function openHelpWindow(url) {
-        if (busy) return;
+    	if (busy) return;
         busy = true;
+        
         let s = FULL_DIV.style;
         s.position = "fixed";
-        s.backgroundColor = "#666";
         s.left = 0 + "px";
         s.top = 0 + "px";
         s.width = winWidth + padding * 2 + "px";
@@ -77,30 +89,30 @@
         s.transform = `scale(${scale})`;
 
     	s = WIN_DIV.style;
-        s.backgroundColor = "#666";
         s.position = "relative";
         s.left = (winWidth * (window.fullscreenUIWidth || document.documentElement.clientWidth) / dw - 820) / 2 + "px";
-        s.top = (winHeight * (window.fullscreenUIHeight || document.documentElement.clientHeight) / dh - winHeight) / 2 + "px";
+        s.top = (winHeight * (window.fullscreenUIHeight || document.documentElement.clientHeight) / dh - winHeight ) / 2 + "px";
         s.width = 820 + "px";
         s.height = winHeight + "px";
-
+        //s.borderStyle = "solid";
+        //s.borderWidth = "1px";
+        
         s = IFRAME_DIV.style;
-        s.backgroundColor = "#ddd";
-        s.position = "absolute";
-        s.left = 10 + "px";
-        s.top = 10 + "px";
-        s.width = 800 + "px";
-        s.height = parseInt(WIN_DIV.style.height) + "px";
-        //s.zIndex = -1;
-
-        s = IFRAME.style;
-        s.backgroundColor = "#ddd";
         s.position = "absolute";
         s.left = 0 + "px";
         s.top = 0 + "px";
-        s.width = "800px";
+        s.width = 820 + "px";
+        s.height = parseInt(WIN_DIV.style.height) + "px";
+        //s.zIndex = -1;
+        
+        s = IFRAME.style;
+        s.position = "absolute";
+        s.left = 0 + "px";
+        s.top = 0 + "px";
+        s.width = "820px";
         s.height = s.height || "100%"; //保存旧高度，防止滚到顶部
-
+		s.overflowX = "hidden";
+        	
         s = BUT_DIV.style;
         s.position = "absolute";
         s.left = (820 - 197) / 2 + "px";
@@ -111,31 +123,29 @@
         s.zIndex = 99999;
 
         s = ICO_BACK.style;
-        s.backgroundColor = "#c0c0c0";
         s.position = "absolute";
         s.left = 0 + "px";
         s.top = 0 + "px";
         s.width = "78px";
         s.height = "78px";
         s.borderStyle = "solid";
-        s.borderColor = "#fff";
-        s.borderWidth = "0px";
+        s.borderWidth = "5px";
+        s.borderRadius = "50%";
 
         s = ICO_CLOSE.style;
-        s.backgroundColor = "#c0c0c0";
         s.position = "absolute";
         s.left = 117 + "px";
         s.top = 0 + "px";
         s.width = "78px";
         s.height = "78px";
         s.borderStyle = "solid";
-        s.borderColor = "#fff";
-        s.borderWidth = "0px";
-
+        s.borderWidth = "5px";
+        s.borderRadius = "50%";
+        
         FULL_DIV.style.display = "block";
         FULL_DIV.style.zIndex = 99999;
         WIN_DIV.setAttribute("class", "show");
-
+        
         if (IFRAME.src.indexOf(url) + 1) {
             IFRAME.src = url; //保持上次滚动值，防止滚到顶部
             IFRAME.contentWindow.onhashchange(); //onhashchange 滚动目标元素到可视区域
@@ -143,6 +153,7 @@
         else {
             IFRAME.src = url;
         }
+        refreshTheme();
     }
 
     function closeHelpWindow() {
@@ -155,8 +166,8 @@
         }, 500);
     }
 
-    IFRAME.onload = () => {
-        if (navigator.userAgent.indexOf("iPhone") < 0) return;
+    IFRAME.onload = () => { // 让iPhone safari 可以滚动
+    	if (navigator.userAgent.indexOf("iPhone") < 0) return;
         const SRC = IFRAME.contentWindow.location.href;
 
         getDocumentHeight = (() => { //添加结束标记，准确判断文档高度
@@ -179,6 +190,10 @@
                 temp(top);
             }
         };
+        
+        CHILD_WINDOW.getClientHeight = () => {
+        	return parseInt(WIN_DIV.style.height) || document.documentElement.clientHeight;
+        }
 
         CHILD_WINDOW.setScrollHeight = () => {
             IFRAME.style.height = getDocumentHeight() + "px";
@@ -186,6 +201,22 @@
 
         CHILD_WINDOW.setScrollHeight();
     }
+    IFRAME.addEventListener("load", () => {
+    	let iDoc = IFRAME.Document || IFRAME.contentWindow.document;
+        Object.assign(iDoc.body.style, { 
+        	overflowX: "hidden", 
+        	overflowY: "auto",
+        	backgroundColor: document.body.style.backgroundColor
+        });
+        refreshTheme();
+        IFRAME.setAttribute("class", "viewBox");
+        
+        if (window.top.fullscreenUI) {
+			IFRAME.contentWindow.addEventListener("scroll", () => window.top.fullscreenUI.fullscreenButtons.touchmove(), true);
+			IFRAME.contentWindow.addEventListener("touchmove", () => window.top.fullscreenUI.fullscreenButtons.touchmove(), true);
+			IFRAME.contentWindow.addEventListener("mousemove", () => window.top.fullscreenUI.fullscreenButtons.touchmove(), true);
+        }
+    }, true);
 
 
     const tempF = window.open;

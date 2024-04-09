@@ -8,8 +8,7 @@
 			progress: "50%",
 			type: "scriptAll",
 			isAsync: false,
-			sources: [[SOURCE_FILES["msgbox"]],
-				[SOURCE_FILES["CheckerBoard"]],
+			sources: [[SOURCE_FILES["CheckerBoard"]],
 				[SOURCE_FILES["image2board"]]]
          },{
          	progress: "39%",

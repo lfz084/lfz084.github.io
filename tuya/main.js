@@ -389,9 +389,10 @@
 		cBoard.hideLastMove = true;
 		cBoard.loadImgURL("./tuya/start.png")
 			.then(() => cBoard.putImg())
+			.then(() => game.reset())
 			.then(() => mainUI.loadTheme())
-		game.reset();
-		mainUI.viewport.resize();
+			.then(() => mainUI.viewport.resize())
+		
 		addEvents();
 
 	} catch (e) { alert(e.stack) }

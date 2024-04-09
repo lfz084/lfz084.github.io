@@ -265,3 +265,26 @@ for(let i = 1; i < 226; i++) {
 	s *= i;
 }
 console.log(s)
+
+
+
+  
+ [...document.styleSheets].map(sheet => {
+	console.log(`constructor:${sheet.constructor.name}\n${sheet.title}\n${sheet.title}`);
+	sheet.cssRules && [...sheet.cssRules].map(cssRule => {
+		console.log(cssRule.cssText)
+	})
+ })
+ 
+ [...fullscreenUI.contentWindow.document.styleSheets].map(sheet => {
+ 	console.log(`constructor:${sheet.constructor.name}\n${sheet.title}\n${sheet.href}`);
+ 	"CSSStyleSheet" == sheet.constructor.name && sheet.href.indexOf("main.css") + 1 && sheet.cssRules && [...sheet.cssRules].map((cssRule, index) => {
+		let cssText = cssRule.cssText;
+		if ((/^(a \{)|(a:link \{)|(a:visited \{)|(a:hover \{)|(a:active \{)/).test(cssText)) {
+			sheet.deleteRule(index);
+			sheet.insertRule(cssText.replace(/(?<=color:[\s]*)rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)/,"#fff"), index);
+			console.log(`index: ${index} \n${cssText}`);
+		}
+ 	})
+  })
+  

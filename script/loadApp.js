@@ -51,31 +51,6 @@ window.loadApp = (() => { // 按顺序加载应用
         Msg += `_____________________\n\n `;
         return Msg;
     }
-   
-    
-    function loadTheme() {
-    	const themes = {
-    		"light": {
-    			"color": "#333333",
-    			"backgroundColor": "white"
-    		},
-    		"grey": {
-    			"color": "#333333",
-    			"backgroundColor": "white"
-    		},
-    		"green": {
-    			"color": "#333333",
-    			"backgroundColor": "#118800"
-    		},
-    		"dark": {
-    			"color": "#d0d0d0",
-    			"backgroundColor": "#333333"
-    		}
-    	}
-    	const themeKey = localStorage.getItem("theme") || "light";
-    	Object.assign(document.body.style, themes[themeKey]);
-    }
-    
 
     //-----------------------------------------------
 
@@ -257,10 +232,9 @@ window.loadApp = (() => { // 按顺序加载应用
                 [SOURCE_FILES["bindevent"]],
                 [SOURCE_FILES["Button"]],
                 [SOURCE_FILES["ImgButton"]],
+                [SOURCE_FILES["msgbox"]],
                 [SOURCE_FILES["mainUI"]]]
 			}];
-		
-		loadTheme();
         
         mlog(`body onload`)
         await loadScriptAll([
@@ -274,7 +248,7 @@ window.loadApp = (() => { // 按顺序加载应用
         mlog("removeOldAppCache ......");
         await upData.removeOldAppCache();
         
-        if (localStorage.getItem("debug") && window.location.href.indexOf("http://") > -1) {
+        if (window.location.href.indexOf("http://") > -1) {
         	mlog("removeServiceWorker ......");
         	await serviceWorker.removeServiceWorker();
         }
@@ -283,11 +257,11 @@ window.loadApp = (() => { // 按顺序加载应用
         	await serviceWorker.registerServiceWorker();
         	mlog("postVersion ......");
         	await upData.postVersion();
-        	
-        	mlog("upData CacheFiles ......");
-        	const urls = Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key])
-    		isTopWindow && await upData.saveCacheFiles(urls, upData.currentVersion)
     	}
+    	
+        mlog("upData CacheFiles ......");
+        const urls = Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key]);
+        await upData.saveCacheFiles(urls, upData.currentVersion)
         
         mlog(`loading ${fullscreenEnabled ? "fullscreenUI" : "mainUI"}......`);
         await loadSources(uiSources);
@@ -322,13 +296,12 @@ window.loadApp = (() => { // 按顺序加载应用
         	})
         }
         console.info(`logCaches`)
-        console.info(await upData.logCaches());
+        console.info(await upData.logCaches(Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key])));
         console.info(upData.logVersions());
-        
     }catch(err) {
     	const ASK = `❌加载过程出现了错误...\n${err && err.stack}\n\n`;
     	const PS = `是否重置数据\n\n`;
-    	confirm(ASK + PS) ? window.location.href = "reset.html" : 	window.reloadApp();
+    	//confirm(ASK + PS) ? window.location.href = "upData.html" : 	window.reloadApp();
     }
     }
 })()

@@ -217,7 +217,9 @@ window.puzzleAI = (() => {
 		filterCallbackTree[puzzleCoder.MODE.BASE_FOUL] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_33] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_44] = filterCallbackTree[puzzleCoder.MODE.BASE_FOUL_6] = createTreeFoul;
 		filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_CATCH_FOUL] = createTreeBlockCatchFoul;
 		filterCallbackTree[puzzleCoder.MODE.BASE_FREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_NOTFREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_FREE_FOUR] = filterCallbackTree[puzzleCoder.MODE.BASE_NOTFREE_FOUR] = createTreeNodes;
-		filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF] = filterCallbackTree[puzzleCoder.MODE.BASE_REVIVE_FREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF_43] = filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF_44] = createTreeMakeVCF;
+		filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF] = createTreeMakeVCF;
+		filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF_43] = createTreeMakeVCF43;
+		filterCallbackTree[puzzleCoder.MODE.BASE_REVIVE_FREE_THREE] = filterCallbackTree[puzzleCoder.MODE.BASE_MAKE_VCF_44] = createTreeMakeVCF44;
 		filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_VCF] = filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_VCF_4] = createTreeBlockVCFDepth;
 		filterCallbackTree[puzzleCoder.MODE.BASE_DOUBLE_VCF] = createTreeDoubleVCF;
 		filterCallbackTree[puzzleCoder.MODE.BASE_BLOCK_DOUBLE_VCF] = createTreeBlockVCFDepth;
@@ -399,6 +401,28 @@ window.puzzleAI = (() => {
 				ftype: FIND_ALL,
 				maxVCF: 1,
 				maxDepth: 225,
+				maxNode: 2560000
+			})
+		}
+		
+		async function createTreeMakeVCF43(arr, color) {
+			return engine.createTreeLevelThree({
+				arr,
+				color,
+				ftype: FIND_ALL,
+				maxVCF: 1,
+				maxDepth: 3,
+				maxNode: 2560000
+			})
+		}
+		
+		async function createTreeMakeVCF44(arr, color) {
+			return engine.createTreeLevelThree({
+				arr,
+				color,
+				ftype: FIND_ALL,
+				maxVCF: 1,
+				maxDepth: 1,
 				maxNode: 2560000
 			})
 		}

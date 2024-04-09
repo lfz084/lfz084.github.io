@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+</head>
+
+<body>
+	<script>
+		async function removeServiceWorker() {
+			return "serviceWorker" in navigator &&
+				"getRegistrations" in navigator.serviceWorker &&
+				navigator.serviceWorker.getRegistrations()
+				.then(registrations => {
+					registrations.map(registration => {
+						if (window.location.href.indexOf(registration.scope) + 1) {
+							registration.unregister();
+						}
+					})
+				})
+		}
+		
+		async function removeCaches() {
+			return "caches" in window &&
+				caches.keys()
+				.then(keys => {
+					keys.map(key => {
+						caches.delete(key);
+					})
+				})
+		}
+		
+		async function removeLocalStorage() {
+			"localStorage" in window &&
+				Object.keys(localStorage).map(key => {
+					localStorage.removeItem(key);
+				})
+		}
+		
+		async function upData() {
+			await removeServiceWorker();
+			await removeLocalStorage();
+			await removeCaches();
+			window.top.location.href = "index.html";
+		}
+		upData();
+	</script>
+
+</body>
+
+</html>

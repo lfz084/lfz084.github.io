@@ -9,7 +9,7 @@ window.fullscreenUI = (() => {
 		const svgRenju = "./UI/theme/light/contrast-setting-svgrepo-com.svg";
 		const svgDBRead = "./UI/theme/light/alpha-w.svg";
 		const svgEditor = "./UI/theme/light/alpha-k.svg";
-		const svgMakeVCF = "./UI/theme/light/alpha-v.svg";
+		const svgMakeVCF = "./UI/theme/light/house-svgrepo-com.svg";
 		const svgPuzzle = "./UI/theme/light/question-circle-svgrepo-com.svg";
 
 		const svgTheme01 = "./UI/theme/light/sun-svgrepo-com.svg";
@@ -66,7 +66,7 @@ window.fullscreenUI = (() => {
 		btnRenjuEditor.setontouchend(() => IFRAME.src = "renjueditor.html")
 		btnRenjuEditor.setIcons(svgEditor)
 
-		btnMakeVCF.setontouchend(() => IFRAME.src = "makevcf.html")
+		btnMakeVCF.setontouchend(() => IFRAME.src = "index.html")
 		btnMakeVCF.setIcons(svgMakeVCF)
 
 		const [btnHome, btnFullscreen, btnTheme, btnRefresh] = btnBoard.leftButtons;
@@ -423,7 +423,7 @@ window.fullscreenUI = (() => {
 
 			btnBoard.leftButtons[2].clickFunctionIndex = (themeNames.indexOf(themeKey) + 1) % themeNames.length;
 			btnBoard.leftButtons[2].show();
-			if (!cancel && IFRAME.contentWindow.mainUI && (typeof IFRAME.contentWindow.mainUI.loadTheme === "function")) IFRAME.contentWindow.mainUI.loadTheme(true)
+			if (!cancel && IFRAME.contentWindow.mainUI && (typeof IFRAME.contentWindow.mainUI.loadTheme === "function")) await IFRAME.contentWindow.mainUI.loadTheme(true)
 		}
 
 		async function setTheme(themeKey = defaultTheme, cancel) {
@@ -431,12 +431,12 @@ window.fullscreenUI = (() => {
 			localStorage.setItem("theme", themeKey);
 			const data = window.settingData && ( await settingData.getDataByKey("themes"));
 			const theme = data && data.themes[themeKey] || ( await loadJSON(`UI/theme/${themeKey}/theme.json`));
-			refreshTheme.call(this, theme, themeKey, cancel);
+			await refreshTheme.call(this, theme, themeKey, cancel);
 		}
 
-		function loadTheme(cancel) {
+		async function loadTheme(cancel) {
 			let themeKey = localStorage.getItem("theme");
-			setTheme.call(this, themeKey, cancel);
+			await setTheme.call(this, themeKey, cancel);
 		}
 
 		function getThemeName() {
@@ -446,6 +446,7 @@ window.fullscreenUI = (() => {
 		//----------------------------------------------------------------------------------
 
 		return {
+			get fullscreenButtons() { return fullscreenButtons },
 			get refreshTheme() { return refreshTheme },
 			get loadTheme() { return loadTheme },
 			get iframe() { return IFRAME },

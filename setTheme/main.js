@@ -23,6 +23,9 @@
         		borderColor: "black",
         		background: "white",
         		padding: `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`
+        	},
+        	reset: function() {
+        		this.viewElem.setAttribute("class", "textarea");
         	}
         }),
         mainUI.newComment({
@@ -30,7 +33,7 @@
         	id: "comment",
         	type: "div",
         	width: mainUI.buttonWidth * 2.33,
-        	height: mainUI.buttonHeight * 12.5,
+        	height: mainUI.buttonHeight * 13.5,
         	style: {
         		position: "absolute",
         		fontSize: `${fontSize}px`,
@@ -41,19 +44,22 @@
         		borderColor: "black",
         		background: "white",
         		padding: `${fontSize/2}px ${fontSize/2}px ${fontSize/2}px ${fontSize/2}px`
+        	},
+        	reset: function() {
+        		this.viewElem.setAttribute("class", "viewBox");
         	}
         }),
         {
             varName: "btnLight",
             type: "radio",
-            text: "白色主题",
+            text: "明亮主题",
 			group: "theme",
 			reset: function() { this.themeKey = "light" }
         },
         {
             varName: "btnGreen",
             type: "radio",
-            text: "绿色主题",
+            text: "护眼主题",
             group: "theme",
 			reset: function() { this.themeKey = "green" }
         },
@@ -67,7 +73,7 @@
         {
             varName: "btnGrey",
             type: "radio",
-            text: "灰色主题",
+            text: "经典主题",
             group: "theme",
 			reset: function() { this.themeKey = "grey" },
 			touchend: function() { 
@@ -105,7 +111,7 @@
             type: "button",
             text: "棋谱弹窗",
             touchend: function() {
-            	window.exWindow.setStyle(0, 0, mainUI.cmdWidth, mainUI.cmdWidth, mainUI.cmdWidth / 28, cmdDiv.viewElem);
+            	window.exWindow.setStyle(mainUI.cmdPadding, 0, mainUI.cmdWidth - mainUI.cmdPadding * 2, mainUI.cmdWidth, mainUI.cmdWidth / 28, cmdDiv.viewElem);
             	window.exWindow.innerHTML("<br><br>棋谱弹窗文字效果预览棋谱弹窗文字效果预览棋谱弹窗文字效果预览棋谱弹窗文字效果预览棋谱弹窗文字效果预览");
 				window.exWindow.open();
             }
@@ -125,12 +131,29 @@
             	if (settingData) {
             		const newData = { key: "themes", themes: copyDefaultThemes() };
             		const oldData = await settingData.getDataByKey("themes");
-            		oldData && Object.assign(newData.themes, oldData.themes);
-            		Object.assign(newData.themes[themeKey], themesData.themes[themeKey]);
-            		(await settingData.putData(newData)) && msg(`已经保存"${({ "light": "白色主题", "grey": "灰色主题", "green": "绿色主题", "dark": "暗黑主题" })[themeKey]}"`);
+            		oldData && coverObject(newData.themes, oldData.themes);
+            		coverObject(newData.themes[themeKey], themesData.themes[themeKey]);
+        			(await settingData.putData(newData)) && msg(`已经保存"${({ "light": btnLight.text, "grey": btnGrey.text, "green": btnGreen.text, "dark": btnDark.text })[themeKey]}"`);
             	}
             }
-        } 
+        },
+        {
+            type: "file",
+            text: "导入主题",
+            change: async function() {
+            	const jsonStr = await this.files[0].text();
+            	const theme = JSON.parse(jsonStr);
+            	theme["body"] && theme["Board"] && theme["Button"] && (themes[themeKey] = theme, refreshTheme());
+            }
+        },
+        {
+            type: "button",
+            text: "导出主题",
+            touchend: function() {
+            	const jsonStr = JSON.stringify(themes[themeKey], null, 2);
+            	saveFile.save(jsonStr, "theme.json");
+            }
+        }
     ];
     
     buttonSettings.splice(1, 0, null);
@@ -229,56 +252,85 @@
 	bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => {
 		cBoard.zoomStart(x1, y1, x2, y2);
 	});
-    
+			
 	class InputColor {
 		constructor(parent, title, value, change = ()=>{}) {
+			function checkColorCode(value) {
+				const reg3 = /^#[A-Fa-f0-9]{3}$/;
+				const reg6 = /^#[A-Fa-f0-9]{6}$/;
+				const codeStr = colorName2colorCode(value).toString();
+				return reg3.test(codeStr) || reg6.test(codeStr);
+			}
 			const div = document.createElement("div");
 			const input = document.createElement("input");
-			const colorDiv = document.createElement("div");
 			const label = document.createElement("label");
+			const colorDiv = document.createElement("div");
+			const colorCode = document.createElement("input");
+			
+			const btnWidth = mainUI.buttonWidth * 1.1;
+			const btnHeight = mainUI.buttonHeight * 0.9;
 			parent.appendChild(div);
 			div.appendChild(colorDiv);
 			div.appendChild(label);
-			input.setAttribute("type", "color");
-			input.setAttribute("value", value);
+			div.appendChild(colorCode);
 			label.innerHTML = title;
+			input.setAttribute("type", "color");
+			input.setAttribute("value", colorName2colorCode(value));
+			colorCode.setAttribute("type", "text");
+			colorCode.value = input.value;
+			
 			Object.assign(div.style,{
 				position: "relative",
-				height: mainUI.buttonHeight + "px"
-			})
-			
-			Object.assign(colorDiv.style,{
-				position: "absolute",
-				left: "0px",
-				top: "5px",
-				width: mainUI.buttonHeight - 10 + "px",
-				height: mainUI.buttonHeight - 10 + "px",
-				background: input.value,
-				border: "1px solid black"
+				height: btnHeight * 2 + "px"
 			})
 			Object.assign(label.style, {
 				position: "absolute",
-				left: parseInt(colorDiv.style.width) + 15 + "px",
-				top: colorDiv.style.top,
-				fontSize: mainUI.buttonHeight / 2 + "px",
-				lientHeight: mainUI.buttonHeight + "px"
+				left: "0px",
+				top: "0PX",
+				fontSize: btnHeight * 0.6 + "px",
+				lientHeight: btnHeight + "px"
 			})
-			div.addEventListener("click", () => input.click(), true);
-			input.addEventListener("change", () => colorDiv.style.background = input.value, true);
+			Object.assign(colorDiv.style,{
+				position: "absolute",
+				left: "0px",
+				top: btnHeight + "px",
+				width: btnWidth + "px",
+				height: btnHeight + "px",
+				background: input.value,
+				border: "1px solid black"
+			})
+			Object.assign(colorCode.style,{
+				position: "absolute",
+				left: btnWidth + btnHeight * 0.33 + "px",
+				top: btnHeight + "px",
+				width: btnWidth + "px",
+				height: btnHeight + "px",
+				border: "1px solid black",
+				fontSize: btnHeight * 0.7 + "px",
+				//lientHeight: btnHeight + "px"
+			})
+			colorDiv.addEventListener("click", () => input.click(), true);
 			input.addEventListener("change", change, true);
+			colorCode.addEventListener("input", () => checkColorCode(colorCode.value) && change.call(colorCode), true);
 			this.input = input;
 			this.label = label;
 			this.colorDiv = colorDiv;
+			this.colorCode = colorCode;
 		}
 		get title() { return this.label.innerHTML }
 		set title(t) { this.label.innerHTML = t }
-		get value() { return this.input.value }
-		set value(v) { this.input.value = v; this.colorDiv.style.background = v; }
+		get value() { return this.colorDiv.style.background }
+		set value(v) { this.colorDiv.style.background = this.colorCode.value = v; this.input.value = colorName2colorCode(v) }
+	}
+	
+	InputColor.prototype.loadTheme = function(theme = {}) {
+		Object.assign(this.colorCode.style, theme);
 	}
 	
 	const inputColors = [];
 	const colorButtonSettings = [
 		{ key: "body", styleKey: "color",  title: "页面-字体颜色" },
+		{ key: "a", styleKey: "color", title: "页面-链接字体颜色" },
 		{ key: "body", styleKey: "backgroundColor", title: "页面-背景颜色" },
 		
 		{ key: "Board", styleKey: "backgroundColor", title: "棋盘-背景颜色" },
@@ -337,31 +389,44 @@
 			dark: JSON.parse(JSON.stringify(dark))
 		}
 	}
-		
 	
 	const themesData = { key: "themes", themes: copyDefaultThemes() };
 	const themes = themesData.themes;
 	
 	if (settingData) {
 		const data = await settingData.getDataByKey("themes");
-		data && Object.assign(themes, data.themes);
+		data && coverObject(themes, data.themes);
 	}
 	
 	let themeKey = localStorage.getItem("theme") || "light";
 			
 	colorButtonSettings.map(info => {
-		inputColors.push(new InputColor(inputBoard.viewElem, info.title, "#000", function(){
+		themes[themeKey][info.key] && themes[themeKey][info.key][info.styleKey] && inputColors.push(new InputColor(inputBoard.viewElem, info.title, themes[themeKey][info.key][info.styleKey], function(){
 			themes[themeKey][info.key][info.styleKey] = this.value;
-			refreshTheme()
+			window.setBlockUnload(true);
+			refreshTheme();
 		}))
 	})
 	
+	function coverObject(target, source) {
+		Object.keys(source).map(key => {
+			if (typeof source[key] == "object") {
+				if (typeof target[key] == "object") {
+					coverObject(target[key], source[key]);
+				}
+				else {
+					target[key] = JSON.parse(JSON.stringify(source[key]));
+				}
+			}
+			else target[key] = source[key];
+		})
+	}
+	
 	function refreshTheme() {
 		mainUI.refreshTheme(themes[themeKey]);
-		
 		const code = "J10K10G8G9H8I9J8F7E7H7H6J7I6G6J6K6L5";
 		const vcfCode = "I7G7K7L7I8J9H9G10F5E4F9E9F8F6F11F10K9K8I11";
-		const labels = ["F2,标","G2,记","H2,效","I2,果","J2,测","K2,试"];
+		const labels = ["E2,棋","F2,盘", "G2,标","H2,记","I2,效","J2,果","K2,测","L2,试"];
 		cBoard.unpackCode(code, undefined, true);
 		cBoard.printMoves(cBoard.moveCode2Points(vcfCode), 2);
 		labels.map(str => {
@@ -376,17 +441,24 @@
 			}
 		})
 		
-		colorButtonSettings.map((info, i) => {
-			inputColors[i].value = themes[themeKey][info.key][info.styleKey];
-		})
+		for (let i = 0, j = 0; i < colorButtonSettings.length; i++) {
+			const info = colorButtonSettings[i];
+			if (themes[themeKey][info.key] && themes[themeKey][info.key][info.styleKey]) {
+				inputColors[j].value = themes[themeKey][info.key][info.styleKey];
+				inputColors[j].loadTheme({
+					color: themes[themeKey]["body"]["color"],
+					backgroundColor: themes[themeKey]["body"]["backgroundColor"]
+				})
+				j++;
+			}
+		}
 	}
     
 	//------------------ load -----------------------------
 	
 	({ "light": btnLight, "grey": btnGrey, "green": btnGreen, "dark": btnDark }[themeKey].defaultontouchend)();
 	cBoard.unpackCode("J11G11H10E9I10G9F9H9F8I8G8K8H8F7J8K7G7H6F5H5J5I5", undefined, true);
-    commentBox.innerHTML = "文字效果预览文字效果预览文字效果预览文字效果预览文字效果预览文字效果预览文字效果预览文字效果预览文字效果预览......";
-	refreshTheme();
-	mainUI.loadTheme();
-    mainUI.viewport.resize();
+    commentBox.innerHTML = "<a>链接文字效果预览</a><br>页面文字效果预览页面文字效果预览页面文字效果预览页面文字效果预览页面文字效果预览页面文字效果预览页面文字效果预览页面文字效果预览页面文字效果预览......";
+	try{refreshTheme();}catch(e){alert(e.stack)}
+	mainUI.loadTheme().then(() => mainUI.viewport.resize());
 })()

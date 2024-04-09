@@ -3,7 +3,7 @@
     const TEST_HELP = true;
     
     function log(param, type = "log") {
-        const  print = console[type] || console.log;
+        const  print = window.top.console[type] || window.top.console.log;
         TEST_HELP && window.top.DEBUG && print(`[help.js]\n>>  ${ param}`);
     }
     
@@ -15,7 +15,13 @@
             startY = 0;
 
         function resetTopImage() {
-            topDocument = window.top.document;
+        	let topWindow = window;
+        	do {
+            	topDocument = topWindow.document;
+            	if (topWindow === window.top) break;
+            	topWindow = topWindow.parent;
+            	if (topWindow.fullscreenUI) break;
+        	} while(true);
             topDiv = topDocument.createElement("div");
             topImg = topDocument.createElement("img");
             topDocument.body.appendChild(topDiv);
@@ -43,7 +49,6 @@
         }
 
         function close() {
-
             topDiv.setAttribute("class", "hide");
             setTimeout(() => {
                 topDiv.style.zIndex = -99999;
@@ -69,7 +74,7 @@
             s.top = -padding + "px";
             s.width = dw + padding * 2 + "px";
             s.height = dh + padding * 2 + "px";
-            s.backgroundColor = "black";
+            s.backgroundColor = document.body.style.backgroundColor;
             s.zIndex = 99999;
 
             s = topImg.style;
@@ -78,6 +83,7 @@
             s.top = (dh - img.height * minScale) / 2 + padding + "px";
             s.width = img.width * minScale + "px";
             s.height = img.height * minScale + "px";
+        	s.opacity = "0.68";
             topImg.src = img.src;
 
             topDiv.setAttribute("class", "show");
@@ -118,7 +124,7 @@
             if (getFirstChildNode(elem, undefined, 1).style.display == "none") {
                 showList(elem);
                 if (!fast) {
-                    scrollToElement(elem);
+                	scrollToElement(elem);
                     focusElement(elem);
                     setFocus(elem);
                 }
@@ -129,13 +135,15 @@
                     focusElement(elem);
                     setFocus(elem);
                     setTimeout(() => {
-                        const p = getAbsolutePos(elem);
-                        if (getScrollY() > p.y - 80) {
+                        scrollToElement(elem);
+                        /*
+                    	const p = getAbsolutePos(elem);
+                        if (getScrollY() > p.y - 256) {
                             scrollToElement(elem);
                         }
                         else if (getScrollY() + document.documentElement.clientHeight < p.y + 100) {
                             scrollToAnimation(getScrollY() + 100);
-                        }
+                        }*/
                     }, 0);
                 }
             }
@@ -188,11 +196,16 @@
             if (!fast && busy) return;
             busy = !fast;
             if (elem && elem.nodeType == 1) {
-
                 //log(`scrollHeight = ${elem.scrollHeight}`)
+                const padding = 256;
                 const p = getAbsolutePos(elem);
-                //log(`x=${p.x}, p.y=${p.y}`)
-                scrollToAnimation(p.y - 80);
+                const scrollY = getScrollY();
+                const height = elem.offsetHeight;
+                const clientHeight = getClientHeight();
+                let top = scrollY;
+                top += Math.max(0, (p.y + height) - (scrollY + clientHeight - padding));
+                top -= Math.max(0, (top + padding) - p.y);
+                scrollToAnimation(top);
                 setFocus(elem);
             }
             if (busy) setTimeout(() => {
@@ -244,22 +257,22 @@
         }
     })();
 
-
-
+	
+	let focusBorderColor = "green";
     const setFocus = (() => {
         let busy = false;
         let focusH = null;
         return (elem) => {
             //if (busy) return;
             busy = true;
-            log("setFocus......" + new Date().getTime())
+            //log("setFocus......" + new Date().getTime())
             if (elem &&
                 elem.nodeType == 1 &&
                 elem.parentNode != document.body)
             {
                 if (focusH) focusH.style.border = "";
                 focusH = elem;
-                focusH.style.border = "2px solid green";
+                focusH.style.border = `5px solid ${focusBorderColor}`;
             }
             else {
                 if (focusH) focusH.style.border = "";
@@ -357,9 +370,9 @@
     }
 
 
-
-    window.setScrollHeight = () => {}; // ios set iframe Height
-
+	/* 为了兼容ios safari 滚动, window.parent 会修改下面两个函数 */
+    window.setScrollHeight = () => {};
+	window.getClientHeight = () => document.documentElement.clientHeight;
 
 
     function showList(elem) {
@@ -538,7 +551,7 @@
             if (busy) return;
             busy = true;
             const HASH = window.location.hash;
-            log(HASH)
+            //log(HASH)
             if (HASH != "#1" && HASH != "#0") {
 
                 if (HASH) {
@@ -583,24 +596,20 @@
     }
 
 
-    document.body.onload = function() {
-
-        //if (window.parent == window.self) setView();
-        document.body.setAttribute("class", "finish");
-        const iHTML = document.body.innerHTML;
+    document.body.onload = async () => {
+    	//if (window.parent == window.self) setView();
+		const iHTML = document.body.innerHTML;
         document.body.innerHTML = "";
         let dDiv = createDocumentDiv(),
             topDiv = createTop(dDiv),
             bodyDiv = createBody(iHTML, dDiv),
             buttomDiv = createButtom(dDiv);
         window.onhashchange();
-        //alert(`${document.documentElement.clientWidth}, ${document.documentElement.clientHeight}`)
-        log(`parentWindow=${window.parent==window.self}`);
-
+        //log(`parentWindow=${window.parent==window.self}`);
+    	await loadTheme();
+		document.body.setAttribute("class", "finish");
     }
-
-
-
+    
     window.setView = (doc = document, width = 800) => {
 
         const ELEM_LIST = doc.getElementsByName("viewport");
@@ -749,4 +758,150 @@
             elem.style.left = (DW - ELEM_WIDTH) / 2 + `px`;
         }
     }
+
+//---------------------- load theme ---------------------------
+	    
+
+const themes = {"light":"light", "grey":"grey", "green":"green", "dark":"dark"};
+const defaultThemeKey = "light";
+
+
+window.loadJSON = window.parent.loadJSON;
+window.settingData = window.parent.settingData;
+
+function colorName2colorCode(color) {
+	return window.parent.colorName2colorCode(color) || "#000000";
+}
+
+function changeColor(colorCode, v) {
+	colorCode = colorName2colorCode(colorCode);
+	const r = ("0" + (Math.max(0, Math.min(255, parseInt("0x" + colorCode[1] + colorCode[2]) + parseInt(v)))).toString(16)).slice(-2);
+	const g = ("0" + (Math.max(0, Math.min(255, parseInt("0x" + colorCode[3] + colorCode[4]) + parseInt(v)))).toString(16)).slice(-2);
+	const b = ("0" + (Math.max(0, Math.min(255, parseInt("0x" + colorCode[5] + colorCode[6]) + parseInt(v)))).toString(16)).slice(-2);
+	return "#" + r + g + b;
+}
+
+function colorToRGB(color) {
+	color = colorName2colorCode(color);
+	const r = Math.max(0, Math.min(255, parseInt("0x" + color[1] + color[2])));
+	const g = Math.max(0, Math.min(255, parseInt("0x" + color[3] + color[4])));
+	const b = Math.max(0, Math.min(255, parseInt("0x" + color[5] + color[6])));
+	return `rgb(${r}, ${g}, ${b})`;
+}
+
+async function getCSSStyleSheet(name) {
+	return new Promise(resolve => {
+		let count = 0;
+		let timer = setInterval(() => {
+			if (++count > 10) {
+				resolve();
+				clearInterval(timer);
+			}
+			for (let i = 0; i < document.styleSheets.length; i++) {
+				const sheet = document.styleSheets[i];
+				if ("CSSStyleSheet" == sheet.constructor.name && sheet.href.indexOf(name) + 1) {
+					resolve(sheet);
+					clearInterval(timer);
+				}
+			}
+		}, 100);
+	})
+}
+
+async function loadTheme() {
+	const themeKey = localStorage.getItem("theme") || defaultThemeKey;
+	const sheet = await getCSSStyleSheet("help.css");
+	const data = window.settingData && (await settingData.getDataByKey("themes"));
+	const theme = data && data.themes[themeKey] || (await loadJSON(`UI/theme/${themeKey}/theme.json`));
+	if (!sheet || !sheet.cssRules) return;
+	const rgb = colorToRGB(theme["body"]["backgroundColor"]).match(/[0-9]+/g).map(v=>v*1);
+	for (let i = 1; i < 4; i++) {
+		let done = false;
+		const vColor = 39;
+		
+		if (vColor <= Math.abs(Math.min(255, rgb[i % 3] + vColor) - rgb[i % 3])) {
+			rgb[i % 3] = Math.min(255, rgb[i % 3] + vColor);
+			done = true;
+		}
+		else if (vColor <= Math.abs(Math.min(255, rgb[(i + 1) % 3] + vColor) - rgb[(i + 1) % 3])) {
+			rgb[(i + 1) % 3] = Math.min(255, rgb[(i + 1) % 3] + vColor);
+			done = true;
+		}
+		else if (vColor <= Math.abs(Math.min(255, rgb[(i + 2) % 3] + vColor) - rgb[(i + 2) % 3])) {
+			rgb[(i + 2) % 3] = Math.min(255, rgb[(i + 2) % 3] + vColor);
+			done = true;
+		}
+		else if (vColor <= Math.abs(Math.max(0, rgb[i % 3] - vColor) - rgb[i % 3])) {
+			rgb[i % 3] = Math.max(0, rgb[i % 3] - vColor);
+			done = true;
+		}
+		else if (vColor <= Math.abs(Math.max(0, rgb[(i + 1) % 3] - vColor) - rgb[(i + 1) % 3])) {
+			rgb[(i + 1) % 3] = Math.max(0, rgb[(i + 1) % 3] - vColor);
+			done = true;
+		}
+		else if (vColor <= Math.abs(Math.max(0, rgb[(i + 2) % 3] - vColor) - rgb[(i + 2) % 3])) {
+			rgb[(i + 2) % 3] = Math.max(0, rgb[(i + 2) % 3] - vColor);
+			done = true;
+		}
+		if (done) {
+			focusBorderColor = "#" + ("0" + rgb[0].toString(16)).slice(-2) + ("0" + rgb[1].toString(16)).slice(-2) + ("0" + rgb[2].toString(16)).slice(-2);
+			break;
+		}
+	}
+	
+	for(let index = 0; index < sheet.cssRules.length; index++) {
+		let cssText = sheet.cssRules[index].cssText || sheet.cssRules[index];
+		//log(cssText)
+		/*if (navigator.userAgent.indexOf("iPhone") + 1) {
+			(/body[\s]+\*[\s]+\{[\s]+max-height/).test(cssText) && sheet.deleteRule(index);
+		}*/
+		if (theme["a"] && (/^(a \{)|(a:link \{)|(a:visited \{)|(a:hover \{)|(a:active \{)/).test(cssText)) {
+			sheet.deleteRule(index);
+			sheet.insertRule(cssText = cssText.replace(/(color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(color:[\s]*[a-zA-z]+[\s]*;)/, `color: ${theme["a"]["color"]};`), index);
+		}
+		if ((/body \{/).test(cssText)) {
+			sheet.deleteRule(index);
+			cssText = cssText.replace(/(color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(color:[\s]*[a-zA-z]+[\s]*;)/, `color: ${theme["body"]["color"]};`);
+			sheet.insertRule(cssText = cssText.replace(/(background-color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(background-color:[\s]*[a-zA-z]+[\s]*;)/, `background-color: ${theme["body"]["backgroundColor"]};`), index);
+		}
+		if ((/^(h3 \{)|(h4 \{)|(li \{)/).test(cssText)) {
+			sheet.deleteRule(index);
+			sheet.insertRule(cssText = cssText.replace(/(color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(color:[\s]*[a-zA-z]+[\s]*;)/, `color: ${theme["body"]["color"]};`), index);
+		}
+		if ((/(text \{)|(mark \{)/).test(cssText)) {
+			sheet.deleteRule(index);
+			cssText = cssText.replace(/(color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(color:[\s]*[a-zA-z]+[\s]*;)/, `color: ${theme["body"]["color"]};`);
+			sheet.insertRule(cssText = cssText.replace(/(background-color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(background-color:[\s]*[a-zA-z]+[\s]*;)/, `background-color: ${theme["body"]["backgroundColor"]};`), index);
+		}
+		if ((/(\.showFocus \{)|(\.hideFocus \{)/).test(cssText)) {
+			sheet.deleteRule(index);
+			cssText = cssText.replace(/(color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(color:[\s]*[a-zA-z]+[\s]*;)/, `color: ${theme["body"]["color"]};`);
+			sheet.insertRule(cssText = cssText.replace(/(background-color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(background-color:[\s]*[a-zA-z]+[\s]*;)/, `background-color: ${theme["body"]["backgroundColor"]};`), index);
+		}
+		if ((/ol \{/).test(cssText)) {
+			sheet.deleteRule(index);
+			sheet.insertRule(cssText = cssText.replace(/(color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(color:[\s]*[a-zA-z]+[\s]*;)/, `color: ${theme["body"]["color"]};`), index);
+		}
+		if ((/li::marker \{/).test(cssText)) {
+			sheet.deleteRule(index);
+			sheet.insertRule(cssText = cssText.replace(/(color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(color:[\s]*[a-zA-z]+[\s]*;)/, `color: ${theme["body"]["color"]};`), index);
+		}
+		if ((/ul\[color[dD]epth/).test(cssText)) {
+			//log(cssText)
+			for (let i = 0; i < 7; i++) {
+				//log(new RegExp(`ol\\[color[dD]epth\\="${i}"\\] \\{`).toString());
+				if (new RegExp(`ol\\[color[dD]epth\\="${i}"\\] \\{`).test(cssText)) {
+					sheet.deleteRule(index);
+					//log(cssText)
+					cssText = cssText.replace(/(background-color:[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(background-color:[\s]*[a-zA-z]+[\s]*;)/, `background-color: ${theme["body"]["backgroundColor"]};`);
+					//log(cssText, ">")
+					sheet.insertRule(cssText = cssText.replace(/(solid[\s]*rgb[\s]*\([\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\,[\s]*[0-9]+[\s]*\)[\s]*;)|(solid[\s]*[a-zA-z]+[\s]*;)/, `solid ${theme["body"]["color"]};`), index);
+				}
+			}
+		}
+		//log(cssText, "info")
+	}
+	//log(sheet.cssRules)
+}
+
 })();

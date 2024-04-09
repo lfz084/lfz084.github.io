@@ -1032,8 +1032,7 @@
     btnAuto.defaultontouchend();
     setcBoardClick();
     addEvents(cBoard);
-    mainUI.loadTheme();
-    mainUI.viewport.resize();
+    mainUI.loadTheme().then(() => mainUI.viewport.resize());
     renjuEditor.onloadPage = onloadPage;
     log("打开(pdf,zip,jpg,png,json)");
     log1(`第${0}题 / ${0}题`);

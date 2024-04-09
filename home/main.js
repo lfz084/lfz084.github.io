@@ -10,7 +10,7 @@
 			const img = document.createElement("img");
 			const label = document.createElement("label");
 			
-			const height = mainUI.buttonHeight*2;
+			const height = mainUI.buttonHeight * 1.8;
 			const fontSize = mainUI.buttonHeight;
 			
 			parent.appendChild(div);
@@ -31,7 +31,8 @@
 				top: "5px",
 				width: height - 10 + "px",
 				height: height - 10 + "px",
-				borderRadius: "50%"
+				borderRadius: "50%",
+				opacity: 0.6
 			})
 			
 			Object.assign(label.style, {
@@ -100,17 +101,23 @@
 			src: "settings.png",
 			title: "重置数据",
 			link: "reset.html",
+			target: "_self" 
+		},
+		{
+			src: "help.jpg",
+			title: "使用说明",
+			link: "instructions.html",
 			target: "_self"
-		}
+		},
 	];
 	
 	const divWidth = mainUI.cmdWidth / 1.5;
 	const divStyle = {
 		position: "absolute",
 		left: (mainUI.cmdWidth - divWidth)/ 2 + "px",
-		top: "0px",
+		top: mainUI.cmdPadding + "px",
 		width: divWidth + "px",
-		height: mainUI.cmdWidth + "px",
+		height: mainUI.cmdWidth - mainUI.cmdPadding * 2 + "px",
 		overflowY: "auto"
 	}
 	
@@ -130,6 +137,5 @@
 	
 	//------------------- load -------------------------
 	
-	mainUI.loadTheme();
-	mainUI.viewport.resize();
+    mainUI.loadTheme().then(() => mainUI.viewport.resize());
 })()

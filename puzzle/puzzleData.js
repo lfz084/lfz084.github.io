@@ -122,12 +122,14 @@
 			const oldData = await puzzleData.getDataByKey(jsonString);
 			if (oldData) {
 				rt.push(oldData.time);
+				defaultPuzzleTimes.indexOf(oldData.time) == - 1 && defaultPuzzleTimes.push(oldData.time);
 				i == 0 && callback(oldData.json)
 			}
 			else {
 				const data  = await puzzleData.jsonFile2Data(jsonString);
 				puzzleData.addData(data);
 				rt.push(data.time);
+				defaultPuzzleTimes.indexOf(data.time) == - 1 && defaultPuzzleTimes.push(data.time);
 				i == 0 && callback(data.json)
 			}
 		}

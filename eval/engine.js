@@ -371,7 +371,7 @@ window.engine = (function() {
                     }
                 })
 
-                //log(`[${movesToName(blackMoves)}]\n[${movesToName(whiteMoves)}]\n[${movesToName(moves)}]`, "warn")
+                //log(`${movesToName(blackMoves)}\n${movesToName(whiteMoves)}\n${movesToName(moves)}`, "warn")
                 for (let i = blackMoves.length - 1; i >= 0; i--) {
                     moves.push(blackMoves.pop());
                     if (whiteMoves.length) moves.push(whiteMoves.pop());
@@ -390,7 +390,7 @@ window.engine = (function() {
                         moves.push(225, whiteMoves.pop());
                     }
                 }
-                //log(`[${movesToName(blackMoves)}]\n[${movesToName(whiteMoves)}]\n[${movesToName(moves)}]`, "warn")
+                //log(`${movesToName(blackMoves)}\n${movesToName(whiteMoves)}\n${movesToName(moves)}`, "warn")
                 return moves;
             }
 
@@ -623,7 +623,6 @@ window.engine = (function() {
                     sltArr = filterArr || await _selectPoints(param, BLOCK_MODE),
                     nodes = [],
                     ps = [];
-
                 for (let idx = 0; idx < 225; idx++) {
                     if (sltArr[idx]) {
                         ps.push(getLevelThreeNode(idx, infoArr[idx], param)
@@ -933,7 +932,7 @@ window.engine = (function() {
                 if (vcfInfo.winMoves.length) {
                     vcfInfo.winMoves.map(vcfMoves => {
                         tree.createPathVCF(current, vcfMoves);
-                        iHtml += `[${movesToName(vcfMoves)}]<br>`;
+                        iHtml += `${movesToName(vcfMoves)}<br>`;
                     });
                 }
                 else {
@@ -1070,7 +1069,7 @@ window.engine = (function() {
                 
                 tree.createPath(positionMoves).comment = ` ③	活三点<br> ❸	复活三点<br> ㊹	做四四<br> ⊗	做冲四抓禁<br> V3	做四三杀<br> V4	做冲四再四四<br> VX	做冲四冲四抓禁<br> V5 ~ V180	做VCF，数字后缀表示VCF双色步数，以活四、四四、冲四抓为最后一手`
                 return tree;
-                }catch(e){alert(e.stack)}
+                }catch(e){console.error(e.stack)}
             }
 
             //param: {arr, color, maxVCF, maxDepth, maxNode, ftype}
@@ -1167,7 +1166,7 @@ window.engine = (function() {
                         }
                         else {
                             let level = getLevelPoint(idx, color, arr);
-                            //console.log(`[${idxToName(idx)}], ${0xff & level}`)
+                            //console.log(`${idxToName(idx)}, ${0xff & level}`)
                             if (LEVEL_CATCHFOUL > (0xff & level)) {
                                 let path = positionToMoves(arr),
                                     pNodes = tree.getPositionNodes(path, 7, 0xffff),
@@ -1230,7 +1229,7 @@ window.engine = (function() {
                     moveList.getRoot().score = SCORE_MIN;
 
                     while (current) {
-                        console.log(`>> [${movesToName(moves)}]\n alpha: ${current.alpha}, beta: ${current.beta}, bestValue: ${current.bestValue}`)
+                        console.log(`>> ${movesToName(moves)}\n alpha: ${current.alpha}, beta: ${current.beta}, bestValue: ${current.bestValue}`)
                         while (true) { //选择当前最优分支
                             let nextChild = moves.length & 1 ? current.getMinChild() : current.getMaxChild();
                             if (nextChild) {
@@ -1250,7 +1249,7 @@ window.engine = (function() {
                 vList.push(moveList.get(curIdx).bestValue);
             }
 
-            console.info(`>> [${movesToName(moves)}]\nvList: ${vList}`)
+            console.info(`>> ${movesToName(moves)}\nvList: ${vList}`)
 
             curDepthVCT = moves.length;
             maxDepthVCT = curDepthVCT == 0 ? 3 : curDepthVCT + 4;
@@ -1349,7 +1348,7 @@ window.engine = (function() {
                 else break;
             }
 
-            console.info(`<< [${movesToName(moves)}]`)
+            console.info(`<< ${movesToName(moves)}`)
             if (moves.length) {
                 continue;
                 arr[moves.pop()] = 0;
@@ -1360,7 +1359,7 @@ window.engine = (function() {
             else {
                 current = moveList.current()
                 let bestValue = current.bestValue;
-                console.error(`[bestValue: ${bestValue}]`)
+                console.error(`bestValue: ${bestValue}`)
                 if (bestValue == SCORE_WIN || bestValue == SCORE_LOST) break;
             }
         }
@@ -1393,7 +1392,7 @@ window.engine = (function() {
                     if (wNode) count++
                     else {
                         done = true;
-                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>[${idxToName(idx)}]<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepthVCT / 2 + 1)} 手内取胜<br>`;
+                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>${idxToName(idx)}<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepthVCT / 2 + 1)} 手内取胜<br>`;
                     }
                 })
             )
@@ -1434,7 +1433,7 @@ window.engine = (function() {
             
             if (node.winMoves) { //levelThreeNode
                 blkPoints = getBlockVCF(arr, color, node.winMoves, true);
-                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>[${movesToName(blkPoints)}]<br>`;
+                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>${movesToName(node.winMoves)}<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>${movesToName(blkPoints)}<br>`;
                 let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
                     nParam = copyParam(param),
                     nMoves = moves.slice(0);
@@ -1557,7 +1556,7 @@ window.engine = (function() {
             isDoubleVCF = false,
             winMoves = await _findVCF(param);
         if (winMoves.length) {
-            current.comment = `<br><br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防 ${idxToName(idx)} 不成立<br> ${COLOR_NAME[param.color]} 还有 VCF:<br> [${movesToName(winMoves)}]<br>`;
+            current.comment = `<br><br>${COLOR_NAME[INVERT_COLOR[param.color]]} 防 ${idxToName(idx)} 不成立<br> ${COLOR_NAME[param.color]} 还有 VCF:<br> ${movesToName(winMoves)}<br>`;
             tree.createPathVCF(current, winMoves);
             isDoubleVCF = true;
         }
@@ -1572,7 +1571,7 @@ window.engine = (function() {
                 let wMoves = await _findVCF(param);
                 if (wMoves.length) {
                     let bPoints = getBlockVCF(param.arr, param.color, wMoves, true);
-                    cur.comment = `<br><br>${COLOR_NAME[param.color]} 挡四后有 VCF:<br>[${movesToName(wMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]}考虑防点:<br>[${movesToName(bPoints)}]<br>`;
+                    cur.comment = `<br><br>${COLOR_NAME[param.color]} 挡四后有 VCF:<br>${movesToName(wMoves)}<br>${COLOR_NAME[INVERT_COLOR[param.color]]}考虑防点:<br>${movesToName(bPoints)}<br>`;
                     isDoubleVCF = await _addBranchIsDoubleVCF(param, bPoints, tree, cur, depth + 1);
                 }
                 else{
@@ -1658,14 +1657,14 @@ window.engine = (function() {
             
         if (vcfInfo.winMoves.length) {
             iHtml += `找到${COLOR_NAME[param.color]}VCF:<br>`;
-            iHtml += `[${movesToName(vcfInfo.winMoves[0])}]<br>`;
+            iHtml += `${movesToName(vcfInfo.winMoves[0])}<br>`;
             
             param.vcfMoves = vcfInfo.winMoves[0];
             param.includeFour = true;
             let blkPoints = await _getBlockVCF(param);
             if (param.blkDepth == 1) {
             	current.addChilds(tree.createNodes(blkPoints, {boardText: DEFAULT_BOARD_TXT[INVERT_COLOR[param.color]]})).map(cur => {
-                    cur.comment = `<br><br>${COLOR_NAME[param.color]} VCF:<br>[${movesToName(vcfInfo.winMoves[0])}]<br>已经不成立<br>`;
+                    cur.comment = `<br><br>${COLOR_NAME[param.color]} VCF:<br>${movesToName(vcfInfo.winMoves[0])}<br>已经不成立<br>`;
                 })
             }
             else {
@@ -1673,7 +1672,7 @@ window.engine = (function() {
             }
                 
             iHtml += `${COLOR_NAME[INVERT_COLOR[param.color]]}考虑防点:<br>`;
-            iHtml += `[${movesToName(blkPoints)}]<br>${param.blkDepth > 1 ? "***找到成立的直接防点，不会算先手防***" : ""}<br>-----点击棋盘查看计算结果-----<br>`;
+            iHtml += `${movesToName(blkPoints)}<br>${param.blkDepth > 1 ? "***找到成立的直接防点，不会算先手防***" : ""}<br>-----点击棋盘查看计算结果-----<br>`;
         }
         else {
             iHtml += `${COLOR_NAME[param.color]} 没有找到 VCF<br>`;
@@ -1687,7 +1686,6 @@ window.engine = (function() {
     async function createTreeDoubleVCF(param) {
         let wTree = await createTreeWin(param);
         if (wTree) return wTree;
-        
         let { tree, positionMoves, isPushPass, current} = createTree(param),
             nodes = await getLevelThreeNodes(param),
             infoArr = getTestThreeInfo(param),
@@ -1709,7 +1707,7 @@ window.engine = (function() {
                     
                 ps.push(_addBranchIsDoubleVCF(nParam, blkPoints, tree, cur)
                     .then(isDoubleVCF => {
-                        cur.comment = `<br><br>${COLOR_NAME[param.color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[param.color]]} 考虑防点:<br>[${movesToName(blkPoints)}]<br>双杀 ${isDoubleVCF?"成立":"不成立"}<br>`;
+                        cur.comment = `<br><br>${COLOR_NAME[param.color]} 做杀:<br>${movesToName(node.winMoves)}<br>${COLOR_NAME[INVERT_COLOR[param.color]]} 考虑防点:<br>${movesToName(blkPoints)}<br>双杀 ${isDoubleVCF?"成立":"不成立"}<br>`;
                         if (canceling) current.removeChild(cur);
                         else board.wLb(cur.idx, cur.boardText, "black");
                     })
@@ -1738,8 +1736,12 @@ window.engine = (function() {
             foulCount = 0,
             fourCount = 0,
             threeCount = 0,
-            lineInfos = [],
-            iHtml = `<br><br>判断 ${idxToName(idx)} 是否为禁手......<br>`,
+            lineFiveInfos = [],
+            lineFoulInfos = [],
+            lineFourInfos = [],
+            lineThreeInfos = [],
+            foulTypes = [],
+            iHtml = `<br><br>判断 ${idxToName(idx)} 是否为${depth ? "活四点" : "禁手"}......<br>`,
             pCur = 0 == depth ? current : current.getChild(225),
             bCur = tree.newNode(idx, DEFAULT_BOARD_TXT[1]);
         
@@ -1749,83 +1751,158 @@ window.engine = (function() {
         }
         pCur.addChild(bCur);
         arr[idx] = 1;
+        
+        iHtml += `1.以${idxToName(idx)}为中心判断四个方向的子力<br>`;
         for (let direction = 0; direction < 4; direction++) {
-            let info = testLineThree(idx, direction, 1, arr),
+            let info = testLine(idx, direction, 1, arr),
                 v = FOUL_MAX_FREE & info;
+            const dirName = DIRECTION_NAME[(info >> 12) & 7]; 
             if (v == FIVE) { // not foul
                 fiveCount++;
-                break;
+                lineFiveInfos.push(info & 0x8fff | (direction << 12));
+                iHtml += `${idxToName(idx)}在${dirName}五连<br>`;
             }
-            else if (v > FOUL) foulCount++;
-            else if (v >= FOUR_NOFREE) fourCount++;
+            else if (v > FOUL) {
+            	foulCount++;
+                lineFoulInfos.push(info & 0x8fff | (direction << 12));
+                iHtml += `${idxToName(idx)}在${dirName}${LINE_NAME[v]}<br>`;
+            }
+            else if (v >= FOUR_NOFREE) {
+            	fourCount++;
+                lineFourInfos.push(info & 0x8fff | (direction << 12));
+                iHtml += `${idxToName(idx)}在${dirName}${LINE_NAME[v]}<br>`;
+            }
             else if (v == THREE_FREE) {
                 threeCount++;
-                lineInfos.push(info & 0x8fff | (direction << 12))
+                lineThreeInfos.push(info & 0x8fff | (direction << 12));
+                iHtml += `${idxToName(idx)}在${dirName}${LINE_NAME[v]}<br>`;
+            }
+            else  {
+                iHtml += `${idxToName(idx)}在${dirName}${LINE_NAME[v]}<br>`;
             }
         }
+        
+        iHtml += `2.判断${idxToName(idx)}是否为五连点<br>`;
         if (fiveCount) {
             rt = FIVE;
-            iHtml += `${idxToName(idx)} 是五连点<br>    五连否定禁手<br>    五连否定活四<br>`;
+        	for (let i = 0; i < lineFiveInfos.length; i++) {
+        		if ((lineFiveInfos[i] & FOUL_MAX_FREE) == FIVE) {
+        			const dirName = DIRECTION_NAME[(lineFiveInfos[i] >> 12) & 7]; 
+                	iHtml += `${idxToName(idx)}在${dirName}形成五连<br>`;
+        		}
+        	}
         }
-        else if (foulCount || fourCount > 1){
-            rt = FOUL;
-            iHtml += `${idxToName(idx)} 是简单禁手<br>    禁手否定活四<br>`;
+        else iHtml += `${idxToName(idx)}没有五连，不是五连点<br>`;
+        
+        if (!rt) {
+        	iHtml += `3.判断${idxToName(idx)}是否为长连禁手<br>`;
+        	if (foulCount) {
+        		let isF = false;
+    			for (let i = 0; i < lineFoulInfos.length; i++) {
+        			if ((lineFoulInfos[i] & FOUL_MAX_FREE) == SIX) {
+        				const dirName = DIRECTION_NAME[(lineFoulInfos[i] >> 12) & 7];
+                    	iHtml += `${idxToName(idx)}在${dirName}形成长连禁手<br>`;
+        				isF = true;
+        				rt = FOUL;
+        				foulTypes.push("长连禁手");
+        			}
+        		}
+        		if (!isF) iHtml += `${idxToName(idx)}没有长连，不是长连禁手<br>`;
+        	}
+        	else iHtml += `${idxToName(idx)}没有长连，不是长连禁手<br>`;
+        	
+        	iHtml += `4.判断${idxToName(idx)}是否为四四禁手<br>`;
+        	if (foulCount || fourCount){
+            	let count = 0;
+    			for (let i = 0; count < 2 && i < lineFoulInfos.length; i++) {
+    				if ((lineFoulInfos[i] & FOUL_MAX_FREE) == LINE_DOUBLE_FOUR) {
+    					const dirName = DIRECTION_NAME[(lineFoulInfos[i] >> 12) & 7];
+    					iHtml += `${idxToName(idx)}在${dirName}形成${LINE_NAME[lineFoulInfos[i] & FOUL_MAX_FREE]}<br>`;
+    					count += 2;
+    				}
+    			}
+    			for (let i = 0; count < 2 && i < lineFourInfos.length; i++) {
+    				if ((lineFourInfos[i] & FOUL_MAX) == FOUR_NOFREE) {
+    					const dirName = DIRECTION_NAME[(lineFourInfos[i] >> 12) & 7];
+    					iHtml += `${idxToName(idx)} 在${dirName}形成${LINE_NAME[lineFourInfos[i] & FOUL_MAX_FREE]}<br>`;
+    					count++;
+    				}
+    			}
+        		if (count > 1) {
+        			rt = FOUL;
+        			foulTypes.push("四四禁手");
+        			iHtml += `找够两个四，${idxToName(idx)}是四四禁手<br>`;
+        		}
+        		else iHtml += `不够两个四，${idxToName(idx)}不是四四禁手<br>`;
+        	}
+        	else iHtml += `${idxToName(idx)}没有四，不是四四禁手<br>`;
+        	
+        	iHtml += `5.判断 ${idxToName(idx)}是否为三三禁手<br>`;
+        	if (threeCount > 1) {
+            	iHtml += `找到三三禁手棋型，继续判断活三，有活四点的才是活三......<br>`;
+            	let freeThreeCount = 0;
+            	while (lineThreeInfos.length + freeThreeCount > 1) {
+                	if (freeThreeCount > 1) break;
+                	let lineInfo = lineThreeInfos.pop(),
+                    	dirName = DIRECTION_NAME[(lineInfo >> 12) & 7],
+                    	ps = getFreeFourPoint(idx, arr, lineInfo),
+                    	len = ps[0],
+                    	pointInfo = 0;
+                	//console.log(`idx: ${idxToName(idx)} ${movesToName(ps.slice(1, ps[0]+1))}`)
+                	iHtml += `判断 ${dirName}是否为活三，`;
+                	if (len) {
+                    	arr[ps[1]] = 1;
+                    	pointInfo = _addBranchIsFoul(ps[1], arr, tree, bCur, depth+1);
+                    	arr[ps[1]] = 0;
+                    	if (!pointInfo) {
+                        	iHtml += `${idxToName(ps[1])}是活四点，${dirName}是活三<br>`;
+                        	freeThreeCount++;
+                        	continue;
+                    	}
+                    	else {
+                        	iHtml += `${idxToName(ps[1])}是${LINE_NAME[pointInfo]}点，不是活四点，${len==1?`${dirName}没有活四点不是活三<br>`:""}`;
+                    	}
+                	}
+                	if (len == 2) {
+                    	arr[ps[2]] = 1;
+                    	pointInfo = _addBranchIsFoul(ps[2], arr, tree, bCur, depth+1);
+                    	arr[ps[2]] = 0;
+                    	if (!pointInfo) {
+                        	iHtml += `${idxToName(ps[2])}是活四点，${dirName}是活三<br>`;
+                        	freeThreeCount++;
+                    	}
+                    	else {
+                        	iHtml += `${idxToName(ps[2])}是${LINE_NAME[pointInfo]}点，不是活四点，${dirName}没有活四点不是活三<br>`;
+                    	}
+                	}
+            	}
+            	if (freeThreeCount > 1) {
+                	rt = FOUL;
+        			foulTypes.push("三三禁手");
+                	iHtml += `找够两个活三，${idxToName(idx)}是三三禁手<br>`;
+            	}
+            	else {
+                	iHtml += `不够两个活三，${idxToName(idx)}不是三三禁手<br>`;
+            	}
+        	}
+        	else {
+            	iHtml += `${idxToName(idx)} 没有三三禁手棋型,不是三三禁手<br>`;
+        	}
         }
-        else if (threeCount > 1) {
-            iHtml += `找到三三形状,继续判断活四点...<br>有活四点的才是活三......<br>`;
-            threeCount = 0;
-            while (lineInfos.length + threeCount > 1) {
-                if (threeCount > 1) break;
-                let lineInfo = lineInfos.pop(),
-                    dirName = DIRECTION_NAME[(lineInfo >> 12) & 7],
-                    ps = getFreeFourPoint(idx, arr, lineInfo),
-                    len = ps[0],
-                    pointInfo = 0;
-                //console.log(`idx: ${idxToName(idx)} [${movesToName(ps.slice(1, ps[0]+1))}]`)
-                iHtml += `判断 ${dirName}是否为活三......<br>`;
-                if (len) {
-                    arr[ps[1]] = 1;
-                    pointInfo = _addBranchIsFoul(ps[1], arr, tree, bCur, depth+1);
-                    arr[ps[1]] = 0;
-                    if (!pointInfo) {
-                        iHtml += `[${idxToName(ps[1])}] 是活四点 ${dirName}是活三<br>`;
-                        threeCount++;
-                        continue;
-                    }
-                    else {
-                        iHtml += `[${idxToName(ps[1])}] 是 ${LINE_NAME[pointInfo]}点, 不是活四点<br>`;
-                    }
-                }
-                
-                if (len == 2) {
-                    arr[ps[2]] = 1;
-                    pointInfo = _addBranchIsFoul(ps[2], arr, tree, bCur, depth+1);
-                    arr[ps[2]] = 0;
-                    if (!pointInfo) {
-                        iHtml += `[${idxToName(ps[2])}] 是活四点 ${dirName}是活三<br>`;
-                        threeCount++;
-                    }
-                    else {
-                        iHtml += `[${idxToName(ps[2])}] 是 ${LINE_NAME[pointInfo]}点, 不是活四点<br>`;
-                    }
-                }
-            }
-            if (threeCount > 1) {
-                rt = FOUL;
-                iHtml += `找到两个活三<br>  [${idxToName(idx)}] 是三三禁手<br>    禁手否定活四<br>`;
-            }
-            else {
-                iHtml += `不够两个活三<br>  [${idxToName(idx)}] 不是三三禁手,${depth?"是活四点":""}<br>`;
-            }
+        
+        arr[idx] = ov;
+        if (rt) {
+        	bCur.boardText = {10: EMOJI_ROUND_FIVE, 16: EMOJI_FOUL}[rt];
+    		iHtml += `${idxToName(idx)}是${rt==FIVE?"五连点":foulTypes.join(" + ")}<br>`;
+        	bCur.comment += iHtml; //concat comment
+    		depth == 0 && foulCount == 0 && fiveCount + fourCount + threeCount < 2 && pCur.removeChild(bCur);
         }
         else {
-            iHtml += `[${idxToName(idx)}] 没有禁手形状,不是禁手,${depth?"是活四点":""}<br>`;
-            depth==0 && (pCur.removeChild(bCur));
+        	depth && (bCur.boardText = EMOJI_ROUND_FOUR);
+    		iHtml += `${idxToName(idx)}不是禁手<br>`;
+        	bCur.comment += iHtml; //concat comment
+        	depth == 0 && foulCount == 0 && fiveCount + fourCount + threeCount < 2 && pCur.removeChild(bCur);
         }
-        arr[idx] = ov;
-        if (rt) bCur.boardText = {10: EMOJI_ROUND_FIVE, 16: EMOJI_FOUL}[rt];
-        else depth && (bCur.boardText = EMOJI_ROUND_FOUR)
-        bCur.comment += iHtml; //concat comment
         return rt;
     }
     
@@ -1835,8 +1912,8 @@ window.engine = (function() {
         let { tree, positionMoves, isPushPass, current} = createTree(param, 1);
         tree.createPath(positionMoves).comment = `解题<br>先手: ${COLOR_NAME[param.color]}<br>规则: 全盘禁手分析<br>-----点击棋盘查看计算结果-----<br>`;
         for (let idx = 0; idx < 225; idx++) {
-            if (param.arr[idx] == 0 && THREE_FREE <= (testPointFour(idx, 1, param.arr) & FOUL_MAX_FREE)) {
-                _addBranchIsFoul(idx, param.arr, tree, current);
+            if (param.arr[idx] == 0) {
+            	_addBranchIsFoul(idx, param.arr, tree, current);
             }
         }
         return tree;
@@ -1865,7 +1942,8 @@ window.engine = (function() {
             let cur = tree.newNode(idx, DEFAULT_BOARD_TXT[2]);
             current.addChild(cur);
             arr[idx] = 2;
-            _addBranchIsFoul(foulIdx, arr, tree, cur, 0);
+            const isF = FOUL == _addBranchIsFoul(foulIdx, arr, tree, cur, 0);
+            cur.comment += `<br><br>${idxToName(idx)}抓${idxToName(foulIdx)},${idxToName(foulIdx)}${isF?"是":"不是"}禁手`;
             arr[idx] = 0;
         }
     }
@@ -2061,7 +2139,7 @@ window.engine = (function() {
             bPoints.map(idx => markArr[idx] = 1);
             await _addBranchContinueBlockFoul(catchFoulArray, markArr, param.arr, tree, current);
             
-            iHtml += `<br>找到冲四抓禁:<br>${catchFoulArray.map(catchFoul => `冲 [${idxToName(catchFoul.winMoves[0])}] 抓 [${idxToName(catchFoul.foulIdx)}]<br>`)}`;
+            iHtml += `<br>找到冲四抓禁:<br>${catchFoulArray.map(catchFoul => `冲 ${idxToName(catchFoul.winMoves[0])} 抓 ${idxToName(catchFoul.foulIdx)}<br>`)}`;
         }
         else {
             iHtml = `<br><br>没有找到冲四抓禁<br>`;
@@ -2095,7 +2173,7 @@ window.engine = (function() {
                     if (wNode) count++
                     else {
                         done = true;
-                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>[${idxToName(idx)}]<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepth / 2) + 2} 手内五连<br>`;
+                        blkCur.comment = `${COLOR_NAME[INVERT_COLOR[param.color]]} 防守:<br>${idxToName(idx)}<br>${COLOR_NAME[param.color]} 不能在 ${~~(param.maxDepth / 2) + 2} 手内五连<br>`;
                     }
                 })
             )
@@ -2140,7 +2218,7 @@ window.engine = (function() {
                     
             if (node.winMoves) { //levelThreeNode
                 blkPoints = getBlockVCF(arr, color, node.winMoves, true);
-                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>[${movesToName(node.winMoves)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>[${movesToName(blkPoints)}]<br>`;
+                cur.comment = `<br><br>${COLOR_NAME[color]} 做杀:<br>${movesToName(node.winMoves)}<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>${movesToName(blkPoints)}<br>`;
                 let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
                     nParam = copyParam(param),
                     nMoves = moves.slice(0);
@@ -2228,7 +2306,7 @@ window.engine = (function() {
             arr[idx] = color;
             moves.push(idx);
             current.addChild(cur);
-            cur.comment = `<br><br>${COLOR_NAME[color]} 做VCT:<br>[${movesToName(node.bestMove)}]<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>[${movesToName(blkPoints)}]<br>`;
+            cur.comment = `<br><br>${COLOR_NAME[color]} 做VCT:<br>${movesToName(node.bestMove)}<br>${COLOR_NAME[INVERT_COLOR[color]]} 考虑防点:<br>${movesToName(blkPoints)}<br>`;
                 
             let { fourPoints, elsePoints } = filterBlockPoints(blkPoints, INVERT_COLOR[color], arr),
                 nParam = copyParam(param),
@@ -2308,7 +2386,7 @@ window.engine = (function() {
         ps.length && await Promise.all(ps);
         moves.length == 0 && board.cleSearchPoint();
         //vc2Nodes.map(node => {
-            //(idxToName(node.idx) == "G9" || idxToName(node.idx) =="F8") && console.log(`[${idxToName(node.idx)}], blkP: [${movesToName(node.blkPoints)}]`)
+            //(idxToName(node.idx) == "G9" || idxToName(node.idx) =="F8") && console.log(`${idxToName(node.idx)}, blkP: ${movesToName(node.blkPoints)}`)
         //})
         return vc2Nodes;
     }
@@ -2319,7 +2397,7 @@ window.engine = (function() {
         let winNode = undefined,
             {twoNodes} = await getContinueNodes(param),
             vc2Nodes = await getVC2Node(param, twoNodes);
-        //console.log(`vc2Nodes: [${movesToName(vc2Nodes.map(node => node.idx))}]`)
+        //console.log(`vc2Nodes: ${movesToName(vc2Nodes.map(node => node.idx))}`)
         winNode = winNode || await _addBranchVC2_1(param, vc2Nodes, tree, current, moves);
         param.maxDepth += 2;
         return winNode;

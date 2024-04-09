@@ -1,3 +1,4 @@
+body * { max-height: 999999px; }
 
 html,
 body {
@@ -9,10 +10,18 @@ body {
     font-weight: bold;
     scroll-behavior: smooth;
     -webkit-user-select: none;
+    -ms-overflow-style: none;  /* IE and Edge */
+	scrollbar-width: none;  /* Firefox */
+    -webkit-overflow-scrolling: touch;
     /*background-color: #303030*/
     /* Chrome/Safari/Opera */
 }
-
+html::-webkit-scrollbar {
+	display: none;
+}
+body::-webkit-scrollbar {
+	display: none;
+}
 
 
 font {
@@ -35,7 +44,6 @@ div {
     font-family: sans;
     font-weight: bold;
     -webkit-user-select: none;
-    /* Chrome/Safari/Opera */
 }
 
 img {

@@ -132,6 +132,9 @@
 				},
 				click: () => {
 			
+				},
+				reset: function() {
+    				this.viewElem.setAttribute("class", "textarea");
 				}
 			}),
 		mainUI.newLabel({
@@ -988,7 +991,7 @@
 					this.puzzle.title = this.puzzle.title + "（封面）" ;
 					btnAIHelp.enabled = false;
 					this.board.setCoordinate(0);
-					this.puzzle.image && this.board.loadImgURL(this.puzzle.image).then(() => this.board.putImg());
+					this.puzzle.image && (this.board.loadImgURL(this.puzzle.image).then(() => this.board.putImg()), this.board.canvas.style.opacity = 0.5);
 				}
 				else {
 					this.state = this.STATE.PLAYING;
@@ -1001,6 +1004,7 @@
 					html += `规则: ${ruleStr}\n`;
 					html += `模式: ${modeStr}\n\n`;
 					this.board.setCoordinate(1);
+					this.board.canvas.style.opacity = 1;
 					(this.puzzle.randomRotate || rotate != undefined) && !this.notRotate ? this.randomRotate(rotate) : (this.rotate = 0);
 					this.puzzle.rotate = this.rotate;
 					btnAIHelp.enabled = true;
@@ -1121,13 +1125,13 @@
 				try{
 				const newData = await puzzleData.jsonFile2Data(file, (progress) => outputInnerHTML({ indexLabel: `${(progress*100).toFixed(2)}%`, title: `${(progress*100).toFixed(2)}%` }));
 				const oldData = await puzzleData.getDataByKey(newData.key) || {};
-				
 				if(Object.keys(oldData).length) {
 					window.warn("不用重复添加题集");
 				}
-				else puzzleData.addData(newData);
-				//IndexedDB.clearStore("puzzle")
-				await this.loadJSON(newData.json)
+				else {
+					puzzleData.addData(newData);
+					await this.loadJSON(newData.json)
+				}
 				}catch(e){console.error(e.stack)}
 			},
 			async loadJSON(jsonString) {
@@ -1461,7 +1465,7 @@
 			bindEvent.addEventListener(cBoard.viewBox, "dblclick", doubleClick);
         	bindEvent.addEventListener(cBoard.viewBox, "dbltouchstart", dbltouchstart);
         	bindEvent.addEventListener(cBoard.viewBox, "contextmenu", contextmenu);
-        	/*bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => cBoard.zoomStart(x1, y1, x2, y2))*/
+        	bindEvent.addEventListener(cBoard.viewBox, "zoomstart", (x1, y1, x2, y2) => cBoard.zoomStart(x1, y1, x2, y2));
 			function click(x, y) { canvasClick(x, y) }
 			function doubleClick(x, y) { canvasDblClick(x, y) }
 			function dbltouchstart(x, y) { canvasDblTouchStart(x, y) }
@@ -1692,8 +1696,7 @@
 		}
 
 		addEvents();
-		mainUI.loadTheme();
-		mainUI.viewport.resize();
+		mainUI.loadTheme().then(() => mainUI.viewport.resize());
 		puzzleAI.processOutput = processOutput;
 		self.cBoard = cBoard;
 		window.setBlockUnload(true);
@@ -1712,6 +1715,5 @@
 		});
 		
 		delayRefreshPuzzles(100);
-		
-	} catch (e) { alert(e.stack) }
+	} catch (e) { console.error(e.stack) }
 })()

@@ -8,7 +8,7 @@
 			progress: "99%",
 			type: "scriptAll",
 			isAsync: false,
-			sources: [[SOURCE_FILES["homeMain"]]]
+			sources: [[SOURCE_FILES["resetMain"]]]
         }
      ];
 })()

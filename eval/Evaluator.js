@@ -79,10 +79,10 @@ const LINE_NAME = {
 	6: "眠三",
 	9: "活四",
 	8: "冲四",
-	24: "单线四四禁",
+	24: "四四",
 	10: "五连",
 	28: "长连",
-	14: "空间不够"
+	14: "空间不足"
 }
 
 //--------------------- game -----------------------------
@@ -673,8 +673,8 @@ function aroundPoint(arr, color, radius = 4, ctnInfo = [new Array(225), new Arra
 	return rtArr;
 }
 
-function selectPoints(arr, color, radius = 4, maxVCF = 1, maxDepth = 10, maxNode = 100000) {
-	let ctnArr = continueFour(arr, color, maxVCF, maxDepth, maxNode);
+function selectPoints(arr, color, radius = 4, maxVCF = 1, maxDepth = 3, maxNode = 100000) {
+	let ctnArr = continueFour(arr, color, 255 || maxVCF, 3 || maxDepth, 100000 || maxNode);
 	return aroundPoint(arr, color, radius, maxVCF ? ctnArr : undefined);
 }
 

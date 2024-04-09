@@ -30,6 +30,7 @@ window.share = (() => {
 
     let checkbox = document.createElement("input");
     checkbox.setAttribute("type", "checkbox")
+    checkbox.checked = true;
     checkDiv.appendChild(checkbox);
 
     let shareLabel2 = document.createElement("div");
@@ -86,7 +87,6 @@ window.share = (() => {
             s.left = "0px";
             s.transformOrigin = `0px 0px`;
             s.transform = `scale(${scale})`;
-
             
             let imgWidth = gridWidth;
             imgWidth = ~~(imgWidth * 3 / 4);

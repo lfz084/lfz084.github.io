@@ -108,6 +108,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["msgbox"] = "v2024.15";
 			const paddingWidth = 10;
 			if (type == "msgbox") {
 				msgTextarea.readOnly = true;
+				
 				Object.assign(msgTextarea.style, {
 					textAlign: textAlign || "center",
 					border: `0px`,

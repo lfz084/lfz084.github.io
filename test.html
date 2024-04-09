@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="Cache-Control" content="no-store" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-touch-fullscreen" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="摆棋小工具" />
+	<meta name="x5-page-mode" content="app" />
+	<link rel="shortcut icon" sizes="192x192" href="icon(192x192).png" type="image/png" />
+	<link rel="icon" href="icon(128x128).ico" type="image/x-icon" />
+	<link rel="apple-touch-icon" sizes="57x57" href="icon(57x57).png" type="image/png" />
+	<link rel="apple-touch-icon" sizes="72x72" href="icon(72x72).png" type="image/png" />
+	<link rel="apple-touch-icon" sizes="114x114" href="icon(114x114).png" type="image/png" />
+	<title> 摆棋小工具</title>
+</head>
+
+<body>
+	<version v="v2024.15"></version>
+	<script src="setTheme/preloadTheme.js"></script>
+	<script src="script/loadFile.js"></script>
+	<script>
+		(async () => {
+			window.SOURCE_FILES = await loadJSON("Version/SOURCE_FILES.json");
+			window.appSources = [
+				{
+					progress: "99%",
+					type: "scriptAll",
+					isAsync: false,
+					sources: [["UI/exWindow.js", () => {
+						try {
+							const iHTML = "感觉阿贾克斯看到开始看看思考简直可笑科学家<br>计算机自己作践自己看到角度看<br>觉阿贾克斯看到开始看看思考简直可笑科学家<br>计算机自己作践自己看到角度看<br>觉阿贾克斯看到开始看看思考简直可笑科学家<br>计算机自己作践自己看到角度看<br>觉阿贾克斯看到开始看看思考简直可笑科学家<br>计算机自己作践自己看到角度看<br>觉阿贾克斯看到开始看看思考简直可笑科学家<br>计算机自己作践自己看到角度看<br>觉阿贾克斯看到开始看看思考简直可笑科学家<br>计算机自己作践自己看到角度看<br>觉阿贾克斯看到开始看看思考简直可笑科学家<br>计算机自己作践自己看到角度看<br>jajzjksns<br>nndkxkxkkdkejejenjejejejbecuc<br>jajzjksns<br>nndkxkxkkdkejejenjejejejbecuc<br>jajzjksns<br>nndkxkxkkdkejejenjejejejbecuc<br>jajzjksns<br>nndkxkxkkdkejejenjejejejbecuc<br>jajzjksns<br>nndkxkxkkdkejejenjejejejbecuc<br>jajzjksnpdo]d}[d]]oso[do]so[so[so6d}6s<6s";
+							const cmdDiv = mainUI.createCmdDiv();
+							const comment = mainUI.newComment({
+								varName: "comment",
+								type: "div",
+								width: (mainUI.buttonWidth * 4.99 - mainUI.buttonHeight / 1.8) / 2,
+								height: mainUI.buttonHeight * 11,
+								style: {
+									fontSize: `${mainUI.buttonHeight / 1.8}px`,
+									wordBreak: "break-all",
+									overflowY: "auto",
+									borderStyle: "solid",
+									borderWidth: `${mainUI.buttonHeight / 1.8 / 20}px`,
+									borderColor: "black",
+									background: "white",
+									padding: `${mainUI.buttonHeight / 1.8/2}px ${mainUI.buttonHeight / 1.8/2}px ${mainUI.buttonHeight / 1.8/2}px ${mainUI.buttonHeight / 1.8/2}px`
+								},
+								reset: function() {
+									this.viewElem.setAttribute("class", "textarea");
+								}
+							});
+							comment.move(0, 0, undefined, undefined, cmdDiv.viewElem);
+							comment.viewElem.innerHTML = iHTML;
+							
+							let p = { x: 0, y: 0 };
+							xyObjToPage(p, mainUI.downDiv);
+							const FONT_SIZE = mainUI.buttonHeight / 1.8;
+							const EX_WINDOW_LEFT = 0 + p.x;
+							const EX_WINDOW_TOP = parseInt(100);
+							const EX_WINDOW_WIDTH = 600;//(mainUI.buttonWidth * 4.99 - mainUI.buttonHeight / 1.8) / 1.2;
+							const EX_WINDOW_HEIGHT = mainUI.buttonHeight * 11;
+
+							window.mainUI.loadTheme().then(() => mainUI.viewport.resize());
+							window.exWindow.setStyle(EX_WINDOW_LEFT, EX_WINDOW_TOP, EX_WINDOW_WIDTH, EX_WINDOW_HEIGHT, FONT_SIZE, cmdDiv.viewElem);
+							exWindow.open();
+							exWindow.innerHTML(iHTML);
+						} catch (e) { alert(e.stack) }
+				}]]
+	        }
+	     ];
+		})()
+	</script>
+	<script src="script/loadApp.js"></script>
+</body>
+
+</html>

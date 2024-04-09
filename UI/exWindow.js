@@ -10,7 +10,7 @@ window.exWindow = (() => {
     const xWindow = document.createElement("div");
     
     const xIframe = document.createElement("div");
-    xIframe.setAttribute("id", "exWindow");
+    xIframe.setAttribute("class", "textarea");
     xWindow.appendChild(xIframe);
     Object.assign(xIframe.style, {
     	color: "black",

@@ -39,7 +39,7 @@ window.control = (() => {
         ];
         let userdefinedLabel = EMOJI_STAR;
 		let userdefinedLabels = loadUserdefinedLabels() || [..."⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿❶❷❸❹❺❻❼❽❾❿⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴⓵⓶⓷⓸⓹⓺⓻⓼⓽⓾ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ㊀㊁㊂㊃㊄㊅㊆㊇㊈㊉㊤㊥㊦㊧㊨⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽⑾⑿⒀⒁⒂⒃⒄⒅⒆⒇⒜⒝⒞⒟⒠⒡⒢⒣⒤⒥⒦⒧⒨⒩⒪⒫⒬⒭⒮⒯⒰⒱⒲⒳⒴⒵㈠㈡㈢㈣㈤㈥㈦㈧㈨㈩㈪㈫㈬㈭㈮㈯㈰ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫⅬⅭⅮⅯⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹⅺⅻⅼⅽⅾⅿ"];
-		const menuLeft = mainUI.menuLeft;
+	  	const menuLeft = mainUI.menuLeft;
 		const menuWidth = mainUI.menuWidth;
 		const menuFontSize = mainUI.menuFontSize;
 		const cWidth = mainUI.cmdWidth;
@@ -1002,10 +1002,10 @@ window.control = (() => {
 			
 		const _themeNames = ["light","grey","green","dark"];
 		const themeMenu = createMenu(
-					[0, "白色",
-	    			1, "灰色",
-	    			2, "绿色",
-	    			3, "黑色"],
+					[0, "明亮",
+	    			1, "经典",
+	    			2, "护眼",
+	    			3, "暗黑"],
 	    		function() {
 	    			if (isBusy()) return;
 	    			mainUI.setTheme(_themeNames[this.input.value*1]);
@@ -1192,8 +1192,6 @@ window.control = (() => {
 				backgroundColor: lbColor[i].color
 			})
 		})
-		
-		mainUI.loadTheme();
 
 		setCheckerBoardEvent()
 		
@@ -1574,8 +1572,8 @@ window.control = (() => {
 			if (playMode == MODE_READLIB || playMode == MODE_EDITLIB) {
 				this.showBranchs(iHTML => {
 					let exWindow = window.exWindow;
-					exWindow.innerHTML((iHTML).split("<br><br>").join("<br>"));
 					iHTML && exWindow.open();
+					exWindow.innerHTML((iHTML).split("<br><br>").join("<br>"));
 				});
 			}
 			else if (playMode == MODE_RENLIB) {
@@ -1680,16 +1678,16 @@ window.control = (() => {
         	return Math.max(0, index);
 		}
 		
-		mainUI.viewport.resize();
+		mainUI.loadTheme().then(() => mainUI.viewport.resize());
 		
 		let p = { x: 0, y: 0 };
 		xyObjToPage(p, renjuCmdDiv.viewElem);
 
-		const FONT_SIZE = mainUI.cmdWidth / 28;
-		const EX_WINDOW_LEFT = parseInt(cMoveL.left) + p.x;
+		const FONT_SIZE = mainUI.buttonHeight / 1.8;//mainUI.cmdWidth / 28;
+		const EX_WINDOW_WIDTH = parseInt(mainUI.cmdWidth - mainUI.cmdPadding * 5);
+		const EX_WINDOW_HEIGHT = mainUI.cmdWidth - mainUI.buttonHeight * (dw > dh ? 1.5 : 3) - parseInt(cMoveL.top);
+		const EX_WINDOW_LEFT = (mainUI.cmdWidth - EX_WINDOW_WIDTH) / 2 + p.x;
 		const EX_WINDOW_TOP = parseInt(cMoveL.top) + p.y;
-		const EX_WINDOW_WIDTH = mainUI.cmdWidth - mainUI.cmdPadding * 2;
-		const EX_WINDOW_HEIGHT = mainUI.cmdWidth - parseInt(cMoveL.top);
 		try {
 			window.exWindow.setStyle(EX_WINDOW_LEFT, EX_WINDOW_TOP, EX_WINDOW_WIDTH, EX_WINDOW_HEIGHT, FONT_SIZE, mainUI.bodyDiv);
 		} catch (e) { console.error(e.stack) }

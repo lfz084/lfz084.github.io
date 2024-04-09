@@ -26,10 +26,10 @@
     font-style: normal;
 }
 
+body * { max-height: 999999px; }
+
 html,
 body {
-    color: #222;
-    background-color: #ddd;
     height: 100%;
     width: 800px;
     /*viewport width=800*/
@@ -39,7 +39,18 @@ body {
     line-height: 2;
     scroll-behavior: auto;
     /*smooth;*/
-    -webkit-user-select: none;
+    -webkit-user-select: text;
+    -ms-overflow-style: none;  /* IE and Edge */
+	scrollbar-width: none;  /* Firefox */
+    -webkit-overflow-scrolling: touch;
+    /*background-color: #303030*/
+    /* Chrome/Safari/Opera */
+}
+html::-webkit-scrollbar {
+	display: none;
+}
+body::-webkit-scrollbar {
+	display: none;
 }
 
 body.loading {
@@ -183,20 +194,20 @@ h4 {
 
 
 .focus {
-    border: 2px solid green; /*防止 safari 下设置失败*/
+    border: 5px solid green; /*防止 safari 下设置失败*/
     animation: focus 700ms ease-in;
     animation-fill-mode: both;
 }
 
 @keyframes focus {
     0% {
-        border: 2px solid green;
+        border: 5px solid green;
         /*background-color: #dddddd;*/
     }
 
     100% {
         /*background-color: #ccc;*/
-        border: 2px solid green;
+        border: 5px solid green;
     }
 }
 
@@ -209,47 +220,53 @@ ol {
     font-weight: 300;
     line-height: 2;
 }
+ul li::marker {
+    color: #228;
+}
+ol li::marker {
+    color: #228;
+}
 
 ul[colorDepth="0"],
 ol[colorDepth="0"] {
     background-color: #d8d8d8;
-    border: 5px solid #d5d5d5;
+    border: 1px solid #d5d5d5;
 }
 
 ul[colorDepth="1"],
 ol[colorDepth="1"] {
     background-color: #d3d3d3;
-    border: 5px solid #cccccc;
+    border: 1px solid #cccccc;
 }
 
 ul[colorDepth="2"],
 ol[colorDepth="2"] {
     background-color: #cdcdcd;
-    border: 5px solid #c5c5c5;
+    border: 1px solid #c5c5c5;
 }
 
 ul[colorDepth="3"],
 ol[colorDepth="3"] {
     background-color: #c8c8c8;
-    border: 5px solid #bcbcbc;
+    border: 1px solid #bcbcbc;
 }
 
 ul[colorDepth="4"],
 ol[colorDepth="4"] {
     background-color: #c3c3c3;
-    border: 5px solid #b5b5b5;
+    border: 1px solid #b5b5b5;
 }
 
 ul[colorDepth="5"],
 ol[colorDepth="5"] {
     background-color: #bdbdbd;
-    border: 5px solid #acacac;
+    border: 1px solid #acacac;
 }
 
 ul[colorDepth="6"],
 ol[colorDepth="6"] {
     background-color: #b8b8b8;
-    border: 5px solid #a5a5a5;
+    border: 1px solid #a5a5a5;
 }
 
 
@@ -263,7 +280,7 @@ li {
 }
 
 img {
-    opacity: 0.72;
+    opacity: 0.68;
 }
 
 text {

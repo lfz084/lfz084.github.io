@@ -31,8 +31,7 @@
 			progress: "35%",
 			type: "scriptAll",
 			isAsync: true,
-			sources: [[SOURCE_FILES["msgbox"]],
-                [SOURCE_FILES["appData"]],
+			sources: [[SOURCE_FILES["appData"]],
                 [SOURCE_FILES["engine"]],
                 [SOURCE_FILES["NoSleep"]],
                 [SOURCE_FILES["jspdf"]]]

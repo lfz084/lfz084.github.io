@@ -96,7 +96,6 @@ div {
     font-family: mHeiTi, Roboto, emjFont, Symbola;
     font-weight: bold;
     -webkit-user-select: none;
-    /* Chrome/Safari/Opera */
 }
 
 
@@ -106,6 +105,7 @@ h1 {
     /* Chrome/Safari/Opera */
 }
 
+body * { max-height: 999999px; }
 
 html,
 body {
@@ -117,8 +117,17 @@ body {
     font-weight: bold;
     scroll-behavior: smooth;
     -webkit-user-select: none;
+    -ms-overflow-style: none;  /* IE and Edge */
+	scrollbar-width: none;  /* Firefox */
+    -webkit-overflow-scrolling: touch;
     /*background-color: #303030*/
     /* Chrome/Safari/Opera */
+}
+html::-webkit-scrollbar {
+	display: none;
+}
+body::-webkit-scrollbar {
+	display: none;
 }
 
 
@@ -168,6 +177,19 @@ a:active {
     top: 100px;
 }
 
+.textarea {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+	scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    -webkit-user-select: text;
+}
+
+.textarea::-webkit-scrollbar {
+	display: none;
+}
+
 .menu {
     overflow-x: hidden;
     overflow-y: auto;
@@ -199,7 +221,7 @@ hr {
     border-width: 0px;
 }
 
-#viewBox {
+.viewBox {
     overflow-x: auto;
     overflow-y: auto;
     -ms-overflow-style: none;  /* IE and Edge */
@@ -207,17 +229,11 @@ hr {
     -webkit-overflow-scrolling: touch;
 }
 
-#viewBox::-webkit-scrollbar {
+.viewBox::-webkit-scrollbar {
     display: none;
 }
 
 #wrapper {
-    overflow-x: auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-#exWindow {
     overflow-x: auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -302,7 +318,7 @@ hr {
 }
 
 .showEXWindow {
-    -webkit-animation: showEXWindow 500ms ease-in;
+	-webkit-animation: showEXWindow 500ms ease-in;
     -moz-animation: showEXWindow 500ms ease-in;
     animation: showEXWindow 500ms ease-in;
     -webkit-animation-fill-mode: both;

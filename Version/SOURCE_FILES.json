@@ -27,6 +27,8 @@
     "homeMain": "home/main.js",
     "homeSources": "home/sources.js",
     "IndexedDB": "IndexedDB/IndexedDB.js",
+    "instructionsMain": "instructions/main.js",
+    "instructionsSources": "instructions/sources.js",
     "mylz4": "lz4/mylz4.js",
     
     "gomocalc_worker": "gomocalc/engine-warpper.worker.8389b800.worker.js",
@@ -78,7 +80,7 @@
     "坂田吾郎九段连珠教室": "puzzle/json/坂田吾郎九段连珠教室_puzzle.json",
     "大道五目": "puzzle/json/大道五目_puzzle.json",
     "天狗道场": "puzzle/json/天狗道场_puzzle.json",
-    "实战VCF": "puzzle/json/ 实战VCF.json",
+    "实战VCF": "puzzle/json/实战VCF.json",
     "新图巧百番":  "puzzle/json/新图巧百番_puzzle.json",
     "每日VCF": "puzzle/json/每日VCF.json",
     "每日VCT": "puzzle/json/每日VCT.json",
@@ -149,6 +151,9 @@
     "renjueditor": "renjueditor/renjuEditor.js",
     "renjueditorSources": "renjueditor/sources.js",
     
+    "resetMain": "reset/main.js",
+    "resetSources": "reset/sources.js",
+    
     "bindevent": "script/bindEvent.js",
     "IntervalPost": "script/IntervalPost.js",
     "loadApp": "script/loadApp.js",
@@ -164,6 +169,7 @@
     "maxBufferwasm": "script/maxBuffer.wasm",
     
     "setThemeMain": "setTheme/main.js",
+    "preloadTheme": "setTheme/preloadTheme.js",
     "setThemeSources": "setTheme/sources.js",
     
     "loaders": "style/loaders.css",
@@ -219,11 +225,10 @@
     "icon_light_11": "./UI/theme/light/contrast-setting-svgrepo-com.svg",
     "icon_light_12": "./UI/theme/light/alpha-w.svg",
     "icon_light_13": "./UI/theme/light/alpha-k.svg",
-    "icon_light_14": "./UI/theme/light/alpha-v.svg",
+    "icon_light_14": "./UI/theme/light/house-svgrepo-com.svg",
     "icon_light_15": "./UI/theme/light/dots-3-horizontal-svgrepo-com.svg",
     "icon_light_16": "./UI/theme/light/dots-3-vertical-svgrepo-com.svg",
     "icon_light_17": "./UI/theme/light/arrow-ccw-svgrepo-com.svg",
-    "icon_light_18": "./UI/theme/light/arrow-cw-svgrepo-com.svg",
 
     "theme_grey_json": "./UI/theme/grey/theme.json",
     "icon_grey_01": "./UI/theme/grey/xmark-circle-svgrepo-com.svg",
@@ -239,11 +244,10 @@
     "icon_grey_11": "./UI/theme/grey/contrast-setting-svgrepo-com.svg",
     "icon_grey_12": "./UI/theme/grey/alpha-w.svg",
     "icon_grey_13": "./UI/theme/grey/alpha-k.svg",
-    "icon_grey_14": "./UI/theme/grey/alpha-v.svg",
+    "icon_grey_14": "./UI/theme/grey/house-svgrepo-com.svg",
     "icon_grey_15": "./UI/theme/grey/dots-3-horizontal-svgrepo-com.svg",
     "icon_grey_16": "./UI/theme/grey/dots-3-vertical-svgrepo-com.svg",
     "icon_grey_17": "./UI/theme/grey/arrow-ccw-svgrepo-com.svg",
-    "icon_grey_18": "./UI/theme/grey/arrow-cw-svgrepo-com.svg",
     
     "theme_green_json": "./UI/theme/green/theme.json",
     "icon_green_01": "./UI/theme/green/xmark-circle-svgrepo-com.svg",
@@ -259,11 +263,10 @@
     "icon_green_11": "./UI/theme/green/contrast-setting-svgrepo-com.svg",
     "icon_green_12": "./UI/theme/green/alpha-w.svg",
     "icon_green_13": "./UI/theme/green/alpha-k.svg",
-    "icon_green_14": "./UI/theme/green/alpha-v.svg",
+    "icon_green_14": "./UI/theme/green/house-svgrepo-com.svg",
     "icon_green_15": "./UI/theme/green/dots-3-horizontal-svgrepo-com.svg",
     "icon_green_16": "./UI/theme/green/dots-3-vertical-svgrepo-com.svg",
     "icon_green_17": "./UI/theme/green/arrow-ccw-svgrepo-com.svg",
-    "icon_green_18": "./UI/theme/green/arrow-cw-svgrepo-com.svg",
 
     "theme_dark_json": "./UI/theme/dark/theme.json",
     "icon_dark_01": "./UI/theme/dark/xmark-circle-svgrepo-com.svg",
@@ -279,11 +282,10 @@
     "icon_dark_11": "./UI/theme/dark/contrast-setting-svgrepo-com.svg",
     "icon_dark_12": "./UI/theme/dark/alpha-w.svg",
     "icon_dark_13": "./UI/theme/dark/alpha-k.svg",
-    "icon_dark_14": "./UI/theme/dark/alpha-v.svg",
+    "icon_dark_14": "./UI/theme/dark/house-svgrepo-com.svg",
     "icon_dark_15": "./UI/theme/dark/dots-3-horizontal-svgrepo-com.svg",
     "icon_dark_16": "./UI/theme/dark/dots-3-vertical-svgrepo-com.svg",
     "icon_dark_17": "./UI/theme/dark/arrow-ccw-svgrepo-com.svg",
-    "icon_dark_18": "./UI/theme/dark/arrow-cw-svgrepo-com.svg",
     
     "icon_ico_128x128": "icon(128x128).ico",
     "icon_ico_192x192": "icon(192x192).ico",
@@ -291,6 +293,8 @@
     "icon_png_72x72": "icon(72x72).png",
     "icon_png_114x114": "icon(114x114).png",
     "icon_png_192x192": "icon(192x192).png",
+    "help_jpg":  "help.jpg",
+    "icon_settings": "settings.png",
     "404_html": "404.html",
     "dbread_html": "dbread.html",
     "index_html": "index.html",
@@ -301,6 +305,6 @@
     "renjueditor_html": "renjueditor.html",
     "reset_html": "reset.html",
     "setTheme_html": "setTheme.html",
-    "icon_settings": "settings.png",
-    "tuya_html": "tuya.html"
+    "tuya_html": "tuya.html",
+    "upData_html": "upData.html"
 }

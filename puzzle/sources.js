@@ -14,7 +14,6 @@
                 [SOURCE_FILES["saveFile"]],
                 [SOURCE_FILES["share"]],
                 [SOURCE_FILES["helpWindow"]],
-                [SOURCE_FILES["msgbox"]],
                 [SOURCE_FILES["InputButton"]]]
         }, {
 			progress: "39%",

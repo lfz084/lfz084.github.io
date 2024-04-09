@@ -11,8 +11,7 @@
                 [SOURCE_FILES["image2board"]],
                 [SOURCE_FILES["saveFile"]],
                 [SOURCE_FILES["share"]],
-                [SOURCE_FILES["helpWindow"]],
-                [SOURCE_FILES["msgbox"]]]
+                [SOURCE_FILES["helpWindow"]]]
         }, {
 			progress: "99%",
 			type: "scriptAll",
