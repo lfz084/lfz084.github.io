@@ -4,16 +4,19 @@
 }(this, (async function(exports) {
 	try{
 	'use strict';
+	const TEMP_TIME = 1;
+	const UPPUZZLES_TIME = 2;
 	const STORE_NAME = "puzzle";
 	const INDEXNAMES = ["title","progress","json","time","index01","index02","index03","index04","index05","index06","index07","index08","index09","index"];
 	const INDEX = {
-		TITLE: INDEXNAMES[0],
-		PROGRESS: INDEXNAMES[1],
-		"JSON": INDEXNAMES[2],
-		TIME: INDEXNAMES[3],
-		TIMERS: INDEXNAMES[4],
-		INDEX: INDEXNAMES[5],
-		DATE: INDEXNAMES[6]
+		TITLE: INDEXNAMES[0],		//题集标题
+		PROGRESS: INDEXNAMES[1],	//数组与题目一一对应，1表示做对过，0表示没有做对过
+		"JSON": INDEXNAMES[2],		//题集JSON
+		TIME: INDEXNAMES[3],		//创建题集时的时间戳
+		TIMERS: INDEXNAMES[4],		//数组与题目一一对应，统计解题的累计时间
+		INDEX: INDEXNAMES[5],		//上次解题的定位
+		DATE: INDEXNAMES[6],		//创建每日习题的日期
+		STARS: INDEXNAMES[7]			//收藏标记
 	}
 	
 	let {
@@ -51,6 +54,19 @@
 	}
 	
 	async function addDefaultPuzzles(_path, defaultPuzzleTimes = [], callback = () => {}) {
+		async function addPuzzle(filename) {
+			const jsonString = await window.loadTxT(path + filename);
+			const oldData = await puzzleData.getDataByKey(jsonString);
+			if (oldData) {
+				return oldData;
+			}
+			else {
+				const data = await puzzleData.jsonFile2Data(jsonString);
+				puzzleData.addData(data);
+				return data;
+			}
+		}
+		
 		const dataDefaultPuzzleTimes = await puzzleData.getDataByKey("defaultPuzzleTimes") || { key: "defaultPuzzleTimes" };
 		if (dataDefaultPuzzleTimes[INDEX.TIMERS]) {
 			defaultPuzzleTimes.length = 0;
@@ -61,6 +77,7 @@
 		const fileNames = [
 			"例题演示.json",
 			"错题复习.json",
+			"你的收藏.json",
 			"每日练习.json",
 			"每日残局.json",
 			"每日三手胜.json",
@@ -118,21 +135,12 @@
     		"解题大赛合集_07_(21~47)_puzzle.json"
 			];
 		for (let i = 0; i < fileNames.length; i++) {
-			const jsonString = await window.loadTxT(path + fileNames[i]);
-			const oldData = await puzzleData.getDataByKey(jsonString);
-			if (oldData) {
-				rt.push(oldData.time);
-				defaultPuzzleTimes.indexOf(oldData.time) == - 1 && defaultPuzzleTimes.push(oldData.time);
-				i == 0 && callback(oldData.json)
-			}
-			else {
-				const data  = await puzzleData.jsonFile2Data(jsonString);
-				puzzleData.addData(data);
-				rt.push(data.time);
-				defaultPuzzleTimes.indexOf(data.time) == - 1 && defaultPuzzleTimes.push(data.time);
-				i == 0 && callback(data.json)
-			}
+			const data = await addPuzzle(fileNames[i]);
+			rt.push(data.time);
+			defaultPuzzleTimes.indexOf(data.time) == -1 && defaultPuzzleTimes.push(data.time);
+			i == 0 && callback(data.json);
 		}
+		
 		defaultPuzzleTimes.length = 0;
 		rt.map((time) => defaultPuzzleTimes.push(time));
 		dataDefaultPuzzleTimes[INDEX.TIMERS] = rt;
@@ -189,6 +197,7 @@
 			rule: puzzle.rule,
 			mode: puzzle.mode,
 			title: puzzle.title,
+			sourceTitle: puzzle.sourceTitle,
 			comment: puzzle.comment,
 			level: puzzle.level,
 			rotate: puzzle.rotate,
@@ -200,6 +209,10 @@
 	
 	async function getErrorPuzzlesData() {
 		return puzzleData.getDataByIndex("title", "错题复习")
+	}
+	
+	async function getStarPuzzlesData() {
+		return puzzleData.getDataByIndex("title", "你的收藏")
 	}
 	
 	function equalPuzzle(puzzle1, puzzle2) {
@@ -229,16 +242,21 @@
 		return rt;
 	}
 	
+	function createPuzzleProgress(game, puzzle) {
+		return puzzle && puzzle.progress || (game.data && game.data.key ? {time: game.data.time, index: game.puzzles.index} : {time: TEMP_TIME, index: game.time});
+	}
+	
 	async function addErrorPuzzle(game) {
-	try{
 		const puzzle = game.puzzle;
 		const newPuzzle = copyPuzzle(puzzle);
 		newPuzzle.title = game.data ? game.data.title + `(${game.puzzles.index + 1})${game.data[INDEX.DATE] ? " - " + game.data[INDEX.DATE] : ""}` : "";
-		game.data && game.data.key && (newPuzzle.progress = puzzle.progress || {time: game.data.time, index: game.puzzles.index});
+		newPuzzle.sourceTitle = newPuzzle.sourceTitle || (game.data ? game.data.title + `(${game.index})` : puzzle.title);
+		newPuzzle.progress = createPuzzleProgress(game, puzzle);
 		const data = await getErrorPuzzlesData();
 		if (data) {
 			const puzzles = JSON.parse(data.json);
 			const index = puzzleIndex(puzzles.puzzles, newPuzzle);
+			data[INDEX.TIMERS] = data[INDEX.TIMERS] || new Array(data.progress.length).fill(0);
 			if (index + 1) {
 				puzzles.puzzles.splice(index, 1);
 				data.progress.splice(index, 1);
@@ -255,19 +273,97 @@
 			data.json = JSON.stringify(puzzles);
 			await puzzleData.putData(data);
 		}
-	}catch(e){console.error(e.stack)}
 	}
 	
 	async function removeErrorPuzzle() {
 		const data = await getErrorPuzzlesData();
 		if (data) {
 			const puzzles = JSON.parse(data.json);
-			for (let i = puzzles.puzzles.length - 1; i >= 0; i--) {
+			for (let i = puzzles.puzzles.length - 1; i > 0; i--) {
 				if (data.progress[i]) {
 					puzzles.puzzles.splice(i, 1);
 					data.progress.splice(i, 1);
 					data[INDEX.TIMERS].splice(i, 1);
 				}
+			}
+			if (puzzles.puzzles.length) {
+				data.json = JSON.stringify(puzzles);
+			}
+			else {
+				data.json = data.key;
+				data.progress = [0];
+				data[INDEX.TIMERS] = [0];
+			}
+			await puzzleData.putData(data);
+		}
+	}
+	
+	function getMap(puzzles) {
+		const rt = {};
+		for (let i = 0; i < puzzles.puzzles.length; i++) {
+			const {time, index} = puzzles.puzzles[i].progress || {};
+			if(time && index + 1) {
+				rt[time] = rt[time] || {};
+				rt[time][index] = i;
+			}
+		}
+		return rt;
+	}
+	
+	async function getStarArray(game) {
+		const rt = new Array(game.puzzles.puzzles.length).fill(0);
+		const data = await getStarPuzzlesData();
+		if (data) {
+			const map = getMap(JSON.parse(data.json));
+			const puzzles = game.puzzles;
+			const oldIndex = puzzles.index;
+			for (let i = 0; i < puzzles.puzzles.length; i++) {
+				puzzles.index = i;
+				const {time, index} = createPuzzleProgress(game, puzzles.currentPuzzle);
+				if (map[time] && map[time][index] + 1) {
+					rt[i] = 1;
+				}
+			}
+			puzzles.index = oldIndex;
+		}
+		return rt;
+	}
+	
+	async function addStarPuzzle(game) {
+		const data = await getStarPuzzlesData();
+		if (data) {
+			const puzzles = JSON.parse(data.json);
+			const map = getMap(puzzles);
+			const {time, index} = createPuzzleProgress(game, game.puzzle);
+			if (!(map[time] && map[time][index] + 1)) {
+				const puzzle = game.puzzle;
+				const newPuzzle = copyPuzzle(puzzle);
+				newPuzzle.title = newPuzzle.sourceTitle || (game.data ? game.data.title + `(${game.index})` : puzzle.title);
+				newPuzzle.progress = {time, index};
+				newPuzzle.rotate = undefined;
+				
+				data[INDEX.TIMERS] = data[INDEX.TIMERS] || new Array(data.progress.length).fill(0);
+				puzzles.puzzles.push(newPuzzle);
+				data.progress.push(0);
+				data[INDEX.TIMERS].push(0);
+				data.json = JSON.stringify(puzzles);
+				await puzzleData.putData(data);
+			}
+		}
+	}
+	
+	async function removeStarPuzzle(game) {
+		const data = await getStarPuzzlesData();
+		if (data) {
+			const puzzles = JSON.parse(data.json);
+			const map = getMap(puzzles);
+			const {time, index} = createPuzzleProgress(game, game.puzzle);
+			if (map[time] && map[time][index] + 1) {
+				const idx = map[time][index];
+				data[INDEX.TIMERS] = data[INDEX.TIMERS] || new Array(data.progress.length).fill(0);
+				puzzles.puzzles.splice(idx, 1);
+				data.progress.splice(idx, 1);
+				data[INDEX.TIMERS].splice(idx, 1);
 				data.json = JSON.stringify(puzzles);
 				await puzzleData.putData(data);
 			}
@@ -437,7 +533,8 @@
 			for (let j = 0; j < indexs.length; j++) {
 				puzzles.index = indexs[j];
 				const puzzle = puzzles.currentPuzzle;
-				puzzle.title = data.title + `(${indexs[j] + 1})`
+				puzzle.title = data.title + `(${indexs[j] + 1})`;
+				puzzle.sourceTitle = puzzle.title;
 				puzzle.progress = {time: data.time, index: indexs[j]};
 				
 				const key = `${puzzle.mode} - ${puzzleCoder.MODE_TITLE[puzzle.mode]}`;
@@ -447,7 +544,6 @@
 				
 				const sPuzzles = data.progress[indexs[j]] == 0 ? puzzle.level <= maxLevel ? newPuzzlesLower : newPuzzlesUp : donePuzzles;
 				if (newPuzzlesLower[puzzle.mode]) {
-					
 					pushPuzzle(puzzle.mode, sPuzzles, puzzle, maxLevel);
 				}
 				else if ((puzzle.mode & 0xE0) == 160 || (puzzle.mode & 0xE0) == 192) {
@@ -475,7 +571,7 @@
 	function loadURL2JSON(url) {
 		const hash = replaceAll(url.split(/#/)[1] || "", "%", "&");
 		const arr = hash.split("&");
-		if (arr.length < 11) return ""
+		if (arr.length < 11) return "";
 		const labels = [];
 		const tempArr = (arr[11] || "").split(",");
 		tempArr.length > 1 && tempArr.length % 2 == 0 && tempArr.map((v,i) => {
@@ -483,6 +579,7 @@
 			else labels[i >> 1] = v;
 		})
 		const puzzle = {
+			title: "来自链接分享",
 			stones: arr[0] || undefined,
 			blackStones: arr[1] || undefined,
 			whiteStones: arr[2] || undefined,
@@ -531,9 +628,12 @@
 		addDefaultPuzzles,
 		saveProgress,
 		getProgress,
-		addErrorPuzzle,
 		createRandomPuzzles,
+		addErrorPuzzle,
 		removeErrorPuzzle,
+		getStarArray,
+		addStarPuzzle,
+		removeStarPuzzle,
 		loadURL2JSON,
 		puzzle2URL
 	}

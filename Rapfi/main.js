@@ -116,6 +116,7 @@
         			this.MSindex = cBoard.MSindex;
         			btnAIPlay.enabled = false;
         			btnRandomPlay.enabled = false;
+        			setTimeout(() => $("comment").innerHTML = "开始对弈...", 380);
         		}
         		else {
                 	game.toStart(true);
@@ -123,6 +124,7 @@
         			while(cBoard.MSindex < this.MSindex && cBoard.MSindex < cBoard.MS.length - 1) {
         				game.toNext(true);
         			}
+        			cBoard.MSindex < 0 && game.cBoard.stonechange();
         			btnAIPlay.enabled = true;
         			btnRandomPlay.enabled = true;
         		}
@@ -502,7 +504,9 @@
         		if (state) {
         			const COLOR = []
         			let msg = "";
-        			msgbox("棋局已经结束")
+        			msgbox("棋局已经结束");
+        			$("comment").innerHTML = "棋局已经结束";
+        			return true;
         		}
         	}
         },
@@ -667,8 +671,9 @@
             }
             else if (game.cBoard.P[idx].type == TYPE_EMPTY || game.cBoard.P[idx].type == TYPE_MARK) {
                 game.cBoard.wNb(idx, "auto", true); // 添加棋子
-                btnPlay.checked && game.checkWin(cBoard.getArray(), idx);
-                btnPlay.checked && game.think();
+                if (btnPlay.checked) {
+                	game.checkWin(cBoard.getArray(), idx).then(gameOver => !gameOver && game.think());
+                }
             }
         })
         bindEvent.addEventListener(game.cBoard.viewBox, "dblclick", (x, y) => {
@@ -775,6 +780,7 @@
     			"title": "gomocalc 引擎异常，请尝试刷新页面"
     		})
     	}
+    	else game.stopThinking();
     }
     
     function processOutput(output) {
@@ -788,8 +794,19 @@
     			const idx = output.pos[1] * 15 + output.pos[0];
     			cBoard.hideStone();
     			cBoard.wNb(idx, "auto", true);
-    			game.checkWin(cBoard.getArray(), idx);
+    			game.checkWin(cBoard.getArray(), idx).then(gameOver => !gameOver && btnPlay.checked && ($("comment").innerHTML = "请落子..."));
     		}
+    		if (output.sideLabel) {
+    			if (output.sideLabel.indexOf("ready") + 1) {
+					btnPlay.checked && ($("comment").innerHTML = "请落子...");
+    			}
+    			else {
+    				btnPlay.checked && ($("comment").innerHTML = output.sideLabel);
+    			}
+			}
+			if (output.comment) {
+				btnPlay.checked && ($("comment").innerHTML = output.comment);
+			}
     	} catch (e) { console.error(e.stack) }
     }
     

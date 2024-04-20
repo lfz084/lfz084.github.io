@@ -208,17 +208,19 @@
 			}
 		}),
 		mainUI.newLabel({
-				varName: "indexLabel",
+				varName: "starLabel",
 				type: "div",
 				width: mainUI.buttonWidth,
 				height: mainUI.buttonHeight,
 				style: {
-					fontSize: `${mainUI.buttonHeight / 1.8}px`,
+					fontSize: `${mainUI.buttonHeight/1.6}px`,
 					textAlign: "center",
 					lineHeight: `${mainUI.buttonHeight}px`
 				},
 				click: function() {
-					openIndexBoard();
+					closeBoards();
+					if (game.puzzle.mode == puzzleCoder.MODE.COVER) return;
+					game.star ? game.removeStarPuzzle() : game.addStarPuzzle();
 				}
 			}),
 		mainUI.newLabel({
@@ -228,11 +230,17 @@
 			height: mainUI.buttonHeight,
 			style: {
 				fontSize: `${mainUI.buttonHeight / 1.8}px`,
-				textAlign: "center",
+				textAlign: "right",
 				lineHeight: `${mainUI.buttonHeight}px`
 			},
 			click: function() {
-				closeBoards();
+				openIndexBoard();
+			},
+			reset: function() {
+				setTimeout(() => {
+					this.width += this.height*1.8;
+					this.move(this.left - this.height*1.6);
+				},100);
 			}
 		}),
 			{
@@ -483,7 +491,7 @@
 			sideLabel,
 			ruleLabel,
 			modeLabel,
-			indexLabel,
+			starLabel,
 			strengthLabel,
 			rotateLabel,
 			progressLabel,
@@ -719,7 +727,7 @@
 				i + 1 == game.index && (style.borderWidth = "5px");
 				indexBoard.createIndex(i+1, style)
 			}
-			inputButton.bindButton(indexLabel, mainUI.bodyScale);
+			inputButton.bindButton(progressLabel, mainUI.bodyScale);
 			inputButton.value = game.index;
 		}
 	
@@ -875,7 +883,7 @@
 			varName: "lbTimer"
 		});
 		
-		const inputButton = new InputButton(document.body, 0, 0, indexLabel.with, indexLabel.height);
+		const inputButton = new InputButton(document.body, 0, 0, progressLabel.with, progressLabel.height);
 		inputButton.callback = indexBoard.callback;
 		mainUI.addChild({
 			variant: inputButton,
@@ -952,11 +960,12 @@
 			rotate: 0,
 			async reset(rotate, puzzle) {
 				try{
+				this.puzzles.length == 0 && msg("你打开了一个空的题集");
 				this.puzzle = typeof puzzle === "object" ? puzzle : this.puzzles.currentPuzzle;
 				rotate == undefined && (rotate = this.puzzle.rotate)
 				
 				const isLocation = 0 && window.location.href.indexOf("http://") > -1;
-				const completed = this.data && this.data.progress && this.data.progress[this.puzzles.index];
+				const completed = this.completed;
 				const delay = this.puzzle.delayHelp * 60 * 1000;
 				const isTimeout = (this.data && this.data[puzzleData.INDEX.TIMERS] && this.data[puzzleData.INDEX.TIMERS][this.puzzles.index] || 0) > delay;
 				if(puzzle == undefined) {
@@ -1019,8 +1028,8 @@
 					title: this.puzzle.title,
 					ruleLabel: ruleStr,
 					modeLabel: modeStr.replace("模式",""),
-					indexLabel: `${completed && "✔" || ""}  ${this.index}`,
-					progressLabel: `(${this.data && this.data.progress ? this.data.progress.filter(v => v).length + "/" : ""}${this.puzzles.length})`,
+					starLabel: `${this.puzzle.mode == puzzleCoder.MODE.COVER?"封面" : this.star ? "★" : "✩"}`,
+					progressLabel: `${completed && "✔" || ""}&nbsp;${(this.index + "bbb").slice(0, 3).replace(/b/g, "&nbsp;")}(&nbsp;${this.data && this.data.progress ? (this.data.progress.filter(v => v).length + "bbb").slice(0, 3).replace(/b/g, "&nbsp;") + "/&nbsp;" : ""}${(this.puzzles.length + "bbb").slice(0, 3).replace(/b/g, "&nbsp;")}&nbsp;)`,
 					comment: html.split("\n").join("<br>")
 				})
 				closeBoards();
@@ -1123,7 +1132,7 @@
 			},
 			async openJSON(file) {
 				try{
-				const newData = await puzzleData.jsonFile2Data(file, (progress) => outputInnerHTML({ indexLabel: `${(progress*100).toFixed(2)}%`, title: `${(progress*100).toFixed(2)}%` }));
+				const newData = await puzzleData.jsonFile2Data(file, (progress) => outputInnerHTML({ starLabel: `${(progress*100).toFixed(2)}%`, title: `${(progress*100).toFixed(2)}%` }));
 				const oldData = await puzzleData.getDataByKey(newData.key) || {};
 				if(Object.keys(oldData).length) {
 					window.warn("不用重复添加题集");
@@ -1137,14 +1146,14 @@
 			async loadJSON(jsonString) {
 				this.puzzles = puzzleCoder.renjuJSON2Puzzles(jsonString);
 				this.data = await puzzleData.getDataByIndex("json", jsonString);
-				this.puzzles.index = this.data && this.data[puzzleData.INDEX.INDEX] || 0;
-				this.reset();
+				this.puzzles.index = Math.min(Math.max(0, this.puzzles.length - 1), this.data && this.data[puzzleData.INDEX.INDEX] || 0);
+				this.time = this.data && this.data.time || new Date().getTime();
+				this.data && (this.data[puzzleData.INDEX.STARS] = await puzzleData.getStarArray(game))
+				await this.reset();
 				if (this.data && this.data.title.indexOf("每日") + 1 && this.data[puzzleData.INDEX.DATE] != new Date().toDateString()) {
-					msgbox({
-						butNum: 1,
-						title: `习题未更新，打开旧的每日习题`
-					})
+					window.warn(`习题未更新，打开旧的每日习题`);
 				}
+				!this.data && await this.addStarPuzzle();
 			},
 			async addDefaultPuzzles(path, callback) {
 				this.defaultPuzzleTimes.length = 0;
@@ -1162,6 +1171,30 @@
 				}
 				}catch(e){console.error(e.stack)}
 			},
+			async addStarPuzzle() {
+				outputInnerHTML({starLabel: "★"});
+				this.data && this.data[puzzleData.INDEX.STARS] && (this.data[puzzleData.INDEX.STARS][this.puzzles.index] = 1);
+				window.warn("已经添加到我的收藏");
+				await puzzleData.addStarPuzzle(game);
+			},
+			async removeStarPuzzle() {
+				outputInnerHTML({starLabel: "✩"});
+				this.data && this.data[puzzleData.INDEX.STARS] && (this.data[puzzleData.INDEX.STARS][this.puzzles.index] = 0);
+				window.warn("已经从我的收藏删除");
+				await puzzleData.removeStarPuzzle(game);
+				if (this.data && this.data.title == "你的收藏") {
+					this.data[puzzleData.INDEX.TIMERS] = this.data[puzzleData.INDEX.TIMERS] || new Array(this.data.progress.length).fill(0);
+					this.puzzles.puzzles.splice(this.puzzles.index, 1);
+					this.data.progress.splice(this.puzzles.index, 1);
+					this.data[puzzleData.INDEX.TIMERS].splice(this.puzzles.index, 1);
+					this.data[puzzleData.INDEX.STARS].splice(this.puzzles.index, 1);
+					this.puzzles.index = Math.min(this.puzzles.index, this.puzzles.length - 1);
+					this.data.json = JSON.stringify(this.puzzles);
+					this.reset();
+				}
+			},
+			get completed() { return this.data && this.data.progress && this.data.progress[this.puzzles.index] },
+			get star() { return this.data && this.data[puzzleData.INDEX.STARS] && this.data[puzzleData.INDEX.STARS][this.puzzles.index] },
 			get state() { return this._state },
 			set state(st) {
 				this._state = st;
@@ -1185,6 +1218,7 @@
 										return;
 									}
 								}
+								msgbox("这个题集没有习题");
 							}
 						});
 					};
@@ -1262,8 +1296,7 @@
 						output.comment && (output.comment += `\n\n\n解题结束\n开始复盘......\n1.点击空格落子\n2.点击棋子悔棋`)
 						output.errorPoints && game.continuePutStone(output.errorPoints, "✕", game.board.bNumColor)
 						outputInnerHTML({
-							indexLabel: `${game.data && game.data.progress && game.data.progress[game.puzzles.index] && "✔" || ""}  ${game.index}`,
-							progressLabel: `(${game.data && game.data.progress ? game.data.progress.filter(v => v).length + "/" : ""}${game.puzzles.length})`
+							progressLabel: `${game.completed && "✔" || ""}&nbsp;${(game.index + "bbb").slice(0, 3).replace(/b/g, "&nbsp;")}(&nbsp;${game.data && game.data.progress ? (game.data.progress.filter(v => v).length + "bbb").slice(0, 3).replace(/b/g, "&nbsp;") + "/&nbsp;" : ""}${(game.puzzles.length + "bbb").slice(0, 3).replace(/b/g, "&nbsp;")}&nbsp;)`
 						})
 					}
 					outputInnerHTML(output);
@@ -1279,7 +1312,7 @@
 		}
 
 		function outputInnerHTML(param) {
-			const labels = { title, indexLabel, strengthLabel, rotateLabel, progressLabel, sideLabel, ruleLabel, modeLabel, comment };
+			const labels = { title, starLabel, strengthLabel, rotateLabel, progressLabel, sideLabel, ruleLabel, modeLabel, comment };
 			Object.keys(param).map(key => labels[key] && (console.warn(param[key]), labels[key].innerHTML = replaceAll(param[key], "\n", "<br>")))
 		}
 
@@ -1407,6 +1440,7 @@
 		
 		function createPuzzle(game) {
 			return {
+				title: "来自图片输入",
 				arr: getArray(game),
 				side: getSide(game),
 				rule: 2,
@@ -1705,6 +1739,7 @@
 		await waitValueChange({get v() {return window.puzzleData}}, "v", undefined)
 		
 		const jsonStr = puzzleData.loadURL2JSON(window.location.href);
+		
 		if (jsonStr) await game.loadJSON(jsonStr)
 		else await game.continuePlay();
 		

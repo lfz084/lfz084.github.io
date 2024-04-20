@@ -692,7 +692,7 @@ window.puzzleAI = (() => {
 			}
 			processOutput({ sideLabel: "stopthinking" })
 			await waitValue({ get v() { return aiState } }, "v", STATE_AI_READY, 50);
-			processOutput({ sideLabel: "ready" })
+			processOutput({ sideLabel: "engine ready" })
 		}
 		
 		return {

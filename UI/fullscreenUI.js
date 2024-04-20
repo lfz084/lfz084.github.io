@@ -51,22 +51,26 @@ window.fullscreenUI = (() => {
 		const btnBoard = new ButtonBoard(document.body, (dw - butWidth) / 2, dh - butWidth * 1.5, butWidth, butWidth, 8)
 		btnBoard.board.style.zIndex = "8";
 		const [btnRenju, btnDBRead, btnRenjuEditor, btnMakeVCF] = btnBoard.rightButtons;
-
+		
+		function toURL(url) {
+			return window.location.href.indexOf(url) == -1 ? window.location.href = url : IFRAME.src = url;
+		}
+		
 		btnRenju.setText("R");
 		btnDBRead.setText("W");
 		btnRenjuEditor.setText("E");
 		btnMakeVCF.setText("V");
 
-		btnRenju.setontouchend(() => IFRAME.src = "renju.html")
+		btnRenju.setontouchend(() => toURL("renju.html"))
 		btnRenju.setIcons(svgRenju)
 
-		btnDBRead.setontouchend(() => IFRAME.src = "dbread.html")
+		btnDBRead.setontouchend(() => toURL("dbread.html"))
 		btnDBRead.setIcons(svgDBRead)
 
-		btnRenjuEditor.setontouchend(() => IFRAME.src = "renjueditor.html")
+		btnRenjuEditor.setontouchend(() => toURL("renjueditor.html"))
 		btnRenjuEditor.setIcons(svgEditor)
 
-		btnMakeVCF.setontouchend(() => IFRAME.src = "index.html")
+		btnMakeVCF.setontouchend(() => toURL("index.html"))
 		btnMakeVCF.setIcons(svgMakeVCF)
 
 		const [btnHome, btnFullscreen, btnTheme, btnRefresh] = btnBoard.leftButtons;
@@ -76,7 +80,7 @@ window.fullscreenUI = (() => {
 		btnRefresh.setText("O");
 		btnTheme.setText("T");
 
-		btnHome.setontouchend(() => IFRAME.src = "puzzle.html")
+		btnHome.setontouchend(() => toURL("puzzle.html"))
 		btnHome.setIcons(svgPuzzle)
 
 		btnFullscreen.setClickFunctions([requestFullscreen, exitFullscreen]);
@@ -452,7 +456,7 @@ window.fullscreenUI = (() => {
 			get iframe() { return IFRAME },
 			get contentWindow() { return IFRAME.contentWindow },
 			get src() { return IFRAME.src; },
-			set src(url) { return IFRAME.src = url; },
+			set src(url) { return toURL(url); },
 		}
 	} catch (e) { alert(e.stack) }
 })()
