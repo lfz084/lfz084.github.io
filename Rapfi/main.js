@@ -555,7 +555,7 @@
         	do {
         		let nodes = [];
         		let node = null;
-        		const rt = await game.showBranchNodes();
+        		const rt = await  game.showBranchNodes();
         		rt && rt.nodes && rt.nodes.map(node => nodes.push({idx: node.idx, label: node.txt}));
         		rt && rt.records && rt.records.map(record => nodes.push({idx: record.idx, label: readLabel(record.buffer)}));
         		if (nodes.length) {
@@ -603,6 +603,7 @@
         	while (cBoard.MSindex < cBoard.MS.length - 1) {
         		cBoard.toNext(true, 100);
         	}
+    		this.mode == 0 && msg("请先打开一个棋谱，再随机出题");
         },
 		stopThinking: async function() {
     		cBoard.hideStone();
@@ -739,6 +740,7 @@
     		}
     		log(file.name);
     		fileInput.value = "";
+        	btnPlay.checked && btnPlay.touchend();
     	},
     	showBranchNodes: async function() {
     		if (this.mode == this.MODE.DATABASS) return oldshowBranchNodes.call(this);

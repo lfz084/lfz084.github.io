@@ -1749,6 +1749,13 @@
 			}
 		});
 		
+		await puzzleData.upPuzzles(path, async (title) => {
+			if (game.data && game.data.title == title) {
+				const data = await puzzleData.getDataByIndex("title", title);
+				await game.loadJSON(data.json);
+			}
+		}).then(upInfo => upInfo && msg({type: "input", title: upInfo, butNum: 1}));
+		
 		delayRefreshPuzzles(100);
 	} catch (e) { console.error(e.stack) }
 })()

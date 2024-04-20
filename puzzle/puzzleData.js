@@ -5,7 +5,6 @@
 	try{
 	'use strict';
 	const TEMP_TIME = 1;
-	const UPPUZZLES_TIME = 2;
 	const STORE_NAME = "puzzle";
 	const INDEXNAMES = ["title","progress","json","time","index01","index02","index03","index04","index05","index06","index07","index08","index09","index"];
 	const INDEX = {
@@ -146,6 +145,37 @@
 		dataDefaultPuzzleTimes[INDEX.TIMERS] = rt;
 		await puzzleData.putData(dataDefaultPuzzleTimes);
 		return rt;
+	}
+	
+	async function upPuzzles(_path, callback = () => {}) {
+		const path = _path || document.currentScript.src.slice(0, document.currentScript.src.lastIndexOf("/") + 1) + "json/";
+		const fileName = "upPuzzles.json";
+		const jsonString = await window.loadTxT(path + fileName);
+		const oldData = await puzzleData.getDataByKey(jsonString);
+		if (!oldData) {
+			let logStr = "错题更正...\n";
+			await puzzleData.deleteDataByIndex("title", "upPuzzles");
+			const upDatas = JSON.parse(jsonString);
+			upDatas.map && upDatas.map(async(upData) => {
+				const data = await puzzleData.getDataByIndex("title", upData.title);
+				if (data) {
+					logStr += `${data.title}\n`;
+					const puzzles = JSON.parse(data.json);
+					upData.puzzles && upData.puzzles.map(puzzle => {
+						const index = puzzle.index - 1;
+						Object.assign(puzzles.puzzles[index], puzzle.puzzle);
+						logStr += `第${puzzle.index}题、`;
+					})
+					logStr += `已被修改\n`;
+					data.json = JSON.stringify(puzzles);
+					await puzzleData.putData(data);
+					await callback(upData.title);
+				}
+			})
+			await puzzleData.putData({key: jsonString, title: "upPuzzles"});
+			logStr += `结束...\n`;
+			return logStr;
+		}
 	}
 	
 	async function saveProgress(game) {
@@ -626,6 +656,7 @@
 		openCursorByIndex,
 		jsonFile2Data,
 		addDefaultPuzzles,
+		upPuzzles,
 		saveProgress,
 		getProgress,
 		createRandomPuzzles,
