@@ -99,7 +99,7 @@ window.fullscreenUI = (() => {
 		btnRotateDown.setText("D")
 		btnRotateRight.setIcons(svgDown_Right)
 		btnRotateDown.setIcons(svgRight_Down)
-
+		
 		document.body.appendChild(bodyDiv);
 		bodyDiv.appendChild(fullscreenDiv);
 		fullscreenDiv.appendChild(IFRAME);
@@ -112,7 +112,8 @@ window.fullscreenUI = (() => {
 			left: "0px",
 			top: "0px",
 			width: dw + "px",
-			height: dh + "px"
+			height: dh + "px",
+			opacity: "0"
 		})
 
 		Object.assign(fullscreenDiv.style, {
@@ -171,6 +172,7 @@ window.fullscreenUI = (() => {
 				//firstRequestFullscreen(IFRAME.contentWindow);
 				show();
 				loadTheme();
+				bodyDiv.setAttribute("class", "showBody");
 			}, true);
 
 			btnBoard.board.addEventListener("touchstart", () => { lastTime = new Date().getTime() + defaultDelay }, true)

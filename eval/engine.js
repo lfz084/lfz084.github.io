@@ -1735,7 +1735,8 @@ window.engine = (function() {
             fiveCount = 0,
             foulCount = 0,
             fourCount = 0,
-            threeCount = 0,
+            freeThreeCount = 0,
+            nofreeThreeCount = 0,
             lineFiveInfos = [],
             lineFoulInfos = [],
             lineFourInfos = [],
@@ -1773,12 +1774,13 @@ window.engine = (function() {
                 iHtml += `${idxToName(idx)}在${dirName}${LINE_NAME[v]}<br>`;
             }
             else if (v == THREE_FREE) {
-                threeCount++;
+                freeThreeCount++;
                 lineThreeInfos.push(info & 0x8fff | (direction << 12));
                 iHtml += `${idxToName(idx)}在${dirName}${LINE_NAME[v]}<br>`;
             }
             else  {
-                iHtml += `${idxToName(idx)}在${dirName}${LINE_NAME[v]}<br>`;
+            	v == THREE_NOFREE && nofreeThreeCount++;
+            	iHtml += `${idxToName(idx)}在${dirName}${LINE_NAME[v]}<br>`;
             }
         }
         
@@ -1838,11 +1840,11 @@ window.engine = (function() {
         	else iHtml += `${idxToName(idx)}没有四，不是四四禁手<br>`;
         	
         	iHtml += `5.判断 ${idxToName(idx)}是否为三三禁手<br>`;
-        	if (threeCount > 1) {
+        	if (freeThreeCount > 1) {
             	iHtml += `找到三三禁手棋型，继续判断活三，有活四点的才是活三......<br>`;
-            	let freeThreeCount = 0;
-            	while (lineThreeInfos.length + freeThreeCount > 1) {
-                	if (freeThreeCount > 1) break;
+            	let fThreeCount = 0;
+            	while (lineThreeInfos.length + fThreeCount > 1) {
+                	if (fThreeCount > 1) break;
                 	let lineInfo = lineThreeInfos.pop(),
                     	dirName = DIRECTION_NAME[(lineInfo >> 12) & 7],
                     	ps = getFreeFourPoint(idx, arr, lineInfo),
@@ -1856,7 +1858,7 @@ window.engine = (function() {
                     	arr[ps[1]] = 0;
                     	if (!pointInfo) {
                         	iHtml += `${idxToName(ps[1])}是活四点，${dirName}是活三<br>`;
-                        	freeThreeCount++;
+                        	fThreeCount++;
                         	continue;
                     	}
                     	else {
@@ -1869,14 +1871,14 @@ window.engine = (function() {
                     	arr[ps[2]] = 0;
                     	if (!pointInfo) {
                         	iHtml += `${idxToName(ps[2])}是活四点，${dirName}是活三<br>`;
-                        	freeThreeCount++;
+                        	fThreeCount++;
                     	}
                     	else {
                         	iHtml += `${idxToName(ps[2])}是${LINE_NAME[pointInfo]}点，不是活四点，${dirName}没有活四点不是活三<br>`;
                     	}
                 	}
             	}
-            	if (freeThreeCount > 1) {
+            	if (fThreeCount > 1) {
                 	rt = FOUL;
         			foulTypes.push("三三禁手");
                 	iHtml += `找够两个活三，${idxToName(idx)}是三三禁手<br>`;
@@ -1895,13 +1897,13 @@ window.engine = (function() {
         	bCur.boardText = {10: EMOJI_ROUND_FIVE, 16: EMOJI_FOUL}[rt];
     		iHtml += `${idxToName(idx)}是${rt==FIVE?"五连点":foulTypes.join(" + ")}<br>`;
         	bCur.comment += iHtml; //concat comment
-    		depth == 0 && foulCount == 0 && fiveCount + fourCount + threeCount < 2 && pCur.removeChild(bCur);
+    		depth == 0 && foulCount == 0 && fiveCount + fourCount + freeThreeCount + nofreeThreeCount < 2 && pCur.removeChild(bCur);
         }
         else {
         	depth && (bCur.boardText = EMOJI_ROUND_FOUR);
     		iHtml += `${idxToName(idx)}不是禁手<br>`;
         	bCur.comment += iHtml; //concat comment
-        	depth == 0 && foulCount == 0 && fiveCount + fourCount + threeCount < 2 && pCur.removeChild(bCur);
+        	depth == 0 && foulCount == 0 && fiveCount + fourCount + freeThreeCount + nofreeThreeCount < 2 && pCur.removeChild(bCur);
         }
         return rt;
     }

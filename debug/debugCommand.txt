@@ -288,3 +288,19 @@ console.log(s)
  	})
   })
   
+  
+    if (navigator.userAgent.indexOf("iPhone") + 1) {
+    
+    const links = document.getElementsByTagName("link");
+    for(let i = 0; i < links.length; i++){
+  	const link = links[i];
+      const url = link.href.replace(/^https\:\/\/[\.\:0-9a-z ]*\/|^http\:\/\/[\.\:0-9a-z ]*\//, "http://192.168.1.225:8000/");
+  	console.log(url)
+      if (/\.png$|\.ico$/.test(url)) {
+  		link.href = url;
+      }
+      console.info(link.href)
+    }
+    
+    }
+                            

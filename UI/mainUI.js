@@ -514,6 +514,110 @@ window.mainUI = (function() {
 	function getChildsByName(name) {
 		return this.getChilds({ varName: name });
 	}
+	
+	//----------------------------- homeButton ---------------------------------
+	let btnBoard;
+	let themeNames;
+	if (window.parent && !window.parent.fullscreenUI) {
+		const svgRefresh = "./UI/theme/light/arrow-cw-svgrepo-com.svg";
+		const svgTuya = "./UI/theme/light/pen-tool-svgrepo-com.svg";
+		
+		const svgRenju = "./UI/theme/light/contrast-setting-svgrepo-com.svg";
+		const svgDBRead = "./UI/theme/light/alpha-w.svg";
+		const svgEditor = "./UI/theme/light/alpha-k.svg";
+		const svgMakeVCF = "./UI/theme/light/house-svgrepo-com.svg";
+		const svgPuzzle = "./UI/theme/light/question-circle-svgrepo-com.svg";
+		
+		const svgTheme01 = "./UI/theme/light/sun-svgrepo-com.svg";
+		const svgTheme02 = "./UI/theme/light/exposure-2-svgrepo-com.svg";
+		const svgTheme03 = "./UI/theme/light/eye-svgrepo-com.svg";
+		const svgTheme04 = "./UI/theme/light/moon-svgrepo-com.svg";
+		
+		const butWidth = ~~(108 * bodyScale);
+		btnBoard = new ButtonBoard(document.body, (dw - butWidth) / 2, dh - butWidth * 1.5, butWidth, butWidth, 8)
+		btnBoard.board.style.zIndex = "8";
+		const [btnRenju, btnDBRead, btnRenjuEditor, btnMakeVCF] = btnBoard.rightButtons;
+		
+		function toURL(url) {
+			return window.location.href = url;
+		}
+		
+		btnRenju.setText("R");
+		btnDBRead.setText("W");
+		btnRenjuEditor.setText("E");
+		btnMakeVCF.setText("V");
+		
+		btnRenju.setontouchend(() => toURL("renju.html"))
+		btnRenju.setIcons(svgRenju)
+		
+		btnDBRead.setontouchend(() => toURL("dbread.html"))
+		btnDBRead.setIcons(svgDBRead)
+		
+		btnRenjuEditor.setontouchend(() => toURL("renjueditor.html"))
+		btnRenjuEditor.setIcons(svgEditor)
+		
+		btnMakeVCF.setontouchend(() => toURL("index.html"))
+		btnMakeVCF.setIcons(svgMakeVCF)
+		
+		const [btnHome, btnFullscreen, btnTheme, btnRefresh] = btnBoard.leftButtons;
+		
+		btnHome.setText("P");
+		btnFullscreen.setText("F");
+		btnRefresh.setText("O");
+		btnTheme.setText("T");
+		
+		btnHome.setontouchend(() => toURL("puzzle.html"))
+		btnHome.setIcons(svgPuzzle)
+		
+		btnFullscreen.setClickFunctions(() => toURL("tuya.html"))
+		btnFullscreen.setIcons(svgTuya)
+		
+		btnRefresh.setontouchend(() => window.location.reload());
+		btnRefresh.setIcons([svgRefresh])
+		
+		themeNames = ["light", "green", "dark"];
+		btnTheme.setontouchend([() => setTheme.call(mainUI, themeNames[0]), () => setTheme.call(mainUI, themeNames[1]), () => setTheme.call(mainUI, themeNames[2])])
+		btnTheme.setIcons([svgTheme01, svgTheme03, svgTheme04])
+		
+		window.addEventListener("scroll", touchmove, true);
+		window.addEventListener("touchmove", touchmove, true);
+		window.addEventListener("mousemove", touchmove, true);
+		
+		let touchmoveCount = 0;
+		let touchendCount = 0;
+		let lastTime = 0;
+		let timer = null;
+		const defaultDelay = 5000;
+		
+		function reset() {
+			touchmoveCount = 0;
+			touchendCount = 0;
+			lastTime = 0;
+			timer = clearInterval(timer) && null;
+		}
+		
+		function touchmove() {
+			const time = new Date().getTime();
+			time - lastTime < 500 && touchmoveCount++;
+			lastTime = time;
+			!timer && touchmoveCount > 5 && show();
+		}
+		
+		function show(delay = defaultDelay) {
+			lastTime = new Date().getTime();
+			timer = setInterval(() => {
+				new Date().getTime() - lastTime > delay && hide()
+			}, 1000);
+			btnBoard.show()
+		}
+		
+		function hide() {
+			reset();
+			btnBoard.state == 1 && btnBoard.topButtons[0].defaultontouchend();
+			btnBoard.hide();
+		}
+		
+	}
 
 	//----------------------------- class ---------------------------------
 	
@@ -898,6 +1002,13 @@ window.mainUI = (function() {
 		});
 		self["share"] && share.loadTheme(theme["share"]);
 		if (!cancel && window.top.fullscreenUI && (typeof window.top.fullscreenUI.refreshTheme === "function")) (await window.top.fullscreenUI.refreshTheme(theme, themeKey, true));
+		
+		if (!btnBoard) return;
+		const btnTheme = theme["Button"];
+		const btnBoardTheme = JSON.parse(JSON.stringify(theme["fullscreenUI"]["btnBoard"]).replace("fullscreen-alt-svgrepo-com.svg", "pen-tool-svgrepo-com.svg"))
+		btnBoard.loadTheme({ ButtonBoard: theme["ButtonBoard"], btnBoard: btnBoardTheme, Button: btnTheme });
+		btnBoard.leftButtons[2].clickFunctionIndex = (themeNames.indexOf(themeKey) + 1) % themeNames.length;
+		btnBoard.leftButtons[2].show();
 	}
 	
 	async function setTheme(themeKey = defaultTheme, cancel) {
@@ -908,7 +1019,7 @@ window.mainUI = (function() {
 		await refreshTheme.call(this, theme, themeKey, cancel);
 		const preTheme = {};
 		preTheme[themeKey] = theme;
-		localStorage.setItem("themes", preTheme);
+		localStorage.setItem("themes", JSON.stringify(preTheme));
 	}
 	
 	async function loadTheme(cancel) {
