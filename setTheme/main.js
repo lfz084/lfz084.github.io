@@ -141,9 +141,11 @@
             type: "file",
             text: "导入主题",
             change: async function() {
+            	try{
             	const jsonStr = await this.files[0].text();
             	const theme = JSON.parse(jsonStr);
             	theme["body"] && theme["Board"] && theme["Button"] && (themes[themeKey] = theme, refreshTheme());
+            	}catch(e){console.error(e.stack)}
             }
         },
         {

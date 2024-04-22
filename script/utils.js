@@ -12,6 +12,29 @@ async function wait(timeout) {
 
 //------------------------------------------------------------
 
+async function _readFileAsType(file, type = "readAsArrayBuffer") {
+	return new Promise(function(resolve, reject) {
+		let fr = new FileReader();
+		fr.onload = function() {
+			resolve(fr.result)
+		};
+		fr.onerror = function() {
+			reject(fr.error)
+		};
+		fr[type](file);
+	});
+}
+
+Blob.prototype.arrayBuffer = Blob.prototype.arrayBuffer || async function() {
+	return _readFileAsType(this, "readAsArrayBuffer");
+};
+
+Blob.prototype.text = Blob.prototype.text || async function() {
+	return _readFileAsType(this, "readAsText");
+};
+
+//------------------------------------------------------------
+
 /**
  * 当对象属性与 value 想等时， resolve(obj[key])
  * @obj			要判断的对象
