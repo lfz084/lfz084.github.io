@@ -8,10 +8,7 @@
 			progress: "50%",
 			type: "scriptAll",
 			isAsync: false,
-			sources: [[SOURCE_FILES["share"]],
-				[SOURCE_FILES["CheckerBoard"]],
-                [SOURCE_FILES["markLine"]],
-				[SOURCE_FILES["saveFile"]]]
+			sources: [[SOURCE_FILES["CheckerBoard"]]]
          },{
 			progress: "60%",
 			type: "scriptAll",
@@ -33,31 +30,11 @@
 			sources: [[SOURCE_FILES["TypeBuffer"]],
 				[SOURCE_FILES["RenjuTree"]]]
 		}, {
-			progress: "80%",
-			type: "scriptAll",
-			isAsync: false,
-			sources: [[SOURCE_FILES["EvaluatorWebassembly"]],
-                [SOURCE_FILES["EvaluatorJScript"]],
-                [SOURCE_FILES["Evaluator"]],
-                [SOURCE_FILES["engine"]]]
-        }, {
-        	progress: "80%",
-        	type: "scriptAll",
-        	isAsync: false,
-        	sources: [[SOURCE_FILES["gomocalc"]]]
-        }, {
-        	progress: "80%",
-        	type: "scriptAll",
-        	isAsync: false,
-        	sources: [[SOURCE_FILES["jszip"]]]
-        },{
 			progress: "99%",
 			type: "scriptAll",
 			isAsync: false,
 			sources: [[SOURCE_FILES["saveFile_js"]],
-                [SOURCE_FILES["puzzleCoder"]],
-                [SOURCE_FILES["puzzleAI"]],
-				[SOURCE_FILES["dbreadMain"]]]
+				[SOURCE_FILES["renjuConvertMain"]]]
         }
      ];
 })()

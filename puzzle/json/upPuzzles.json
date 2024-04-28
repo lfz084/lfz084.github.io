@@ -20,6 +20,13 @@
 				"puzzle": {
 					"options": "e12f12h12j12k12l11e10h10i10j10"
 				}
+			},
+			{
+				"index": 121,
+				"puzzle": {
+					"comment": "白1做VCF，找出黑棋所有的防点",
+					"labels": ["i6,1"]
+				}
 			}
 		]
 	},

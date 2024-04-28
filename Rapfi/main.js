@@ -1,11 +1,14 @@
 (() => {
+	try{
     "use strict";
     const d = document;
     const dw = d.documentElement.clientWidth;
     const dh = d.documentElement.clientHeight;
 
     const DBREAD_HELP = `DB阅读器使用技巧<br>1.点击棋子悔棋<br>2.双击棋子悔到双击的那一手<br>3.长按棋盘放大、缩小棋盘<br>4.棋谱注解乱码可以选择gbk以外的编码<br>5.棋谱规则和棋盘大小需要设置正确才能正常显示`
-	
+	function wait(timeout) {
+		return new Promise(resolve => setTimeout(resolve, timeout));
+	}
     //-----------------------------------------------------------------------
 
     const buttons = [];
@@ -174,6 +177,15 @@
                 const encoding = ["gbk", "big5", "utf-8"];
                 textDecoder = new TextDecoder(encoding[this.input.value]);
                 game.showBranchNodes();
+            }
+        },
+        {
+            type: "button",
+            text: "输出svg",
+            touchend: async function() {
+                try {
+                	downloadsgf();
+                } catch (e) { console.error(e.stack) }
             }
         },
     ];
@@ -373,8 +385,10 @@
     };
 
     const game = {
+    	filename: "",
         rule: Rule.RENJU,
         cBoard: cBoard,
+        searching: false,
 
         toStart: function(isShowNum) {
         	this.stopThinking();
@@ -436,7 +450,7 @@
             fileInput.value = "";
             const ratio = await game.openDatabass(file);
             if (ratio > 0) {
-            	log(getFileName(path));
+            	log(game.filename);
         		game.toStart();
             	await game.showBranchNodes();
             }
@@ -528,7 +542,8 @@
     		btnRotate90.enabled = true;
     		btnRotateY180.enabled = true;
         },
-        forEveryPosition: async function(param) {
+        forEveryPosition: async function(_param) {
+        this.searching = true;
         try{
         	function compareValue(x, y, node) {
         		const x1 = node.idx % 15;
@@ -548,6 +563,13 @@
         			return compareValue(x, y, lNode) - compareValue(x, y, rNode);
         		})
         	}
+        	const param = {
+        		filterNodes: ()=>{},
+        		callback: ()=>{},
+        		callback2: ()=>{},
+        		condition: ()=>{}
+        	}
+        	Object.assign(param, _param);
         	
         	this.lockBoard();
         	const stack = [];
@@ -556,7 +578,7 @@
         		let nodes = [];
         		let node = null;
         		const rt = await  game.showBranchNodes();
-        		rt && rt.nodes && rt.nodes.map(node => nodes.push({idx: node.idx, label: node.txt}));
+        		rt && rt.nodes && rt.nodes.map(node => nodes.push({idx: node.idx, label: node.txt, color: node.color}));
         		rt && rt.records && rt.records.map(record => nodes.push({idx: record.idx, label: readLabel(record.buffer)}));
         		if (nodes.length) {
         			sortNodes(nodes);
@@ -566,6 +588,7 @@
         			node = nodes.pop();
         		}
         		else {
+        			await param.callback2();
         			cBoard.toPrevious(true);
         			while (stack.length && stack[stack.length-1].length == 0) {
         				stack.pop();
@@ -580,9 +603,10 @@
         	} while(param.condition())
         	this.unlockBoard();
         }catch(e){
-        	console.log(e.stack);
+        	console.error(e.stack);
         	this.unlockBoard();
         }
+        this.searching = false;
         },
         randomPlay: async function() {
         	let MS = [];
@@ -655,6 +679,7 @@
     //------------------------ Events ---------------------------
 
     game.cBoard.stonechange = function() { 
+    	if (game.searching) return;
     	if (btnPlay.checked) {
     		cBoard.cleLb("all");
     	}
@@ -728,6 +753,7 @@
     		const type = file.name.toLowerCase().split(".").pop();
     		await DBClient.closeDatabass();
     		RenjuLib.closeLib();
+    		game.filename = getFileName(path);
     		if (type == "db") {
     			(await oldOpenFile.call(this, fileInput)) > 0 && (this.mode = this.MODE.DATABASS) && (await oldshowBranchNodes.call(this));
     			btnEncoding.enabled = true;
@@ -825,5 +851,61 @@
     }
     checkAI();
 	puzzleAI.processOutput = processOutput;
-    
+	
+	//---------------sgf--------------------------
+	
+	function createSGFStrinc(cBoard = cBoard) {
+		let sgf = "(;GM[1]CA[gb2312]FF[4]AP[ZJRenju]SZ[15]";
+		for (let index = 0; index <= cBoard.MSindex; index++) {
+			const color = index % 2 ? "W" : "B";
+			const x = String.fromCharCode( 97 + cBoard.MS[index] % 15 );
+			const y = String.fromCharCode( 97 + ~~(cBoard.MS[index] / 15) );
+			sgf += `;${color}[${x}${y}]`;
+		}
+		sgf += ")";
+		return sgf
+	}
+	
+	async function downloadsgf() {
+		const MS = cBoard.MS.slice(0, cBoard.MSindex + 1);
+		const oldText = btnPlay.text;
+        btnPlay.checked = false;
+        btnPlay.touchend();
+        btnPlay.setText("停止搜索");
+        try{
+		let count = 0;
+		const zip = new JSZip();
+		await game.forEveryPosition({
+			filterNodes: async(nodes) => nodes.filter(node => !node.color || node.color == "black"),
+			callback: () => {},
+			callback2: async () => {
+				count++;
+				await zip.file(`${count}.sgf`, createSGFStrinc(cBoard));
+			},
+			condition: () => btnPlay.checked
+		});
+			
+		let data = await zip.generateAsync({ type: "blob" }, function updateCallback(metadata) {
+			log("progression: " + metadata.percent.toFixed(2) + " %");
+			if (metadata.currentFile) {
+				log("current file = " + metadata.currentFile);
+			}
+		});
+		log("downloading...")
+		const _filename = (game.filename ? game.filename + "." : "") + "sgf.zip";
+		msg({
+			title: `${count}个局面转成sgf文件\n打包在“${_filename}”\n是否下载文件`,
+			butNum: 2
+		})
+		.then(({butCode}) => butCode==1 && saveFile.save(data, _filename))
+        }catch(e){console.error(e.stack)}
+        btnPlay.checked && btnPlay.touchend();
+        btnPlay.setText(oldText);
+        cBoard.toStart(true);
+        cBoard.MS = MS;
+        while (cBoard.MSindex < cBoard.MS.length - 1) {
+        	cBoard.toNext(true, 100);
+        }
+	}
+}catch(e){alert(e.stack)}
 })()

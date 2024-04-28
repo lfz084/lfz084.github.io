@@ -146,6 +146,9 @@
     "control": "renju/control.js",
     "renjuSources": "renju/sources.js",
     
+    "renjuConvertMain": "renjuConvert/main.js",
+    "renjuConvertSources": "renjuConvert/sources.js",
+    
     "renjueditorMain": "renjueditor/main.js",
     "mypdfjs": "renjueditor/myPDFJS.js",
     "myzip": "renjueditor/myZip.js",

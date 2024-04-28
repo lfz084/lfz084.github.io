@@ -260,7 +260,7 @@
 			function checkColorCode(value) {
 				const reg3 = /^#[A-Fa-f0-9]{3}$/;
 				const reg6 = /^#[A-Fa-f0-9]{6}$/;
-				const codeStr = colorName2colorCode(value).toString();
+				const codeStr = `${colorName2colorCode(value)}`;
 				return reg3.test(codeStr) || reg6.test(codeStr);
 			}
 			const div = document.createElement("div");
