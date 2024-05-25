@@ -1,4 +1,3 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["JFile"] = "v2024.17";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
@@ -75,6 +74,10 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["JFile"] = "v2024.17";
         }
         return rt;
     };*/
+    
+    JFile.prototype.current = function() {
+    	return this.m_current;
+    };
     
     JFile.prototype.seek = function(current) {
         if (current < 0 || current >= this.m_end)

@@ -4,6 +4,16 @@
 }(this, (async function(exports) {
 	try{
 	'use strict';
+	
+	const DEBUG_PUZZLEDATA = false;
+	
+	function log(param, type = "log") {
+		const print = console[type] || console.log;
+		DEBUG_PUZZLEDATA && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`puzzleData.js: ${ param}`);
+	}
+	
+	//--------------------------------------------------------------------------------------
+	
 	const TEMP_TIME = 1;
 	const STORE_NAME = "puzzle";
 	const INDEXNAMES = ["title","progress","json","time","index01","index02","index03","index04","index05","index06","index07","index08","index09","index"];
@@ -180,7 +190,7 @@
 	
 	async function saveProgress(game) {
 		try{
-		console.log("saveProgress");
+		log("saveProgress");
 		if(!game.data || !game.data.key) return;
 		localStorage.setItem("puzzle_progress", `${game.data.time},${game.puzzles.index}`);
 		if (game.state == game.STATE.WIN || game.puzzle.mode == puzzleCoder.MODE.COVER) {
@@ -417,10 +427,10 @@
 		const modes = randomInfo.modes;
 		const data = await puzzleData.getDataByIndex("title", title);
 		if (!data) {
-			console.log(`没有找到${title}`);
+			log(`没有找到${title}`);
 		}
 		else if(data[INDEX.DATE] == new Date().toDateString()) {
-			console.log(`今天已有${title}`);
+			log(`今天已有${title}`);
 		}
 		else {
 			const puzzles = JSON.parse(data.json);
@@ -437,7 +447,7 @@
 			data[INDEX.INDEX] = 0;
 			data[INDEX.DATE] = new Date().toDateString();
 			await puzzleData.putData(data);
-			console.log(`成功生成${title}`);
+			log(`成功生成${title}`);
 		}
 	}
 	
@@ -449,7 +459,7 @@
 				puzzle.level <= maxLevel ? puzzles[key].splice(0, 0, puzzle) : puzzles[key].push(puzzle);
 			}
 		}
-		console.log(new Date().getTime())
+		log(new Date().getTime())
 		const times = [];
 		let donePuzzlesCount = 0;
 		await puzzleData.openCursorByIndex("time", cursor => {
@@ -461,7 +471,7 @@
 		})
 		const maxLevel = Math.min(5, 3 + parseInt(5 * donePuzzlesCount / 5000));
 		randomArray(times, 31);
-		console.log(`maxLevel: ${maxLevel}`)
+		log(`maxLevel: ${maxLevel}`)
 		
 		const newPuzzlesLower = {
 			32: [],
@@ -587,14 +597,14 @@
 			randomArray(donePuzzles[key], 31);
 			newPuzzlesLower[key] = newPuzzlesLower[key].concat(newPuzzlesUp[key], donePuzzles[key]);
 		});
-		console.log(newPuzzlesLower);
-		//console.log(newPuzzlesUp);
-		//console.log(donePuzzles);
-		console.log(puzzleInfo);
+		log(newPuzzlesLower);
+		log(newPuzzlesUp);
+		log(donePuzzles);
+		log(puzzleInfo);
 		for (let i = 0; i < ramdomPuzzles.length; i++) {
 			await saveRandomPuzzlesJSON(newPuzzlesLower, ramdomPuzzles[i], i);
 		}
-		console.log(new Date().getTime())
+		log(new Date().getTime())
 		}catch(e){console.error(e.stack)}
 	}
 	

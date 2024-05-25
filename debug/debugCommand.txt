@@ -303,4 +303,199 @@ console.log(s)
     }
     
     }
-                            
+    
+        var myInit = {
+                cache: "no-store", //不使用缓存
+                mode: 'cors' //支持跨域访问
+        };
+        fetch("https://lfz084.gitee.io/renju/sw.js", myInit)
+        .then(r => {
+        	console.log(r.ok);
+        	r.text();
+        })
+        .then(console.log);
+        
+        
+        
+            const scriptURL = 'sw.js';
+            async function checkScriptURL() {
+                	return new Promise((resolve => {
+                		fetch(scriptURL + "?cache=onlyNet", {
+                			cache: "no-store", //不使用缓存
+                			mode: 'cors' //支持跨域访问
+                		})
+                		.then(response => {
+                			resolve(response.ok);
+                		})
+                		setTimeout(()=>resolve(false), 15 * 1000);
+                	}))
+                }
+            checkScriptURL().then(console.log);
+            
+     localStorage.setItem("delayCheckVersion", 0)
+     
+     
+     /^https\:\/\/[\.\:0-9a-z ]*\/renju\-beta\/|^https\:\/\/[\.\:0-9a-z ]*\/renju\/|^https\:\/\/[\.\:0-9a-z ]*\/|^http\:\/\/[\.\:0-9a-z ]*\//i
+     
+     /^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/renju\\-beta\\/|^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/renju\\/|^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/|^http\\:\\/\\/[\\.\\:0-9a-z ]*\\//i
+        
+     new RegExp("^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/renju\\-beta\\/|^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/renju\\/|^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/|^http\\:\\/\\/[\\.\\:0-9a-z ]*\\/", "i")
+     
+     
+     const HOME = new RegExp("^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/renju\\-beta\\/|^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/renju\\/|^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/|^http\\:\\/\\/[\\.\\:0-9a-z ]*\\/", "i").exec(location.href8);
+        
+     var response_err = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport"content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"><title>404 error</title><style>body{padding:0;margin:0}#mainview{position:fixed;top:0px;left:0px;width:500px;height:500px;border-radius:50px;background:#ddd;text-align:center}#info{position:absolute;top:10px;width:500px;height:250px;text-align:center}#link{position:absolute;top:260px;width:500px;height:250px;text-align:center}#refresh{font-size:70px;border-radius:50%;border:0px}#refresh:hover{color:#885588;opacity:0.38}h1{font-size:25px;font-weight:blod;line-height:1.5}a{color:#663366;font-size:26px;font-weight:blod;text-decoration:underline;line-height:1.8;cursor:pointer}a:link{color:#663366;text-decoration:underline}a:visited{color:#552255;text-decoration:underline}a:hover{color:#885588;text-decoration:underline}a:active{color:blue;text-decoration:underline}</style></head><body><script>const HOME=new RegExp("^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/renju\\-beta\\/|^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/renju\\/|^https\\:\\/\\/[\\.\\:0-9a-z ]*\\/|^http\\:\\/\\/[\\.\\:0-9a-z ]*\\/","i").exec(location.href8);async function postVersion(){return new Promise(resolve=>{if(navigator.serviceWorker&&navigator.serviceWorker.controller){let timer;const currentVersion=localStorage.getItem("RENJU_APP_VERSION");function onmessage(event){const MSG=event.data;if(typeof MSG=="object"&&MSG.cmd=="NEW_VERSION"){rm(MSG.versionChange)}}function rm(rt){navigator.serviceWorker.removeEventListener("message",onmessage);clearTimeout(timer);resolve(rt)}!currentVersion&&resolve(false);navigator.serviceWorker.addEventListener("message",onmessage,true);navigator.serviceWorker.controller.postMessage({cmd:"NEW_VERSION",version:currentVersion});timer=setTimeout(()=>{rm(false)},1500)}else{resolve(false)}})}async function ping(url){return new Promise(resolve=>{const time=new Date().getTime();setTimeout(()=>resolve(-1),15*1000);fetch(url.split("?=")[0].split("#")[0]+"?cache=onlyNet").then(response=>response.ok?resolve(new Date().getTime()-time):resolve(-1))})}async function checkLink(){document.getElementById("log").innerHTML="正在测试网络链接......";return ping(HOME+"index.html").then(time=>{if(time+1){document.getElementById("log").innerHTML="没有找到你要打开的页面"}else{document.getElementById("log").innerHTML="❌网络链接异常"}})}function clk(url){window.top.open(url,"_self")}postVersion(n=>n&&window.location.reload());document.body.onload=()=>{const gw=Math.min(document.documentElement.clientWidth,document.documentElement.clientHeight);Object.assign(document.getElementById("mainview").style,{left:(document.documentElement.clientWidth-500)\/2+"px",top:(document.documentElement.clientHeight-500)\/2+"px",transform:"scale("+gw\/600+")"})checkLink();document.getElementById("refresh").onclick=async()=>{window.location.reload()};document.getElementById("home").onclick=()=>{clk(HOME+"index.html")};document.getElementById("gitee").onclick=()=>{clk("https://lfz084.gitee.io/renju/")};document.getElementById("github").onclick=()=>{clk("https://lfz084.github.io/")};document.getElementById("renjumap").onclick=()=>{clk("https://renjumap.com/renjutool/index.html")};document.getElementById("url").innerHTML=window.location.href}</script><div id="mainview"><div id="info"><h1 id="url"></h1><h1 id="log"></h1></br><button id="refresh">🔄</button></div><div id="link"><br><a id="home">网站首页</a></br><a id="gitee">国内网站gitee</a></br><a id="github">国外网站github</a></br><a id="renjumap">镜像站renjumap</a></br></div></div></body></html>`;
+	const myHeaders = { "Content-Type": 'text/html; charset=utf-8' };
+	    	const init = {
+	    		status: 200,
+	    		statusText: "OK",
+	    		headers: myHeaders
+	    	}
+	  new Response(response_err, init).text(console.log)
+	  
+	  localStorage.setItem("fullscreenCancel",true)
+	  fetch("404.html").then(r=>r.text()).then(text=>msg({title: text}))
+	  
+	  
+	  
+	async function setItem(key, value) {
+		return new Promise(resolve => {
+			try {
+			key = key.toString();
+			value = value.toString();
+	    	const myHeaders = { "Content-Type": 'text/html; charset=utf-8' };
+			const init = { status: 200, statusText: "OK", headers: myHeaders };
+    		caches.open("settings").then(cache => cache.put(new Request(key), new Response(value, init))).then(() => resolve(value)).catch(() => resolve());
+    		}catch(e){resolve()}
+    	});
+    }
+    
+	async function getItem(key) {
+		return new Promise(resolve => {
+			try {
+			key = key.toString();
+			caches.open("settings").then(cache => cache.match(new Request(key))).then(response => response.text()).then(value => resolve(value)).catch(() => resolve());
+		    }catch(e){resolve()}
+		 });
+	}
+	
+	async function removeItem(key) {
+		return new Promise(resolve => {
+			try {
+				key = key.toString();
+				caches.open("settings").then(cache => cache.delete(new Request(key))).then(() => resolve(true)).catch(() => resolve(false));
+			}catch(e){resolve(false)}
+		});
+	}
+    
+    const key = "version";
+    const value = window;
+    setItem(key, value).then(() => getItem(key)).then(console.log).then(() => removeItem(key)).then(console.log).catch(console.error);
+    
+    const url = "sw.js?=onlyNet";
+    const rt = /\?cache\=onlyNet$|\?cache\=onlyCache$|\?cache\=netFirst$|\?cache\=cacheFirst$/.exec(url);
+    const key = null == rt ? "default" : rt[0];
+    const getResponse = {
+    	"?cache=onlyNet": "myFetch",
+    	"?cache=onlyCache": "loadCache",
+    	"?cache=netFirst": "netFirst",
+    	"?cache=cacheFirst": "cacheFirst",
+    	"default": "cacheFirst"
+    }[key];
+    getResponse
+    
+    const htmlScript = '<script>\n  var _hmt=_hmt||[];\n  (function(){\n    var hm=document.createElement("script");\n    hm.src="https://hm.baidu.com/hm.js?c17b8a02edb4aff101e8b42ed01aca1b";\n    var s=document.getElementsByTagName("script")[0];\n    s.parentNode.insertBefore(hm,s)\n  })();\n</script>'
+    upData.fetchTXT("index.html").then(html => html.replace(new RegExp("\<head\>", "i"),"<head>\n" + htmlScript + "\n")).then(console.log)
+    
+    fetch("index.html").then(response => console.log(response.type))
+    
+    
+    
+        		
+    async function a(b) {
+    	return Promise.resolve()
+    		.then(() => b ? Promise.resolve() : Promise.reject())
+    		.then(() => console.log(b))
+    		.catch(() => console.error(1))
+    		.catch(() => console.error(2))
+    		.then(() => console.log(3))
+    		.then(() => console.log(4))
+    		.catch(() => console.error(5))
+    		.catch(() => console.error(6))
+    }
+    
+    a(true).then(()=>console.log(7)).catch(()=>console.error(8))
+    
+    fetch("upData.html").then(r=>(console.log(r.ok),r)).then(r=>r.text()).then(console.log)
+    
+    
+    caches.open("currentCache").then(cache=>cache.match("Version/SOURCE_FILES.json")).then(r=>r.json()).then(console.log).catch(console.error)
+    
+    serviceWorker.postMessage({cmd:"getVersionInfos",args:"io"}).then(console.log)
+    
+    caches.open("currentCache").then(cache=>cache.matchAll()).then(responses =>responses.map(response => response.url)).then(console.log)
+        			})
+        			
+    ("<br><br>as<br>\nas<bR>\n<br>").replace(/^(\<br\>|\n)+|(\<br\>|\n)+$/ig, 556)
+    
+    caches.open("currentCache")
+        	.then(cache=>cache.matchAll())
+        	.then(responses => responses.map(response=>console.log(decodeURIComponent(response.url))))
+   
+   caches.open("localCache")
+          	.then(cache=>Promise.all([cache, cache.keys()]))
+          	.then(([cache, keys])=>keys.map(key=>cache.match(key).then(r=>console.log([key, r.url]))))
+          	
+    
+    async function copyCache(targetCacheKey, sourceCacheKey) {
+    	return Promise.all([caches.open(targetCacheKey), caches.open(sourceCacheKey)])
+		.then(([targetCache, sourceCache]) => {
+			return sourceCache.keys().then(requests => {
+				const ps = requests.map(request => sourceCache.match(request).then(response => targetCache.put(request, response)));
+				return Promise.all(ps);
+			})
+		})
+		.then(() => true)
+		.catch(()=> false)
+	}
+	
+	
+			copyCache("temp", "currentCache")
+			.then(console.log)
+			.then(() => upData.logCaches())
+			.then(console.log)
+			.catch(console.error)
+			
+
+try{
+async function queue(fun, paramQueue = []) {
+    	return new Promise((resolve, reject) => {
+    		function next() {
+    			const args = Array.isArray(paramQueue[index++]) ? paramQueue[index++] : [paramQueue[index++]];
+    			if (index <= paramQueue.length) {
+    				Promise.resolve().then(() => fun(...args)).then(next).catch(reject)
+    			}
+    			else resolve()
+    		}
+    		let index = 0;
+    		next()
+    	})
+    }
+
+async function copyCache(targetCacheKey, sourceCacheKey) {
+    	return Promise.all([caches.open(targetCacheKey), caches.open(sourceCacheKey)])
+    		.then(([targetCache, sourceCache]) => {
+    			return sourceCache.keys().then(requests => {
+    				return queue(request => {
+    					console.log(request && request.url)
+    					return sourceCache.match(request).then(response => targetCache.put(request, response))
+    				}, requests)
+    			})
+    		})
+    		.then(() => true)
+    		.catch(e => console.error(e&&e.stack||e))
+    }
+    
+    
+copyCache("log","currentCache").then(console.log).catch(console.error)
+}catch(e){alert(e&&e.stack||e)}

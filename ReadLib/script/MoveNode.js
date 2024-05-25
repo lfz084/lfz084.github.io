@@ -1,4 +1,3 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["MoveNode"] = "v2024.17";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {

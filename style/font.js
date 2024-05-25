@@ -1,18 +1,6 @@
 // javaScript load fonts
 
 const fonts = [{
-            family: "mHeiTi",
-            url: "style/font/NotoSansSC-Medium.subset.ttf",
-            descriptors: { weight: "normal" }
-        }, {
-            family: "mHeiTi",
-            url: "style/font/NotoSansSC-Bold.subset.ttf",
-            descriptors: { weight: "bold" }
-        }, {
-            family: "mHeiTi",
-            url: "style/font/NotoSansSC-Black.subset.ttf",
-            descriptors: { weight: "900" }
-        }, {
             family: "Roboto",
             url: "style/font/NotoSans-Medium.subset.ttf",
             descriptors: { weight: "normal" }
@@ -25,6 +13,18 @@ const fonts = [{
             url: "style/font/NotoSans-Black.subset.ttf",
             descriptors: { weight: "900" }
         }, {
+        	family: "mHeiTi",
+        	url: "style/font/NotoSansSC-Medium.subset.ttf",
+        	descriptors: { weight: "normal" }
+        }, {
+        	family: "mHeiTi",
+        	url: "style/font/NotoSansSC-Bold.subset.ttf",
+        	descriptors: { weight: "bold" }
+        }, {
+        	family: "mHeiTi",
+        	url: "style/font/NotoSansSC-Black.subset.ttf",
+        	descriptors: { weight: "900" }
+        },{
             family: "emjFont",
             url:  "style/font/SourceHanSansCN-Medium.subset.ttf",
             descriptors: { weight: "normal" }

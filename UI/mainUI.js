@@ -3,7 +3,13 @@
 
 window.mainUI = (function() {
 	'use strict';
-	const debug = 0
+	const debug = 0;
+	const DEBUG_MAINUI = false;
+	
+	function log(param, type = "log") {
+		const print = console[type] || console.log;
+		DEBUG_MAINUI && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`[mainUI.js]  ${ param}`);
+	}
 
 	//--------------------------- 设置主界面框架，调整窗口比例 --------------------------------------------------
 
@@ -309,12 +315,12 @@ window.mainUI = (function() {
 	const iphoneCancelClick = (() => {
     	let isCancelClick = false;
     	const iPhone = !!(navigator.userAgent.indexOf("iPhone") + 1);
-    	bodyDiv.addEventListener("contextmenu", () => { isCancelClick = iPhone; console.log("contextmenu") }, true);
-    	bodyDiv.addEventListener("touchend", () => { setTimeout(() => { isCancelClick = false }, 250); console.log("touchend") }, true);
+    	bodyDiv.addEventListener("contextmenu", () => { isCancelClick = iPhone; log("contextmenu") }, true);
+    	bodyDiv.addEventListener("touchend", () => { setTimeout(() => { isCancelClick = false }, 250); log("touchend") }, true);
     	return {
         	isCancel: () => {
             	setTimeout(() => { isCancelClick = false }, 100);
-            	console.log(`isCancelClick === ${isCancelClick}`)
+            	log(`isCancelClick === ${isCancelClick}`)
             	return isCancelClick;
         	}
     	}
@@ -518,7 +524,7 @@ window.mainUI = (function() {
 	//----------------------------- homeButton ---------------------------------
 	let btnBoard;
 	let themeNames;
-	if (window.parent && !window.parent.fullscreenUI) {
+	if (window.top && !window.top.fullscreenUI) {
 		const svgRefresh = "./UI/theme/light/arrow-cw-svgrepo-com.svg";
 		const svgTuya = "./UI/theme/light/pen-tool-svgrepo-com.svg";
 		
@@ -623,7 +629,7 @@ window.mainUI = (function() {
 	
 	function removeChildsAndNode(node) {
 		[...node.children].map(child => removeChildsAndNode(child));
-		//console.log(`remove: ${node.innerHTML}`);
+		log(`remove: ${node.innerHTML}`);
 		node.remove();
 	}
 	
@@ -691,7 +697,7 @@ window.mainUI = (function() {
 	}
 	
 	viewElem.prototype.loadTheme = function(theme) {
-		//console.info(`loadTheme: ${this.constructor.name}`)
+		log(`loadTheme: ${this.constructor.name}`, "info")
 		this.style(theme);
 	}
 
@@ -1091,12 +1097,14 @@ window.mainUI = (function() {
 
 	return exports;
 })()
-
+/*
 // 百度统计
-var _hmt = _hmt || [];
-window.location.href.indexOf("http://") == -1 && (function() {
+window._hmt = _hmt || [];
+//window.location.href.indexOf("http://") == -1 && 
+(function() {
 	var hm = document.createElement("script");
 	hm.src = "https://hm.baidu.com/hm.js?c17b8a02edb4aff101e8b42ed01aca1b";
 	var s = document.getElementsByTagName("script")[0]; 
 	s.parentNode.insertBefore(hm, s);
 })();
+*/

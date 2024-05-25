@@ -1,6 +1,4 @@
-"use strict"
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["work_ReadLib"] = "v2024.17";
-
+"use strict";
 if ("importScripts" in self) {
     self.importScripts(
         "../../script/IntervalPost.js",

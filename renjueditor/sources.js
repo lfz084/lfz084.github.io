@@ -1,7 +1,7 @@
 "use strict";
 
 (async () => {
-	window.SOURCE_FILES = await loadJSON("Version/SOURCE_FILES.json");
+	window.SOURCE_FILES = (await loadJSON("Version/SOURCE_FILES.json")).files;
 
 	window.appSources = [
 		{

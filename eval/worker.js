@@ -1,12 +1,17 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["worker"] = "v2024.17";
+//if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["worker"] = "2024.23206";
 /Worker/.exec(`${self}`) && (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
     'use strict';
     //console.log(exports);
 
-    if ("importScripts" in self) 
-        self.importScripts('../emoji/emoji.js', `EvaluatorWebassembly.js`, `EvaluatorJScript.js`, `Evaluator.js`);
+    if ("importScripts" in self) {
+    	if (true && "WebAssembly" in self && typeof WebAssembly.instantiate == "function")
+        	self.importScripts('../emoji/emoji.js', `EvaluatorWebassembly.js`, `Evaluator.js`)
+        else
+        	self.importScripts('../emoji/emoji.js', `EvaluatorJScript.js`, `Evaluator.js`)
+    }
+    else new Error(`"importScripts" not found`)
 
     let isWorkerBusy = false;
     const MSG_RESOLVE = { cmd: "resolve" };

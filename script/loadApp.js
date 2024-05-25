@@ -1,17 +1,18 @@
 window.SCRIPT_VERSIONS = [];
-self.SCRIPT_VERSIONS["renju"] = "v2024.17";
+//self.SCRIPT_VERSIONS["renju"] = "2024.23206";
 window.loadApp = (() => { // 按顺序加载应用
+try{
     "use strict";
     window.DEBUG = true;
-    const TEST_LOADAPP = true;
+    const DEBUG_LOADAPP = true;
 
     //--------------------- log -----------------------
 
     function log(param, type = "log") {
         const print = console[type] || console.log;
-        if (TEST_LOADAPP && window.DEBUG) {
+    	if (DEBUG_LOADAPP && window.DEBUG && (window.vConsole || window.parent.vConsole)) {
             const MSG = `${param}`;
-            print(`[loadApp.js]\n>>  ${MSG}`);
+            print(`[loadApp.js]  ${MSG}`);
             "mlog" in window && typeof mlog == "function" && mlog(MSG);
         }
     }
@@ -35,15 +36,15 @@ window.loadApp = (() => { // 按顺序加载应用
         console.trace("trace")
     }
 
-    
-
     function logTestBrowser() {
         let Msg = "";
         Msg += `__________ logTestBrowser ___________\n\n `;
-        Msg += `Worker: ${"Worker" in window}\n`;
-        Msg += `caches: ${"caches" in window}\n`;
-        Msg += `serviceWorker: ${"serviceWorker" in navigator}\n`;
+        Msg += `fullscreenEnabled: ${document.fullscreenEnabled}\n`;
         Msg += `localStorage: ${"localStorage" in window}\n`;
+        Msg += `caches: ${"caches" in window}\n`;
+        Msg += `Worker: ${"Worker" in window}\n`;
+        Msg += `serviceWorker: ${"serviceWorker" in navigator}\n`;
+        Msg += `indexedDB: ${"indexedDB" in window}\n`;
         Msg += `msSaveOrOpenBlob in navigator: ${"msSaveOrOpenBlob" in navigator}\n`;
         Msg += `download in HTMLAnchorElement.prototype: ${"download"  in HTMLAnchorElement.prototype}\n`;
         Msg += `_____________________\n\n `;
@@ -57,14 +58,19 @@ window.loadApp = (() => { // 按顺序加载应用
     window.d = document;
     window.dw = d.documentElement.clientWidth;
     window.dh = d.documentElement.clientHeight;
-    const isTopWindow = window === window.top;
-	const fullscreenEnabled = document.fullscreenEnabled && isTopWindow && !localStorage.getItem("fullscreenCancel");
-		
-    
     window.vConsole = null; // 调试工具
     window.cBoard = null; //棋盘对象
-
-    window.alert = function(name) { //更改默认标题
+    
+    const isTopWindow = window === window.parent;
+	const fullscreenEnabled = true && document.fullscreenEnabled && isTopWindow && !localStorage.getItem("fullscreenCancel");
+	const openVconsoleSwitch = {
+    		FAST_SMALL: 1,
+    		DELAY_LARGE: 2,
+    		LAST_LARGE: 3
+    	}
+    const vconsoleSwitch = true && openVconsoleSwitch.FAST_SMALL || localStorage.getItem("debug");
+    
+	window.alert = function(name) { //更改默认标题
         const IFRAME = document.createElement('IFRAME');
         IFRAME.style.display = 'none';
         IFRAME.setAttribute('src', 'data:text/plain,');
@@ -75,13 +81,16 @@ window.loadApp = (() => { // 按顺序加载应用
     
     window.fullscreenCancel = function(){localStorage.setItem("fullscreenCancel", "true")}
     
-    
-    window.openVconsole = function (open) {
-    	const IS_DEBUG = open ? "true" : localStorage.getItem("debug");
-    	if (isTopWindow && IS_DEBUG == "true") {
-    		localStorage.setItem("debug", true);
-    		if (vConsole == null) vConsole = new VConsole();
-    		console.log(new Array(128).fill("---- reset vConsole touch ----").join("\n"))
+    window.openVconsole = async function (debugSwitch) {
+    	if (isTopWindow && (debugSwitch || vconsoleSwitch)) {
+    		!("VConsole" in window) && (await loadScript("debug/vconsole.min.js"));
+    		debugSwitch && localStorage.setItem("debug", debugSwitch);
+    		if (vConsole == null) {
+    			vConsole = new VConsole();
+    			console.log(`open vConsole time: ${new Date().getTime()}`);
+    		}
+    		else console.log("skip open vConsole");
+    		"fullscreenUI" in window && (fullscreenUI.contentWindow.console = fullscreenUI.contentWindow.parent.console);
     		return vConsole;
     	}
     }
@@ -89,25 +98,50 @@ window.loadApp = (() => { // 按顺序加载应用
     window.closeVconsole = function () {
     	if (vConsole) {
 			vConsole.destroy();
-			localStorage.setItem("debug", false);
+			localStorage.removeItem("debug");
 		}
 		vConsole = null;
     }
 
-    window.addEventListener("error", function(err) {
-        log(err.stack || err.message || err, "error");
-        //alert(err.Stack || err.message || err);
+    window.addEventListener("error", function(event) {
+    	log(event.message || event, "error");
     })
+    
+    function onerror(err) {
+    	const ASK = `❌加载过程出现了错误...\n${err && err.stack || err}\n\n`;
+    	const PS = `是否重置数据\n\n`;
+    	if (false && (window.vConsole || window.parent.vConsole || window["fullscreenUI"] && fullscreenUI.contentWindow.vConsole)) {
+    		console.error(ASK);
+    		setTimeout(() => {
+    			"caches" in self && caches.open("log").then(cache => cache.match("log")).then(response => response.text()).then(console.log)
+    		}, 6000)
+    	}
+    	else {
+    		const numTryReload = 5;
+    		let reloadCount = localStorage.getItem("reloadCount") * 1 || 0;
+    		localStorage.setItem("reloadCount", ++reloadCount);
+    		reloadCount > numTryReload && localStorage.removeItem("reloadCount");
+    		if (reloadCount > numTryReload && confirm(ASK + PS)) {
+    			window.location.href = "upData.html";
+    		}
+    		else {
+    			window.mlog && mlog("准备刷新页面...");
+    			window.loadAnimation && loadAnimation.text("准备刷新页面...");
+    			window.reloadApp && window.reloadApp() || window.top.location.reload();
+    		}
+    	}
+    }
 
     const BUT = document.createElement("div");
     BUT.setAttribute("id", "mlog");
     document.body.appendChild(BUT);
 
     function removeMlog() {
-        if (BUT && BUT.parentNode) BUT.parentNode.removeChild(BUT);
+        BUT && BUT.parentNode && BUT.parentNode.removeChild(BUT);
+        BUT && BUT.remove();
         window.mlog = undefined;
     }
-
+    
     window.mlog = (function() {
         let timer;
         return function(message, type = "log") {
@@ -126,14 +160,13 @@ window.loadApp = (() => { // 按顺序加载应用
     })()
 
     window.reloadApp = async function(codeURL) {
-    	let reloadCount = localStorage.getItem("reloadCount") * 1 || 0;
-        localStorage.setItem("reloadCount", ++reloadCount);
-        const url = window.location.href.split("?")[0] + `?v=${new Date().getTime()}${codeURL ? "#" + codeURL : ""}`
-        reloadCount > 16 && (localStorage.removeItem("reloadCount"),  window.upData && (await upData.resetApp()));
-        window.location.href = url;
+    	const timestamp = "navigator" in self && navigator.serviceWorker && navigator.serviceWorker.controller && ("?v=" + parseInt(new Date().getTime()/1000)) || "";
+    	const url = window.location.href.split("?")[0].split("#")[0] + `${timestamp}${codeURL ? "#" + codeURL : ""}`
+        window.top.location.href = url;
+        return new Promise(resolve => setTimeout(resolve, 30 * 1000));
     }
 
-    window.codeURL = window.location.href.split(/#/)[1] || "";
+    window.codeURL = window.location.href.split("#").pop().split("?")[0] || "";
 
     function initNoSleep() { //设置防休眠
         let noSleep;
@@ -164,16 +197,16 @@ window.loadApp = (() => { // 按顺序加载应用
 
 	document.body.onload = async function load() {
     try {
-    	window.console = window.top.console;
-    	if (isTopWindow) {
-    		await loadScript("debug/vconsole.min.js");
-    	}
-    	openVconsole();
-    	console.info(`isTopWindow: ${isTopWindow}`)
-    	console.info(`fullscreenEnabled: ${fullscreenEnabled}`)
-    	console.info(logTestBrowser());
+    	window.console = window.parent.console;
     	
-        window.SOURCE_FILES = window.SOURCE_FILES || await loadJSON("Version/SOURCE_FILES.json");
+    	vconsoleSwitch == openVconsoleSwitch.FAST_SMALL && isTopWindow && (await openVconsole());
+    	vconsoleSwitch == openVconsoleSwitch.DELAY_LARGE && !fullscreenEnabled && (await window.parent.openVconsole());
+		
+		const cacheKeys = "caches" in self && [...(await caches.keys())] || [];
+		"caches" in self && console.info(`caches: [${cacheKeys}]`);
+		!fullscreenEnabled && console.info(logTestBrowser());
+    	
+    	window.SOURCE_FILES = window.SOURCE_FILES || (await loadJSON("Version/SOURCE_FILES.json")).files;
         window.UPDATA_INFO = await loadJSON("Version/UPDATA_INFO.json");
 		
 		const sources = window.appSources;
@@ -184,13 +217,6 @@ window.loadApp = (() => { // 按顺序加载应用
 				isAsync: true,
 				sources: [[SOURCE_FILES["loaders"]],
 				[SOURCE_FILES["fullscreen"]]]
-			},{
-			 	progress: "1%",
-			 	type: "fontAll",
-			 	isAsync: true,
-			 	sources: [[SOURCE_FILES["enMedium_ttf"]],
-				[SOURCE_FILES["enBold_ttf"]],
-				[SOURCE_FILES["enHeavy_ttf"]]]
 			},{
 			 	progress: "2%",
 				type: "scriptAll",
@@ -207,20 +233,6 @@ window.loadApp = (() => { // 按顺序加载应用
 				isAsync: true,
 				sources: [[SOURCE_FILES["loaders"]],
 				[SOURCE_FILES["main"]]]
-			}, {
-				progress: "5%",
-				type: "fontAll",
-				isAsync: true,
-				sources: [[SOURCE_FILES["enMedium_ttf"]],
-				[SOURCE_FILES["enBold_ttf"]],
-				[SOURCE_FILES["enHeavy_ttf"]],
-				[SOURCE_FILES["cnMedium_ttf"]],
-				[SOURCE_FILES["cnBold_ttf"]],
-				[SOURCE_FILES["cnHeavy_ttf"]],
-				[SOURCE_FILES["emjMedium_ttf"]],
-				[SOURCE_FILES["emjBold_ttf"]],
-				[SOURCE_FILES["emjHeavy_ttf"]],
-				[SOURCE_FILES["Symbola_ttf"]]]
 			},{
 				progress: "25%",
 				type: "scriptAll",
@@ -235,8 +247,10 @@ window.loadApp = (() => { // 按顺序加载应用
                 [SOURCE_FILES["msgbox"]],
                 [SOURCE_FILES["mainUI"]]]
 			}];
-        
+			
+        mlog(`url: ${window.location.href}`)
         mlog(`body onload`)
+        
         await loadScriptAll([
         	[SOURCE_FILES["loadAnimation"]],
         	[SOURCE_FILES["upData"]],
@@ -244,64 +258,59 @@ window.loadApp = (() => { // 按顺序加载应用
         	[SOURCE_FILES["Viewport"]]
     	], false)
     	
-    	await upData.checkAppVersion();
-        mlog("removeOldAppCache ......");
-        await upData.removeOldAppCache();
-        
-        if (window.location.href.indexOf("http://") > -1) {
+        if (false && window.location.href.indexOf("http://") > -1) {
         	mlog("removeServiceWorker ......");
         	await serviceWorker.removeServiceWorker();
         }
-    	else {
+    	else if(isTopWindow) {
         	mlog("registerServiceWorker ......");
         	await serviceWorker.registerServiceWorker();
-        	mlog("postVersion ......");
-        	await upData.postVersion();
     	}
     	
-        mlog("upData CacheFiles ......");
-        const urls = Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key]);
-        await upData.saveCacheFiles(urls, upData.currentVersion)
+    	if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        	mlog("upData.refreshVersionInfos ......");
+        	await upData.refreshVersionInfos();
+    	}
         
         mlog(`loading ${fullscreenEnabled ? "fullscreenUI" : "mainUI"}......`);
         await loadSources(uiSources);
         
+        !isTopWindow && window.parent.fullscreenUI && window.parent.fullscreenUI.viewport.resize();
+    	!isTopWindow && setTimeout(() => vconsoleSwitch == openVconsoleSwitch.FAST_SMALL && window.parent.fullscreenUI && window.parent.fullscreenUI.viewport.userScalable(), 1500);
+        
         if ("fullscreenUI" in self) {
         	mlog(`fullscreenUI.src = ${window.location.href}`, "warn")
         	fullscreenUI.src = window.location.href;
+        	vconsoleSwitch == openVconsoleSwitch.FAST_SMALL && fullscreenUI.viewport.userScalable();
         	return;
         }
         
         await loadSources(sources);
-        localStorage.removeItem("reloadCount");
         loadAnimation.lock(false);
         loadAnimation.close();
         
-        removeMlog();
-        initNoSleep();
-        window.DEBUG = true;
+        !fullscreenEnabled && initNoSleep();
         window.jsPDF = window.jspdf && window.jspdf.jsPDF;
          
-        upData.saveAppVersion(upData.currentVersion);
-        const str = upData.logNewVersionInfo();
+        const str = upData.logUpDataCompleted();
     	if (str) { //更新已经完成，弹窗提示
-    		str.indexOf(`\n`) == -1 ? warn(str) : msg({
-                	text: str,
-                	butNum: 1,
-                	lineNum: 10,
-                	textAlign: "left",
-                	enterTXT: "关闭",
-                	callEnter: () => {},
-                	callCancel: () => { window.open("./help/renjuhelp/versionHistory.html", "helpWindow") }
-        	})
+    		upData.saveAppVersion(upData.currentVersion);
+        	warn("摆棋小工具更新完成")
         }
-        console.info(`logCaches`)
-        console.info(await upData.logCaches(Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key])));
-        console.info(upData.logVersions());
-    }catch(err) {
-    	const ASK = `❌加载过程出现了错误...\n${err && err.stack}\n\n`;
-    	const PS = `是否重置数据\n\n`;
-    	//confirm(ASK + PS) ? window.location.href = "upData.html" : 	window.reloadApp();
+        
+        const logCaches = !fullscreenEnabled && (window.vConsole || window.parent.vConsole) && (await upData.logCaches(Object.keys(SOURCE_FILES).map(key => SOURCE_FILES[key])));
+        logCaches && console.info(upData.logVersions());
+        logCaches && console.info(logCaches);
+        
+    	vconsoleSwitch == openVconsoleSwitch.LAST_LARGE && !fullscreenEnabled && (await window.parent.openVconsole());
+    	serviceWorker.postMessage({cmd: "postDelayMessages"});
+    	
+    	(window.vConsole || window.parent.vConsole) && (vconsoleSwitch == openVconsoleSwitch.FAST_SMALL || isTopWindow) && !fullscreenEnabled && mainUI.viewport.userScalable()
+        //window["mainUI"] && upData.searchUpdate();
+        
+        removeMlog();
+        localStorage.removeItem("reloadCount");
+    }catch(err) { onerror(err)}
     }
-    }
+}catch(err) { location.href = "upData.html" }
 })()

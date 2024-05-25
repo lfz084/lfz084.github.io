@@ -53,4 +53,4 @@ try {
 		}
 	}
 
-} catch (e) { alert(e.stack) }
+} catch (e) { console.error(e.stack) }

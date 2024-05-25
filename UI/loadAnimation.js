@@ -1,6 +1,15 @@
 'use strict';
 // loaders.css
 window.loadAnimation = (function() { //控制加载动画
+	const DEBUG_LOADANIMA = false;
+	
+	function log(param, type = "log") {
+		const print = console[type] || console.log;
+		DEBUG_LOADANIMA && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`[loadAnimation.js]  ${ param}`);
+	}
+	
+	//--------------------------------------------------------------------------
+	
     let timer = null;
     const WIN_LOADING = document.createElement("div"),
         ANIMA = document.createElement("div"),
@@ -57,7 +66,7 @@ window.loadAnimation = (function() { //控制加载动画
     return {
         open: (animaName, _timeout) => { //打开动画
             if (lock) return
-            //log("loadAnimation.open","warn");
+            log("loadAnimation.open","info");
             if (!WIN_LOADING.parentNode) {
                 ANIMA.innerHTML = ANIMA_NANE[animaName] || black_white;
                 document.body.appendChild(WIN_LOADING);
@@ -75,7 +84,7 @@ window.loadAnimation = (function() { //控制加载动画
         },
         close: (delay = 500) => { //关闭动画
             if (lock) return
-            //log("loadAnimation.close","warn");
+            log("loadAnimation.close","info");
             if (timer) {
                 clearTimeout(timer);
             }
@@ -101,12 +110,15 @@ window.loadAnimation = (function() { //控制加载动画
         const MSG = event.data;
         if (MSG.indexOf("loading...") + 1) {
             loadAnimation.open();
-            console.info(`loadAnimation.open`);
         }
         else if (MSG.indexOf("load finish") + 1) {
             loadAnimation.close();
-            console.info(`loadAnimation.close`);
         }
+    }
+    else if (event.data.cmd && event.data.cmd == "progress") {
+    	const progress = event.data.msg.progress;
+    	loadAnimation.text(~~(progress*1000)/10 + "%");
+    	progress < 1 ? loadAnimation.open() : loadAnimation.close();
     }
 })
 

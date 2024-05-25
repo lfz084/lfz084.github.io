@@ -662,7 +662,7 @@ window.puzzleCoder = (() => {
 		BASE_FOUL_6: { value: 6 << 5 | 10, name: "点点题模式", title: "找长连点", comment: "找全所有的长连禁手点\n注意：一个禁手点可能包括好几种禁手" },
 		BASE_BLOCK_CATCH_FOUL: { value: 6 << 5 | 11, name: "点点题模式", title: "找防冲四抓禁点", comment: "防冲四抓禁手\r\n白棋准备冲四抓禁手,黑棋找出所有让冲4抓禁不成立的点" },
 		
-		BASE_MAKE_VCF: { value: 6 << 5 | 12, name: "点点题模式", title: "找做V点", comment: "找全做V点\r\n做V点：做一手棋，如果对手不防，下一手能够形成成立的VCF的点。茶馆点点题解题规则的VCF，必须要连续冲四两次以上，四三杀不算VCF" },
+		BASE_MAKE_VCF: { value: 6 << 5 | 12, name: "点点题模式", title: "找做V点", comment: "找全做V点\r\n做V点：做一手棋，如果对手不防，下一手能够形成成立的VCF的点。茶馆点点题解题规则的VCF，必须要连续冲四两次以上(包括两次)，四三杀不算VCF" },
 		BASE_MAKE_VCF_43: { value: 6 << 5 | 13, name: "点点题模式", title: "找做43点", comment: "找全做43点\r\n做43点：做一手棋，如果对手不防，下一手可以形成成立的四三杀的点" },
 		BASE_MAKE_VCF_44: { value: 6 << 5 | 14, name: "点点题模式", title: "找做44点", comment: "找全做44点，白棋做四四杀" },
 		BASE_BLOCK_VCF: { value: 6 << 5 | 15, name: "点点题模式", title: "找VCF防点", comment: "找全VCF防点" },

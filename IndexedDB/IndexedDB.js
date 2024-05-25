@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "v2024.17";
+//if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["IndexedDB"] = "2024.23206";
 
 if (window.top.IndexedDB) {
 	window.IndexedDB = window.top.IndexedDB;
@@ -7,6 +7,16 @@ else (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
     'use strict';
+    
+    const DEBUG_INDEXEDDB = false;
+	
+	function log(param, type = "log") {
+		const print = console[type] || console.log;
+		DEBUG_INDEXEDDB && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`indexedDB.js: ${ param}`);
+	}
+	
+	//--------------------------------------------------------------------------------------
+	
 
     const DEFAULT_OBJECTSTORE_INFO = {
         name: "objectStore",
@@ -183,8 +193,8 @@ else (function(global, factory) {
                     this.database = event.target.result;
                     this.name = name;
                     this.version = version;
-                    console.log(`openDB: "${name}" ${version}`);
-                    console.log(`this.database: ${this.database}`)
+                    log(`openDB: "${name}" ${version}`);
+                    log(`this.database: ${this.database}`)
                     resolve(this.database);
                 }.bind(this);
                 request.onupgradeneeded = function(event) {
@@ -192,7 +202,7 @@ else (function(global, factory) {
                     this.name = name;
                     this.version = version;
                     try{callback(event.target.result)}catch(e){console.error(e.stack)}
-                    console.log(`onupgradeneeded name: "${name}", version: ${version}`);
+                    log(`onupgradeneeded name: "${name}", version: ${version}`);
                 }.bind(this);
             } catch (e) {
                 console.error(e.stack);
@@ -224,7 +234,7 @@ else (function(global, factory) {
         try {
             if (this.database) {
                 this.database.close();
-                console.log(`closeDB: "${this.name}"`);
+                log(`closeDB: "${this.name}"`);
                 this.name = undefined;
                 this.version = undefined;
                 this.database = undefined;
@@ -238,7 +248,7 @@ else (function(global, factory) {
         try {
             let name = this.name;
             this.close();
-            console.log(`deleteDB: "${name}"`);
+            log(`deleteDB: "${name}"`);
             return exports.indexedDB.deleteDatabase(name);
         } catch (e) { console.error(e.stack) }
     }
@@ -267,7 +277,7 @@ else (function(global, factory) {
                 if (false == await add(store, dataList[i]), key) {
                     return false;
                 }
-                console.log(`${IndexedDB.name} -> ${storeName} -> addData ${i+1}/${dataList.length}`)
+                log(`${IndexedDB.name} -> ${storeName} -> addData ${i+1}/${dataList.length}`)
             }
             return true;
         } catch (e) { console.error(e.stack); return false }
@@ -287,7 +297,7 @@ else (function(global, factory) {
                 if (false == await put(store, dataList[i], key)) {
                     return false;
                 }
-                console.log(`${IndexedDB.name} -> ${storeName} -> putData ${i+1}/${dataList.length}`)
+                log(`${IndexedDB.name} -> ${storeName} -> putData ${i+1}/${dataList.length}`)
             }
             return true;
         } catch (e) { console.error(e.stack); return false }
@@ -299,7 +309,7 @@ else (function(global, factory) {
     	return new Promise((resolve) => {
     		try{
     			const objectStore = this.getStore(storeName, mode);
-                console.log(`${IndexedDB.name} -> ${storeName} -> openCursorByKey`)
+                log(`${IndexedDB.name} -> ${storeName} -> openCursorByKey`)
     			objectStore.openCursor().onsuccess = function(event) {
     				try{
     					const cursor = event.target.result;
@@ -320,7 +330,7 @@ else (function(global, factory) {
     	return new Promise((resolve) => {
     		try{
     			const objectStore = this.getIndex(storeName, indexName, mode);
-    			console.log(`${IndexedDB.name} -> ${storeName} -> openCursorByIndex ${indexName}`)
+    			log(`${IndexedDB.name} -> ${storeName} -> openCursorByIndex ${indexName}`)
     			objectStore.openCursor().onsuccess = function(event) {
     				try{
     					const cursor = event.target.result;
@@ -371,7 +381,7 @@ else (function(global, factory) {
             if (false == await del(store, value)) {
             	return false;
             }
-            console.log(`${IndexedDB.name} -> ${storeName} -> deleteDataByKey ${value}`)
+            log(`${IndexedDB.name} -> ${storeName} -> deleteDataByKey ${value}`)
         } catch (e) { console.error(e.stack); return false }
     }
     /**
@@ -389,7 +399,7 @@ else (function(global, factory) {
      			if (false == await del(store, data.id)) {
      				return false;
      			}
-     			console.log(`${IndexedDB.name} -> ${storeName} -> deleteDataByIndex ${data.id}`)
+     			log(`${IndexedDB.name} -> ${storeName} -> deleteDataByIndex ${data.id}`)
      		}
     	} catch (e) { console.error(e.stack); return false }
     }

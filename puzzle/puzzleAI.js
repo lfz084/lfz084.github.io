@@ -1,7 +1,15 @@
 window.puzzleAI = (() => {
 	try {
 		"use strict";
-
+		const DEBUG_PUZZLEAI = false;
+		
+		function log(param, type = "log") {
+			const print = console[type] || console.log;
+			DEBUG_PUZZLEAI && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`puzzleAI.js: ${ param}`);
+		}
+		
+		//--------------------------------------------------------------------------------------
+	
 		const RAPFI_RULE = {
 			freestyle: 0,
 			renju: 2,
@@ -536,13 +544,13 @@ window.puzzleAI = (() => {
 		async function checkPuzzle(arr, side, rule, mode, board) {
 			aiState = aiState | STATE_RENJU_THINKING;
 			try{
-			console.info(`checkPuzzle\narr: ${arr}\nside: ${side}\nrule: ${rule}\nmode: ${mode}`)
+			log(`checkPuzzle\narr: ${arr}\nside: ${side}\nrule: ${rule}\nmode: ${mode}`, "info")
 			engine.gameRules = RENJU_RULE[rule];
 			const over = getGameOver(arr, side);
 			if (over) return false;
 				
 			if ("function" !== typeof filterCallbackTree[mode]) {
-				console.info(`typeof filterCallbackTree[mode]: ${typeof filterCallbackTree[mode]}`)
+				log(`typeof filterCallbackTree[mode]: ${typeof filterCallbackTree[mode]}`, "info")
 				return true;
 			}
 			
@@ -593,7 +601,7 @@ window.puzzleAI = (() => {
 				logStr += `第${i + 1}题测试：${rt ? "通过" : "失败"}\n  解题模式: ${puzzleCoder.MODE_TITLE[puzzle.mode]}\n  玩家: ${[,"黑棋","白棋"][puzzle.side]}\n  规则: ${puzzle.rule==2 ? "有禁" : "无禁"}\n  棋盘: ${puzzle.size}路\n`;
 				try{callback(i/puzzles.length)}catch(e){console.error(e.stack)}
 			}
-			console.log(logStr)
+			log(logStr)
 			return logStr;
 		}
 		

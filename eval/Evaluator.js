@@ -1,5 +1,5 @@
 "use strict";
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "v2024.17";
+//if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["Evaluator"] = "2024.23206";
 const DIRECTIONS = [0, 1, 2, 3] //[→, ↓, ↘, ↗]; // 米字线
 const FIND_ALL = 0;
 const ONLY_FREE = 1; // 只找活3，活4
@@ -92,14 +92,15 @@ let cBoardSize = 15;
 
 //---------------  ------------------ ------------------
 
-if ("WebAssembly" in self && typeof WebAssembly.instantiate == "function") {
+if ("loadEvaluatorWebassembly" in self) {
 	loadEvaluatorWebassembly.call(this);
 	console.warn("loadEvaluatorWebassembly");
 }
-else {
+else if ("loadEvaluatorJScript" in self) {
 	loadEvaluatorJScript.call(this);
 	console.warn("loadEvaluatorJScript");
 }
+else throw new Error(`"loadEvaluatorWebassembly" && "loadEvaluatorJScript" not found`)
 
 //---------------------- IDX_LISTS ------------------------
 

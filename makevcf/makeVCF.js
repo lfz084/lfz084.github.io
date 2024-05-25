@@ -437,7 +437,7 @@ window.makeVCF = (function() {
 		}
 	}
 
-	async function continueMakeVCF(callback = ()=>{}) {
+	async function continueMakeVCF(callback = ()=>{}, callbackDone = ()=>{}) {
 		//try {
 		const shortVCF = [];
 		while (true) {
@@ -481,7 +481,10 @@ window.makeVCF = (function() {
 				await window.engine.removeFinallyPromise(ps);
 			}
 			//await saveData();
-			if (state == STATE_DONE) return;
+			if (state == STATE_DONE) {
+				callbackDone();
+				return;
+			}
 			if (state == STATE_STOPPING) { state = STATE_WAITING; return; }
 			state = STATE_WAITING;
 		}

@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["appData"] = "v2024.17";
+//if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["appData"] = "2024.23206";
  window.appData = (() => {
     "use strict";
     let timerSave = null; // 保存,定时器

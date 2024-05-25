@@ -181,7 +181,7 @@
         },
         {
             type: "button",
-            text: "输出svg",
+            text: "输出sgf",
             touchend: async function() {
                 try {
                 	downloadsgf();

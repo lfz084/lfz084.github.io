@@ -1,11 +1,11 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "v2024.17";
+//if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["engine"] = "2024.23206";
 window.engine = (function() {
             "use strict";
-            const TEST_ENGINE = false;
+            const DEBUG_ENGINE = false;
 
             function log(param, type = "log") {
                 const print = console[type] || console.log;
-                TEST_ENGINE && window.DEBUG && print(`[engine.js]\n>>  ${ param}`);
+                DEBUG_ENGINE && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`[engine.js]  ${ param}`);
             }
 
             //------------------------  ListNode   ------------------------ 
@@ -136,7 +136,7 @@ window.engine = (function() {
 
             Thread.prototype.unlock = function(code = LOCK1) {
                 this.lockCode <= code && (this.lockCode = UNLOCK);
-                //console.log(`unlock ${this.lockCode}`)
+                log(`unlock ${this.lockCode}`)
             }
 
             Thread.prototype.postMessage = function(param) {
@@ -155,7 +155,7 @@ window.engine = (function() {
 
             function getFreeThreads(threads = THREADS) {
                 //threads.map(thread => console.log(`${!thread.isBusy}  ${thread.lockCode}`))
-                //console.log(waitThreadList.length);
+                log(waitThreadList.length);
                 return threads.filter(thread => {
                     if (thread.lockCount > 100) alert(`${thread.ID} ERROR...`)
                     if (!thread.isBusy) {
@@ -1229,7 +1229,7 @@ window.engine = (function() {
                     moveList.getRoot().score = SCORE_MIN;
 
                     while (current) {
-                        console.log(`>> ${movesToName(moves)}\n alpha: ${current.alpha}, beta: ${current.beta}, bestValue: ${current.bestValue}`)
+                        log(`>> ${movesToName(moves)}\n alpha: ${current.alpha}, beta: ${current.beta}, bestValue: ${current.bestValue}`)
                         while (true) { //选择当前最优分支
                             let nextChild = moves.length & 1 ? current.getMinChild() : current.getMaxChild();
                             if (nextChild) {
@@ -1249,7 +1249,7 @@ window.engine = (function() {
                 vList.push(moveList.get(curIdx).bestValue);
             }
 
-            console.info(`>> ${movesToName(moves)}\nvList: ${vList}`)
+            log(`>> ${movesToName(moves)}\nvList: ${vList}`, "info")
 
             curDepthVCT = moves.length;
             maxDepthVCT = curDepthVCT == 0 ? 3 : curDepthVCT + 4;
@@ -1280,7 +1280,7 @@ window.engine = (function() {
                     //count++;
                     bestValue = moves.length >= maxDepthVCT ? getScore(moves[moves.length - 1], param.color, arr) : moves.length & 1 ? SCORE_WIN : SCORE_LOST;
                     moveList.current().bestValue = bestValue;
-                    //console.log(bestValue);
+                    log(bestValue);
 
                     current = undefined;
                     while (moves.length > curDepthVCT) {
@@ -1329,7 +1329,7 @@ window.engine = (function() {
                     if (moves.length & 1) {
                         current.bestValue = minScore;
                         current.beta = Math.min(current.beta, current.bestValue);
-                        console.log(`min << alpha: ${current.alpha}, beta: ${current.beta}, bestValue: ${current.bestValue}, maxScore: ${maxScore}, minScore: ${minScore}`)
+                        log(`min << alpha: ${current.alpha}, beta: ${current.beta}, bestValue: ${current.bestValue}, maxScore: ${maxScore}, minScore: ${minScore}`)
                         if (current.bestValue < oldBestValue || current.bestValue == SCORE_LOST || (current.bestValue == SCORE_WIN && maxScore == minScore)) {
 
                         }
@@ -1338,7 +1338,7 @@ window.engine = (function() {
                     else {
                         current.bestValue = maxScore;
                         current.alpha = Math.max(current.alpha, current.bestValue);
-                        console.log(`max << alpha: ${current.alpha}, beta: ${current.beta}, bestValue: ${current.bestValue}, maxScore: ${maxScore}, minScore: ${minScore}`)
+                        log(`max << alpha: ${current.alpha}, beta: ${current.beta}, bestValue: ${current.bestValue}, maxScore: ${maxScore}, minScore: ${minScore}`)
                         if (current.bestValue < oldBestValue || current.bestValue == SCORE_WIN || (current.bestValue == SCORE_LOST && maxScore == minScore)) {
 
                         }
@@ -1348,7 +1348,7 @@ window.engine = (function() {
                 else break;
             }
 
-            console.info(`<< ${movesToName(moves)}`)
+            log(`<< ${movesToName(moves)}`, "info")
             if (moves.length) {
                 continue;
                 arr[moves.pop()] = 0;
@@ -2458,7 +2458,7 @@ window.engine = (function() {
             return result;
         }
         catch(err) {
-            console.log(err.stack);
+            console.error(err.stack);
         }
     }
     return {

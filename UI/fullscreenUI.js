@@ -34,6 +34,11 @@ window.fullscreenUI = (() => {
 			w_scale < h_scale ?
 			w_scale : h_scale;
 			
+		const viewport = new View();
+		viewport.resize();
+		document.body.style.padding = "0";
+		document.body.style.margin = "0";
+			
 		const bodyHeight = dw < dh ? Math.max(dh, boardH * 2) : dh;
 
 		const numButtons = 4;
@@ -53,7 +58,7 @@ window.fullscreenUI = (() => {
 		const [btnRenju, btnDBRead, btnRenjuEditor, btnMakeVCF] = btnBoard.rightButtons;
 		
 		function toURL(url) {
-			return window.location.href.indexOf(url) == -1 ? window.location.href = url : IFRAME.src = url;
+			return (window.location.href.indexOf(url) == -1 && !document.fullscreenElement) ? window.location.href = url : IFRAME.src = url;
 		}
 		
 		btnRenju.setText("R");
@@ -207,7 +212,7 @@ window.fullscreenUI = (() => {
 			}
 
 			function show(delay = defaultDelay) {
-				console.info("show")
+				//console.info("show")
 				lastTime = new Date().getTime();
 				timer = setInterval(() => {
 					new Date().getTime() - lastTime > delay && hide()
@@ -391,7 +396,7 @@ window.fullscreenUI = (() => {
 					element.removeEventListener("mouseup", first, true);
 					element.removeEventListener("keydown", first, true);
 					element.removeEventListener("keyup", first, true);
-					console.warn(`fullscreenUI.js: ${element} ${event.type} first requestFullscreen`)
+					//console.warn(`fullscreenUI.js: ${element} ${event.type} first requestFullscreen`)
 					requestFullscreen()
 				}
 
@@ -458,6 +463,7 @@ window.fullscreenUI = (() => {
 			get iframe() { return IFRAME },
 			get contentWindow() { return IFRAME.contentWindow },
 			get src() { return IFRAME.src; },
+			get viewport() { return viewport },
 			set src(url) { return toURL(url); },
 		}
 	} catch (e) { alert(e.stack) }

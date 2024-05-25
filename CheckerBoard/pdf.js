@@ -2,6 +2,127 @@
     (global = global || self, factory(global));
 }(this, (function(exports) {
     'use strict';
+	const fontName_normal = "PFSCMedium";
+    const fontName_bold = "PFSCHeavy";
+    
+    //unloaded >> loading >> loaded >> error
+    const fontScripts = {
+    	"PFSCMedium": {
+    		status: "unloaded",
+    		url: window["SOURCE_FILES"] && window["SOURCE_FILES"]["PFSCMedium_js"] || "pdf/SourceHanSansCN-Medium_jsPdf.subset-normal.js"
+    	},
+		"PFSCHeavy": {
+    		status: "unloaded",
+			url: window["SOURCE_FILES"] && window["SOURCE_FILES"]["PFSCHeavy_js"] || "pdf/SourceHanSansCN-Heavy_jsPdf.subset-normal.js"
+		}
+    }
+    
+    async function isFinally(promise) {
+    	let isF = true,
+    		t = {};
+    	await Promise.race([promise, t])
+    		.then(v => v === t && (isF = false))
+    	return isF;
+    }
+    
+    async function removeFinallyPromise(promiseArray) {
+    	for (let j = promiseArray.length - 1; j >= 0; j--) {
+    		if (await isFinally(promiseArray[j])) {
+    			promiseArray.splice(j, 1);
+    		}
+    	}
+    }
+        
+    function hasWideCharacter(board) {
+    	const str = board.P.map(p => p.text).join("");
+    	return str.split("").map(char => char.codePointAt()).find(code => code > 0xFF) !== undefined;
+    }
+    
+    async function waitCondition(condition = ()=>true, timeout = 500) {
+    	return new Promise((resolve) => {
+    		let timer = setInterval(() => {
+    			if (condition()) {
+    				clearInterval(timer);
+    				resolve();
+    			}
+    		}, timeout)
+    	})
+    }
+    
+    async function waitAddFont(fontName) {
+    	if (fontScripts[fontName]["status"] == "loaded") {
+    		let count = 0;
+    		await waitCondition(() => {
+    			const doc = new jsPDF("p", "pt", "a4");
+    			const _fontName = doc.getFont(fontName, "normal", "normal").fontName;
+    			doc.close();
+    			return _fontName == fontName || ++count > 5;
+    		}, 500);
+    		count > 5 && (fontScripts[fontName]["status"] = "error");
+    		return count <= 5 ? fontName : undefined;
+    	}
+    	else return undefined;
+    }
+    
+    async function loadFontScript(fontName) {
+    	const url = new Request(fontScripts[fontName].url).url;
+		const filename = url.split("/").pop();
+    	return new Promise(resolve => {
+    		try{
+    		const oHead = document.getElementsByTagName('HEAD').item(0);
+    		const oScript = document.createElement("script");
+    		oHead.appendChild(oScript);
+    		oScript.type = "text/javascript";
+    		oScript.rel = "preload";
+    		oScript.as = "script";
+    		oScript.onload = () => {
+    			fontScripts[fontName]["status"] = "loaded";
+    			resolve()
+    		}
+    		oScript.onerror = (event) => {
+    			fontScripts[fontName]["status"] = "error";
+    			resolve()
+    		}
+    		fontScripts[fontName]["status"] = "loading";
+    		oScript.src = url;
+    		}catch(e){
+    			fontScripts[fontName]["status"] = "error";
+    			resolve()
+    		}
+    	})
+    }
+    
+    async function loadFont(fontName) {
+    	if (fontScripts[fontName]["status"] == "unloaded") {
+    		await loadFontScript(fontName);
+    	}
+    	await waitCondition(() => fontScripts[fontName]["status"] == "loaded" || fontScripts[fontName]["status"] == "error");
+    	return waitAddFont(fontName);
+    }
+    
+    async function loadFonts() {
+    	const ps = Object.keys(fontScripts).map(async (fontName) => {
+        	if (fontScripts[fontName]["status"] == "unloaded") {
+        		window["warn"] && warn(`加载pdf字体${fontName}......`);
+        		const _fontName = await loadFont(fontName);
+        		if (fontName != _fontName) await (window["msg"] && msg || alert)(`加载pdf字体${fontName}失败\npdf不能正常显示非英文字符`)
+        		return _fontName;
+        	}
+        	else if (fontScripts[fontName]["status"] == "loading") {
+        		return await loadFont(fontName)
+        	}
+        	else if (fontScripts[fontName]["status"] == "error") {
+        		await (window["msg"] && msg || alert)(`加载pdf字体${fontName}失败\npdf不能正常显示非英文字符`)
+        	}
+        	else return fontName;
+        })	
+        while(ps.length) {
+        	await Promise.race(ps);
+        	await removeFinallyPromise(ps)
+        }
+    }
+    
+    //--------------------------------------------------------------------------------------
 
     CheckerBoard.prototype.printLinePDF = function({ x1, y1, x2, y2, color, lineWidth }, doc, scale) {
         doc.setLineWidth(~~(lineWidth * scale + 1));
@@ -17,8 +138,6 @@
     }
     
     CheckerBoard.prototype.printTextPDF = function({ txt, x, y, color, weight, family, size }, doc, scale) {
-        let fontName_normal = "PFSCMedium", //"arial";
-            fontName_bold = "PFSCHeavy"; //"arial";
         txt = txt.split("").map(char => char == EMOJI_FOUL ? "×" : char).join("")
         doc.setTextColor(color);
         doc.setFont(weight == "900" ? fontName_bold : fontName_normal, "normal", "normal");
@@ -89,13 +208,14 @@
     }
     
     // 棋盘保存PDF文件
-    CheckerBoard.prototype.saveAsPDF = function(fontName) {
+    CheckerBoard.prototype.saveAsPDF = async function(fontName) {
         if (!("jsPDF" in self) || typeof jsPDF != "function") {
             warn(`${EMOJI_FOUL_THREE}缺少 jsPDF 插件`);
             return;
         }
         const oldTheme = this.theme;
         this.loadTheme(this.defaultTheme);
+        hasWideCharacter(this) && (await loadFonts());
         
         //新建文档
         let doc = new jsPDF("p", "pt", "a4"); // 594.3pt*840.51pt

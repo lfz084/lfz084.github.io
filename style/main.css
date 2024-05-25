@@ -1,22 +1,3 @@
-/* mHeiTi  中文和部分特殊字符 */
-@font-face {
-    font-family: mHeiTi;
-    src: url('./font/NotoSansSC-Medium.subset.ttf') format('truetype');
-    font-weight: normal;
-}
-@font-face {
-    font-family: mHeiTi;
-    src: url('./font/NotoSansSC-SemiBold.subset.ttf') format('truetype');
-    font-weight: bold;
-}
-@font-face {
-    font-family: mHeiTi;
-    src: url('./font/NotoSansSC-Bold.subset.ttf') format('truetype');
-    font-weight: 900;
-}
-
-
-
 /* Roboto  英文和数字 */
 @font-face {
     font-family: Roboto;
@@ -34,6 +15,22 @@
     font-weight: 900;
 }
 
+/* mHeiTi  中文和部分特殊字符 */
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/NotoSansSC-Medium.subset.ttf') format('truetype');
+    font-weight: normal;
+}
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/NotoSansSC-SemiBold.subset.ttf') format('truetype');
+    font-weight: bold;
+}
+@font-face {
+    font-family: mHeiTi;
+    src: url('./font/NotoSansSC-Bold.subset.ttf') format('truetype');
+    font-weight: 900;
+}
 
 /* 特殊字符 */
 @font-face {
@@ -52,7 +49,6 @@
     src: url('./font/SourceHanSansCN-Heavy.subset.ttf') format('truetype');
     font-weight: 900;
 }
-
 
 /* 特殊字符 */
 @font-face {

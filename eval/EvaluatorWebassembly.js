@@ -1,4 +1,4 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "v2024.17";
+//if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["EvaluatorWebassembly"] = "2024.23206";
 
 function loadEvaluatorWebassembly() {
 
@@ -80,7 +80,7 @@ function loadEvaluatorWebassembly() {
                 }
             };
 
-        fetch(url.split("?")[0] + "?v=" + new Date().getTime(), { cache: "no-store" })
+        fetch(url.split("?")[0].split("#")[0] + "?v=" + new Date().getTime())
             .then(response => {
                 return response.arrayBuffer()
             })

@@ -99,7 +99,7 @@
 		},
 		{
 			src: "settings.png",
-			title: "重置数据",
+			title: "检查更新",
 			link: "reset.html",
 			target: "_self" 
 		},

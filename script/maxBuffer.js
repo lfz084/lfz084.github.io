@@ -1,12 +1,12 @@
-// 在不让浏览器奔溃的情况下，申请尽可能的大的内存
+// 在不让浏览器奔溃的前提下，申请尽可能的大的内存
+(() => {
 'use strict';
-
 //  利用 wasm 可以获得更多内存
 let wasm_exports;
 let memory;
 async function loadWASM(url, importObject) {
     try {
-        return fetch(url.split("?")[0] + "?v=" + new Date().getTime(), { cache: "no-store" })
+        return fetch(url.split("?")[0].split("#")[0] + "?v=" + new Date().getTime())
             .then(response => {
                 //post("alert", `response = ${response}`);
                 return response.arrayBuffer()
@@ -119,3 +119,7 @@ async function getMaxBuffes(scl = 1, freeBytes = 0, ...byteBuffers) {
         max(scl, freeBytes, ...byteBuffers);
     });
 }
+
+self.getMaxBuffes = getMaxBuffes;
+self.loadWASM = loadWASM;
+})()

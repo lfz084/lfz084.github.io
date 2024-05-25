@@ -43,20 +43,21 @@
 	const buttonSettings = [
 		{
 			type: "button",
-			text: "新建",
+			text: "新建棋型",
 			touchend: async function() {
 				const arr = cBoard.getArray();
 				const numStones = arr.filter(v => v > 0).length;
+				numStones == 0 && (msg || alert)("请先在棋盘上摆好棋型，再点新建");
 				makeVCF.resetMakeVCF(arr, numStones - (numStones >>> 1), numStones >>> 1, log);
-				makeVCF.continueMakeVCF(arr => cBoard.unpackArray(arr));
+				makeVCF.continueMakeVCF(arr => cBoard.unpackArray(arr), ()=>(msg || alert)("搜索已经结束"));
 				window.setBlockUnload(true)
 			}
         },
 		{
 			type: "button",
-			text: "搜索",
+			text: "继续搜索",
 			touchend: async function() {
-				makeVCF.continueMakeVCF(arr => cBoard.unpackArray(arr));
+				makeVCF.continueMakeVCF(arr => cBoard.unpackArray(arr), ()=>(msg || alert)("搜索已经结束"));
 			}
         },
         mainUI.createMiniBoard({varName: "miniBoard"}),
@@ -69,7 +70,7 @@
         },
 		{
 			type: "button",
-			text: "暂停",
+			text: "暂停搜索",
 			touchend: async function() {
 				makeVCF.stop();
 			}

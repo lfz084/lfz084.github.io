@@ -22,7 +22,7 @@
             this.MS = tree.init.MS;
             this.resetNum = tree.init.resetNum;
             while (this.MSindex < tree.init.MSindex) this.toNext(true, 100);
-            console.log(`addTree this.MS = [${this.MS}]\n[${this.MS.slice(0, this.MSindex + 1)}]`)
+            //console.log(`addTree this.MS = [${this.MS}]\n[${this.MS.slice(0, this.MSindex + 1)}]`)
         }
     };
 
@@ -70,7 +70,7 @@
             this.tree.mergeTree(tree);
         }
         this.tree.init = tree.init;
-        console.log(`mergeTree tree.init.MS = ${tree.init.MS}`)
+        //console.log(`mergeTree tree.init.MS = ${tree.init.MS}`)
         this.addTree(this.tree);
     }
 
@@ -90,7 +90,7 @@
             iHtml = this.tree.getInnerHtml(path),
             nextMove = { idx: -1, level: -2, idxColor: undefined },
             level = ["l", "L", "c", "c5", "c4", "c3", "c2", "c1", "w", "W", "a", "a5", "a4", "a3", "a2", "a1"];
-        console.log(`showBranchs path = ${path}`)
+        //console.log(`showBranchs path = ${path}`)
         nodes.map(cur => {
             if (cur) {
                 //console.log(`cur.branchsInfo: ${cur.branchsInfo}`)

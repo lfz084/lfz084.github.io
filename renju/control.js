@@ -1,12 +1,11 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["control"] = "v2024.17";
 window.control = (() => {
 	try {
 		"use strict";
-		const TEST_CONTROL = true;
+		const DEBUG_CONTROL = false;
 
 		function log(param, type = "log") {
 			const print = console[type] || console.log;
-			TEST_CONTROL && window.DEBUG && print(`[control.js]\n>>  ${ param}`);
+			DEBUG_CONTROL && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`[control.js]  ${ param}`);
 		}
 
 		//--------------------------------------------------------------
@@ -1028,7 +1027,7 @@ window.control = (() => {
 					 9, "线条宽度",
 					 //10, "设置按键位置",
 					 //11, "加载按键设置",
-					 12, "重置数据"],
+					 12, "检查更新"],
 			function(but) {
 				if (isBusy()) return;
 				const FUN = {
@@ -1285,7 +1284,6 @@ window.control = (() => {
 				return true;
 			}
 			else if (msgStr.indexOf("color==") > -1) {
-
 				let st = msgStr.indexOf("color==");
 				let color = Number(msgStr.slice(st + 7, st + 8));
 				st = msgStr.indexOf("[");
@@ -1306,19 +1304,23 @@ window.control = (() => {
 				}
 			}
 			else if (msgStr.indexOf("debug") > -1) {
-				vConsole = window.top.openVconsole(true)
+				const cmd = /debug[\s]*\=[\s]*[1-9]|debug/i.exec(msgStr);
+				const debugSwith = /[1-9]/.exec(cmd) * 1 || true;
+				window.parent.openVconsole(debugSwith)
 				return;
 			}
 			else if (msgStr.indexOf("close") > -1) {
-				vConsole = window.top.closeVconsole()
+				window.parent.closeVconsole();
 				return;
 			}
 			else if (msgStr.indexOf("showSwitch") > -1) {
-				vConsole.showSwitch()
+				vConsole = vConsole || window.parent.vConsole();
+				vConsole && vConsole.showSwitch();
 				return;
 			}
 			else if (msgStr.indexOf("hideSwitch") > -1) {
-				vConsole.hideSwitch()
+				vConsole = vConsole || window.parent.vConsole();
+				vConsole && vConsole.hideSwitch();
 				return;
 			}
 			else if (msgStr.indexOf("offline") > -1 || msgStr.indexOf("icon") > -1) {
@@ -1925,7 +1927,7 @@ window.control = (() => {
 			return cSelBlack.checked ? 1 : 2;
 		}
 
-		let timerCancelKeepTouch = null; // 防止悔棋触发取消红色显示
+		var timerCancelKeepTouch = null; // 防止悔棋触发取消红色显示
 
 		function cancelKeepTouch() {
 			if (timerCancelKeepTouch) return true;

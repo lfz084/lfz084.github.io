@@ -1,14 +1,22 @@
 (async () => {
 	try {
 		"use strict";
+		const DEBUG_PUZZLE = false;
 		let iswarn = true;
 		const d = document;
 		const dw = d.documentElement.clientWidth;
 		const dh = d.documentElement.clientHeight;
 		const CUR_PATH = document.currentScript.src.slice(0, document.currentScript.src.lastIndexOf("/") + 1);
 		
-		async function wait(timeout = 0) { return new Promise(resolve => setTimeout(resolve, timeout)) }
+		function log(param, type = "log") {
+			const print = console[type] || console.log;
+			DEBUG_PUZZLE && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`main.js: ${ param}`);
+		}
 		
+		async function wait(timeout = 0) { return new Promise(resolve => setTimeout(resolve, timeout)) }
+	
+	//--------------------------------------------------------------------------------------
+	
 		const menuSettings = [{
 				varName: "btnRule",
 				type: "select",
@@ -921,7 +929,6 @@
 			btnAIHelp.show();
 			lbTimer.hide();
 			lbTimer.stop();
-			//console.log("stop")
 		}
 		
 		const delayAIHelp = createDelayCallback(() => showAIHelp());
@@ -1057,7 +1064,6 @@
 				}
 			},
 			printLabels() {
-				//console.log(this.puzzle.labels)
 				this.puzzle.labels && this.puzzle.labels.length && this.puzzle.labels.map(str => {
 					const [code, char] = str.split(",");
 					const idx = this.board.moveCode2Points(code)[0];
@@ -1313,7 +1319,7 @@
 
 		function outputInnerHTML(param) {
 			const labels = { title, starLabel, strengthLabel, rotateLabel, progressLabel, sideLabel, ruleLabel, modeLabel, comment };
-			Object.keys(param).map(key => labels[key] && (console.warn(param[key]), labels[key].innerHTML = replaceAll(param[key], "\n", "<br>")))
+			Object.keys(param).map(key => labels[key] && (log(param[key], "warn"), labels[key].innerHTML = replaceAll(param[key], "\n", "<br>")))
 		}
 
 		function playerTryPutStone(idx) {
@@ -1581,7 +1587,7 @@
 		}
 		
 		function canvasClick_playing(x, y) {
-			console.log("canvasClick_playing")
+			log("canvasClick_playing")
 			const idx = cBoard.getIndex(x, y);
 			if (game.state == game.STATE.PLAYING) {
 				if (game.puzzle.mode < puzzleCoder.MODE.BASE) {
@@ -1618,7 +1624,7 @@
 		}
 
 		function canvasDblClick_playing(x, y) {
-			console.log("canvasDblClick_playing")
+			log("canvasDblClick_playing")
 			const idx = cBoard.getIndex(x, y);
 			if (idx < 0 || (cBoard.MSindex + 1 + (cBoard.firstColor == "black" ? 0 : 1)) % 2 + 1 == game.aiSide || game.state != game.STATE.PLAYING) return;
 			if (game.puzzle.mode < puzzleCoder.MODE.BASE) {

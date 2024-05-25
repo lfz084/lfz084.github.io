@@ -1,10 +1,10 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.17";
+//if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "2024.23206";
 (function(global, factory) {
     (global = global || self, factory(global));
 }(this, (function(exports) {
     'use strict';
 
-    const TEST_CHECKER_BOARD = true;
+    const DEBUG_CHECKER_BOARD = false;
     const TYPE_EMPTY = 0;
     const TYPE_MARK = 1 << 4; // 标记
     const TYPE_MOVE = TYPE_MARK | 1; //VCF手顺
@@ -62,59 +62,70 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.17";
 
     function log(param, type = "log") {
         const print = console[type] || console.log;
-        TEST_CHECKER_BOARD && window.DEBUG && print(`[CheckerBoard.js]\n>>  ${ param}`);
+        DEBUG_CHECKER_BOARD && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`[CheckerBoard.js] ${ param}`);
     }
 
     //------------------------ loadFont ------------------
 
     let fonts_status = "unloaded"; // unloaded >> loading >> loaded
-    const fonts = [{
-        family: "mHeiTi",
-        descriptors: { weight: "normal" }
+    const fonts = [{	//  优先加载 Roboto 英文字体
+        	family: "Roboto",
+        	descriptors: { weight: "normal" }
         }, {
-        family: "mHeiTi",
-        descriptors: { weight: "bold" }
+        	family: "Roboto",
+        	descriptors: { weight: "bold" }
         }, {
-        family: "mHeiTi",
-        descriptors: { weight: "900" }
+        	family: "Roboto",
+        	descriptors: { weight: "900" }
         }, {
-        family: "Roboto",
-        descriptors: { weight: "normal" }
+        	family: "mHeiTi",
+        	descriptors: { weight: "normal" }
         }, {
-        family: "Roboto",
-        descriptors: { weight: "bold" }
+        	family: "mHeiTi",
+        	descriptors: { weight: "bold" }
         }, {
-        family: "Roboto",
-        descriptors: { weight: "900" }
+        	family: "mHeiTi",
+        	descriptors: { weight: "900" }
+        },{
+        	family: "emjFont",
+        	descriptors: { weight: "normal" }
         }, {
-        family: "emjFont",
-        descriptors: { weight: "normal" }
+        	family: "emjFont",
+        	descriptors: { weight: "bold" }
         }, {
-        family: "emjFont",
-        descriptors: { weight: "bold" }
-        }, {
-        family: "emjFont",
-        descriptors: { weight: "900" }
-    }];
+        	family: "emjFont",
+        	descriptors: { weight: "900" }
+    	}];
+    const queueBoards = [];
 
     async function wait(timeout) {
         return new Promise(resolve => setTimeout(resolve, timeout))
     }
 
-    async function loadFonts() {
-        if (fonts_status == "unloaded") {
+    async function loadFonts(cBoard) {
+    	!(queueBoards.find(board => board===cBoard)) && queueBoards.push(cBoard);
+    	if (fonts_status == "unloaded") {
+    		await wait(1000);
             fonts_status = "loading";
-            let log_str = "loadFonts:\n";
+            let log_str = "CheckerBoard loadFonts:\n";
+            const numFonts = fonts.length;
             while (fonts.length) {
                 const font = fonts.shift();
                 const fontCSS = `${font.descriptors.weight} 50px ${font.family}`;
                 const text = "五子棋renju123㉕㉖";
-                log_str += `css: ${fontCSS}\n`;
-                const fontFaces = await document.fonts.load(fontCSS, text);
+                log_str += `loading: ${fontCSS}, ${numFonts - fonts.length} / ${numFonts}\n`;
+                log(log_str, "info");
+            	const fontFaces = await document.fonts.load(fontCSS, text);
                 const logFontFaces = fontFaces.map(fontFace => `${fontFace.weight} 50px ${fontFace.family} ${fontFace.status}`).join("\n") || "没有找到字体";
-                log_str += `fontFace: ${logFontFaces} \n`;
+                log_str += `${logFontFaces} \n`;
+                log(log_str, "info");
+                queueBoards.map(board => {
+                	if (board.mode != MODE_BOARD) return;
+        			board.printEmptyCBoard();
+        			board.refreshBoardPoint("all");
+        			log(`font loaded: refreshCheckerBoard`);
+                })
             }
-            log(log_str, "info");
             fonts_status = "loaded";
         }
         else if (fonts_status == "loading") {
@@ -122,7 +133,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.17";
                 await wait(1000);
             }
         }
-    }
+    }	
 
 
     //------------------------ Animation ------------------
@@ -620,7 +631,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.17";
     	this.P[idx].type = type;
     	const { x, y, radius, color, lineWidth } = this.getBoardPointInfo(idx, false).circle;
     	this.P[idx].type = oldType;
-    	console.log(`${this.firstColor}\n${this.MS.slice(0,this.MSindex+1)}\n${this.MS.slice(0)}`)
+    	log(`${this.firstColor}\n${this.MS.slice(0,this.MSindex+1)}\n${this.MS.slice(0)}`)
     	const fill =[this.bNumColor, this.wNumColor][(this.MSindex + (this.firstColor=="black"?1:2)) % 2]
     	Object.assign(this.stoneDiv.style, {
     		position: "absolute",
@@ -1718,11 +1729,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.17";
         if (this.mode != MODE_BOARD) return;
         this.resetCBoardCoordinate();
         this.printEmptyCBoard();
-        await loadFonts();
-        if (this.mode != MODE_BOARD) return;
-        this.printEmptyCBoard();
-        this.refreshBoardPoint("all");
-        log("showCheckerBoard: refreshCheckerBoard");
+        await loadFonts(this);
     }
 
     Board.prototype.setCoordinate = function(coordinateType) {
@@ -1933,11 +1940,11 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.17";
         points.map(idx => {
         	// 棋谱坐标转成 index 后添加棋子
             if (sourceType == TYPE_NUMBER) {
-                //console.log(`unpackCodeType sourceType == TYPE_NUMBER`);
+                log(`unpackCodeType sourceType == TYPE_NUMBER`);
                 this.wNb(idx, "auto", showNum, undefined, undefined, 100);
             }
             else if (sourceType == TYPE_BLACK) {
-                //console.log(`unpackCodeType sourceType == TYPE_BLACK`);
+                log(`unpackCodeType sourceType == TYPE_BLACK`);
                 switch (targetType) {
                     case TYPE_NUMBER:
                         if (0 == (this.MSindex & 1)) this.wNb(225, "auto", showNum, undefined, undefined, 100);
@@ -1949,7 +1956,7 @@ if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["CheckerBoard"] = "v2024.17";
                 }
             }
             else if (sourceType == TYPE_WHITE) {
-                //console.log(`unpackCodeType sourceType == TYPE_WHITE`);
+                log(`unpackCodeType sourceType == TYPE_WHITE`);
                 switch (targetType) {
                     case TYPE_NUMBER:
                         if (1 == (this.MSindex & 1)) this.wNb(225, "auto", showNum, undefined, undefined, 100);

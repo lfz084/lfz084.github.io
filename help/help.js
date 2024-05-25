@@ -1,10 +1,10 @@
 (() => {
     "use strict";
-    const TEST_HELP = true;
+    const DEBUG_HELP = true;
     
     function log(param, type = "log") {
         const  print = window.top.console[type] || window.top.console.log;
-        TEST_HELP && window.top.DEBUG && print(`[help.js]\n>>  ${ param}`);
+        DEBUG_HELP && window.top.DEBUG && window.top.vConsole && print(`[help.js]  ${ param}`);
     }
     
     const topImage = (() => {

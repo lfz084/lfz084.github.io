@@ -167,10 +167,11 @@ BYTE* getDataBuffer(){
 }
 
 BYTE* newBuffer(UINT size){
-    current_data_buffer += size;
-    if(current_data_buffer > end_data_buffer){
-        return 0;
+    if(current_data_buffer + size > end_data_buffer){
+        current_data_buffer = end_data_buffer;
+    	return 0;
     }
+    current_data_buffer += size;
     return &data_buffer[current_data_buffer-size];
 }
 

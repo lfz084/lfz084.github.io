@@ -16,6 +16,12 @@
 				}
 			},
 			{
+				"index": 96,
+				"puzzle": {
+					"options": "k10e9f5f4g8g7g6g5h7i8"
+				}
+			},
+			{
 				"index": 110,
 				"puzzle": {
 					"options": "e12f12h12j12k12l11e10h10i10j10"
@@ -37,6 +43,13 @@
 				"index": 61,
 				"puzzle": {
 					"stones": "G10K10H10F9J9H9H8I9I8G8F7E6H7G6F6D4F3",
+					"mode": 67
+				}
+			},
+			{
+				"index": 174,
+				"puzzle": {
+					"stones": "H11H12J11I11K11H10F10I10G10G9J10H9I9J9L9K9F8H8H7M13K15",
 					"mode": 67
 				}
 			}

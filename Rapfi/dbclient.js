@@ -1,12 +1,11 @@
-if (self.SCRIPT_VERSIONS) self.SCRIPT_VERSIONS["dbclient"] = "v2024.17";
 window.DBClient = (() => {
     "use strict";
-    //console.log(exports);
-    const TEST_DBClient = false;
+    
+    const DEBUG_DBClient = false;
 
     function log(param, type = "log") {
         const  print = console[type] || console.log;
-        TEST_DBClient && window.DEBUG && print(`[RenjuLib.js]\n>>  ${ param}`);
+        DEBUG_DBClient && window.DEBUG && (window.vConsole || window.parent.vConsole) && print(`[dbclient.js] ${ param}`);
     }
     
     //----------------------------------------------------------
