@@ -1,7 +1,7 @@
 window.serviceWorker = window.parent.serviceWorker || (() => {
     "use strict";
 
-    const DEBUG_SERVER_WORKER = true;
+    const DEBUG_SERVER_WORKER = false;
     const scriptURL = './sw.js';
     let serviceWorker_state;
     

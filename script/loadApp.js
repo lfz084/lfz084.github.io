@@ -68,7 +68,7 @@ try{
     		DELAY_LARGE: 2,
     		LAST_LARGE: 3
     	}
-    const vconsoleSwitch = true && openVconsoleSwitch.FAST_SMALL || localStorage.getItem("debug");
+    const vconsoleSwitch = false && openVconsoleSwitch.FAST_SMALL || localStorage.getItem("debug");
     
 	window.alert = function(name) { //更改默认标题
         const IFRAME = document.createElement('IFRAME');
