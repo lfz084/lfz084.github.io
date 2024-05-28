@@ -5,7 +5,6 @@ async function removeServiceWorker() {
 		navigator.serviceWorker.getRegistrations()
 		.then(registrations => {
 			registrations.map(registration => {
-				alert([window.location.href,registration.scope])
 				if (window.location.href.indexOf(registration.scope) + 1) {
 					ps.push(registration.unregister());
 				}
