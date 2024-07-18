@@ -1,3 +1,5 @@
+const scriptURL = './sw.js';
+
 async function registerServiceWorker() {
 	const sWorker = await new Promise(resolve => {
 		if ('serviceWorker' in navigator) {
